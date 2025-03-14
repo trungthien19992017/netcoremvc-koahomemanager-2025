@@ -1,0 +1,363 @@
+
+
+@{
+    ViewData["Title"] = "BOOKING";
+    Layout = "~/Views/Shared/_ContentNavbarLayout.cshtml";
+    // var listcus = ViewBag.listcus as List<KOAHome.EntityFramework.HsCustomer>;
+    var listbook_store = ViewBag.listbook_store as List<dynamic>;
+    var listbookser_info_store = ViewBag.listbookser_info_store as List<dynamic>;
+
+    var random = new Random();
+
+    int totalPeriods = 10; // 10 tiết học mỗi ngày
+    int totalWeeks = 4; // Giả sử có 4 tuần trong tháng
+    string[] daysOfWeek = { "Thứ Hai", "Thứ Ba", "Thứ Tư", "Thứ Năm", "Thứ Sáu", "Thứ Bảy", "Chủ Nhật" };
+}
+
+@section VendorStyles {
+	<link rel="stylesheet" href="~/vendor/libs/apex-charts/apex-charts.css" />
+}
+
+@section VendorScripts {
+	<script src="~/vendor/libs/apex-charts/apexcharts.js"></script>
+}
+
+@section PageScripts {
+    <script src="~/js/dashboards-analytics.js"></script>
+    @* thong bao day *@
+    <script src="~/js/ui-toasts.js"></script>
+    @* validate, kem cac file js ho tro *@
+    <script src="~/js/helper.js"></script>
+    <script src="~/js/flatpickr.js"></script>
+    <script src="~/js/form-validation.js"></script>
+}
+@section success
+{
+    @if (ViewBag.success != null)
+    {
+
+        <!-- Toast with Placements -->
+        <div class="bs-toast toast  top-0 end-0 show toast-placement-ex1 m-2" role="alert" aria-live="assertive" aria-atomic="true" data-bs-delay="2000">
+            <div class="toast-header">
+                <i class="ri-home-4-fill me-2 text-success"></i>
+                <div class="me-auto fw-medium">Thông báo</div><small class="text-muted">1 giây trước</small>
+                <button type="button" class="btn-close" data-bs-dismiss="toast" aria-label="Close"></button>
+            </div>
+            <div class="toast-body text-success">@ViewBag.success.</div>
+        </div>
+        <!-- Toast with Placements -->
+    }
+}
+
+@section ErrorMessage
+{
+    @if (ViewBag.ErrorMessage != null)
+    {
+        <!-- Toast with Placements -->
+        <div class="bs-toast toast  top-0 end-0 show toast-placement-ex1 m-2" role="alert" aria-live="assertive" aria-atomic="true" data-bs-delay="2000">
+            <div class="toast-header">
+                <i class="ri-home-4-fill me-2 text-danger"></i>
+                <div class="me-auto fw-medium">Thông báo</div><small class="text-muted">1 giây trước</small>
+                <button type="button" class="btn-close" data-bs-dismiss="toast" aria-label="Close"></button>
+            </div>
+            <div class="toast-body text-danger">@ViewBag.ErrorMessage.</div>
+        </div>
+        <!-- Toast with Placements -->
+    }
+}
+
+
+@* ************** Content ************** *@
+<!-- Content wrapper -->
+<div class="content-wrapper">
+    <!-- Content -->
+ <div class="container-xxl flex-grow-1 container-p-y">
+  <h1 class ="mb-1">Danh sách booking! 🎉</h1>
+  <div class="row gy-6">
+  @* Data Table new *@
+  <!-- Data Tables -->
+  <div class="col-xl-12">
+	  <div class="card h-100">
+		  <div class="card-header">
+	  <div class="card overflow-hidden">
+            <div class="card-body">
+               <!-- Accordion -->
+               <!-- phan mo rong de an hien bo loc-->
+              <div class="row">
+                <div class="col-md mb-6 mb-md-2">
+                  <div class="accordion mt-4" id="accordionExample">
+                    <div class="accordion-item active">
+                      <h2 class="accordion-header" id="headingOne">
+                        <button type="button" class="accordion-button collapsed" data-bs-toggle="collapse" data-bs-target="#accordionOne"  aria-expanded="true" aria-controls="accordionOne">
+                          Tìm kiếm
+                        </button>
+                      </h2>
+                      <div id="accordionOne" class="accordion-collapse collapse" data-bs-parent="#accordionExample">
+                        <div class="accordion-body">
+                        @* filter *@
+                        <form method="get" asp-action="Index" enctype="multipart/form-data">
+                            <div class="row gx-3 gy-2 align-items-center">
+                                <div class="col-md-4 form-floating form-floating-outline mb-6">
+                                      <input class="form-control form-control-sm" type="search" placeholder="" id="PhoneNumber" name="PhoneNumber" value="@Context.Request.Query["PhoneNumber"]" autofocus />
+                                      <label for="PhoneNumber">SĐT</label>
+                                </div>
+                                <div class="col-md-4 form-floating form-floating-outline mb-6">
+                                      <input class="form-control form-control-sm" type="search" placeholder="" id="HoTen" name="HoTen"  value="@Context.Request.Query["HoTen"]" />
+                                      <label for="HoTen">Họ tên</label>
+                                </div>
+                                <div class="col-md-4 form-floating form-floating-outline mb-6">
+                                      <input class="form-control form-control-sm" type="date" placeholder="" id="CheckInFrom"  name="CheckInFrom" value="@Context.Request.Query["CheckInFrom"]" />
+                                      <label for="CheckInFrom">Check in từ</label>
+                                </div>
+                                <div class="col-md-4 form-floating form-floating-outline mb-6">
+                                      <input class="form-control form-control-sm" type="date" placeholder="" id="CheckInTo"  name="CheckInTo" value="@Context.Request.Query["CheckInTo"]" />
+                                      <label for="CheckInTo">Check in đến</label>
+                                </div>
+                                 <div class="col-md-4 form-floating form-floating-outline mb-6">
+                                        <select asp-items="ViewBag.IsActiveOptions"
+                                        class="form-select color-dropdown form-select-sm" placeholder="" id="isActive"  name="isActive">
+                                   
+                                        </select>
+                                      <label for="isActive">Hoạt động</label>
+                                </div>
+                            </div>
+                      @* end filter *@
+                      @* nut xem *@
+                      <div class="row gx-3 gy-2 align-items-center">
+                          <div class="col-md-12 d-flex justify-content-center">
+                              <label class="form-label" for="showToastPlacement">&nbsp;</label>
+                              <button type="submit" id="showToastPlacement" class="btn btn-primary d-block">Xem</button>
+                          </div>
+                      </div>  
+                      @* end nut xem *@
+                    </form>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <!--/ Accordion -->
+              @* action top *@
+              <div class="row gx-3 gy-2 align-items-center">
+                  <div class="col-md-12 d-flex">
+                      <div class="demo-inline-spacing">
+                          <a asp-action="Create" type="button" class="btn btn-icon btn-primary" data-bs-toggle="tooltip" data-bs-offset="0,4" data-bs-placement="top" data-bs-html="true"
+                              title="<i class='ri-add-line'></i> <span>Thêm mới</span>">
+                            <i class="ri-add-line"></i>
+                          </a>
+                          <a asp-action="Create" type="button" class="btn btn-icon btn-primary" data-bs-toggle="tooltip" data-bs-offset="0,4" data-bs-placement="top" data-bs-html="true"
+                              title="<i class='ri-eye-line'></i> <span>Mô tả</span>">
+                            <i class="ri-eye-line"></i>
+                          </a>
+                      </div>
+                  </div>
+              </div>
+              @* end action top *@
+          </div>
+          @* end filter *@
+          <div class="card-body">
+             <small class="text-muted">Có <strong>@ViewBag.Total</strong> kết quả tìm kiếm</small>
+          </div>
+          @* table *@
+      <div class="card overflow-auto mb-6" style="height: 600px">
+          <div class="card-body" id="vertical-example">
+            <div class="table-responsive">
+			  <table class="table table-sm table-bordered table-hover">
+				  <thead>
+					  <tr>
+						  <th class="text-truncate">STT</th>
+						  <th></th>
+						  <th class="text-truncate">Họ Tên</th>
+						  <th class="text-truncate">SĐT</th>
+						  <th class="text-truncate">Tổng số tiền</th>
+						  <th class="text-truncate">Thời gian check in</th>
+						  <th class="text-truncate">Thời gian check out</th>
+						  <th class="text-truncate">Trạng thái thanh toán</th>
+						  <th class="text-truncate">Số giờ</th>
+						  <th class="text-truncate">Phòng</th>
+						  <th class="text-truncate">Tầng</th>
+						  <th class="text-truncate">Hoạt động</th>
+						  <th class="text-truncate">Ngày book phòng</th>
+						  <th class="text-truncate">Giới tính</th>
+						  <th class="text-truncate">CCCD</th>
+						  <th class="text-truncate">Lý do hủy phòng</th>
+						  <th class="text-truncate">Đơn giá</th>
+						  <th class="text-truncate">Phần trăm giảm giá (%)</th>
+						  <th class="text-truncate">Số tiền giảm giá phát sinh (VNĐ)</th>
+						  <th class="text-truncate">Lý do giảm giá</th>
+						  <th class="text-truncate">Dịch vụ</th>
+						  <th class="text-truncate">Dịch vụ</th>
+					  </tr>
+				  </thead>
+				  <tbody>
+					  @if (listbook_store != null)
+					  {
+						  @foreach (var book in listbook_store.Take(20))
+						  {
+										
+							  <tr class="@book.BGColorRowClass">
+								  <td class="text-center">@book.stt</td>
+								  <td class="text-center"> 
+                                        <div class="demo-inline-spacing">
+                                          <div class="btn-group" id="dropdown-icon-demo">
+                                            <button type="button" class="btn btn-primary btn-xs dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false"><i class="ri-align-justify me-1"></i></button>
+                                            <ul class="dropdown-menu overflow-auto" style="max-height:200px">
+                                              <li>
+                                                <a asp-action="Edit" asp-route-id="@book.Id" class="dropdown-item"><i class="ri-pencil-line me-1 text-primary"></i> Chỉnh sửa</a>
+                                              </li>
+                                              <li>
+                                                <a asp-action="Details" asp-route-id="@book.Id" class="dropdown-item"><i class="ri-eye-line me-1 text-primary"></i> Xem</a>
+                                              </li>
+                                              <li>
+                                                <a asp-action="XacNhanThanhToan" asp-route-id="@book.Id" class="dropdown-item"><i class="ri-check-line me-1 text-primary"></i> Xác nhận đã thanh toán</a>
+                                              </li>
+                                              <li>
+                                                <a asp-action="DichVuPhatSinh" asp-route-id="@book.Id" class="dropdown-item"><i class="ri-add-line me-1 text-primary"></i> Dịch vụ phát sinh</a>
+                                              </li>
+                                              <li>
+                                                <a data-bs-toggle="modal" data-bs-target="#modal-GiamGiaPhatSinh" data-id="@book.Id" data-sqlstore="HS_Booking1_OtherDiscount_sel" data-action="GiamGiaPhatSinh" data-controller="HsBookings" class="dropdown-item popup-form-action"><i class="ri-money-dollar-box-line me-1 text-primary"></i> Giảm giá phát sinh</a>
+                                              </li>
+                                              <li>
+                                                <a data-bs-toggle="modal" data-bs-target="#modal-HuyPhong" data-id="@book.Id" data-sqlstore="HS_Booking1_Cancel_sel" class="dropdown-item popup-form-action"><i class="ri-close-line me-1 text-primary"></i> Hủy phòng</a>
+                                              </li>
+                                              <li>
+                                                <a data-id="@book.Id" data-confirmtext="Bạn có chắc chắn muốn xóa khum?" data-sqlstore="HS_Booking1_del" class="dropdown-item confirmAction"><i class="ri-delete-bin-6-line me-1 text-primary"></i> Xóa</a>
+                                              </li>
+                                            </ul>
+                                          </div>
+                                        </div>
+								  </td>
+								  <td>
+									  <div class="d-flex align-items-center">
+										  <div class="avatar @book.IsPayClass avatar-sm me-4" 
+                                            data-bs-toggle="popover"
+                                            data-bs-placement="top"
+                                            data-bs-content="@book.CheckInInfo"
+                                            title="Thông tin đặt phòng">
+											  <img src="~/img/avatars/@(random.Next(1,7)).png" alt="Avatar" class="rounded-circle">
+										  </div>
+										  <div>
+											  <h6 class="mb-0 text-truncate">@book.LastName <span class="badge badge-center rounded-pill bg-danger">@book.NumberOfBooking</span></h6>
+											  <small class="text-truncate">&#64;@book.MXH</small>
+										  </div>
+									  </div>
+								  </td>
+								  <td class="text-truncate">@book.PhoneNumber</td>
+								  <td class="text-truncate text-center"><span class="badge bg-label-primary me-1">@string.Format("{0:N0}", book.TotalAmount)</span></td>
+								  <td class="text-truncate">@string.Format("{0:dd/MM/yyyy HH:mm}", book.CheckInDate ?? "")</td>
+								  <td class="text-truncate">@string.Format("{0:dd/MM/yyyy HH:mm}", @book.CheckOutDate ?? "")</td>
+								  <td class="text-center">
+									  <input type="checkbox" @(book.IsPay ? "checked" : "") disabled />
+								  </td>
+								  <td class="text-truncate">@book.TotalTime</td>
+								  <td><cusan class="badge @(book.RoomBadgeClass) rounded-pill">@book.RoomName</cusan></td>
+								  <td class="text-truncate">@book.Floor</td>
+								  <td class="text-center">
+									  <input type="checkbox" @(book.isActive ? "checked" : "") disabled />
+								  </td>
+								  <td class="text-truncate">@string.Format("{0:dd/MM/yyyy HH:mm}", @book.BookingDate ?? "")</td>
+								  <td><i class="@book.GenderIcon ri-22px @book.GenderColorClass"></i><span>@book.Gender</span></td>
+								  <td class="text-truncate">@book.CCCD</td>
+								  <td class="text-truncate">@book.ReasonCancel</td>
+								  <td class="text-truncate">@string.Format("{0:N0}", book.UnitPrice ?? "")</td>
+								  <td class="text-truncate">@book.DiscountPercent</td>
+								  <td class="text-truncate">@string.Format("{0:N0}", book.OtherDiscountAmount ?? "")</td>
+								  <td class="text-truncate">@book.ReasonDiscount</td>
+								  <td class="text-truncate">@book.ListDichVu</td>
+								  <td>
+								    <ul class="list-unstyled m-0 avatar-group d-flex align-items-center">
+									  @* voi moi booking lay list book service hien thi *@
+									  @foreach (var bookser in listbookser_info_store.Where(p => p.BookingID == book.Id).ToList())
+									  {
+									    <li data-bs-toggle="tooltip" data-popup="tooltip-custom" data-bs-placement="top" class="avatar avatar-xs pull-up" title="@bookser.DichVu">
+										  <img src="~/img/ServiceImage/@bookser.ServiceImage" alt="Avatar" class="rounded-circle">
+									    </li>
+									  }
+								    </ul>
+								  </td>
+							  </tr>
+						  }
+					  }
+				  </tbody>
+			  </table>
+ 
+		  </div>
+        </div>
+      </div>
+	  </div>
+              </div>
+                    <!--/ Pagination Start -->
+                    @if (listbook_store.Count() > 0)
+                    {
+                        <div class="col-12">
+                            <!-- Phân trang -->
+                            @if (ViewBag.TotalPage > 1)
+                            {
+                                var pageDisplay = (int)ViewBag.MaxPage;
+                                int totalPage = (int)ViewBag.TotalPage;
+                                int page = (int)ViewBag.Page;
+
+                                // Create numeric links
+                                var startPageIndex = Math.Max(1, page - pageDisplay / 2);
+                                var endPageIndex = Math.Min(totalPage, page + pageDisplay / 2);
+
+                                //var link = "/san-pham/" + category.MetaTitle + "-" + category.ID;
+                                var link = "/HsBookings?PhoneNumber=" + Context.Request.Query["PhoneNumber"] + "&HoTen=" + Context.Request.Query["HoTen"] + "&CheckInFrom=" + Context.Request.Query["CheckInFrom"] + "&CheckInTo=" + Context.Request.Query["CheckInTo"] + "&IsActive=" + Context.Request.Query["IsActive"];
+                                <nav>
+                                    <ul class="pagination justify-content-center">
+                                        @if (page > ViewBag.First)
+                                        {
+                                            <li class="page-item"><a href="@link&page=@ViewBag.First" title="Trang đầu" class="page-link first"><i class="ri-arrow-left-double-line"></i></a></li>
+                                            <li class="page-item">
+                                                <a href="@link&page=@ViewBag.Prev" title="Trang trước" class="page-link prev"><i class="ri-arrow-left-s-line"></i></a>
+                                            </li>
+
+                                        }
+                                        @for (int i = startPageIndex; i <= endPageIndex; i++)
+                                        {
+                                            if (page == i)
+                                            {
+                                                <li class="page-item active"> <a href="@link&page=@i" class="page-link" title="Trang @i">@i</a></li>
+                                            }
+                                            else
+                                            {
+                                                <li class="page-item"><a href="@link&page=@i" title="Trang @i" class="page-link pos">@i</a></li>
+                                            }
+                                        }
+                                        @if (page < totalPage)
+                                        {
+                                            <li class="page-item"><a href="@link&page=@ViewBag.Next" class="page-link next" title="Trang sau"><i class="ri-arrow-right-s-line"></i></a></li>
+                                            <li class="page-item"> <a href="@link&page=@ViewBag.Last" class="page-link last" title="Trang cuối"><i class="ri-arrow-right-double-line"></i></a></li>
+                                        }
+
+                                    </ul>
+                                </nav>
+
+                            }
+                        </div>
+                    }
+                    <!--/ Pagination End -->
+                </div>
+    </div>
+  @* end data table new *@
+   </div>
+     @* Modal (popup form) *@
+    @* Huy phong *@
+   <div class="row gy-6">
+        @{
+            await Html.RenderPartialAsync("_HuyPhong");
+        }
+   </div>
+   @* End Huy phong *@
+   @* giam gia phat sinh *@
+   <div class="row gy-6">
+        @{
+            await Html.RenderPartialAsync("_GiamGiaPhatSinh");
+        }
+   </div>
+   @* end giam gia phat sinh *@
+    @* End Modal  *@
+ </div>
+    <!-- Content wrapper -->
+</div>

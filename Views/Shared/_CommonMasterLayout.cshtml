@@ -1,0 +1,536 @@
+@inject IHttpContextAccessor httpContextAccessor
+
+<!DOCTYPE html>
+<html lang="en"
+  class='light-style layout-menu-fixed'
+  data-theme="theme-default" data-assets-path='@((httpContextAccessor.HttpContext?.Request.PathBase ?? "") + "/")'
+  data-framework="aspnetcore-mvc"
+  data-template='vertical-menu-aspnet-core-mvc-template-free'>
+
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0" />
+
+    <script src="https://code.jquery.com/jquery-3.4.1.min.js"></script>
+    <!-- Select2 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/select2@4.0.13/dist/css/select2.min.css" rel="stylesheet" />
+    <link rel="stylesheet" href="~/css/replete-modal.css">
+    <!-- Select2 JS -->
+    <script src="https://cdn.jsdelivr.net/npm/select2@4.0.13/dist/js/select2.min.js"></script>
+    <link rel="stylesheet" href="~/css/select2.css">
+    <link rel="stylesheet" href="~/css/animate.css">
+
+    <!-- Thêm moment.js để xử lý ngày giờ chính xác -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.29.4/moment.min.js"></script>
+
+  @{
+        string title = ViewData["title"] as string ?? "";
+        string appName = TempData.Peek("appName") as string ?? "";
+        string productPage = TempData.Peek("productPage") as string ?? "";
+    }
+  <title>@title | @appName - Asp.Net Core MVC Free Admin Template</title>
+  <meta name="description" content="" />
+
+  <!-- Canonical SEO -->
+  <link rel="canonical" href='@productPage'>
+  <!-- Favicon -->
+  <link rel="icon" type="image/x-icon" href="~/img/favicon/favicon.ico" />
+
+  <!-- Core Styles -->
+  @await Html.PartialAsync("Sections/_Styles")
+
+  <!-- Vendor Styles -->
+  @RenderSection("VendorStyles", required: false)
+
+  <!-- Page Styles -->
+  @RenderSection("PageStyles", required: false)
+
+
+  <!-- Include Scripts for customizer, helper, analytics, config -->
+  @await Html.PartialAsync("Sections/_ScriptsIncludes")
+</head>
+
+<body>
+  @RenderSection("Success", required: false)
+  @RenderSection("ErrorMessage", required: false)
+  <!-- Layout Content -->
+  @RenderBody()
+  <!--/ Layout Content -->
+
+  <!-- Core Scripts -->
+  @await Html.PartialAsync("Sections/_Scripts")
+
+  <!-- Vendor Scripts -->
+  @RenderSection("VendorScripts", required: false)
+
+
+
+  <!-- Main JS-->
+  <script src='~/js/main.js'></script>
+  <script src='~/js/replete-modal.js'></script>
+
+
+    <!--  script xu ly chung duoc viet trong master-->
+  <script>
+          // tim kiem trong select box
+        $(document).ready(function () {
+            $.noConflict();
+            function initSelect2() {
+                $("select").not(".select2-hidden-accessible").select2({
+                    placeholder: "Chọn",
+                    allowClear: true,
+                    width: "100%"
+                });
+            }
+
+            // Khởi tạo Select2 cho các select đã có sẵn
+            initSelect2();
+
+            // // Áp dụng Select2 cho các select được thêm động
+            // $(document).on('focus', 'select', function () {
+            //     if (!$(this).hasClass("select2-hidden-accessible")) {
+            //         $(this).select2({
+            //             placeholder: "Chọn",
+            //             allowClear: true,
+            //             width: "100%"
+            //         });
+            //     }
+            // });
+        });
+
+          // focus vao field dau tien khong hop le
+        $("form").on("submit", function (event) {
+        var firstInvalid = $(this).find(":invalid").first();
+        if (firstInvalid.length) {
+        firstInvalid.focus();
+        event.preventDefault(); // Ngăn không cho form submit
+        }
+        });
+
+        // data fill sau khi on change select box
+        $(document).ready(function () {
+        $("select").change(function () {
+        let value = $(this).val();
+        let key = $(this).attr("name"); // Lấy name của select
+        let datafillstore = $(this).data("datafillstore"); // Lấy giá trị từ data-datafillstore
+
+        if (value && datafillstore) {
+        $.ajax({
+        url: `/HsBookings/GetDataFillSelection`, // Sử dụng serviceStore để xác định API cần gọi
+        type: "GET",
+        data: { value: value, key: key, datafillstore : datafillstore },
+        success: function (data) {
+        console.log("Dữ liệu trả về:", data);
+        console.log("Loại dữ liệu:", typeof data); // Phải là "object"
+
+        $.each(data, function (key, value) {
+        let inputField = $(`[name='${key}'], [id='${key}']`);
+        if (inputField.length) {
+            if (inputField.is(":radio")) {
+                // Tìm radio button có giá trị tương ứng
+                let radioToCheck = inputField.filter(`[value='${value}']`);
+
+                if (radioToCheck.length) {
+                    // Nếu có radio button phù hợp, chọn nó
+                    radioToCheck.prop("checked", true);
+                } else {
+                    // Nếu không tìm thấy giá trị tương ứng, bỏ chọn tất cả radio của nhóm đó
+                    inputField.prop("checked", false);
+                }
+            } else {
+                // Nếu là input bình thường, gán giá trị trực tiếp
+                inputField.val(value);
+            }
+        }
+            });
+        },
+        error: function (xhr, status, error) {
+        console.error("Error:", xhr.responseText);
+        }
+        });
+        }
+        });
+        });
+
+  
+        // xu ly du lieu datetime truyen vao
+        function formatDateTimeLocal(value) {
+            return value ? moment(value, "M/D/YYYY h:mm:ss A").format("YYYY-MM-DDTHH:mm") : "";
+        }
+
+        function formatDate(value) {
+            return value ? moment(value, "M/D/YYYY h:mm:ss A").format("YYYY-MM-DD") : "";
+        }
+
+        function formatTime(value) {
+            return value ? moment(value, "h:mm:ss A").format("HH:mm") : "";
+        }
+
+        var formData = @Html.Raw(Json.Serialize(ViewBag.FormData));
+        if (formData != null)
+        {
+          $(document).ready(function () {
+              $.each(formData, function (key, value) {
+                  let inputField = $(`[name='${key}'], [id='${key}']`); // Tìm input theo name hoặc id
+
+                  if (inputField.length) {
+                      let inputType = inputField.attr("type"); // Lấy kiểu input
+                      let isoFormatRegex1 = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}$/; // regex kiem tra dinh dang date YYYY-MM-DDTHH:mm
+                      let isoFormatRegex2 = /^\d{4}-\d{2}-\d{2}$/; // regex kiem tra dinh dang date YYYY-MM-DD
+                      let isoFormatRegex3 = /^\d{2}:\d{2}$/; // regex kiem tra dinh dang date HH:mm
+
+                      if (inputType === "datetime-local" && isoFormatRegex1.test(value) == false) {
+                          value = formatDateTimeLocal(value);
+                          inputField.val(value); // Gán giá trị vào input
+                      } 
+                      else if (inputType === "date" && isoFormatRegex2.test(value) == false) {
+                          value = formatDate(value);
+                          inputField.val(value); // Gán giá trị vào input
+                      } 
+                      else if (inputType === "time" && isoFormatRegex3.test(value) == false) {
+                          value = formatTime(value);
+                          inputField.val(value); // Gán giá trị vào input
+                      } 
+
+                  }
+              });
+          });
+        }
+
+          // function xoa dòng áp dụng cho report editor
+          function toggleDelete(button) {
+            var row = $(button).closest("tr");
+            var isDeletedInput = row.find(".isDeleted");
+            var idInput = row.find("input[name$='Id']").val();
+
+            if (idInput === "" || idInput === null) {
+                row.remove(); // Xóa dòng nếu Id rỗng
+            } else {
+                var isDeleted = isDeletedInput.val() === "true";
+                isDeletedInput.val(!isDeleted);
+
+                if (!isDeleted) {
+                    $(button).html('<i class="ri-recycle-line ri-24px text-warning"></i>');
+                } else {
+                    $(button).html('<i class="ri-delete-bin-line ri-24px text-danger"></i>');
+                }
+            }
+        }
+
+        // kiem tra de xet readonly form
+          $(document).ready(function () {
+            var isReadOnly = @Json.Serialize(ViewBag.IsReadOnly);
+            if (isReadOnly) {
+              // Chỉ đặt readonly cho input, textarea
+              $("form input, form textarea").prop("readonly", true);
+
+              // Chỉ đặt disable cho select
+              $("form select").prop("disabled", true);
+
+              // Chỉ disable nút submit
+              $("form button[type='submit']").prop("disabled", true);
+            }
+        });
+
+        // loai bo disable cho select trong truong hop form submit (ly do khi disabled thi IFormColletion khong lay duoc gia tri)
+        $(document).ready(function () {
+            $("form").on("submit", function () {
+                    $("select:disabled").prop("disabled", false);
+                });
+        });
+
+        // xu ly spinner khi load
+        $(document).ready(function () {
+            // Thêm Spinner vào body khi trang tải
+            $("body").append(`
+            <div id="loading-overlay" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; background: #96929e;opacity: 0.5;z-index: 2000;display: flex;justify-content: center;align-items: center;pointer-events: none;">
+                <div id="spinner" style="background: rgba(0, 0, 0, 0.7);padding: 20px;border-radius: 10px;text-align: center;box-shadow: 0 0 10px rgba(0, 0, 0, 0.2);">
+                    <div class="spinner-border text-primary" role="status">
+                          <span class="visually-hidden">Loading...</span>
+                      </div>
+                    <p style="text-align:center; font-weight:bold; color: white;">Đang xử lý...</p>
+                </div>
+            </div>
+            `);
+
+          let loadingTimeout;
+
+          // Chỉ hiển thị spinner sau 2 giây khi trang load
+          loadingTimeout = setTimeout(() => {
+              $("#loading-overlay").show();
+          }, 1000);
+
+          // Khi trang load xong, hủy timeout và ẩn spinner
+          $(window).on("load", function () {
+              clearTimeout(loadingTimeout);
+              $("#loading-overlay").hide();
+          });
+
+          // Khi submit form, chỉ hiển thị sau 2 giây
+          $(document).on("submit", "form", function () {
+              clearTimeout(loadingTimeout);
+              loadingTimeout = setTimeout(() => {
+                  $("#loading-overlay").show();
+              }, 1000);
+          });
+
+          // Khi AJAX request gửi đi, chỉ hiển thị sau 2 giây
+          $(document).ajaxStart(function () {
+              clearTimeout(loadingTimeout);
+              loadingTimeout = setTimeout(() => {
+                  $("#loading-overlay").show();
+              }, 1000);
+          });
+
+          // Khi AJAX request hoàn tất, ẩn spinner ngay lập tức
+          $(document).ajaxComplete(function () {
+              clearTimeout(loadingTimeout);
+              $("#loading-overlay").hide();
+          });
+
+          // Ẩn spinner nếu có lỗi khi tải trang hoặc request thất bại
+          $(window).on("error", function () {
+              clearTimeout(loadingTimeout);
+              $("#loading-overlay").hide();
+          });
+        });
+
+        // xu ly confirm action de hien thi popup confirm va xu ly ajax
+        $('.confirmAction').on('click', function (e) {
+            e.preventDefault(); // Ngăn chặn điều hướng khi click vào link
+
+            var id = $(this).data('id'); // Lấy ID từ thuộc tính data-id
+            var sqlstore = $(this).data('sqlstore'); // lay du lieu store de xu ly (bat buoc)
+            var confirmtext = $(this).data('confirmtext');
+
+            rplm({
+                title: "Xác nhận",
+                text: confirmtext || "Hãy giúp tôi xác nhận lại lần nữa nhé",
+                type: "warning",
+                showCancelButton: true,
+                confirmButtonText: "Đồng ý!",
+                cancelButtonText: "Hủy!",
+                animation: "tada",
+                modalNOverlay: "backShadow",
+                closeOnConfirm: false,
+                closeOnCancel: false,
+                showLoaderOnConfirm: true
+            },
+            function (isConfirm) {
+                if (isConfirm) {
+                    // dua cac du lieu can truyen vao formdata
+                    var formData = new FormData();
+                    formData.append("Id", id); // key cua du lieu
+                    formData.append("sqlstore", sqlstore); // Lấy sqlstore tu button truyen vao
+
+                    // Gọi AJAX để gửi yêu cầu xóa
+                    $.ajax({
+                        url: '/Home/Action_Confirmed', // Controller xử lý xóa
+                        type: 'POST', // Hoặc 'GET' nếu phù hợp
+                        data: formData, // Truyền ID của dòng cần xóa và store xử lý
+                        processData: false, // Không chuyển `FormData` thành query string
+                        contentType: false, // Để trình duyệt tự động đặt `content-type`
+                        success: function (response) {
+                            if (response.success) {
+                                rplm({
+                                  title: "Xử lý thành công!",
+                                  text: "Hành động của bạn đã được xử lý.",
+                                  type: "success",
+                                  timer: 2000,
+                                  confirmButtonText: 'Xác nhận',
+                                }, function () {
+                                      // Sau khi đóng popup, reload lại trang
+                                      location.reload();
+                                  });
+                            } else {
+                                rplm({
+                                    title: "Lỗi!",
+                                    text: response.errorMessage || "Có vấn đề xảy ra.",
+                                    type: "error",
+                                    timer: 2000,
+                                    confirmButtonText: 'Xác nhận',
+                                });
+                            }
+                        },
+                        error: function () {
+                            rplm({
+                                title: "Lỗi!",
+                                text: "Lỗi khi kết nối đến máy chủ.",
+                                type: "error",
+                                timer: 2000,
+                                confirmButtonText: 'Done',
+                            });
+                        }
+                    });
+                } else {
+                    rplm({
+                        title: "Đã hủy!",
+                        text: "Hành động của bạn đã được hủy.",
+                        type: "error",
+                        timer: 2000,
+                        confirmButtonText: 'Done',
+                    });
+                }
+            });
+        });
+          // xu ly form popup
+          $(document).ready(function () {
+            // Khi modal được mở
+              $(".popup-form-action").click(function () {
+                var id = $(this).data("id"); // Lấy ID của booking
+                var sqlStore = $(this).data('sqlstore'); // Lấy SQL Store nếu cần
+                // neu khong truyen action va controller thi se goi action mac dinh
+                var controller = $(this).data("controller") || "HsBookings";
+                var action = $(this).data("action") || "GetDataFillSelection";
+
+                // Kiểm tra nếu không có ID thì không làm gì
+                if (!id) return;
+
+                // Gọi AJAX lấy dữ liệu từ action
+                $.ajax({
+                url: `/${controller}/${action}`, // Sử dụng serviceStore để xác định API cần gọi
+                type: "GET",
+                data: { value: id, key: "Id", datafillstore : sqlStore },
+                success: function (data) {
+                console.log("Dữ liệu trả về:", data);
+                console.log("Loại dữ liệu:", typeof data); // Phải là "object"
+
+                $.each(data, function (key, value) {
+                let inputField = $(`[name='${key}'], [id='${key}']`);
+                if (inputField.length) {
+                    if (inputField.is(":radio")) {
+                        // Tìm radio button có giá trị tương ứng
+                        let radioToCheck = inputField.filter(`[value='${value}']`);
+
+                        if (radioToCheck.length) {
+                            // Nếu có radio button phù hợp, chọn nó
+                            radioToCheck.prop("checked", true);
+                        } else {
+                            // Nếu không tìm thấy giá trị tương ứng, bỏ chọn tất cả radio của nhóm đó
+                            inputField.prop("checked", false);
+                        }
+                    }
+                    else if (inputField.is("select"))
+                    {
+                      // gan gia tri selected
+                      let selectedvalue = value
+                      if (inputField.hasClass("select2-hidden-accessible"))
+                      {
+                       inputField.select2("destroy");
+                      }
+                      inputField.empty().append('<option value="">Chọn</option>');  // Xóa các option cũ // Thêm option mặc định
+
+                      // Thêm các option mới
+                      let selectlistkey = "List"+key
+                      console.log("Dropdown field:", inputField);
+                      console.log("Data list:", data[selectlistkey]);
+                      if (data[selectlistkey] && Array.isArray(data[selectlistkey])) { // Kiểm tra danh sách hợp lệ
+                          let options = data[selectlistkey].map(item => {
+                              return new Option(item.name, item.id, false, item.id == selectedvalue);
+                          });
+
+                          inputField.append(options);
+                      } else {
+                          console.error("Danh sách không hợp lệ hoặc không có dữ liệu.");
+                      }
+ 
+                      if (inputField.not(".select2-hidden-accessible"))
+                      {
+                          $(document).ready(function() {
+                              inputField.select2({
+                                  placeholder: "Chọn",
+                                  allowClear: true,
+                                  width: "100%",
+                                  dropdownParent: $('#modal-GiamGiaPhatSinh') // Chỉ định modal làm container
+                              });
+                          });
+                      }
+                    }
+                    else {
+                        // Nếu là input bình thường, gán giá trị trực tiếp
+                        inputField.val(value);
+                    }
+                }
+                    });
+                },
+                error: function (xhr, status, error) {
+                console.error("Error:", xhr.responseText);
+                }
+                });
+            });
+
+            // khong chu dong submit form ma thong qua button de tranh viec form tu xu ly
+            $(".modal-btn-submit").click(function () {
+                // $(this).closest("form").submit();
+                var form = $(this).closest("form").get(0); // Lấy HTMLFormElement
+
+                // kiem tra neu co validate thi bao loi va return
+                if (!form.checkValidity()) {
+                    form.classList.add("was-validated"); // Kích hoạt CSS validation của Bootstrap
+                    return;
+                }
+
+                $(this).closest("form").submit(); // Nếu hợp lệ, submit form
+            });
+
+           // xu ly luu form popup
+            $(".modal-form").submit(function (e) {
+                e.preventDefault(); // Ngăn form reload trang
+
+                let form = $(this);
+                let modalId = $(this).data("modal-id");
+                var formData = new FormData(this); // Tạo FormData từ form
+
+                $.ajax({
+                    type: form.attr("method"),
+                    url: form.attr("action"),
+                    data: formData,
+                    processData: false, // Không chuyển `FormData` thành query string
+                    contentType: false, // Để trình duyệt tự động đặt `content-type`
+                    success: function (data) {
+                      if (data.success) {
+                          rplm({
+                            title: "Xử lý thành công!",
+                            text: "Hành động của bạn đã được xử lý.",
+                            type: "success",
+                            timer: 2000,
+                            confirmButtonText: 'Xác nhận',
+                          }, function (){
+                                $("#"+modalId+" .modal-btn-close").trigger("click");// Đóng modal
+                                // Sau khi đóng popup, reload lại trang
+                                location.reload();
+                            });
+                      } else {
+                          rplm({
+                              title: "Lỗi!",
+                              text: data.errorMessage || "Có vấn đề xảy ra.",
+                              type: "error",
+                              timer: 2000,
+                              confirmButtonText: 'Xác nhận',
+                          });
+                      }
+                    },
+                    error: function (xhr, status, error) {
+                        console.log("Lỗi AJAX:", xhr.responseText); // Log lỗi AJAX
+                        rplm({
+                            title: "Lỗi!",
+                            text: xhr.responseText || "Có vấn đề xảy ra.",
+                            type: "error",
+                            timer: 2000,
+                            confirmButtonText: 'Xác nhận',
+                        });
+                    }
+                });
+            });
+        });
+    </script>
+
+    <!-- Page Scripts-->
+    @RenderSection("PageScripts", required: false)
+
+  <!-- Place this tag in your head or just before your close body tag. -->
+  <script async defer src="https://buttons.github.io/buttons.js"></script>
+
+</body>
+
+</html>

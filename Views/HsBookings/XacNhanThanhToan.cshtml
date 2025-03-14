@@ -1,0 +1,129 @@
+@{
+    ViewData["Title"] = "Xác nhận thanh toán";
+    Layout = "~/Views/Shared/_ContentNavbarLayout.cshtml";
+    var formData = ViewBag.formData as IDictionary<string, object>;
+}
+
+
+@section VendorStyles {
+    <link rel="stylesheet" href="~/vendor/libs/apex-charts/apex-charts.css" />
+}
+
+@section VendorScripts {
+    <script src="~/vendor/libs/apex-charts/apexcharts.js"></script>
+}
+
+@section PageScripts {
+    <script src="~/js/dashboards-analytics.js"></script>
+    @* thong bao day *@
+    <script src="~/js/ui-toasts.js"></script>
+    @* validate, kem cac file js ho tro *@
+    <script src="~/js/helper.js"></script>
+    <script src="~/js/flatpickr.js"></script>
+    <script src="~/js/form-validation.js"></script>
+
+    <script>
+    </script>
+}
+
+@section success
+{
+    @if (ViewBag.success != null)
+    {
+
+        <!-- Toast with Placements -->
+        <div class="bs-toast toast  top-0 end-0 show toast-placement-ex1 m-2" role="alert" aria-live="assertive" aria-atomic="true" data-bs-delay="2000">
+            <div class="toast-header">
+                <i class="ri-home-4-fill me-2 text-success"></i>
+                <div class="me-auto fw-medium">Thông báo</div><small class="text-muted">1 giây trước</small>
+                <button type="button" class="btn-close" data-bs-dismiss="toast" aria-label="Close"></button>
+            </div>
+            <div class="toast-body text-success">@ViewBag.success.</div>
+        </div>
+        <!-- Toast with Placements -->
+    }
+}
+
+@section ErrorMessage
+{
+    @if (ViewBag.ErrorMessage != null)
+    {
+        <!-- Toast with Placements -->
+        <div class="bs-toast toast  top-0 end-0 show toast-placement-ex1 m-2" role="alert" aria-live="assertive" aria-atomic="true" data-bs-delay="2000">
+            <div class="toast-header">
+                <i class="ri-home-4-fill me-2 text-danger"></i>
+                <div class="me-auto fw-medium">Thông báo</div><small class="text-muted">1 giây trước</small>
+                <button type="button" class="btn-close" data-bs-dismiss="toast" aria-label="Close"></button>
+            </div>
+            <div class="toast-body text-danger">@ViewBag.ErrorMessage.</div>
+        </div>
+        <!-- Toast with Placements -->
+    }
+}
+
+@* ************** Content ************** *@
+<!-- Content wrapper -->
+<div class="content-wrapper">
+    <!-- Content -->
+
+    <div class="container-xxl flex-grow-1 container-p-y">
+        <!-- Xac nhan thanh toan form -->
+        <div class="row">
+            <div class="col-xl">
+                <div class="card mb-6">
+                    <div class="card-header d-flex justify-content-between align-items-center">
+                        <h5 class="mb-0">XÁC NHẬN THANH TOÁN</h5>
+                        <small class="text-body float-end">Thông tin xác nhận </small>
+                    </div>
+                    <div class="card-body">
+                        <form id="create-form" class="needs-validation" novalidate="" method="post" asp-action="XacNhanThanhToan" enctype="multipart/form-data">
+                            <!-- Thong tin chung -->
+                            <div class="row gx-5 mb-5">
+                                <div class="col-md-6">
+                                    <div class="form-floating form-floating-outline mb-6">
+                                        <input type="number" readonly class="form-control" id="Amount" placeholder="" name="Amount" aria-label="Tổng số tiền" value="@(formData.ContainsKey("Amount") ? formData["Amount"] : "")">
+                                        <label for="Amount">Tổng số tiền</label>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="form-floating form-floating-outline mb-6">
+                                        <input class="form-control" type="date" id="PaymentDate" name="PaymentDate" value="@(formData.ContainsKey("PaymentDate") ? formData["PaymentDate"] : "")" required/>
+                                        <label for="PaymentDate">Ngày thanh toán</label>
+                                        <div class="valid-feedback"> Looks good! </div>
+                                        <div class="invalid-feedback"> Không được bỏ trống. </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="form-floating form-floating-outline">
+                                        <input type="text" class="form-control" id="PaymentMethod" placeholder="(Tiền mặt, Chuyển khoản, momo,...)" name="PaymentMethod" value="@(formData.ContainsKey("PaymentMethod") ? formData["PaymentMethod"] : "")" required>
+                                        <label for="PaymentMethod">Hình thức thanh toán</label>
+                                        <div class="valid-feedback"> Looks good! </div>
+                                        <div class="invalid-feedback"> Không được bỏ trống. </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="form-floating form-floating-outline">
+                                        <input type="text" class="form-control" id="PaymentInformation" placeholder="(Số tài khoản, số momo hoặc nội dung chuyển......)" name="PaymentInformation" value="@(formData.ContainsKey("PaymentInformation") ? formData["PaymentInformation"] : "")">
+                                        <label for="PaymentInformation">Thông tin chuyển khoản</label>
+                                    </div>
+                                </div>
+                            </div>
+                            <!-- end thong tin chung -->                  
+                            <button type="submit" class="btn btn-primary">Lưu</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!-- end Xac nhan thanh toan form -->
+    </div>
+    <!-- / Content -->
+
+    <div>
+        <a type="button" class="btn btn-primary" asp-action="Index"><i class="ri-arrow-left-circle-line"></i> Trở về</a>
+    </div>
+
+    @* @section Scripts {
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+}
+ *@

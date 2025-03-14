@@ -1,0 +1,83 @@
+/* Change the background color of the Select2 input */
+.select2-container--default .select2-selection--single {
+    background-color: #f8f9fa;
+    border: 2px solid #007bff;
+    border-radius: 8px;
+    padding: 6px;
+}
+
+/* Change the hover effect */
+.select2-container--default .select2-selection--single:hover {
+    border-color: #0056b3;
+}
+
+/* Change the font size and color of the selected item */
+.select2-container--default .select2-selection--single .select2-selection__rendered {
+    font-size: 16px;
+    color: #333;
+}
+
+/* Customize the dropdown arrow */
+.select2-container--default .select2-selection--single .select2-selection__arrow {
+    top: 50%;
+    transform: translateY(-50%);
+}
+
+/* Remove the default focus border */
+.select2-container--default .select2-selection--single:focus {
+    outline: none;
+    box-shadow: none;
+}
+
+/* Change the background and border of the dropdown */
+.select2-container--default .select2-dropdown {
+    background-color: #fff;
+    border: 2px solid #007bff;
+    border-radius: 8px;
+}
+
+/* Style each dropdown option */
+.select2-container--default .select2-results__option {
+    font-size: 14px;
+    padding: 10px;
+    color: #333;
+}
+
+/* Highlight selected item */
+.select2-container--default .select2-results__option--selected {
+    background-color: #007bff;
+    color: white;
+}
+
+/* Hover effect for options */
+.select2-container--default .select2-results__option--highlighted {
+    background-color: #0056b3;
+    color: white;
+}
+
+/* Style placeholder text */
+.select2-container--default .select2-selection--single .select2-selection__placeholder {
+    color: #999;
+    font-style: italic;
+}
+
+
+/* Change background and border of multi-select */
+.select2-container--default .select2-selection--multiple {
+    background-color: #f8f9fa;
+    border: 2px solid #007bff;
+    border-radius: 8px;
+}
+
+/* Style selected tags (choices) */
+.select2-container--default .select2-selection--multiple .select2-selection__choice {
+    background-color: #007bff;
+    color: white;
+    border-radius: 5px;
+    padding: 3px 10px;
+}
+
+/* Remove close button inside tags */
+.select2-container--default .select2-selection--multiple .select2-selection__choice__remove {
+    display: none;
+}

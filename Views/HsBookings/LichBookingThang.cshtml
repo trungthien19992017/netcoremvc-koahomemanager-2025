@@ -1,0 +1,329 @@
+
+
+@{
+    ViewData["Title"] = "Lịch booking tháng";
+    Layout = "~/Views/Shared/_ContentNavbarLayout.cshtml";
+    // var listcus = ViewBag.listcus as List<KOAHome.EntityFramework.HsCustomer>;
+    var resultList = ViewBag.resultList as List<dynamic>;
+    var displayList = ViewBag.displayList as List<dynamic>;
+
+    // tao bien dem de dem row num cho report
+    var reportRowIndex = 1;
+}
+
+@section VendorStyles {
+	<link rel="stylesheet" href="~/vendor/libs/apex-charts/apex-charts.css" />
+}
+
+@section VendorScripts {
+	<script src="~/vendor/libs/apex-charts/apexcharts.js"></script>
+}
+
+@section PageScripts {
+    <script src="~/js/dashboards-analytics.js"></script>
+    @* thong bao day *@
+    <script src="~/js/ui-toasts.js"></script>
+    @* validate, kem cac file js ho tro *@
+    <script src="~/js/helper.js"></script>
+    <script src="~/js/flatpickr.js"></script>
+    <script src="~/js/form-validation.js"></script>
+}
+@section success
+{
+    @if (ViewBag.success != null)
+    {
+
+              <!-- Toast with Placements -->
+              <div class="bs-toast toast  top-0 end-0 show toast-placement-ex1 m-2" role="alert" aria-live="assertive" aria-atomic="true" data-bs-delay="2000">
+                <div class="toast-header">
+                  <i class="ri-home-4-fill me-2 text-success"></i>
+                  <div class="me-auto fw-medium">Thông báo</div><small class="text-muted">1 giây trước</small>
+                  <button type="button" class="btn-close" data-bs-dismiss="toast" aria-label="Close"></button>
+                </div>
+                <div class="toast-body text-success">@ViewBag.success.</div>
+              </div>
+              <!-- Toast with Placements -->
+    }
+}
+
+@section ErrorMessage
+{
+    @if (ViewBag.ErrorMessage != null)
+    {
+        <!-- Toast with Placements -->
+        <div class="bs-toast toast  top-0 end-0 show toast-placement-ex1 m-2" role="alert" aria-live="assertive" aria-atomic="true" data-bs-delay="2000">
+            <div class="toast-header">
+                <i class="ri-home-4-fill me-2 text-danger"></i>
+                <div class="me-auto fw-medium">Thông báo</div><small class="text-muted">1 giây trước</small>
+                <button type="button" class="btn-close" data-bs-dismiss="toast" aria-label="Close"></button>
+            </div>
+            <div class="toast-body text-danger">@ViewBag.ErrorMessage.</div>
+        </div>
+        <!-- Toast with Placements -->
+    }
+}
+
+@* ************** Content ************** *@
+<!-- Content wrapper -->
+<div class="content-wrapper">
+    <!-- Content -->
+ <div class="container-xxl flex-grow-1 container-p-y">
+  <h1 class ="mb-1">Danh sách booking! 🎉</h1>
+  <div class="row gy-6">
+  @* Data Table new *@
+  <!-- Data Tables -->
+  <div class="col-xl-12">
+	  <div class="card h-100">
+		  <div class="card-header">
+	  <div class="card overflow-hidden">
+            <div class="card-body">
+               <!-- Accordion -->
+               <!-- phan mo rong de an hien bo loc-->
+              <div class="row">
+                <div class="col-md mb-6 mb-md-2">
+                  <div class="accordion mt-4" id="accordionExample">
+                    <div class="accordion-item active">
+                      <h2 class="accordion-header" id="headingOne">
+                        <button type="button" class="accordion-button collapsed" data-bs-toggle="collapse" data-bs-target="#accordionOne"  aria-expanded="true" aria-controls="accordionOne">
+                          Tìm kiếm
+                        </button>
+                      </h2>
+                      <div id="accordionOne" class="accordion-collapse collapse" data-bs-parent="#accordionExample">
+                        <div class="accordion-body">
+                        @* filter *@
+                        <form method="get" asp-action="Index" enctype="multipart/form-data">
+                            <div class="row gx-3 gy-2 align-items-center">
+                                <div class="col-md-4 form-floating form-floating-outline mb-6">
+                                      <input class="form-control form-control-sm" type="search" placeholder="" id="PhoneNumber" name="PhoneNumber" value="@Context.Request.Query["PhoneNumber"]" autofocus />
+                                      <label for="PhoneNumber">SĐT</label>
+                                </div>
+                                <div class="col-md-4 form-floating form-floating-outline mb-6">
+                                      <input class="form-control form-control-sm" type="search" placeholder="" id="HoTen" name="HoTen"  value="@Context.Request.Query["HoTen"]" />
+                                      <label for="HoTen">Họ tên</label>
+                                </div>
+                                <div class="col-md-4 form-floating form-floating-outline mb-6">
+                                      <input class="form-control form-control-sm" type="date" placeholder="" id="CheckInFrom"  name="CheckInFrom" value="@Context.Request.Query["CheckInFrom"]" />
+                                      <label for="CheckInFrom">Check in từ</label>
+                                </div>
+                                <div class="col-md-4 form-floating form-floating-outline mb-6">
+                                      <input class="form-control form-control-sm" type="date" placeholder="" id="CheckInTo"  name="CheckInTo" value="@Context.Request.Query["CheckInTo"]" />
+                                      <label for="CheckInTo">Check in đến</label>
+                                </div>
+                                 <div class="col-md-4 form-floating form-floating-outline mb-6">
+                                        <select asp-items="ViewBag.IsActiveOptions"
+                                        class="form-select color-dropdown form-select-sm" placeholder="" id="isActive"  name="isActive">
+                                   
+                                        </select>
+                                      <label for="isActive">Hoạt động</label>
+                                </div>
+                            </div>
+                      @* end filter *@
+                      @* nut xem *@
+                      <div class="row gx-3 gy-2 align-items-center">
+                          <div class="col-md-12 d-flex justify-content-center">
+                              <label class="form-label" for="showToastPlacement">&nbsp;</label>
+                              <button type="submit" id="showToastPlacement" class="btn btn-primary d-block">Xem</button>
+                          </div>
+                      </div>  
+                      @* end nut xem *@
+                    </form>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <!--/ Accordion -->
+<!--/             @* action top *@
+              <div class="row gx-3 gy-2 align-items-center">
+                  <div class="col-md-12 d-flex">
+                      <div class="demo-inline-spacing">
+                          <a asp-action="Create" type="button" class="btn btn-icon btn-primary" data-bs-toggle="tooltip" data-bs-offset="0,4" data-bs-placement="top" data-bs-html="true"
+                              title="<i class='ri-add-line'></i> <span>Thêm mới</span>">
+                            <i class="ri-add-line"></i>
+                          </a>
+                          <a asp-action="Create" type="button" class="btn btn-icon btn-primary" data-bs-toggle="tooltip" data-bs-offset="0,4" data-bs-placement="top" data-bs-html="true"
+                              title="<i class='ri-eye-line'></i> <span>Mô tả</span>">
+                            <i class="ri-eye-line"></i>
+                          </a>
+                      </div>
+                  </div>
+              </div>
+              @* end action top *@
+-->
+          </div>
+          @* end filter *@
+          <div class="card-body">
+             <small class="text-muted">Có <strong>@ViewBag.Total</strong> kết quả tìm kiếm</small>
+          </div>
+          @* table *@
+      <div class="card mb-6">
+          <div class="card-body" id="vertical-example">
+            <div class="table-responsive" style="max-height: 800px">
+              <table border="1" cellpadding="5" cellspacing="0" style="width: 100%; text-align: center; table-layout: auto;" class="table table-sm table-bordered table-hover">
+                <colgroup>
+                    @* neu co cot isdisplay = 0 thì count cot va dung visi.. để ẩn cột *@
+                    @if (displayList != null)
+                    {
+                      @foreach (var display in displayList.Where(p=> p.IsDisplay == false).OrderBy(p => p.ColNum ?? 0).ToList())
+                      {
+                        <col span="1" style="visibility: collapse">
+                      }
+                    }
+                </colgroup>
+                <thead class="freepanze-head">
+                    <tr>
+                      @* neu display khong null thi tiep tuc *@
+                      @if (displayList != null)
+					  {
+                          @* voi moi cot dang co *@
+                          @* neu cot isdisplay = false thi không hien thi (chỉ lấy giá trị)  *@
+                          @foreach (var display in displayList.Where(p=> p.IsDisplay == false).OrderBy(p => p.ColNum ?? 0).ToList())
+                          {
+                            <th class="text-center" rowspan="2" data-code="@display.Code" data-index="@(display.ColNum ?? "0")">@Html.Raw(display.Name)</th>
+                          }
+                          @* neu cot khong co parent code cung khong phai is parent thi xu ly rieng *@
+						  @foreach (var display in displayList.Where(p=> p.IsDisplay == true && p.IsParent == 0 && string.IsNullOrEmpty(p.ParentCode)).OrderBy(p => p.ColNum ?? 0).ToList())
+                          {
+                            @* co dinh cot neu co cau hinh (chi ap dung cho cot 1 rowspan) *@
+                            <th class="text-center @(display.IsFreePane == true ? "freepanze-col" : "")" rowspan="2" data-code="@display.Code" data-index="@(display.ColNum ?? "0")" style="min-width:@(display.Width ?? "200")px;@(display.CssHeader ?? "")">@Html.Raw(display.Name)</th>
+                          }
+                          @* neu ton tai cot co isparent thi xu ly tiep cot 2 cap *@
+                          @if (displayList.Any(p => p.IsParent == 1))
+                          {
+                            @* hien thi cot cha *@
+						    @foreach (var display in displayList.Where(p=> p.IsDisplay == true && p.IsParent == 1).OrderBy(p => p.ColNum ?? 0).ToList())
+                            {
+                              @* dem so cot con de tinh colspan *@
+                              var countChild = displayList.Count(p => p.ParentCode == display.Code);
+                              @* neu co cot con thi xu ly tiep *@
+                              if (countChild > 0)
+                              {
+                                <th class="text-center" colspan="@countChild"  data-code="@display.Code" style="@(display.CssHeader ?? "")">@Html.Raw(display.Name)</th>
+                              }
+                              
+                            }
+                          }
+                      }
+                    </tr>
+                    <tr>
+                      @* neu display khong null thi tiep tuc *@
+                      @if (displayList != null)
+					  {
+                          @* voi moi cot dang co *@
+                          @* neu ton tai cot co isparent thi xu ly tiep cot 2 cap *@
+                          @if (displayList.Any(p => p.IsParent == 1))
+                          {
+                            @* hien thi cot cha *@
+						    @foreach (var display in displayList.Where(p=> p.IsDisplay == true && p.IsParent == 1).OrderBy(p => p.ColNum ?? 0).ToList())
+                            {
+                              @* dem so cot con de tinh colspan *@
+                              var countChild = displayList.Count(p => p.ParentCode == display.Code);
+                              @* neu co cot con thi xu ly tiep *@
+                              @if (countChild > 0)
+                              {
+                                @foreach (var displaychild in displayList.Where(p=> p.IsDisplay == true && p.ParentCode == display.Code).OrderBy(p => p.ColNum ?? 0).ToList())
+                                {
+                                    <th class="text-center" data-code="@display.Code" data-index="@(displaychild.ColNum ?? "0")" style="min-width:@(displaychild.Width ?? "200")px;@(displaychild.CssHeader ?? "")">@Html.Raw(displaychild.Name)</th>
+                                }
+                              }
+                              
+                            }
+                          }
+                      }
+                    </tr>
+                </thead>
+                  <tbody class="overflow-auto">
+                      @if (resultList != null && displayList != null)
+                      {
+                        @* voi moi dong resultlist *@
+                        @foreach (var result in resultList)
+                        {
+                            var dictionary = (IDictionary<string, object>)result;
+                            <tr>
+                            @* voi moi cot dang co *@
+                            @* neu cot isdisplay = false thi hien thi  *@
+                            @foreach (var display in displayList.Where(p=> p.IsDisplay == false).OrderBy(p => p.ColNum ?? 0).ToList())
+                            {
+                                <td class="text-truncate">
+                                    @{
+                                        object value;
+                                        if (dictionary.TryGetValue(display.Code, out value))
+                                        {
+                                            @Html.Raw(value)
+                                        }
+                                        else
+                                        {
+                                            <span class="text-muted">N/A</span> @* Giá trị mặc định *@
+                                        }
+                                    }
+                                </td>
+                            }
+                            @* neu cot khong co parent code cung khong phai is parent thi xu ly rieng *@
+					        @foreach (var display in displayList.Where(p=> p.IsDisplay == true && p.IsParent == 0 && string.IsNullOrEmpty(p.ParentCode)).OrderBy(p => p.ColNum ?? 0).ToList())
+                            {
+                                @* neu isFreePane bang true thi them class freepanze-col *@
+                                <td class="text-truncate @(display.IsFreePane == true ? "freepanze-col" : "")">
+                                    @{
+                                        object value;
+                                        if (dictionary.TryGetValue(display.Code, out value))
+                                        {
+                                            @Html.Raw(value)
+                                        }
+                                        else
+                                        {
+                                            <span class="text-muted">N/A</span> @* Giá trị mặc định *@
+                                        }
+                                    }
+                                </td>
+                            }
+                            @* neu ton tai cot co isparent thi xu ly tiep cot 2 cap *@
+                            @if (displayList.Any(p => p.IsParent == 1))
+                            {
+                              @* hien thi cot cha *@
+						      @foreach (var display in displayList.Where(p=> p.IsDisplay == true && p.IsParent == 1).OrderBy(p => p.ColNum ?? 0).ToList())
+                              {
+                                @* dem so cot con de tinh colspan *@
+                                var countChild = displayList.Count(p => p.ParentCode == display.Code);
+                                @* neu co cot con thi xu ly tiep *@
+                                if (countChild > 0)
+                                {
+                                  @foreach (var displaychild in displayList.Where(p=> p.IsDisplay == true && p.ParentCode == display.Code).OrderBy(p => p.ColNum ?? 0).ToList())
+                                  {
+                                      <td class="text-truncate">
+                                          @{
+                                              object value;
+                                              if (dictionary.TryGetValue(displaychild.Code, out value))
+                                              {
+                                                  @Html.Raw(value)
+                                              }
+                                              else
+                                              {
+                                                  <span class="text-muted">N/A</span> @* Giá trị mặc định *@
+                                              }
+                                          }
+                                      </td>
+                                  }
+                                }
+                              
+                              }
+                            }
+                          </tr>
+
+                          reportRowIndex ++;
+                        }
+                      }
+                  </tbody>
+            </table>
+		  </div>
+        </div>
+      </div>
+	  </div>
+     </div>
+    </div>
+    </div>
+  @* end data table new *@
+   </div>
+ </div>
+    <!-- Content wrapper -->
+</div>

@@ -1,0 +1,331 @@
+@{
+    ViewData["Title"] = "Dịch vụ phát sinh";
+    Layout = "~/Views/Shared/_ContentNavbarLayout.cshtml";
+    var formData = ViewBag.formData as IDictionary<string, object>;
+    var listbookserbybookingid_store = ViewBag.listbookserbybookingid_store as List<dynamic>;
+
+    // tao bien dem de dem row num cho report
+    var reportRowIndex = 1;
+}
+
+
+@section VendorStyles {
+    <link rel="stylesheet" href="~/vendor/libs/apex-charts/apex-charts.css" />
+}
+
+@section VendorScripts {
+    <script src="~/vendor/libs/apex-charts/apexcharts.js"></script>
+}
+
+@section PageScripts {
+    <script src="~/js/dashboards-analytics.js"></script>
+    @* thong bao day *@
+    <script src="~/js/ui-toasts.js"></script>
+    @* validate, kem cac file js ho tro *@
+    <script src="~/js/helper.js"></script>
+    <script src="~/js/flatpickr.js"></script>
+    <script src="~/js/form-validation.js"></script>
+
+    <script>
+        // xu ly hien thi file sau khi chon file
+        $(document).ready(function () {
+        $('#BookingFile').on('change', function (event) {
+        let fileList = $('#fileList');
+        fileList.empty(); // Xóa danh sách cũ
+        $.each(event.target.files, function (index, file) {
+        fileList.append('<li>' + file.name + '</li>');
+        });
+        });
+        });
+
+
+        // them dong editor moi
+        function addNewRow() {
+        let table = document.getElementById("ReportEditor").getElementsByTagName('tbody')[0];
+        let newRow = table.insertRow();
+        let index = table.rows.length;
+
+
+        // Tạo danh sách option từ serviceList
+        var serviceList = @Html.Raw(Json.Serialize(
+            ((SelectList)ViewBag.ServiceId).Select(item => new { value = item.Value, text = item.Text }).ToList()
+        ));
+
+        let serviceOptions = '<option value="">Chọn dịch vụ</option>';
+        serviceList.forEach(service => {
+        serviceOptions += `<option value="${service.value}">${service.text}</option>`;
+        });
+
+        newRow.innerHTML = `
+        <td class="text-center"><input class="form-control" type="text" name="grid[${index}].Id" readonly/></td>
+        <td class="text-center"><input class="form-control" type="text" name="grid[${index}].STT" value="${index}" readonly/></td>
+        <td class="text-center">
+        <select name="grid[${index}].ServiceID" class="form-select" data-placeholder="Dịch vụ">
+        ${serviceOptions}
+        </select>
+        </td>
+        <td>
+        <input type="number" class="form-control" placeholder="" name="grid[${index}].Quantity" aria-label="Số lượng" value="">
+        </td>
+        <td class="text-truncate">
+        <input readonly type="number" class="form-control" placeholder="" name="grid[${index}].TotalPrice" aria-label="Tổng số tiền" value="">
+        </td>
+        <td class="text-truncate text-center"><textarea row="2" class="form-control" placeholder="" name="grid[${index}].Description" aria-label="Ghi chú"></textarea></td>
+        <td class="text-truncate"><input type="datetime-local" class="form-control" placeholder="" name="grid[${index}].AdditionFromDate" aria-label="Thời gian phát sinh từ" value=""></td>
+        <td class="text-truncate"><input type="datetime-local" class="form-control" placeholder="" name="grid[${index}].AdditionToDate" aria-label="Thời gian phát sinh đến" value=""></td>
+        <td class="text-center">
+            <input type="hidden" name="grid[${index}].isDeleted" value="false" class="isDeleted">
+            <button type="button" class="btn-delete btn btn-sm text-danger" onclick="toggleDelete(this)">
+                <i class="ri-delete-bin-line ri-24px"></i>
+            </button>
+        </td>
+        `;
+
+        // Áp dụng Select2 cho select mới thêm
+        $(newRow).find("select").select2({
+            placeholder: "Chọn",
+            allowClear: true,
+            width: "100%"
+        });
+        }
+
+        // xu ly du lieu ngay trong report editor
+          var gridData = @Html.Raw(Json.Serialize(ViewBag.listbookserbybookingid_store));
+          if (gridData != null)
+          {
+            $(document).ready(function () {
+                $.each(gridData, function (index, rowData) {
+                    // Tìm tất cả input/select trong dòng có name động
+                    $(`#ReportEditor tbody tr:eq(${index})`).find("input, select, textarea").each(function () {
+                        let fieldName = $(this).attr("name"); // Lấy name của input
+                        if (!fieldName) return; // Nếu không có name, bỏ qua
+
+                        // Regex để lấy tên key từ `grid[index].FieldName`
+                        let match = fieldName.match(/\[(\d+)\]\.(\w+)/);
+                        if (!match) return; // Nếu không khớp format, bỏ qua
+
+                        let fieldKey = match[2]; // Lấy phần FieldName (ví dụ: "ServiceID", "Quantity",...)
+
+                        if (rowData.hasOwnProperty(fieldKey)) {
+                            let value = rowData[fieldKey];
+
+                            // Kiểm tra kiểu input và format lại nếu cần
+                            if ($(this).attr("type") === "datetime-local") {
+                                value = formatDateTimeLocal(value);
+                                // Gán giá trị vào input
+                                $(this).val(value);
+                            } else if ($(this).attr("type") === "date") {
+                                value = formatDate(value);
+                                // Gán giá trị vào input
+                                $(this).val(value);
+                            } else if ($(this).attr("type") === "time") {
+                                value = formatTime(value);
+                                // Gán giá trị vào input
+                                $(this).val(value);
+                            }
+                            // Nếu là select2, cần trigger để cập nhật giao diện
+                            if ($(this).is("select")) {
+                                $(this).trigger("change");
+                            }
+                        }
+                    });
+                });
+            });
+          }
+
+    </script>
+}
+
+@section success
+{
+    @if (ViewBag.success != null)
+    {
+
+        <!-- Toast with Placements -->
+        <div class="bs-toast toast  top-0 end-0 show toast-placement-ex1 m-2" role="alert" aria-live="assertive" aria-atomic="true" data-bs-delay="2000">
+            <div class="toast-header">
+                <i class="ri-home-4-fill me-2 text-success"></i>
+                <div class="me-auto fw-medium">Thông báo</div><small class="text-muted">1 giây trước</small>
+                <button type="button" class="btn-close" data-bs-dismiss="toast" aria-label="Close"></button>
+            </div>
+            <div class="toast-body text-success">@ViewBag.success.</div>
+        </div>
+        <!-- Toast with Placements -->
+    }
+}
+
+@section ErrorMessage
+{
+    @if (ViewBag.ErrorMessage != null)
+    {
+        <!-- Toast with Placements -->
+        <div class="bs-toast toast  top-0 end-0 show toast-placement-ex1 m-2" role="alert" aria-live="assertive" aria-atomic="true" data-bs-delay="2000">
+            <div class="toast-header">
+                <i class="ri-home-4-fill me-2 text-danger"></i>
+                <div class="me-auto fw-medium">Thông báo</div><small class="text-muted">1 giây trước</small>
+                <button type="button" class="btn-close" data-bs-dismiss="toast" aria-label="Close"></button>
+            </div>
+            <div class="toast-body text-danger">@ViewBag.ErrorMessage.</div>
+        </div>
+        <!-- Toast with Placements -->
+    }
+}
+
+@* ************** Content ************** *@
+<!-- Content wrapper -->
+<div class="content-wrapper">
+    <!-- Content -->
+
+    <div class="container-xxl flex-grow-1 container-p-y">
+        <!-- Xac nhan thanh toan form -->
+        <div class="row">
+            <div class="col-xl">
+                <div class="card mb-6">
+                    <div class="card-header d-flex justify-content-between align-items-center">
+                        <h5 class="mb-0">DỊCH VỤ PHÁT SINH</h5>
+                        <small class="text-body float-end">Thông tin booking phát sinh </small>
+                    </div>
+                    <div class="card-body">
+                        <form id="create-form" class="needs-validation" novalidate="" method="post" asp-action="DichVuPhatSinh" enctype="multipart/form-data">
+                            <!-- Thong tin chung -->
+                            <div class="row gx-5 mb-5">
+                                <div class="col-md-8">
+                                    <div class="form-floating form-floating-outline mb-6">
+                                        <select id="CustomerID" name="CustomerID" class="form-select form-select-sm mb-6" data-placeholder="Khách hàng" asp-items="ViewBag.CustomerId" disabled>
+                                            <option value="">Chọn khách hàng</option>
+                                        </select>
+                                        <label for="CustomerID">Khách hàng</label>
+                                        <div class="valid-feedback"> Looks good! </div>
+                                        <div class="invalid-feedback"> Không được bỏ trống. </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="form-floating form-floating-outline mb-6">
+                                        <input type="number" readonly class="form-control" id="TotalAmount" placeholder="" name="TotalAmount" aria-label="Tổng số tiền" value="@(formData.ContainsKey("TotalAmount") ? formData["TotalAmount"] : "")">
+                                        <label for="TotalAmount">Tổng số tiền</label>
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="form-floating form-floating-outline mb-6">
+                                        <input class="form-control" type="datetime-local" id="CheckInDate" name="CheckInDate" value="@(formData.ContainsKey("CheckInDate") ? formData["CheckInDate"] : "")" />
+                                        <label for="CheckInDate">Thời gian check in</label>
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="form-floating form-floating-outline mb-6">
+                                        <input class="form-control" type="datetime-local" id="CheckOutDate" name="CheckOutDate" value="@(formData.ContainsKey("CheckOutDate") ? formData["CheckOutDate"] : "")" />
+                                        <label for="CheckOutDate">Thời gian check out</label>
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="form-floating form-floating-outline">
+                                        <input type="text" class="form-control" id="LyDoPhatSinh" placeholder="(Vui lòng nhập nếu có thay đổi)" name="LyDoPhatSinh" value="@(formData.ContainsKey("LyDoPhatSinh") ? formData["LyDoPhatSinh"] : "")" />
+                                        <label class="text-danger" for="PaymentMethod">Lý do phát sinh</label>
+                                        <div class="valid-feedback"> Looks good! </div>
+                                        <div class="invalid-feedback"> Không được bỏ trống. </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <!-- end thong tin chung -->
+                            <!-- Thong tin chi tiet -->
+                            <div class="row gx-5 mb-5">
+                                <div class="col-md-12 card-header"><strong class="mb-0 text-primary">Thông tin chi tiết (Chú ý khách hàng đã thanh toán, việc thay đổi dịch vụ có thể ảnh hưởng đến số liệu đang có!!!)</strong></div>
+                                <div class="col-md-12 card-body">
+                                    <div class="table-responsive">
+                                        <div class="card-header d-flex align-items-center justify-content-between">
+                                            <button type="button" class="btn text-muted p-0" onclick="addNewRow()"><i class="ri-add-line ri-24px"></i></button>
+                                        </div>
+                                        <table id="ReportEditor" class="table table-sm table-bordered" style="table-layout: fixed;">
+                                            <colgroup>
+                                                <col span="1" style="visibility: collapse">
+                                            </colgroup>
+                                            <thead>
+                                                <tr>
+                                                    <th class="text-center" style="width:70px;">Id</th>
+                                                    <th class="text-center" style="width:100px;">STT</th>
+                                                    <th class="text-center" style="width:300px;">Dịch vụ</th>
+                                                    <th class="text-center" style="width:150px;">Số lượng</th>
+                                                    <th class="text-center" style="width:150px;">Tổng số tiền</th>
+                                                    <th class="text-center" style="width:250px;">Ghi chú</th>
+                                                    <th class="text-center" style="width:260px;">Thời gian phát sinh từ (nếu có)</th>
+                                                    <th class="text-center" style="width:260px;">Thời gian phát sinh đến (nếu có)</th>
+                                                    <th class="text-center" style="width:100px;">Hành động</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                @if (listbookserbybookingid_store != null)
+                                                {
+                                                    @foreach (var ser in listbookserbybookingid_store)
+                                                    {
+
+                                                        <tr class="">
+                                                            <td class="text-center"><input class="form-control" type="text" name="grid[@reportRowIndex].Id" value="@ser.Id" readonly /></td>
+                                                            <td class="text-center"><input class="form-control" type="text" name="grid[@reportRowIndex].stt" value="@ser.stt" readonly /></td>
+                                                            <td class="text-center">
+                                                                <select name="grid[@reportRowIndex].ServiceID" class="form-select" data-placeholder="Dịch vụ">
+                                                                    <option value="" selected="@(ser.ServiceID.ToString() == "" ? "selected" : null)">Chọn dịch vụ</option>
+                                                                    @foreach (var item in (SelectList)ViewData["ServiceId"])
+                                                                    {
+                                                                        <option value="@item.Value" selected="@(item.Value == ser.ServiceID.ToString() ? "selected" : null)">
+                                                                            @item.Text
+                                                                        </option>
+                                                                    }
+                                                                </select>
+                                                            </td>
+                                                            <td>
+                                                                <input type="number" class="form-control" placeholder="" name="grid[@reportRowIndex].Quantity" aria-label="Số lượng" value="@ser.Quantity">
+                                                            </td>
+                                                            <td class="text-truncate">
+                                                                <input type="number" readonly class="form-control" placeholder="" name="grid[@reportRowIndex].TotalPrice" aria-label="Tổng số tiền" value="@ser.TotalPrice">
+                                                            </td>
+                                                            <td class="text-truncate text-center"><textarea row="2" class="form-control" placeholder="" name="grid[@reportRowIndex].Description" aria-label="Ghi chú" value="@ser.Description"></textarea></td>
+                                                            <td class="text-truncate"><input type="datetime-local" class="form-control" placeholder="" name="grid[@reportRowIndex].AdditionFromDate" aria-label="Thời gian phát sinh từ" value="@ser.AdditionFromDate"></td>
+                                                            <td class="text-truncate"><input type="datetime-local" class="form-control" placeholder="" name="grid[@reportRowIndex].AdditionToDate" aria-label="Thời gian phát sinh đến" value="@ser.AdditionToDate"></td>
+                                                            <td class="text-center">
+                                                                <input type="hidden" name="grid[@reportRowIndex].isDeleted" value="false" class="isDeleted">
+                                                                <button type="button" class="btn-delete btn btn-sm text-danger" onclick="toggleDelete(this)">
+                                                                    <i class="ri-delete-bin-line ri-24px"></i>
+                                                                </button>
+                                                            </td>
+                                                        </tr>
+
+                                                        reportRowIndex++;
+                                                    }
+                                                }
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                            </div>
+                            <!-- end thong tin chi tiet -->
+                            <!-- Thong tin thanh toan -->
+                            <div class="row gx-5 mb-5">
+                                <div class="col-md-12 card-header"><strong class="mb-0 text-primary">Lịch sử phát sinh</strong></div>
+                                <div class="col-md-12">
+                                    <div class="form-floating form-floating-outline mb-6">
+                                        <textarea style="height:200px" class="form-control" placeholder="" name="LichSuPhatSinh" id="LichSuPhatSinh" aria-label="Lịch sử">@(formData.ContainsKey("LichSuPhatSinh") ? formData["LichSuPhatSinh"] : "")</textarea>
+                                        <label for="LichSuPhatSinh">Lịch sử</label>
+                                        <div class="valid-feedback"> Looks good! </div>
+                                        <div class="invalid-feedback"> Không được bỏ trống. </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <!-- end thong tin thanh toan info -->
+                            <button type="submit" class="btn btn-primary">Lưu</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!-- end Xac nhan thanh toan form -->
+    </div>
+    <!-- / Content -->
+
+    <div>
+        <a type="button" class="btn btn-primary" asp-action="Index"><i class="ri-arrow-left-circle-line"></i> Trở về</a>
+    </div>
+
+    @* @section Scripts {
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+}
+ *@

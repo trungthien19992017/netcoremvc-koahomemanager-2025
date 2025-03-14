@@ -1,0 +1,111 @@
+@await Html.PartialAsync("Sections/_Variables")
+@{
+  TempData.Keep();
+  Layout = "_CommonMasterLayout";
+
+  ViewData["contentNavbar"] = true;
+
+  @* Display elements *@
+  ViewData["isNavbar"] = (ViewData["isNavbar"] ??= true);
+  ViewData["isMenu"] = (ViewData["isMenu"] ??= true);
+  ViewData["isFlex"] = (ViewData["isFlex"] ??= false);
+  ViewData["isFooter"] = (ViewData["isFooter"] ??= true);
+  @* ViewData["customizerHidden"] = (ViewData["customizerHidden"] ??= "customizer-hide"); *@
+
+
+  @*HTML Classes *@
+  ViewData["navbarDetached"] = (ViewData["navbarDetached"] ?? "navbar-detached");
+
+  @*Content classes *@
+  ViewData["container"] = (ViewData["container"] ?? "container-xxl");
+  ViewData["containerNav"] = (ViewData["containerNav"] ?? "container-xxl");
+}
+
+@section VendorStyles{ @RenderSection("VendorStyles", required: false) }
+
+@section PageStyles{ @RenderSection("PageStyles", required: false) }
+
+@section VendorScripts{ @RenderSection("VendorScripts", required: false) }
+
+@section PageScripts{ @RenderSection("PageScripts", required: false)
+    <script>
+        $(document).ready(function () {
+            $("#menuTop .nav-item").click(function (e) {
+                e.preventDefault();
+
+                // Remove active class từ tất cả menu top
+                $(".nav-item").removeClass("isActive");
+
+                // Thêm active class vào item được chọn
+                $(this).addClass("isActive");
+
+                // Lấy giá trị của menu được chọn
+                var menu = $(this).data("menu");
+
+                // Load Partial View của menu left tương ứng
+                    $("#menuLeft").load("/Home/LoadVerticalNavbar?menu=" + menu, function () {
+                    $.getScript("~/vendor/js/menu.js"); // Load lại menu.js sau khi load xong Partial View
+                });
+            });
+        });
+    </script>
+}
+
+@{
+  bool isMenu = ViewData["isMenu"] != null && Convert.ToBoolean(ViewData["isMenu"]);
+}
+
+<div class='layout-wrapper layout-content-navbar @(isMenu ? "" : "layout-without-menu")'>
+  <div class='layout-container'>
+    <!-- Menu Left -->
+    <div id="menuLeft">
+    @if (isMenu)
+    {
+      @await Html.PartialAsync("Sections/Menu/_VerticalMenu_Booking")
+    }
+    </div>
+
+    <!-- Layout page -->
+    <div class="layout-page">
+      <!-- Navbar -->
+    <!-- Menu Top -->
+    <div id="menuTop">
+      @if (@ViewData["isNavbar"] != null && Convert.ToBoolean(@ViewData["isNavbar"]))
+      {
+        @await Html.PartialAsync("Sections/Navbar/_Navbar")
+      }
+    </div>
+      <!-- / Navbar -->
+
+
+      <!-- Content wrapper -->
+      <div class="content-wrapper">
+        <!-- Content -->
+        <div class='@ViewData["container"] @(Convert.ToBoolean(@ViewData["isFlex"]) ? "d-flex align-items-stretch flex-grow-1 p-0" : "flex-grow-1 container-p-y")'>
+          @section success{ @RenderSection("Success", required: false) }
+          @section ErrorMessage{ @RenderSection("ErrorMessage", required: false) }
+          @RenderBody()
+        </div>
+        <!-- / Content -->
+
+        <!-- Footer -->
+        @if (@ViewData["isFooter"] != null && Convert.ToBoolean(@ViewData["isFooter"]))
+        {
+          @await Html.PartialAsync("Sections/Footer/_Footer")
+        }
+        <!-- / Footer -->
+        <div class="content-backdrop fade"></div>
+      </div>
+      <!--/ Content wrapper -->
+    </div>
+    <!-- / Layout page -->
+  </div>
+
+  <!-- Overlay -->
+  @if (@ViewData["isMenu"] != null && Convert.ToBoolean(@ViewData["isMenu"]))
+  {
+    <div class="layout-overlay layout-menu-toggle"></div>
+  }
+  <!-- Drag Target Area To SlideIn Menu On Small Screens -->
+  <div class="drag-target"></div>
+</div>
