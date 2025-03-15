@@ -26,22 +26,29 @@
         <!-- Home booking -->
         <li class="menu-header mt-7"><span class="menu-header-text">KOA Rental Home</span></li>
         <!-- Booking -->
-        <li class='menu-item@(currentPage.StartsWith("/HsBookings") ? " active open" : "")'>
+        <li class='menu-item@(currentPage.StartsWith("/") ? " active open" : "")'>
             <a href="javascript:void(0);" class="menu-link menu-toggle">
                 <i class="menu-icon tf-icons ri-home-5-line"></i>
                 <div>KOA Rental Home</div>
             </a>
             <ul class="menu-sub">
-                <li class='menu-item@(currentPage == "/HsBookings/Index" ? " active" : "")'>
+                <li class='menu-item@(currentPage == "/" ? " active" : "")'>
+                    <a asp-controller="Dashboards" asp-action="Index" class="menu-link">
+                        <div><i class="ri-bar-chart-2-line"></i> Dashboard</div>
+                    </a>
+                </li>
+            </ul>
+            <ul class="menu-sub">
+                <li class='menu-item@(currentPage == "/HsBookings" ? " active" : "")'>
                     <a asp-controller="HsBookings" asp-action="Index" class="menu-link">
-                        <div>Booking <span class="badge badge-center bg-danger ms-1">4</span></div>
+                        <div><i class="ri-draft-line"></i> Booking <span class="badge badge-center bg-danger ms-1">4</span></div>
                     </a>
                 </li>
             </ul>
             <ul class="menu-sub">
                 <li class='menu-item@(currentPage == "/HsBookings/LichBookingThang" ? " active" : "")'>
                     <a asp-controller="HsBookings" asp-action="LichBookingThang" class="menu-link">
-                        <div>Lịch booking tháng <span class="badge badge-center bg-danger ms-1">4</span></div>
+                        <div><i class="ri-calendar-2-line"></i> Lịch booking tháng <span class="badge badge-center bg-danger ms-1">4</span></div>
                     </a>
                 </li>
             </ul>
