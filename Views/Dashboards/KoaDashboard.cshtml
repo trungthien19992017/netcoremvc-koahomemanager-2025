@@ -1,0 +1,506 @@
+@{
+    ViewData["Title"] = "Dashboard - Analytics";
+}
+
+@section VendorStyles {
+    <link rel="stylesheet" href="~/vendor/libs/apex-charts/apex-charts.css" />
+}
+
+@section VendorScripts {
+    <script src="~/vendor/libs/apex-charts/apexcharts.js"></script>
+}
+
+@section PageScripts {
+    <script src="~/js/dashboards-analytics.js"></script>
+    <script src="~/js/dashboards-crm.js"></script>
+    <script src="~/js/apexcharts.js"></script>
+}
+
+@* ************** Content ************** *@
+<div class="row gy-6">
+    <!--/ ------------------------------------------------------------------------------------ -->
+    <!-- Thu chuc mung -->
+    <div class="col-md-12 col-lg-4">
+        <div class="card">
+            <div class="card-body text-nowrap">
+                <h5 class="card-title mb-0 flex-wrap text-nowrap">Chúc mừng KOA! 🎉</h5>
+                <p class="mb-2">Chiến thần doanh thu của tháng</p>
+                <h4 class="text-primary mb-0">72.320k VND</h4>
+                <p class="mb-2">78% mục tiêu 🚀</p>
+                <a href="javascript:;" class="btn btn-sm btn-primary">Xem chi tiết</a>
+            </div>
+            <img src="~/img/illustrations/trophy.png"
+                 class="position-absolute bottom-0 end-0 me-5 mb-5"
+                 width="83"
+                 alt="view sales" />
+        </div>
+    </div>
+    <!--/ Thu chuc mung -->
+    <!-- Số liệu trong tháng -->
+    <div class="col-lg-8">
+        <div class="card h-100">
+            <div class="card-header">
+                <div class="d-flex align-items-center justify-content-between">
+                    <h5 class="card-title m-0 me-2">Số liệu trong tháng</h5>
+                    <div class="dropdown">
+                        <button class="btn text-muted p-0"
+                                type="button"
+                                id="transactionID"
+                                data-bs-toggle="dropdown"
+                                aria-haspopup="true"
+                                aria-expanded="false">
+                            <i class="ri-more-2-line ri-24px"></i>
+                        </button>
+                        <div class="dropdown-menu dropdown-menu-end" aria-labelledby="transactionID">
+                            <a class="dropdown-item" href="javascript:void(0);">Refresh</a>
+                            <a class="dropdown-item" href="javascript:void(0);">Share</a>
+                            <a class="dropdown-item" href="javascript:void(0);">Update</a>
+                        </div>
+                    </div>
+                </div>
+                <p class="small mb-0"><span class="h6 mb-0">Doanh thu tăng 10% </span> 😎 tháng này</p>
+            </div>
+            <div class="card-body pt-lg-10">
+                <div class="row g-6">
+                    <div class="col-md-3 col-6">
+                        <div class="d-flex align-items-center">
+                            <div class="avatar">
+                                <div class="avatar-initial bg-primary rounded shadow-xs">
+                                    <i class="ri-pie-chart-2-line ri-24px"></i>
+                                </div>
+                            </div>
+                            <div class="ms-3">
+                                <p class="mb-0">Doanh thu</p>
+                                <h5 class="mb-0">72.320k</h5>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3 col-6">
+                        <div class="d-flex align-items-center">
+                            <div class="avatar">
+                                <div class="avatar-initial bg-success rounded shadow-xs">
+                                    <i class="ri-group-line ri-24px"></i>
+                                </div>
+                            </div>
+                            <div class="ms-3">
+                                <p class="mb-0">Lượt book</p>
+                                <h5 class="mb-0">212</h5>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3 col-6">
+                        <div class="d-flex align-items-center">
+                            <div class="avatar">
+                                <div class="avatar-initial bg-warning rounded shadow-xs">
+                                    <i class="ri-macbook-line ri-24px"></i>
+                                </div>
+                            </div>
+                            <div class="ms-3">
+                                <p class="mb-0">Số giờ</p>
+                                <h5 class="mb-0">12k</h5>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3 col-6">
+                        <div class="d-flex align-items-center">
+                            <div class="avatar">
+                                <div class="avatar-initial bg-info rounded shadow-xs">
+                                    <i class="ri-money-dollar-circle-line ri-24px"></i>
+                                </div>
+                            </div>
+                            <div class="ms-3">
+                                <p class="mb-0">Chi phí</p>
+                                <h5 class="mb-0">4.6k</h5>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!--/ Số liệu trong tháng -->
+    <!-- Four Cards -->
+    <div class="col-xl-6 col-md-6">
+        <div class="row gy-6">
+            <!-- Doanh thu thang line chart -->
+            <div class="col-sm-6">
+                <div class="card h-100">
+                    <div class="card-header pb-0">
+                        <h4 class="mb-0">72.320k</h4>
+                    </div>
+                    <div class="card-body">
+                        <div id="dtThangLineChart" class="mb-3"></div>
+                        <h6 class="text-center mb-0">Doanh thu tháng gần đây</h6>
+                    </div>
+                </div>
+            </div>
+            <!--/ Doanh thu thang line chart -->
+            <!-- Chi phi thang column chart -->
+            <div class="col-sm-6">
+                <div class="card h-100">
+                    <div class="card-header pb-0">
+                        <h4 class="mb-0">4.6k</h4>
+                    </div>
+                    <div class="card-body">
+                        <div id="cpThangColumnChart" class="mb-3"></div>
+                        <h6 class="text-center mb-0">Chi phí tháng gần đây</h6>
+                    </div>
+                </div>
+            </div>
+            <!--/ Chi phí tháng column chart -->
+            <!-- Dich vu thang -->
+            <div class="col-xl-12">
+                <div class="card mb-0">
+                    <div class="card-body card-separator">
+                        <div class="d-flex justify-content-between align-items-center flex-wrap mb-4">
+                            <h5 class="m-0 me-2">Top 5 dịch vụ tháng</h5>
+                            <a class="fw-medium" href="javascript:void(0);">Xem tất cả</a>
+                        </div>
+                        <div class="deposit-content pt-2">
+                            <ul class="p-0 m-0">
+                                <li class="d-flex mb-4 align-items-center pb-2">
+                                    <div class="flex-shrink-0 me-4">
+                                        <img src="~/img/ServiceImage/Combo3Tieng.png"
+                                             class="img-fluid"
+                                             alt="gumroad"
+                                             height="30"
+                                             width="30" />
+                                    </div>
+                                    <div class="d-flex w-100 flex-wrap align-items-center justify-content-between gap-2">
+                                        <div class="me-2">
+                                            <h6 class="mb-0">B- Combo 3H T2</h6>
+                                            <p class="mb-0">67 lượt</p>
+                                        </div>
+                                        <h6 class="text-success mb-0">21.020.000</h6>
+                                    </div>
+                                </li>
+                                <li class="d-flex mb-4 align-items-center pb-2">
+                                    <div class="flex-shrink-0 me-4">
+                                        <img src="~/img/ServiceImage/Combo3Tieng.png"
+                                             class="img-fluid"
+                                             alt="mastercard"
+                                             height="30"
+                                             width="30" />
+                                    </div>
+                                    <div class="d-flex w-100 flex-wrap align-items-center justify-content-between gap-2">
+                                        <div class="me-2">
+                                            <h6 class="mb-0">B - Combo 3H T7</h6>
+                                            <p class="mb-0">39 lượt</p>
+                                        </div>
+                                        <h6 class="text-success mb-0">16.219.000</h6>
+                                    </div>
+                                </li>
+                                <li class="d-flex mb-4 align-items-center pb-2">
+                                    <div class="flex-shrink-0 me-4">
+                                        <img src="~/img/ServiceImage/QuaDem.png"
+                                             class="img-fluid"
+                                             alt="stripes"
+                                             height="30"
+                                             width="30" />
+                                    </div>
+                                    <div class="d-flex w-100 flex-wrap align-items-center justify-content-between gap-2">
+                                        <div class="me-2">
+                                            <h6 class="mb-0">Book qua đêm T5 - CN</h6>
+                                            <p class="mb-0">32 lượt</p>
+                                        </div>
+                                        <h6 class="text-success mb-0">19.920.000</h6>
+                                    </div>
+                                </li>
+                                <li class="d-flex mb-4 align-items-center pb-2">
+                                    <div class="flex-shrink-0 me-4">
+                                        <img src="~/img/ServiceImage/Combo5Tieng.png"
+                                             class="img-fluid"
+                                             alt="american"
+                                             height="30"
+                                             width="30" />
+                                    </div>
+                                    <div class="d-flex w-100 flex-wrap align-items-center justify-content-between gap-2">
+                                        <div class="me-2">
+                                            <h6 class="mb-0">B - Combo 5H T7 - CN</h6>
+                                            <p class="mb-0">30 lượt</p>
+                                        </div>
+                                        <h6 class="text-success mb-0">16.000.000</h6>
+                                    </div>
+                                </li>
+                                <li class="d-flex align-items-center">
+                                    <div class="flex-shrink-0 me-4">
+                                        <img src="~/img/ServiceImage/Combo5Tieng.png"
+                                             class="img-fluid"
+                                             alt="citi"
+                                             height="30"
+                                             width="30" />
+                                    </div>
+                                    <div class="d-flex w-100 flex-wrap align-items-center justify-content-between gap-2">
+                                        <div class="me-2">
+                                            <h6 class="mb-0">B - Combo 5h T2 - T6</h6>
+                                            <p class="mb-0">24 lượt</p>
+                                        </div>
+                                        <h6 class="text-success mb-0">12.090.000</h6>
+                                    </div>
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <!-- Dich vu thang -->
+        </div>
+    </div>
+    <!--/ five card -->
+    <!-- Ti le kin phong -->
+    <div class="col-xl-6 col-md-6">
+        <div class="card">
+            <div class="card-header d-flex align-items-center justify-content-between">
+                <h5 class="card-title m-0 me-2">Tỷ lệ kín phòng trong tuần</h5>
+                <div class="dropdown">
+                    <button class="btn text-muted p-0"
+                            type="button"
+                            id="totalEarnings"
+                            data-bs-toggle="dropdown"
+                            aria-haspopup="true"
+                            aria-expanded="false">
+                        <i class="ri-more-2-line ri-24px"></i>
+                    </button>
+                    <div class="dropdown-menu dropdown-menu-end" aria-labelledby="totalEarnings">
+                        <a class="dropdown-item" href="javascript:void(0);">Last 28 Days</a>
+                        <a class="dropdown-item" href="javascript:void(0);">Last Month</a>
+                        <a class="dropdown-item" href="javascript:void(0);">Last Year</a>
+                    </div>
+                </div>
+            </div>
+            <div class="card-body pt-lg-8">
+                <ul class="p-0 m-0">
+                    <li class="d-flex mb-6">
+                        <div class="avatar flex-shrink-0 bg-lightest rounded me-3">
+                            <img src="~/img/icons/room/room101.png" alt="zipcar" />
+                        </div>
+                        <div class="d-flex w-100 flex-wrap align-items-center justify-content-between gap-2">
+                            <div class="me-2">
+                                <h6 class="mb-0">Phòng 101 <small class="text-success mb-0">(32 lượt book)</small></h6>
+                                <p class="mb-0">Tỷ lệ kín phòng 65%</p>
+                            </div>
+                            <div>
+                                <h6 class="mb-2">12.240.000 VND</h6>
+                                <div class="progress bg-label-primary" style="height: 4px">
+                                    <div class="progress-bar bg-primary"
+                                         style="width: 65%"
+                                         role="progressbar"
+                                         aria-valuenow="65"
+                                         aria-valuemin="0"
+                                         aria-valuemax="100"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </li>
+                    <li class="d-flex mb-6">
+                        <div class="avatar flex-shrink-0 bg-lightest rounded me-3">
+                            <img src="~/img/icons/room/room102.png" alt="bitbank" />
+                        </div>
+                        <div class="d-flex w-100 flex-wrap align-items-center justify-content-between gap-2">
+                            <div class="me-2">
+                                <h6 class="mb-0">Phòng 102 <small class="text-success mb-0">(29 lượt book)</small></h6>
+                                <p class="mb-0">Tỷ lệ kín phòng 80%</p>
+                            </div>
+                            <div>
+                                <h6 class="mb-2">16.421.000 VND</h6>
+                                <div class="progress bg-label-info" style="height: 4px">
+                                    <div class="progress-bar bg-info"
+                                         style="width: 80%"
+                                         role="progressbar"
+                                         aria-valuenow="80"
+                                         aria-valuemin="0"
+                                         aria-valuemax="100"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </li>
+                    <li class="d-flex mb-6">
+                        <div class="avatar flex-shrink-0 bg-lightest rounded me-3">
+                            <img src="~/img/icons/room/room201.png" alt="aviato" />
+                        </div>
+                        <div class="d-flex w-100 flex-wrap align-items-center justify-content-between gap-2">
+                            <div class="me-2">
+                                <h6 class="mb-0">Phòng 201 <small class="text-success mb-0">(23 lượt book)</small></h6>
+                                <p class="mb-0">Tỷ lệ kín phòng 55,8%</p>
+                            </div>
+                            <div>
+                                <h6 class="mb-2">10.212.000 VND</h6>
+                                <div class="progress bg-label-secondary" style="height: 4px">
+                                    <div class="progress-bar bg-secondary"
+                                         style="width: 55.8%"
+                                         role="progressbar"
+                                         aria-valuenow="55.8"
+                                         aria-valuemin="0"
+                                         aria-valuemax="100"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </li>
+                    <li class="d-flex mb-6">
+                        <div class="avatar flex-shrink-0 bg-lightest rounded me-3">
+                            <img src="~/img/icons/room/room302.png" alt="aviato" />
+                        </div>
+                        <div class="d-flex w-100 flex-wrap align-items-center justify-content-between gap-2">
+                            <div class="me-2">
+                                <h6 class="mb-0">Phòng 302 <small class="text-success mb-0">(35 lượt book)</small></h6>
+                                <p class="mb-0">Tỷ lệ kín phòng 92,5%</p>
+                            </div>
+                            <div>
+                                <h6 class="mb-2">19.863.000 VND</h6>
+                                <div class="progress bg-label-secondary" style="height: 4px">
+                                    <div class="progress-bar bg-success"
+                                         style="width: 92.5%"
+                                         role="progressbar"
+                                         aria-valuenow="92.5"
+                                         aria-valuemin="0"
+                                         aria-valuemax="100"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </div>
+    <!--/ Ti le kin phong -->
+    <!-- Top luot book gan day -->
+    <div class="col-xl-8">
+        <div class="card mb-0">
+            <div class="card-body card-separator">
+                <div class="d-flex justify-content-between align-items-center flex-wrap mb-4">
+                    <h5 class="m-0 me-2">Top 5 khách hàng gần nhất</h5>
+                    <a class="fw-medium" href="javascript:void(0);">View all</a>
+                </div>
+                <div class="deposit-content pt-2">
+                    <ul class="p-0 m-0">
+                        <li class="d-flex mb-4 align-items-center pb-2">
+                            <div class="flex-shrink-0 me-4">
+                                <img src="~/img/avatars/1.png"
+                                     class="img-fluid"
+                                     alt="gumroad"
+                                     height="30"
+                                     width="30" />
+                            </div>
+                            <div class="d-flex w-100 flex-wrap align-items-center justify-content-between gap-2">
+                                <div class="me-2">
+                                    <h6 class="mb-0">Nguyễn Văn Yến <small class="text-success mb-0">300.000</small></h6>
+                                    <p class="mb-2">B- Combo 3H T2 - T6, Thêm giờ 50k/1h</p>
+                                    <span class="badge bg-label-danger rounded-pill mb-0">19:00 19/03/2025</span> - <span class="badge bg-label-danger rounded-pill mb-0">22:00 19/03/2025</span>
+                                </div>
+                                <span class="badge bg-label-success rounded-pill mb-0">KOA 302</span>
+                            </div>
+                        </li>
+                        <li class="d-flex mb-4 align-items-center pb-2">
+                            <div class="flex-shrink-0 me-4">
+                                <img src="~/img/avatars/2.png"
+                                     class="img-fluid"
+                                     alt="gumroad"
+                                     height="30"
+                                     width="30" />
+                            </div>
+                            <div class="d-flex w-100 flex-wrap align-items-center justify-content-between gap-2">
+                                <div class="me-2">
+                                    <h6 class="mb-0">Hồ Minh Khôi </h6> <small class="text-success mb-0">380.000</small></h6>
+                                    <p class="mb-2">B- Combo 5H T7 - CN</p>
+                                    <span class="badge bg-label-danger rounded-pill mb-0">12:00 19/03/2025</span> - <span class="badge bg-label-danger rounded-pill mb-0">18:00 19/03/2025</span>
+                                </div>
+                                <span class="badge bg-label-success rounded-pill mb-0">KOA 302</span>
+                            </div>
+                        </li>
+                        <li class="d-flex mb-4 align-items-center pb-2">
+                            <div class="flex-shrink-0 me-4">
+                                <img src="~/img/avatars/3.png"
+                                     class="img-fluid"
+                                     alt="gumroad"
+                                     height="30"
+                                     width="30" />
+                            </div>
+                            <div class="d-flex w-100 flex-wrap align-items-center justify-content-between gap-2">
+                                <div class="me-2">
+                                    <h6 class="mb-0">Trần Hiệu Chỉnh </h6> <small class="text-success mb-0">250.000</small></h6>
+                                    <p class="mb-2">B- Combo 3H T7 - CN</p>
+                                    <span class="badge bg-label-danger rounded-pill mb-0">11:00 19/03/2025</span> - <span class="badge bg-label-danger rounded-pill mb-0">14:00 19/03/2025</span>
+                                </div>
+                                <span class="badge bg-label-warning rounded-pill mb-0">KOA 102</span>
+                            </div>
+                        </li>
+                        <li class="d-flex mb-4 align-items-center pb-2">
+                            <div class="flex-shrink-0 me-4">
+                                <img src="~/img/avatars/4.png"
+                                     class="img-fluid"
+                                     alt="gumroad"
+                                     height="30"
+                                     width="30" />
+                            </div>
+                            <div class="d-flex w-100 flex-wrap align-items-center justify-content-between gap-2">
+                                <div class="me-2">
+                                    <h6 class="mb-0">Nguyễn Ngọc Hoàng </h6> <small class="text-success mb-0">400.000</small></h6>
+                                    <p class="mb-2">B- Qua đêm T2 - T4</p>
+                                    <span class="badge bg-label-danger rounded-pill mb-0">17:00 19/03/2025</span> - <span class="badge bg-label-danger rounded-pill mb-0">21:00 19/03/2025</span>
+                                </div>
+                                <span class="badge bg-label-info rounded-pill mb-0">KOA 201</span>
+                            </div>
+                        </li>
+                        <li class="d-flex mb-4 align-items-center pb-2">
+                            <div class="flex-shrink-0 me-4">
+                                <img src="~/img/avatars/5.png"
+                                     class="img-fluid"
+                                     alt="gumroad"
+                                     height="30"
+                                     width="30" />
+                            </div>
+                            <div class="d-flex w-100 flex-wrap align-items-center justify-content-between gap-2">
+                                <div class="me-2">
+                                    <h6 class="mb-0">Trần Văn Hậu </h6> <small class="text-success mb-0">430.000</small></h6>
+                                    <p class="mb-2">B- Combo 5H T7 - CN, Thêm giờ 50k/1h</p>
+                                    <span class="badge bg-label-danger rounded-pill mb-0">08:00 19/03/2025</span> - <span class="badge bg-label-danger rounded-pill mb-0">11:00 19/03/2025</span>
+                                </div>
+                                <span class="badge bg-label-primary rounded-pill mb-0">KOA 101</span>
+                            </div>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!--/ Top luot book gan day-->
+    <!-- Doanh thu tuan chart -->
+    <div class="col-xl-4 col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <div class="d-flex justify-content-between">
+                    <div><h5 class="mb-1">Doanh thu tuần </h5><span class="badge bg-success mb-0">18/03 - 23/03</span></div>
+                    <div class="dropdown">
+                        <button class="btn text-muted p-0"
+                                type="button"
+                                id="weeklyOverviewDropdown"
+                                data-bs-toggle="dropdown"
+                                aria-haspopup="true"
+                                aria-expanded="false">
+                            <i class="ri-more-2-line ri-24px"></i>
+                        </button>
+                        <div class="dropdown-menu dropdown-menu-end" aria-labelledby="weeklyOverviewDropdown">
+                            <a class="dropdown-item" href="javascript:void(0);">Refresh</a>
+                            <a class="dropdown-item" href="javascript:void(0);">Share</a>
+                            <a class="dropdown-item" href="javascript:void(0);">Update</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="card-body pt-lg-2">
+                <div id="chartDoanhThuTuan"></div>
+                <div class="mt-1 mt-md-3">
+                    <div class="d-flex align-items-center gap-4">
+                        <h4 class="mb-0">10%</h4>
+                        <p class="mb-0">Doanh thu tăng 10% 😎 so với tuần trước. Cố gắng lên nhé!!</p>
+                    </div>
+                    <div class="d-grid mt-3 mt-md-4">
+                        <button class="btn btn-primary" type="button">Chi tiết</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!--/ Doanh thu tuan chart-->
+
+</div>

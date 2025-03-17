@@ -28,9 +28,16 @@
 @section VendorScripts{ @RenderSection("VendorScripts", required: false) }
 
 @section PageScripts{ @RenderSection("PageScripts", required: false)
+    <script type="module" src="/vendor/js/helpers.js"></script>
     <script>
+        async function reloadESModule(modulePath) {
+            const module = await import(`${modulePath}?v=${Date.now()}`);
+            console.log("Reloaded module:", module);
+        }
+
+
         $(document).ready(function () {
-            $("#menuTop .nav-item").click(function (e) {
+            $("#menuTop #menuTopNavbar .nav-item").click(async function (e) {
                 e.preventDefault();
 
                 // Remove active class từ tất cả menu top
@@ -43,8 +50,9 @@
                 var menu = $(this).data("menu");
 
                 // Load Partial View của menu left tương ứng
-                    $("#menuLeft").load("/Home/LoadVerticalNavbar?menu=" + menu, function () {
-                    $.getScript("~/vendor/js/menu.js"); // Load lại menu.js sau khi load xong Partial View
+                $("#menuLeft").load("/Home/LoadVerticalNavbar?menu=" + menu, async function () {
+                    // Reload helpers.js
+                    reloadESModule("/vendor/js/helpers.js");
                 });
             });
         });

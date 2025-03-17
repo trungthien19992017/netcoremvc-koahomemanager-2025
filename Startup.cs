@@ -66,7 +66,7 @@ namespace KOAHome
         endpoints.MapControllers();
         endpoints.MapControllerRoute(
             name: "default",
-            pattern: "{controller=Dashboards}/{action=Index}/{id?}");
+            pattern: "{controller=Dashboards}/{action=KoaDashboard}/{id?}");
       });
     }
   }

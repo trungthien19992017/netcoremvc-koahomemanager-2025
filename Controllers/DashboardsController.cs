@@ -25,6 +25,11 @@ public class DashboardsController : Controller
     return View();
   }
 
+  public async Task<IActionResult> KoaDashboard()
+  {
+    return View();
+  }
+
 
   [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]
   public IActionResult Error()

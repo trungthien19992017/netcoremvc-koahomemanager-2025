@@ -33,13 +33,13 @@
             </a>
             <ul class="menu-sub">
                 <li class='menu-item@(currentPage == "/" ? " active" : "")'>
-                    <a asp-controller="Dashboards" asp-action="Index" class="menu-link">
+                    <a asp-controller="Dashboards" asp-action="KoaDashboard" class="menu-link">
                         <div><i class="ri-bar-chart-2-line"></i> Dashboard</div>
                     </a>
                 </li>
             </ul>
             <ul class="menu-sub">
-                <li class='menu-item@(currentPage == "/HsBookings" ? " active" : "")'>
+                <li class='menu-item@(currentPage == "/HsBookings/Index" ? " active" : "")'>
                     <a asp-controller="HsBookings" asp-action="Index" class="menu-link">
                         <div><i class="ri-draft-line"></i> Booking <span class="badge badge-center bg-danger ms-1">4</span></div>
                     </a>

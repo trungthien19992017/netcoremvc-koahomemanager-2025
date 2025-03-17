@@ -41,6 +41,7 @@ public class HomeController : Controller
   // kiem tra dieu kien menu top de load menu left
   public IActionResult LoadVerticalNavbar(string? menu)
   {
+    ViewBag.MenuCode = menu ?? "";
     if (menu == "Booking")
     {
       return PartialView("Sections/Menu/_VerticalMenu_Booking");
