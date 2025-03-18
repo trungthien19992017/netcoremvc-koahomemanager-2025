@@ -183,6 +183,13 @@
     weeklyOverviewChart.render();
   }
 
+  // Lấy dữ liệu từ phần tử HTML
+  const chartDoanhThuTuanElement = document.getElementById("chartDoanhThuTuan");
+  const chartDoanhThuTuanDataString = chartDoanhThuTuanElement.getAttribute("data-values");
+  const chartDoanhThuTuanDataArray = chartDoanhThuTuanDataString.split(",").map(Number); // Chuyển chuỗi thành mảng số
+  const chartDoanhThuTuanSeriesString = chartDoanhThuTuanElement.getAttribute("data-series");
+  const chartDoanhThuTuanSeriesArray = chartDoanhThuTuanSeriesString.split(",").map(String); // Chuyển chuỗi thành mảng string
+
   // Weekly Overview Line Chart
   // --------------------------------------------------------------------
   const chartDoanhThuTuanEl = document.querySelector('#chartDoanhThuTuan'),
@@ -200,7 +207,7 @@
       series: [
         {
           name: 'Doanh thu',
-          data: [2020, 1288, 1782, 2590, 2340, 4582, 3320]
+          data: chartDoanhThuTuanDataArray
         }
       ],
       colors: [chartBgColor],
@@ -253,7 +260,7 @@
         axisTicks: { show: false },
         crosshairs: { opacity: 0 },
         axisBorder: { show: false },
-        categories: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
+        categories: chartDoanhThuTuanSeriesArray,
         tickPlacement: 'on',
         labels: {
           show: false
@@ -272,7 +279,7 @@
         tickAmount: 3,
         labels: {
           formatter: function (val) {
-            return parseInt(val) + 'K';
+            return new Intl.NumberFormat('vi-VN').format(parseInt(val)) + 'K';
           },
           style: {
             fontSize: '13px',
@@ -482,6 +489,11 @@
     totalProfitLineChart.render();
   }
 
+  // Lấy dữ liệu từ phần tử HTML
+  const dtThangLineChartElement = document.getElementById("dtThangLineChart");
+  const dtThangLineChartDataString = dtThangLineChartElement.getAttribute("data-values");
+  const dtThangLineChartDataArray = dtThangLineChartDataString.split(",").map(Number); // Chuyển chuỗi thành mảng số
+
   // Total Profit line chart
   // --------------------------------------------------------------------
   const dtThangLineChartEl = document.querySelector('#dtThangLineChart'),
@@ -520,7 +532,7 @@
       },
       series: [
         {
-          data: [0, 66789, 67530, 65720, 32120, 72320]
+          data: dtThangLineChartDataArray
         }
       ],
       tooltip: {
@@ -744,6 +756,10 @@
     sessionsColumnChart.render();
   }
 
+  // Lấy dữ liệu từ phần tử HTML
+  const cpThangColumnChartElement = document.getElementById("cpThangColumnChart");
+  const cpThangColumnChartDataString = cpThangColumnChartElement.getAttribute("data-values");
+  const cpThangColumnChartDataArray = cpThangColumnChartDataString.split(",").map(Number); // Chuyển chuỗi thành mảng số
   // Sessions Column Chart
   // --------------------------------------------------------------------
   const cpThangColumnChartEl = document.querySelector('#cpThangColumnChart'),
@@ -769,23 +785,23 @@
           colors: {
             ranges: [
               {
-                from: 10,
-                to: 30,
+                from: 1,
+                to: 5000,
                 color: config.colors.danger
               },
               {
-                from: 31,
-                to: 50,
+                from: 5001,
+                to: 10000,
                 color: config.colors.primary
               },
               {
-                from: 51,
-                to: 70,
+                from: 10001,
+                to: 15000,
                 color: config.colors.info
               },
               {
-                from: 71,
-                to: 100,
+                from: 15001,
+                to: 30000,
                 color: config.colors.success
               }
             ],
@@ -826,7 +842,7 @@
       },
       series: [
         {
-          data: [30, 71, 50, 40, 60]
+          data: cpThangColumnChartDataArray
         }
       ],
       responsive: [

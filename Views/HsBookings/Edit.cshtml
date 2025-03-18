@@ -141,7 +141,7 @@
     {
 
         <!-- Toast with Placements -->
-        <div class="bs-toast toast  top-0 end-0 show toast-placement-ex1 m-2" role="alert" aria-live="assertive" aria-atomic="true" data-bs-delay="2000">
+        <div class="bs-toast toast  top-0 end-0 show toast-placement-ex1 m-2" style="position:absolute;" role="alert" aria-live="assertive" aria-atomic="true" data-bs-delay="2000">
             <div class="toast-header">
                 <i class="ri-home-4-fill me-2 text-success"></i>
                 <div class="me-auto fw-medium">Thông báo</div><small class="text-muted">1 giây trước</small>
@@ -158,7 +158,7 @@
     @if (ViewBag.ErrorMessage != null)
     {
         <!-- Toast with Placements -->
-        <div class="bs-toast toast  top-0 end-0 show toast-placement-ex1 m-2" role="alert" aria-live="assertive" aria-atomic="true" data-bs-delay="2000">
+        <div class="bs-toast toast  top-0 end-0 show toast-placement-ex1 m-2" style="position:absolute;" role="alert" aria-live="assertive" aria-atomic="true" data-bs-delay="2000">
             <div class="toast-header">
                 <i class="ri-home-4-fill me-2 text-danger"></i>
                 <div class="me-auto fw-medium">Thông báo</div><small class="text-muted">1 giây trước</small>
@@ -401,7 +401,7 @@
                                                                 <input type="number" readonly class="form-control" placeholder="" name="grid[@reportRowIndex].TotalPrice" aria-label="Tổng số tiền" value="@ser.TotalPrice">
                                                             </td>
                                                             <td class="text-truncate text-center"><textarea row="2" class="form-control" placeholder="" name="grid[@reportRowIndex].Description" aria-label="Ghi chú" value="@ser.Description"></textarea></td>
-                                                            <td class="text-truncate"><input type="datetime-local" class="form-control" placeholder="" name="grid[@reportRowIndex].AdditionFromDate" aria-label="Thời gian phát sinh từ" value="@ser.AdditionFromDate"></td>
+                                                            <td class="text-truncate"><input type="datetime-local" class="form-control" placeholder="" id="grid[@reportRowIndex].AdditionFromDate" name="grid[@reportRowIndex].AdditionFromDate" aria-label="Thời gian phát sinh từ" value="@ser.AdditionFromDate"></td>
                                                             <td class="text-truncate"><input type="datetime-local" class="form-control" placeholder="" name="grid[@reportRowIndex].AdditionToDate" aria-label="Thời gian phát sinh đến" value="@ser.AdditionToDate"></td>
                                                             <td class="text-center">
                                                                 <input type="hidden" name="grid[@reportRowIndex].isDeleted" value="false" class="isDeleted">

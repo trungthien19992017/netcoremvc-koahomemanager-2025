@@ -153,49 +153,87 @@
         });
 
   
-        // xu ly du lieu datetime truyen vao
-        function formatDateTimeLocal(value) {
-            return value ? moment(value, "M/D/YYYY h:mm:ss A").format("YYYY-MM-DDTHH:mm") : "";
-        }
+        // // xu ly du lieu datetime truyen vao
+        // function formatDateTimeLocal(value) {
+        //     return value ? moment(value, "M/D/YYYY h:mm:ss A").format("YYYY-MM-DDTHH:mm") : "";
+        // }
 
-        function formatDate(value) {
-            return value ? moment(value, "M/D/YYYY h:mm:ss A").format("YYYY-MM-DD") : "";
-        }
+        // function formatDate(value) {
+        //     // Parse the date using moment.js and format it to 'YYYY-MM-DD'
+        //     return value ? moment(value, ["M/D/YYYY h:mm:ss A", "YYYY-MM-DDTHH:mm:ss", "YYYY-MM-DD"]).format("YYYY-MM-DD") : "";
+        // }
 
-        function formatTime(value) {
-            return value ? moment(value, "h:mm:ss A").format("HH:mm") : "";
-        }
+        // function formatTime(value) {
+        //     return value ? moment(value, "h:mm:ss A").format("HH:mm") : "";
+        // }
 
-        var formData = @Html.Raw(Json.Serialize(ViewBag.FormData));
-        if (formData != null)
-        {
-          $(document).ready(function () {
-              $.each(formData, function (key, value) {
-                  let inputField = $(`[name='${key}'], [id='${key}']`); // Tìm input theo name hoặc id
+        // var formData = @Html.Raw(Json.Serialize(ViewBag.FormData));
+        // if (formData != null)
+        // {
+        //   $(document).ready(function () {
+        //       $.each(formData, function (key, value) {
+        //           let inputField = $(`[name='${key}'], [id='${key}']`); // Tìm input theo name hoặc id
 
-                  if (inputField.length) {
-                      let inputType = inputField.attr("type"); // Lấy kiểu input
-                      let isoFormatRegex1 = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}$/; // regex kiem tra dinh dang date YYYY-MM-DDTHH:mm
-                      let isoFormatRegex2 = /^\d{4}-\d{2}-\d{2}$/; // regex kiem tra dinh dang date YYYY-MM-DD
-                      let isoFormatRegex3 = /^\d{2}:\d{2}$/; // regex kiem tra dinh dang date HH:mm
+        //           if (inputField.length) {
+        //               let inputType = inputField.attr("type"); // Lấy kiểu input
+        //               let isoFormatRegex1 = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}$/; // regex kiem tra dinh dang date YYYY-MM-DDTHH:mm:ss
+        //               let isoFormatRegex2 = /^\d{4}-\d{2}-\d{2}$/; // regex kiem tra dinh dang date YYYY-MM-DD
+        //               let isoFormatRegex3 = /^\d{2}:\d{2}:\d{2}$/; // regex kiem tra dinh dang date HH:mm
 
-                      if (inputType === "datetime-local" && isoFormatRegex1.test(value) == false) {
-                          value = formatDateTimeLocal(value);
-                          inputField.val(value); // Gán giá trị vào input
-                      } 
-                      else if (inputType === "date" && isoFormatRegex2.test(value) == false) {
-                          value = formatDate(value);
-                          inputField.val(value); // Gán giá trị vào input
-                      } 
-                      else if (inputType === "time" && isoFormatRegex3.test(value) == false) {
-                          value = formatTime(value);
-                          inputField.val(value); // Gán giá trị vào input
-                      } 
+        //               if (inputType === "datetime-local") {
+        //                   if (isoFormatRegex1.test(value) == false)
+        //                   {
+        //                     value = formatDateTimeLocal(value);
+        //                     inputField.val(value); // Gán giá trị vào input
+        //                   }
+        //                   else
+        //                   {
+        //                     inputField.val(value); // Gán giá trị vào input
+        //                     console.log("PaymentDate value:", value)
+        //                   }
+        //               } 
+        //               else if (inputType === "date" && isoFormatRegex2.test(value) == false) {
+        //                   value = formatDate(value);
+        //                   inputField.val(value); // Gán giá trị vào input
+        //               } 
+        //               else if (inputType === "time" && isoFormatRegex3.test(value) == false) {
+        //                   value = formatTime(value);
+        //                   inputField.val(value); // Gán giá trị vào input
+        //               }
 
-                  }
-              });
-          });
-        }
+        //           }
+        //       });
+ 
+        //   });
+        // }
+
+        // sau khi load, tu dong cap nhat format date
+        $(document).ready(function () {
+            // Lấy tất cả các input có type="date" hoặc "datetime-local"
+            $('input[type="date"], input[type="datetime-local"]').each(function () {
+                let originalValue = $(this).attr('value');
+
+                if (originalValue) {
+                    if ($(this).attr("type") === "date") {
+                        // Kiểm tra xem đã đúng định dạng YYYY-MM-DD chưa
+                        let isoDateRegex = /^\d{4}-\d{2}-\d{2}$/;
+                        if (!isoDateRegex.test(originalValue)) {
+                            let formattedDate = moment(originalValue, ["M/D/YYYY h:mm:ss A", "DD/MM/YYYY", "YYYY-MM-DD"]).format("YYYY-MM-DD");
+                            $(this).val(formattedDate); // Điền trực tiếp vào value
+                            $(this).attr("value", formattedDate); // Cập nhật lại giá trị trong HTML
+                        }
+                    } else if ($(this).attr("type") === "datetime-local") {
+                        // Kiểm tra xem đã đúng định dạng YYYY-MM-DDTHH:mm chưa
+                        let isoDateTimeRegex = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}$/;
+                        if (!isoDateTimeRegex.test(originalValue)) {
+                            let formattedDateTime = moment(originalValue, ["M/D/YYYY h:mm:ss A", "DD/MM/YYYY HH:mm:ss", "YYYY-MM-DDTHH:mm:ss"]).format("YYYY-MM-DDTHH:mm");
+                            $(this).val(formattedDateTime); // Điền trực tiếp vào value
+                            $(this).attr("value", formattedDateTime); // Cập nhật lại giá trị trong HTML
+                        }
+                    }
+                }
+            });
+        });
 
           // function xoa dòng áp dụng cho report editor
           function toggleDelete(button) {
@@ -523,6 +561,8 @@
                 });
             });
         });
+
+
     </script>
 
     <!-- Page Scripts-->
