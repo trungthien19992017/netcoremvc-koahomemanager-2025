@@ -8,10 +8,6 @@
     var listbookser_info_store = ViewBag.listbookser_info_store as List<dynamic>;
 
     var random = new Random();
-
-    int totalPeriods = 10; // 10 tiết học mỗi ngày
-    int totalWeeks = 4; // Giả sử có 4 tuần trong tháng
-    string[] daysOfWeek = { "Thứ Hai", "Thứ Ba", "Thứ Tư", "Thứ Năm", "Thứ Sáu", "Thứ Bảy", "Chủ Nhật" };
 }
 
 @section VendorStyles {
@@ -30,6 +26,7 @@
     <script src="~/js/helper.js"></script>
     <script src="~/js/flatpickr.js"></script>
     <script src="~/js/form-validation.js"></script>
+    <script src="~/js/ui-popover.js"></script>
 }
 @section success
 {
@@ -160,11 +157,11 @@
              <small class="text-muted">Có <strong>@ViewBag.Total</strong> kết quả tìm kiếm</small>
           </div>
           @* table *@
-      <div class="card overflow-auto mb-6" style="height: 600px">
+      <div class="card mb-6" >
           <div class="card-body" id="vertical-example">
-            <div class="table-responsive">
+            <div class="table-responsive" style="height: 600px">
 			  <table class="table table-sm table-bordered table-hover">
-				  <thead>
+				  <thead class="freepanze-head">
 					  <tr>
 						  <th class="text-truncate">STT</th>
 						  <th></th>
@@ -190,7 +187,7 @@
 						  <th class="text-truncate">Dịch vụ</th>
 					  </tr>
 				  </thead>
-				  <tbody>
+				  <tbody class="overflow-auto">
 					  @if (listbook_store != null)
 					  {
 						  @foreach (var book in listbook_store.Take(20))

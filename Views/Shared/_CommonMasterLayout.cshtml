@@ -562,7 +562,78 @@
             });
         });
 
+        // // kiem tra nếu có nhập liệu trên bất kì dòng nào thì mới enable nút Lưu, và dòng nào nhập liệu thì mới truyền xuống IFormCollection
+        // document.addEventListener("DOMContentLoaded", function () {
+        //     // Theo dõi tất cả form trên trang
+        //     document.querySelectorAll("form").forEach(form => {
+        //         const table = form.querySelector("table"); // Tìm bảng trong form
+        //         const submitButton = form.querySelector("button[type='submit']");
 
+        //         if (!table || !submitButton) return; // Bỏ qua nếu không có bảng hoặc nút submit
+
+        //         function checkChanges() {
+        //             let hasChanges = false;
+
+        //             // neu khong co tr nào co attr data change thi mac dinh hien thi nut Luu
+        //             if (table.querySelectorAll("tr[data-changed]").length == 0)
+        //             {
+        //               submitButton.disabled = false;
+        //               return;
+        //             }
+
+        //             table.querySelectorAll("tr").forEach(row => {
+        //                 if (row.getAttribute("data-changed") === "true") {
+        //                     hasChanges = true;
+        //                 }
+        //             });
+
+        //             submitButton.disabled = !hasChanges; // Bật/tắt nút submit
+        //         }
+
+        //         // Theo dõi thay đổi trong bảng (chỉ trong phạm vi form chứa nó)
+        //         table.addEventListener("input", function (event) {
+        //             let target = event.target;
+        //             if (target.classList.contains("track-change")) {
+        //                 let row = target.closest("tr");
+        //                 row.setAttribute("data-changed", "true"); // Đánh dấu dòng đã thay đổi
+        //                 checkChanges();
+        //             }
+        //         });
+
+        //         // Khi thao tác nút trên dòng → Cũng tính là thay đổi
+        //       table.addEventListener("click", function (event) {
+        //           let deleteButton = event.target.closest(".track-change"); // Tìm nút delete
+        //           console.log("Delete button:", deleteButton);
+
+        //           if (deleteButton) {
+        //               let row = deleteButton.closest("tr"); // Tìm hàng chứa nút xóa
+        //               console.log("Row:", row);
+
+        //               if (row) {
+        //                   row.setAttribute("data-changed", "true"); // Đánh dấu dòng thay đổi
+        //                   checkChanges();
+        //               } else {
+        //                   console.error("Không tìm thấy thẻ <tr> chứa nút delete.");
+        //               }
+        //           } else {
+        //               console.error("Không tìm thấy phần tử có class .btn-delete.");
+        //           }
+        //       });
+
+        //         // Chỉ gử i dữ liệu của bảng đã thay đổi
+        //         form.addEventListener("submit", function (event) {
+        //             let rows = table.querySelectorAll("tbody tr");
+
+        //             rows.forEach(row => {
+        //                 if (row.getAttribute("data-changed") !== "true") {
+        //                     row.remove(); // Xóa các dòng chưa thay đổi khỏi form trước khi submit
+        //                 }
+        //             });
+        //         });
+
+        //         checkChanges(); // Kiểm tra trạng thái ban đầu
+        //     });
+        // });
     </script>
 
     <!-- Page Scripts-->
