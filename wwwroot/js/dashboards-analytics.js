@@ -901,4 +901,117 @@
     const cpThangColumnChart = new ApexCharts(cpThangColumnChartEl, cpThangColumnChartConfig);
     cpThangColumnChart.render();
   }
+
+  // Lấy dữ liệu từ phần tử HTML
+  const tyLeCacPhongThangRoundChartElement = document.getElementById("tyLeCacPhongThangRoundChart");
+  const tyLeCacPhongThangRoundChartDataString = tyLeCacPhongThangRoundChartElement.getAttribute("data-values");
+  const tyLeCacPhongThangRoundChartDataArray = tyLeCacPhongThangRoundChartDataString.split(",").map(Number); // Chuyển chuỗi thành mảng số
+  const tyLeCacPhongThangRoundChartSeriesString = tyLeCacPhongThangRoundChartElement.getAttribute("data-series");
+  const tyLeCacPhongThangRoundChartSeriesArray = tyLeCacPhongThangRoundChartSeriesString.split(",").map(String); // Chuyển chuỗi thành mảng string
+  const tyLeCacPhongThangRoundChartTotalString = tyLeCacPhongThangRoundChartElement.getAttribute("data-total").toString();
+
+  // Pie chart ty le cac phong trong thang
+  const tyLeCacPhongThangRoundChartEl = document.querySelector('#tyLeCacPhongThangRoundChart'),
+    tyLeCacPhongThangRoundChartConfig = {
+      chart: {
+        height: 250,
+        parentHeightOffset: 0,
+        type: "donut"
+      },
+      labels: tyLeCacPhongThangRoundChartSeriesArray,
+      series: tyLeCacPhongThangRoundChartDataArray,
+      colors: [config.colors.success, config.colors.secondary, config.colors.danger, config.colors.warning],
+      stroke: {
+        width: 0
+      },
+      dataLabels: {
+        enabled: !0
+      },
+      legend: {
+        show: !0,
+        position: "right",
+        fontSize: "13px",
+        labels: {
+          colors: config.colors.black,
+          useSeriesColors: !1
+        },
+        markers: {
+          offsetY: 0,
+          offsetX: -3,
+          height: 10,
+          width: 10
+        },
+        itemMargin: {
+          vertical: 3,
+          horizontal: 10
+        }
+      },
+      tooltip: {
+        style: {
+          color: config.colors.white
+        }
+      },
+      grid: {
+        padding: {
+          top: 0
+        }
+      },
+      plotOptions: {
+        pie: {
+          donut: {
+            size: "70%",
+            labels: {
+              show: !0,
+              value: {
+                fontSize: "22px",
+                fontFamily: "Inter",
+                color: config.colors.headingColor,
+                fontWeight: 500,
+                offsetY: -20,
+                formatter: function (val) {
+                  return new Intl.NumberFormat('vi-VN').format(parseInt(val)) + 'K';
+                }
+              },
+              name: {
+                offsetY: 20,
+                fontFamily: "Inter",
+                fontWeight: "500",
+                formatter: function (val) {
+                  return val
+                }
+              },
+              total: {
+                show: !0,
+                fontSize: "15px",
+                fontFamily: "Inter",
+                label: "Tổng",
+                formatter: function (e) {
+                  return tyLeCacPhongThangRoundChartTotalString + 'K';
+                }
+              }
+            }
+          }
+        }
+      },
+      responsive: [{
+        breakpoint: 1399,
+        options: {
+          chart: {
+            height: 200
+          }
+        }
+      }, {
+        breakpoint: 420,
+        options: {
+          chart: {
+            height: 300
+          }
+        }
+      }]
+    };
+
+  if (typeof tyLeCacPhongThangRoundChartEl !== undefined && tyLeCacPhongThangRoundChartEl !== null) {
+    const tyLeCacPhongThangRoundChart = new ApexCharts(tyLeCacPhongThangRoundChartEl, tyLeCacPhongThangRoundChartConfig);
+    tyLeCacPhongThangRoundChart.render();
+  };
 })();

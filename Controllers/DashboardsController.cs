@@ -64,6 +64,10 @@ public class DashboardsController : Controller
     var ListItem_TopDichVuThang = await _widget.Widget_GetList(objParameters, "HS_Widget_ListItem_TopDichVuThang", null);
     ViewBag.ListItem_TopDichVuThang = ListItem_TopDichVuThang;
 
+    //////// Pie Chart tỷ lệ các phòng trong tháng
+    var PieChart_TyLeCacPhongTrongThang = await _widget.Widget_GetObject(objParameters, "HS_Widget_PieChart_TyLeCacPhongTrongThang", null);
+    ViewBag.PieChart_TyLeCacPhongTrongThang = PieChart_TyLeCacPhongTrongThang;
+
     //////// Widget List item ty le kin phong trong tuan
     var ListItem_TyLeKinPhongTuan = await _widget.Widget_GetList(objParameters, "HS_Widget_ListItem_TyLeKinPhongTuan", null);
     ViewBag.ListItem_TyLeKinPhongTuan = ListItem_TyLeKinPhongTuan;

@@ -7,6 +7,7 @@
     var LineChart_DoanhThuCacThang = ViewBag.LineChart_DoanhThuCacThang as IDictionary<string, object>;
     var ColumnChart_ChiPhiCacThang = ViewBag.ColumnChart_ChiPhiCacThang as IDictionary<string, object>;
     var ColumnChart_DoanhThuTuan = ViewBag.ColumnChart_DoanhThuTuan as IDictionary<string, object>;
+    var PieChart_TyLeCacPhongTrongThang = ViewBag.PieChart_TyLeCacPhongTrongThang as IDictionary<string, object>;
     // du lieu list
     var ListItem_TopDichVuThang = ViewBag.ListItem_TopDichVuThang as List<dynamic>;
     var ListItem_TyLeKinPhongTuan = ViewBag.ListItem_TyLeKinPhongTuan as List<dynamic>;
@@ -131,6 +132,93 @@
         </div>
     </div>
     <!--/ Số liệu trong tháng -->
+    <!-- Two Cards -->
+    <div class="col-xl-6 col-md-6">
+        <div class="row gy-6">
+            <!-- Tỷ lệ các phòng trong tháng Round Chart -->
+            <div class="col-sm-12">
+                <div class="card h-100">
+                    <div class="card-header">
+                        <div class="d-flex justify-content-between">
+                            <h5 class="mb-0">Tỷ lệ các phòng trong tháng</h5>
+                            <div class="dropdown">
+                                <button class="btn text-muted p-0" type="button" id="salesOverviewDropdown" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false" fdprocessedid="sghge">
+                                    <i class="ri-more-2-line ri-24px"></i>
+                                </button>
+                                <div class="dropdown-menu dropdown-menu-end" aria-labelledby="salesOverviewDropdown">
+                                    <a class="dropdown-item waves-effect" href="javascript:void(0);">Last 28 Days</a>
+                                    <a class="dropdown-item waves-effect" href="javascript:void(0);">Last Month</a>
+                                    <a class="dropdown-item waves-effect" href="javascript:void(0);">Last Year</a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="card-body pt-lg-5">
+                        <div id="tyLeCacPhongThangRoundChart" data-values="@(PieChart_TyLeCacPhongTrongThang.ContainsKey("DoanhThu_ArrayValue") ? PieChart_TyLeCacPhongTrongThang["DoanhThu_ArrayValue"] : "")" data-series="@(PieChart_TyLeCacPhongTrongThang.ContainsKey("SeriesField_ArrayValue") ? PieChart_TyLeCacPhongTrongThang["SeriesField_ArrayValue"] : "")" data-total="@(PieChart_TyLeCacPhongTrongThang.ContainsKey("DoanhThu_Total") ? PieChart_TyLeCacPhongTrongThang["DoanhThu_Total"] : "")" style="min-height: 197.8px;">
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <!--/ Tỷ lệ các phòng trong tháng -->
+            <!-- Ti le kin phong -->
+            <div class="col-sm-12">
+                <div class="card">
+                    <div class="card-header d-flex align-items-center justify-content-between">
+                        <h5 class="card-title m-0 me-2">Tỷ lệ kín phòng trong tuần</h5>
+                        <div class="dropdown">
+                            <button class="btn text-muted p-0"
+                                    type="button"
+                                    id="totalEarnings"
+                                    data-bs-toggle="dropdown"
+                                    aria-haspopup="true"
+                                    aria-expanded="false">
+                                <i class="ri-more-2-line ri-24px"></i>
+                            </button>
+                            <div class="dropdown-menu dropdown-menu-end" aria-labelledby="totalEarnings">
+                                <a class="dropdown-item" href="javascript:void(0);">Last 28 Days</a>
+                                <a class="dropdown-item" href="javascript:void(0);">Last Month</a>
+                                <a class="dropdown-item" href="javascript:void(0);">Last Year</a>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="card-body pt-lg-8">
+                        <ul class="p-0 m-0">
+                            @if (ListItem_TyLeKinPhongTuan != null)
+                            {
+                                @foreach (var row in ListItem_TyLeKinPhongTuan)
+                                {
+                                    <li class="d-flex mb-6">
+                                        <div class="avatar flex-shrink-0 bg-lightest rounded me-3">
+                                            <img src="@row.RoomImage" alt="zipcar" />
+                                        </div>
+                                        <div class="d-flex w-100 flex-wrap align-items-center justify-content-between gap-2">
+                                            <div class="me-2">
+                                                <h6 class="mb-0">@row.RoomName <small class="text-success mb-0">(@row.SoGio giờ)</small></h6>
+                                                <p class="mb-0">Tỷ lệ kín phòng @(row.TyLeLapDay)%</p>
+                                            </div>
+                                            <div>
+                                                <h6 class="mb-2">@row.DoanhThu VND</h6>
+                                                <div class="progress bg-label-primary" style="height: 4px">
+                                                    <div class="progress-bar bg-primary"
+                                                         style="width: @(row.TyLeLapDay)%"
+                                                         role="progressbar"
+                                                         aria-valuenow="@row.TyLeLapDay"
+                                                         aria-valuemin="0"
+                                                         aria-valuemax="100"></div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </li>
+                                }
+                            }
+                        </ul>
+                    </div>
+                </div>
+            </div>
+            <!--/ Ti le kin phong -->
+        </div>
+    </div>
+    <!--/ Two Cards -->
     <!-- Four Cards -->
     <div class="col-xl-6 col-md-6">
         <div class="row gy-6">
@@ -200,62 +288,6 @@
         </div>
     </div>
     <!--/ five card -->
-    <!-- Ti le kin phong -->
-    <div class="col-xl-6 col-md-6">
-        <div class="card">
-            <div class="card-header d-flex align-items-center justify-content-between">
-                <h5 class="card-title m-0 me-2">Tỷ lệ kín phòng trong tuần</h5>
-                <div class="dropdown">
-                    <button class="btn text-muted p-0"
-                            type="button"
-                            id="totalEarnings"
-                            data-bs-toggle="dropdown"
-                            aria-haspopup="true"
-                            aria-expanded="false">
-                        <i class="ri-more-2-line ri-24px"></i>
-                    </button>
-                    <div class="dropdown-menu dropdown-menu-end" aria-labelledby="totalEarnings">
-                        <a class="dropdown-item" href="javascript:void(0);">Last 28 Days</a>
-                        <a class="dropdown-item" href="javascript:void(0);">Last Month</a>
-                        <a class="dropdown-item" href="javascript:void(0);">Last Year</a>
-                    </div>
-                </div>
-            </div>
-            <div class="card-body pt-lg-8">
-                <ul class="p-0 m-0">
-                    @if (ListItem_TyLeKinPhongTuan != null)
-                    {
-                        @foreach (var row in ListItem_TyLeKinPhongTuan)
-                        {
-                            <li class="d-flex mb-6">
-                                <div class="avatar flex-shrink-0 bg-lightest rounded me-3">
-                                    <img src="@row.RoomImage" alt="zipcar" />
-                                </div>
-                                <div class="d-flex w-100 flex-wrap align-items-center justify-content-between gap-2">
-                                    <div class="me-2">
-                                        <h6 class="mb-0">@row.RoomName <small class="text-success mb-0">(@row.SoGio giờ)</small></h6>
-                                        <p class="mb-0">Tỷ lệ kín phòng @(row.TyLeLapDay)%</p>
-                                    </div>
-                                    <div>
-                                        <h6 class="mb-2">@row.DoanhThu VND</h6>
-                                        <div class="progress bg-label-primary" style="height: 4px">
-                                            <div class="progress-bar bg-primary"
-                                                 style="width: @(row.TyLeLapDay)%"
-                                                 role="progressbar"
-                                                 aria-valuenow="@row.TyLeLapDay"
-                                                 aria-valuemin="0"
-                                                 aria-valuemax="100"></div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </li>
-                        }
-                    }
-                </ul>
-            </div>
-        </div>
-    </div>
-    <!--/ Ti le kin phong -->
     <!-- Doanh thu tuan chart -->
     <div class="col-xl-4 col-md-6">
         <div class="card">
