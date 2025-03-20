@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 
 namespace KOAHome.EntityFramework;
@@ -18,6 +18,8 @@ public partial class HsServiceHistory
     public bool? IsActive { get; set; }
 
     public bool? IsDeleted { get; set; }
+
+    public bool? IsRead { get; set; }
 
     public DateTime? CreationTime { get; set; }
 

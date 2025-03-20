@@ -56,7 +56,7 @@ namespace KOAHome.Services
       return resultList;
     }
 
-    public async Task<(List<dynamic> Results, int TotalRecord, int MaxPage, int TotalPage)> Report_Pagination_search(string sqlStore, string? connectionString, Dictionary<string, object> parameters, int page = 1, int pageSize = 10)
+    public async Task<(List<dynamic> Results, int TotalRecord, int MaxPage, int TotalPage)> Report_Pagination_search(string sqlStore, string? connectionString, Dictionary<string, object> parameters, int page = 1, int pageSize = 20)
     {
       // neu khong truyen connect string thi se lay connection string mac dinh
       if (connectionString == null)

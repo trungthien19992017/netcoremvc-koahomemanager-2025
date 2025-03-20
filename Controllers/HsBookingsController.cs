@@ -32,8 +32,9 @@ namespace KOAHome.Controllers
     private readonly IReportService _report;
     private readonly IFormService _form;
     private readonly IActionService _action;
+    private readonly IWidgetService _widget;
 
-    public HsBookingsController(QLKCL_NEWContext db, ILogger<HsBookingsController> logger, IHsBookingTableService book, IHsBookingServiceService bookser, IReportEditorService re, IAttachmentService att, IHsCustomerService cus, IReportService report, IFormService form, IActionService action)
+    public HsBookingsController(QLKCL_NEWContext db, ILogger<HsBookingsController> logger, IHsBookingTableService book, IHsBookingServiceService bookser, IReportEditorService re, IAttachmentService att, IHsCustomerService cus, IReportService report, IFormService form, IActionService action, IWidgetService widget)
     {
       _db = db;
       _logger = logger;
@@ -45,6 +46,7 @@ namespace KOAHome.Controllers
       _report = report;
       _form = form;
       _action = action;
+      _widget = widget;
     }
 
     // cac phuong thuc con de toi uu xu ly
@@ -89,7 +91,7 @@ namespace KOAHome.Controllers
     }
 
     // GET: HsBookings
-    public async Task<IActionResult> Index([FromQuery] Dictionary<string, string> parameters, int page = 1, int pageSize = 10)
+    public async Task<IActionResult> Index([FromQuery] Dictionary<string, string> parameters, int page = 1, int pageSize = 20)
     {
       try
       {
@@ -894,6 +896,15 @@ namespace KOAHome.Controllers
         // Optionally, return an error view
         return View("Error");
       }
+    }
+
+    [HttpGet]
+    public async Task<IActionResult> GetNotifications()
+    {
+      Dictionary<string, object> objParameters = new Dictionary<string, object>();
+      //////// Widget List item ty le kin phong trong tuan
+      var notifications = await _widget.Widget_GetList(objParameters, "HS_Notify_Search", null);
+      return Ok(notifications);
     }
 
     private bool HsBookingExists(int id)

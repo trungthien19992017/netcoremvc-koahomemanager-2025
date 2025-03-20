@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Mvc;
 using AspnetCoreMvcFull.Models;
 using KOAHome.EntityFramework;
 using KOAHome.Services;
+using System.Security.Cryptography;
 
 namespace AspnetCoreMvcFull.Controllers;
 
@@ -18,8 +19,9 @@ public class HomeController : Controller
   private readonly IReportService _report;
   private readonly IFormService _form;
   private readonly IActionService _action;
+  private readonly IWidgetService _widget;
 
-  public HomeController(QLKCL_NEWContext db, ILogger<HomeController> logger, IHsBookingTableService book, IHsBookingServiceService bookser, IReportEditorService re, IAttachmentService att, IHsCustomerService cus, IReportService report, IFormService form, IActionService action)
+  public HomeController(QLKCL_NEWContext db, ILogger<HomeController> logger, IHsBookingTableService book, IHsBookingServiceService bookser, IReportEditorService re, IAttachmentService att, IHsCustomerService cus, IReportService report, IFormService form, IActionService action, IWidgetService widget)
   {
     _db = db;
     _logger = logger;
@@ -31,6 +33,7 @@ public class HomeController : Controller
     _report = report;
     _form = form;
     _action = action;
+    _widget = widget;
   }
 
   public IActionResult Index()
@@ -121,6 +124,16 @@ public class HomeController : Controller
       return Json(new { success = false, errorMessage = ex.Message });
     }
   }
+
+  [HttpGet]
+  public async Task<IActionResult> GetNotifications()
+  {
+    Dictionary<string, object> objParameters = new Dictionary<string, object>();
+    //////// Widget List item ty le kin phong trong tuan
+    var notifications = await _widget.Widget_GetList(objParameters, "HS_Notify_Search", null);
+    return Ok(notifications);
+  }
+
 
   public IActionResult Privacy()
     {

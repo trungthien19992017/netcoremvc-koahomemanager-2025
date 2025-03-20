@@ -249,6 +249,8 @@
 
                 if (!isDeleted) {
                     $(button).html('<i class="ri-recycle-line ri-24px text-warning"></i>');
+                    // ✅ Đánh dấu dòng đã thay đổi (neu co)
+                    row.attr("data-changed", "true");
                 } else {
                     $(button).html('<i class="ri-delete-bin-line ri-24px text-danger"></i>');
                 }
@@ -562,78 +564,175 @@
             });
         });
 
-        // // kiem tra nếu có nhập liệu trên bất kì dòng nào thì mới enable nút Lưu, và dòng nào nhập liệu thì mới truyền xuống IFormCollection
-        // document.addEventListener("DOMContentLoaded", function () {
-        //     // Theo dõi tất cả form trên trang
-        //     document.querySelectorAll("form").forEach(form => {
-        //         const table = form.querySelector("table"); // Tìm bảng trong form
-        //         const submitButton = form.querySelector("button[type='submit']");
+        // kiem tra nếu có nhập liệu trên bất kì dòng nào thì mới enable nút Lưu, và dòng nào nhập liệu thì mới truyền xuống IFormCollection
+        document.addEventListener("DOMContentLoaded", function () {
+            // Theo dõi tất cả form trên trang
+            document.querySelectorAll("form").forEach(form => {
+                const table = form.querySelector("table"); // Tìm bảng trong form
+                const submitButton = form.querySelector("button[type='submit']");
 
-        //         if (!table || !submitButton) return; // Bỏ qua nếu không có bảng hoặc nút submit
+                if (!table || !submitButton) return; // Bỏ qua nếu không có bảng hoặc nút submit
 
-        //         function checkChanges() {
-        //             let hasChanges = false;
+                function checkChanges() {
+                    let hasChanges = false;
 
-        //             // neu khong co tr nào co attr data change thi mac dinh hien thi nut Luu
-        //             if (table.querySelectorAll("tr[data-changed]").length == 0)
-        //             {
-        //               submitButton.disabled = false;
-        //               return;
-        //             }
+                    // neu khong co tr nào co attr data change thi mac dinh hien thi nut Luu
+                    if (table.querySelectorAll("tr[data-changed]").length == 0)
+                    {
+                      submitButton.disabled = false;
+                      return;
+                    }
 
-        //             table.querySelectorAll("tr").forEach(row => {
-        //                 if (row.getAttribute("data-changed") === "true") {
-        //                     hasChanges = true;
-        //                 }
-        //             });
+                    table.querySelectorAll("tr").forEach(row => {
+                        if (row.getAttribute("data-changed") === "true") {
+                            hasChanges = true;
+                        }
+                    });
 
-        //             submitButton.disabled = !hasChanges; // Bật/tắt nút submit
-        //         }
+                    submitButton.disabled = !hasChanges; // Bật/tắt nút submit
+                }
 
-        //         // Theo dõi thay đổi trong bảng (chỉ trong phạm vi form chứa nó)
-        //         table.addEventListener("input", function (event) {
-        //             let target = event.target;
-        //             if (target.classList.contains("track-change")) {
-        //                 let row = target.closest("tr");
-        //                 row.setAttribute("data-changed", "true"); // Đánh dấu dòng đã thay đổi
-        //                 checkChanges();
-        //             }
-        //         });
+                // Theo dõi thay đổi trong bảng (chỉ trong phạm vi form chứa nó)
+                table.addEventListener("input", function (event) {
+                    let target = event.target;
+                    if (target.classList.contains("track-change")) {
+                        let row = target.closest("tr");
+                        row.setAttribute("data-changed", "true"); // Đánh dấu dòng đã thay đổi
+                        checkChanges();
+                    }
+                });
 
-        //         // Khi thao tác nút trên dòng → Cũng tính là thay đổi
-        //       table.addEventListener("click", function (event) {
-        //           let deleteButton = event.target.closest(".track-change"); // Tìm nút delete
-        //           console.log("Delete button:", deleteButton);
+                // Chỉ gử i dữ liệu của bảng đã thay đổi
+                form.addEventListener("submit", function (event) {
+                    let rows = table.querySelectorAll("tbody tr");
 
-        //           if (deleteButton) {
-        //               let row = deleteButton.closest("tr"); // Tìm hàng chứa nút xóa
-        //               console.log("Row:", row);
+                    rows.forEach(row => {
+                        if (row.getAttribute("data-changed") !== "true") {
+                            row.remove(); // Xóa các dòng chưa thay đổi khỏi form trước khi submit
+                        }
+                    });
+                });
 
-        //               if (row) {
-        //                   row.setAttribute("data-changed", "true"); // Đánh dấu dòng thay đổi
-        //                   checkChanges();
-        //               } else {
-        //                   console.error("Không tìm thấy thẻ <tr> chứa nút delete.");
-        //               }
-        //           } else {
-        //               console.error("Không tìm thấy phần tử có class .btn-delete.");
-        //           }
-        //       });
+                checkChanges(); // Kiểm tra trạng thái ban đầu
+            });
+        });
 
-        //         // Chỉ gử i dữ liệu của bảng đã thay đổi
-        //         form.addEventListener("submit", function (event) {
-        //             let rows = table.querySelectorAll("tbody tr");
+           // xu ly thong bao
+        $(document).ready(function () {
+            $.ajax({
+                url: `/Notifications/GetNotifications`, // Sử dụng serviceStore để xác định API cần gọi
+                type: "GET",
+                success: function (data) {
+                    let notificationList = $("#notificationList");
+                    let badge = $("#notificationBadge");
+                    notificationList.empty();
+                    let unreadCount = 0;
 
-        //             rows.forEach(row => {
-        //                 if (row.getAttribute("data-changed") !== "true") {
-        //                     row.remove(); // Xóa các dòng chưa thay đổi khỏi form trước khi submit
-        //                 }
-        //             });
-        //         });
+                    data.forEach(notification => {
+                        let item = `
+                            <li class="list-group-item list-group-item-action dropdown-notifications-item waves-effect ${notification.IsRead ? 'marked-as-read' : ''}">
+                                   <div class="d-flex">
+                                       <div class="flex-shrink-0 me-3">
+                                           <div class="avatar">
+                                               ${notification.Images ? `<img src="${notification.Images}" class="w-px-40 h-auto rounded-circle">` : '<span class="avatar-initial rounded-circle bg-label-danger">N/A</span>'}
+                                           </div>
+                                       </div>
+                                       <div class="flex-grow-1">
+                                           <h6 class="small mb-1">${notification.Title}</h6>
+                                           <small class="mb-1 d-block text-body">${notification.Content}</small>
+                                           <small class="text-muted">${notification.ThoiGian}</small>
+                                       </div>
+                                    <div class="flex-shrink-0 dropdown-notifications-actions">
+                                        <a href="javascript:void(0)" class="dropdown-notifications-read" onclick="markAsRead(${notification.Id})"><span class="badge badge-dot"></span></a>
+                                        <a href="javascript:void(0)" class="dropdown-notifications-archive"><span class="ri-close-line"></span></a>
+                                    </div>
+                                   </div>
+                               </li>`;
 
-        //         checkChanges(); // Kiểm tra trạng thái ban đầu
-        //     });
-        // });
+                        notificationList.append(item);
+                        if (!notification.IsRead) unreadCount++;
+
+                        //cap nhat lai event remove notifications
+                        document.querySelectorAll(".dropdown-notifications-archive").forEach(t => {
+                                  t.addEventListener("click", e => {
+                                  t.closest(".dropdown-notifications-item").remove()
+                              })
+                          })
+                    });
+
+
+                    $('#notificationBadge').html(data.length + " tin nhắn");
+                    if (unreadCount > 0) {
+                        badge.show();
+                    } else {
+                        badge.hide();
+                    }
+                },
+                error: function () {
+                    console.error("Không thể lấy dữ liệu thông báo.");
+                }
+            });
+        });
+
+        function markAsRead(id) {
+            $.ajax({
+                url: "/Notifications/MarkAsRead",
+                method: "POST",
+                data: { id: id },
+                success: function (data) {
+                    location.reload();
+                },
+                error: function (response) {
+                    console.error("Không thể đánh dấu thông báo đã đọc.");
+                }
+            });
+        }
+
+           // document.addEventListener("DOMContentLoaded", function () {
+           //     fetch('/Home/GetNotifications')
+           //         .then(response => response.json())
+           //         .then(data => {
+           //             let notificationList = document.getElementById("notificationList");
+           //             let badge = document.getElementById("notificationBadge");
+           //             notificationList.innerHTML = "";
+           //             let unreadCount = 0;
+
+           //             data.forEach(notification => {
+           //                 let item = `
+           //                     <li class="list-group-item list-group-item-action dropdown-notifications-item ${notification.IsRead ? 'marked-as-read' : ''}">
+           //                         <div class="d-flex">
+           //                             <div class="flex-shrink-0 me-3">
+           //                                 <div class="avatar">
+           //                                     ${notification.Images ? `<img src="${notification.Images}" class="w-px-40 h-auto rounded-circle">` : '<span class="avatar-initial rounded-circle bg-label-danger">N/A</span>'}
+           //                                 </div>
+           //                             </div>
+           //                             <div class="flex-grow-1">
+           //                                 <h6 class="small mb-1">${notification.Title}</h6>
+           //                                 <small class="mb-1 d-block text-body">${notification.Content}</small>
+           //                                 <small class="text-muted">${notification.ThoiGian}</small>
+           //                             </div>
+           //                             <div class="flex-shrink-0 dropdown-notifications-actions">
+           //                                 <a href="javascript:void(0)" onclick="markAsRead(${notification.Id})">
+           //                                     <span class="badge badge-dot"></span>
+           //                                 </a>
+           //                             </div>
+           //                         </div>
+           //                     </li>`;
+
+           //                 notificationList.innerHTML += item;
+           //                 if (!notification.IsRead) unreadCount++;
+           //             });
+
+           //             badge.style.display = unreadCount > 0 ? "inline-block" : "none";
+           //         });
+           // });
+
+           // function markAsRead(id) {
+           //     fetch('/Notification/MarkAsRead?id=' + id, { method: 'POST' })
+           //         .then(response => response.json())
+           //         .then(() => location.reload());
+           // }
+
     </script>
 
     <!-- Page Scripts-->

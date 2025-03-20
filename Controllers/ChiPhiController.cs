@@ -51,7 +51,7 @@ namespace KOAHome.Controllers
     }
 
     // GET: ChiPhiController
-    public async Task<IActionResult> Index([FromQuery] Dictionary<string, string> parameters, int page = 1, int pageSize = 10)
+    public async Task<IActionResult> Index([FromQuery] Dictionary<string, string> parameters, int page = 1, int pageSize = 20)
     {
       try
       {

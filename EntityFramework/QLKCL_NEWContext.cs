@@ -426,6 +426,9 @@ public partial class QLKCL_NEWContext : DbContext
             entity.Property(e => e.IsDeleted)
                 .HasDefaultValue(false)
                 .HasColumnName("isDeleted");
+            entity.Property(e => e.IsRead)
+                .HasDefaultValue(false)
+                .HasColumnName("IsRead");
             entity.Property(e => e.LastModificationTime).HasColumnType("datetime");
             entity.Property(e => e.TableName).HasMaxLength(100);
         });

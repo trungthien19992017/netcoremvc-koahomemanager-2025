@@ -177,11 +177,11 @@
                                 <small class="text-muted">Có <strong>@ViewBag.Total</strong> kết quả tìm kiếm</small>
                             </div>
                             @* table *@
-                            <div class="card overflow-auto mb-6" style="height: 600px">
+                            <div class="card mb-6">
                                 <div class="card-body" id="vertical-example">
                                     @* form xu ly luu editor *@
                                     <form id="create-form" class="needs-validation" novalidate="" method="post" asp-controller="HsServices" asp-action="Edit" enctype="multipart/form-data">
-                                        <div class="table-responsive">
+                                        <div class="table-responsive" style="height: 600px">
                                             <div class="card-header d-flex align-items-center justify-content-between">
                                                 <div>
                                                     <button type="button" class="btn text-muted p-0" onclick="addNewRow()"><i class="ri-add-line ri-24px"></i></button>
@@ -192,7 +192,7 @@
                                                 <colgroup>
                                                     <col span="1" style="visibility: collapse">
                                                 </colgroup>
-                                                <thead>
+                                                <thead class="freepanze-head">
                                                     <tr>
                                                         <th class="text-center" style="width:70px;">Id</th>
                                                         <th class="text-center" style="width:100px;">STT</th>
@@ -208,7 +208,7 @@
                                                         <th class="text-center" style="width:100px;">Hành động</th>
                                                     </tr>
                                                 </thead>
-                                                <tbody>
+                                                <tbody class="overflow-auto">
                                                     @if (gridData_Store != null)
                                                     {
                                                         @foreach (var data in gridData_Store)
