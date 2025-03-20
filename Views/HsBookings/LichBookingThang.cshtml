@@ -91,30 +91,21 @@
                       <div id="accordionOne" class="accordion-collapse collapse" data-bs-parent="#accordionExample">
                         <div class="accordion-body">
                         @* filter *@
-                        <form method="get" asp-action="Index" enctype="multipart/form-data">
+                        <form method="get" asp-action="LichBookingThang" enctype="multipart/form-data">
                             <div class="row gx-3 gy-2 align-items-center">
                                 <div class="col-md-4 form-floating form-floating-outline mb-6">
-                                      <input class="form-control form-control-sm" type="search" placeholder="" id="PhoneNumber" name="PhoneNumber" value="@Context.Request.Query["PhoneNumber"]" autofocus />
-                                      <label for="PhoneNumber">SĐT</label>
+                                      <input class="form-control form-control-sm" type="date" placeholder="" id="TuNgay"  name="TuNgay" value="@Context.Request.Query["TuNgay"]" />
+                                      <label for="TuNgay">Từ ngày</label>
                                 </div>
                                 <div class="col-md-4 form-floating form-floating-outline mb-6">
-                                      <input class="form-control form-control-sm" type="search" placeholder="" id="HoTen" name="HoTen"  value="@Context.Request.Query["HoTen"]" />
-                                      <label for="HoTen">Họ tên</label>
-                                </div>
-                                <div class="col-md-4 form-floating form-floating-outline mb-6">
-                                      <input class="form-control form-control-sm" type="date" placeholder="" id="CheckInFrom"  name="CheckInFrom" value="@Context.Request.Query["CheckInFrom"]" />
-                                      <label for="CheckInFrom">Check in từ</label>
-                                </div>
-                                <div class="col-md-4 form-floating form-floating-outline mb-6">
-                                      <input class="form-control form-control-sm" type="date" placeholder="" id="CheckInTo"  name="CheckInTo" value="@Context.Request.Query["CheckInTo"]" />
-                                      <label for="CheckInTo">Check in đến</label>
+                                      <input class="form-control form-control-sm" type="date" placeholder="" id="DenNgay"  name="DenNgay" value="@Context.Request.Query["DenNgay"]" />
+                                      <label for="CheckInTo">Đến ngày</label>
                                 </div>
                                  <div class="col-md-4 form-floating form-floating-outline mb-6">
-                                        <select asp-items="ViewBag.IsActiveOptions"
-                                        class="form-select color-dropdown form-select-sm" placeholder="" id="isActive"  name="isActive">
-                                   
+                                        <select asp-items="ViewBag.LocNhanhOptions" class="form-select color-dropdown form-select-sm" placeholder="" id="LocNhanh"  name="LocNhanh">
+                                            <option value="">Chọn</option>
                                         </select>
-                                      <label for="isActive">Hoạt động</label>
+                                      <label for="LocNhanh">Lọc nhanh</label>
                                 </div>
                             </div>
                       @* end filter *@

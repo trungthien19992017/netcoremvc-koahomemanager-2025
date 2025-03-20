@@ -857,6 +857,18 @@ namespace KOAHome.Controllers
     {
       try
       {
+        // Kiểm tra xem có key "LocNhanh" không, nếu không có thì gán giá trị mặc định (null hoặc giá trị khác)
+        string locnhanh = parameters.ContainsKey("LocNhanh") ? parameters["LocNhanh"] : "";
+
+        // Service cho filter hoat dong
+        ViewBag.LocNhanhOptions = new List<SelectListItem>
+        {
+            new SelectListItem { Value = "DaThanhToan_LichHomNay", Text = "Có lịch đặt phòng trong hôm nay (Vàng)" , Selected = locnhanh == "DaThanhToan_LichHomNay"},
+            new SelectListItem { Value = "DaThanhToan_ChuaToiLich", Text = "Đã thanh toán nhưng chưa tới lịch (Trắng)" , Selected = locnhanh == "DaThanhToan_ChuaToiLich"},
+            new SelectListItem { Value = "ChuaThanhToan", Text = "Chưa thanh toán (Đỏ)" , Selected = locnhanh == "ChuaThanhToan"},
+            new SelectListItem { Value = "DaThanhToan_DaCheckOut", Text = "Đã hoàn tất check out và thanh toán (Xanh navy)" , Selected = locnhanh == "DaThanhToan_DaCheckOut"}
+        };
+
         // chuyen parameters thanh Idictionary<string, object>
         Dictionary<string, object> objParameters = parameters.ToDictionary(kvp => kvp.Key, kvp => (object)kvp.Value);
 
@@ -869,6 +881,10 @@ namespace KOAHome.Controllers
 
         //param truyen vao de lay danh sach cot
         Dictionary<string, object> displayParameters = new Dictionary<string, object>();
+        // cac du lieu parameter se add vao store display duoi dang bien param cach nhau bang dau ;
+        string displayParamString = string.Join(";", parameters.Select(kvp => $"{kvp.Key}={kvp.Value ?? ""}"));
+        // add param
+        displayParameters.Add("Param", displayParamString);
         displayParameters.Add("ReportID", "2208");
         displayParameters.Add("SQLContent", "DRDisplay_HS_LichBookingThang_CustomStore");
         // search danh sach
