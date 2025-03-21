@@ -12,11 +12,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0" />
 
     <script src="https://code.jquery.com/jquery-3.4.1.min.js"></script>
-    <!-- Select2 CSS -->
-    <link href="https://cdn.jsdelivr.net/npm/select2@4.0.13/dist/css/select2.min.css" rel="stylesheet" />
     <link rel="stylesheet" href="~/css/replete-modal.css">
-    <!-- Select2 JS -->
-    <script src="https://cdn.jsdelivr.net/npm/select2@4.0.13/dist/js/select2.min.js"></script>
     <link rel="stylesheet" href="~/css/select2.css">
     <link rel="stylesheet" href="~/css/animate.css">
 
@@ -74,7 +70,6 @@
   <script>
           // tim kiem trong select box
         $(document).ready(function () {
-            $.noConflict();
             function initSelect2() {
                 $("select").not(".select2-hidden-accessible").select2({
                     placeholder: "Chọn",
@@ -688,50 +683,113 @@
             });
         }
 
-           // document.addEventListener("DOMContentLoaded", function () {
-           //     fetch('/Home/GetNotifications')
-           //         .then(response => response.json())
-           //         .then(data => {
-           //             let notificationList = document.getElementById("notificationList");
-           //             let badge = document.getElementById("notificationBadge");
-           //             notificationList.innerHTML = "";
-           //             let unreadCount = 0;
+        // xu ly nút xuat export, phan trang doi voi table cau hinh class table-with-exportexcel
+         function initExcelExportForTable(selector, options = {}) {
+            // gia tri mac dinh
+             const defaultOptions = {
+                 header: true,
+                 footer: true,
+                 title: "Export",
+                 filename: "export",
+                 extension: ".xlsx",
+                 createEmptyCells: false,
+                 autoFilter: false,
+                 sheetName: "Sheet1"
+             };
 
-           //             data.forEach(notification => {
-           //                 let item = `
-           //                     <li class="list-group-item list-group-item-action dropdown-notifications-item ${notification.IsRead ? 'marked-as-read' : ''}">
-           //                         <div class="d-flex">
-           //                             <div class="flex-shrink-0 me-3">
-           //                                 <div class="avatar">
-           //                                     ${notification.Images ? `<img src="${notification.Images}" class="w-px-40 h-auto rounded-circle">` : '<span class="avatar-initial rounded-circle bg-label-danger">N/A</span>'}
-           //                                 </div>
-           //                             </div>
-           //                             <div class="flex-grow-1">
-           //                                 <h6 class="small mb-1">${notification.Title}</h6>
-           //                                 <small class="mb-1 d-block text-body">${notification.Content}</small>
-           //                                 <small class="text-muted">${notification.ThoiGian}</small>
-           //                             </div>
-           //                             <div class="flex-shrink-0 dropdown-notifications-actions">
-           //                                 <a href="javascript:void(0)" onclick="markAsRead(${notification.Id})">
-           //                                     <span class="badge badge-dot"></span>
-           //                                 </a>
-           //                             </div>
-           //                         </div>
-           //                     </li>`;
+             const config = { ...defaultOptions, ...options };
 
-           //                 notificationList.innerHTML += item;
-           //                 if (!notification.IsRead) unreadCount++;
-           //             });
+             $(selector).each(function () {
+                 const table = $(this);
 
-           //             badge.style.display = unreadCount > 0 ? "inline-block" : "none";
-           //         });
-           // });
+                 // xu ly data table
+                 table.DataTable({
+                     dom: '<"d-flex justify-content-between align-items-center datatable-top-component"<"d-flex gap-2"fl><"d-flex gap-2"B>>irtp',
+                     buttons: [
+                         {
+                             extend: "excelHtml5",
+                             className: "buttons-excel buttons-html5 btn btn-primary",
+                             text: '<i class="ri-upload-2-line"></i>',
+                             filename: config.filename,
+                             customize: config.customize || null,
+                             exportOptions: config.exportOptions || {},
+                             header: config.header,
+                             footer: config.footer,
+                             title: config.title,
+                             messageTop: config.messageTop || null,
+                             messageBottom: config.messageBottom || null,
+                             autoFilter: config.autoFilter,
+                             sheetName: config.sheetName,
+                             exportOptions: {
+                                 columns: ':visible',
+                                 stripHtml: true // Loại bỏ tất cả HTML, chỉ lấy văn bản
+                             },
+                             customize: function (xlsx) {
+                                 var sheet = xlsx.xl.worksheets["sheet1.xml"];
+                                 var rows = $("row", sheet);
+                                 // Mặc định tô màu header
+                                 // rows.eq(0).attr("s", "2");
+                                 // $('row:first c', sheet).attr( 's', '42' );
+                                 rows.eq(1).find("c").attr("s", "42");
+                             }
+                         }
+                     ],
+                     // phan trang
+                     lengthMenu: [10, 20, 50, 100], // Các tùy chọn số lượng bản ghi
+                     pageLength: 20, // Mặc định hiển thị 25 bản ghi trên mỗi trang
+                     lengthChange: true,
+                     // hien thi
+                     language: {
+                             lengthMenu: "_MENU_",
+                             search: "",
+                             searchPlaceholder: "Tìm kiếm",
+                             info: "Hiển thị _START_ đến _END_ của _TOTAL_ kết quả"
+                         }
+                 });
 
-           // function markAsRead(id) {
-           //     fetch('/Notification/MarkAsRead?id=' + id, { method: 'POST' })
-           //         .then(response => response.json())
-           //         .then(() => location.reload());
-           // }
+               // Di chuyển phần phân trang ra ngoài bảng
+               // doi phan trang va cac nut xuat, tìm kiem ra ngoai (yeu cau class table-pagination va table-top-action)
+               table.on('draw', function () {
+                   $('.dataTables_paginate').appendTo('.table-pagination');
+                   $('.datatable-top-component').appendTo('.table-top-action');
+               });
+
+               // Gọi lần đầu sau khi DataTable load xong
+               $('.dataTables_paginate').appendTo('.table-pagination');
+               $('.datatable-top-component').appendTo('.table-top-action');
+             });
+         }
+
+         function getFormattedDateTime() {
+             var now = new Date();
+             var year = now.getFullYear();
+             var month = String(now.getMonth() + 1).padStart(2, '0');
+             var day = String(now.getDate()).padStart(2, '0');
+             var hours = String(now.getHours()).padStart(2, '0');
+             var minutes = String(now.getMinutes()).padStart(2, '0');
+             var seconds = String(now.getSeconds()).padStart(2, '0');
+
+             return `${year}${month}${day}_${hours}${minutes}${seconds}`;
+         }
+
+         // xu ly nút xuat export, phan trang doi voi table cau hinh class table-with-exportexcel
+         $(document).ready(function () {
+             // Lấy nội dung title từ thẻ H1
+             var pageTitle = $("#header-title").text().trim();
+
+             // Xoá các ký tự đặc biệt không hợp lệ trong tên file (ví dụ: !, 🎉, ...)
+             var sanitizedFilename = pageTitle.replace(/[^a-zA-Z0-9\u00C0-\u1EF9\s]/g, '').replace(/\s+/g, '_');
+
+             // tim table co class table-with-exportexcel va xu ly
+             initExcelExportForTable('.table-with-exportexcel', {
+                 // Thêm timestamp vào filename
+                 filename: `${sanitizedFilename}_${getFormattedDateTime()}` ?? "Danh sách",
+                 title: pageTitle ?? "Danh sách",
+                 autoFilter: false,
+                 sheetName: "Danh sách"
+             });
+
+         });
 
     </script>
 

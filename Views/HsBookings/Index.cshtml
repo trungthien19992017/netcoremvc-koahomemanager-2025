@@ -15,7 +15,7 @@
 }
 
 @section VendorScripts {
-	<script src="~/vendor/libs/apex-charts/apexcharts.js"></script>
+    <script src="~/vendor/libs/apex-charts/apexcharts.js"></script>
 }
 
 @section PageScripts {
@@ -69,7 +69,7 @@
 <div class="content-wrapper">
     <!-- Content -->
  <div class="container-xxl flex-grow-1 container-p-y">
-  <h1 class ="mb-1">Danh sách booking! 🎉</h1>
+  <h1 class ="mb-1" id="header-title">Danh sách booking! </h1>
   <div class="row gy-6">
   @* Data Table new *@
   <!-- Data Tables -->
@@ -136,9 +136,9 @@
               </div>
               <!--/ Accordion -->
               @* action top *@
-              <div class="row gx-3 gy-2 align-items-center">
+              <div class="row gx-3 gy-2 align-items-center table-top-action">
                   <div class="col-md-12 d-flex">
-                      <div class="demo-inline-spacing">
+                      <div class="demo-inline-spacing table-action">
                           <a asp-action="Create" type="button" class="btn btn-icon btn-primary" data-bs-toggle="tooltip" data-bs-offset="0,4" data-bs-placement="top" data-bs-html="true"
                               title="<i class='ri-add-line'></i> <span>Thêm mới</span>">
                             <i class="ri-add-line"></i>
@@ -153,14 +153,11 @@
               @* end action top *@
           </div>
           @* end filter *@
-          <div class="card-body">
-             <small class="text-muted">Có <strong>@ViewBag.Total</strong> kết quả tìm kiếm</small>
-          </div>
           @* table *@
       <div class="card mb-6" >
           <div class="card-body" id="vertical-example">
-            <div class="table-responsive" style="height: 600px">
-			  <table class="table table-sm table-bordered table-hover">
+            <div class="table-responsive" style="height: 400px">
+			  <table class="table table-sm table-bordered table-hover display table-with-exportexcel">
 				  <thead class="freepanze-head">
 					  <tr>
 						  <th class="text-truncate">STT</th>
@@ -190,7 +187,7 @@
 				  <tbody class="overflow-auto">
 					  @if (listbook_store != null)
 					  {
-						  @foreach (var book in listbook_store.Take(20))
+						  @foreach (var book in listbook_store)
 						  {
 										
 							  <tr class="@book.BGColorRowClass">
@@ -284,7 +281,11 @@
       </div>
 	  </div>
               </div>
-                    <!--/ Pagination Start -->
+ <!--/ Pagination Start -->
+ <div class="col-12 table-pagination d-flex justify-content-end mt-3">
+ </div>
+  <!--/ Pagination End -->
+@*                     <!--/ Pagination Start -->
                     @if (listbook_store.Count() > 0)
                     {
                         <div class="col-12">
@@ -334,7 +335,7 @@
                             }
                         </div>
                     }
-                    <!--/ Pagination End -->
+                    <!--/ Pagination End --> *@
                 </div>
     </div>
   @* end data table new *@

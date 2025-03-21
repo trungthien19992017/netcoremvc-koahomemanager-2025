@@ -110,22 +110,8 @@ namespace KOAHome.Controllers
 
         //Phân trang
         // search
-        //if (!_memoryCache.TryGetValue("ProductList", out Task<(List<dynamic> Results, int TotalRecord, int MaxPage, int TotalPage)> (resultList, totalRecord, maxPage, totalPage)))
-        //{
-        //  products = await _context.Products.ToListAsync();
-        //  _memoryCache.Set("ProductList", products, TimeSpan.FromMinutes(10));
-        //}
-        var (resultList, totalRecord, maxPage, totalPage) = await _report.Report_Pagination_search("HS_Booking1_search", null, objParameters, page, pageSize);
+        var resultList = await _report.Report_search(objParameters,"HS_Booking1_search", null);
         ViewBag.listbook_store = resultList;
-        // gia tri pham trang tra ve
-        ViewBag.Total = totalRecord;
-        ViewBag.Page = page;
-        ViewBag.TotalPage = totalPage;
-        ViewBag.MaxPage = maxPage;
-        ViewBag.First = 1;
-        ViewBag.Last = totalPage;
-        ViewBag.Next = page + 1;
-        ViewBag.Prev = page - 1;
 
         // khai bao service lien quan
         var service_parameters = new Dictionary<string, object>();
