@@ -602,8 +602,13 @@
                     let rows = table.querySelectorAll("tbody tr");
 
                     rows.forEach(row => {
-                        if (row.getAttribute("data-changed") !== "true") {
+                        console.log(row.getAttribute('data-changed'));
+                      // neu khong khai bao data change thi bo qua, neu co khai bao data change thi kiem tra = false thi xoa 
+                        if (row.getAttribute('data-changed') !== undefined && row.getAttribute('data-changed') !== null)
+                        {
+                          if (row.getAttribute("data-changed") !== "true") {
                             row.remove(); // Xóa các dòng chưa thay đổi khỏi form trước khi submit
+                          }
                         }
                     });
                 });

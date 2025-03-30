@@ -238,7 +238,7 @@
 									  </div>
 								  </td>
 								  <td class="text-truncate">@book.PhoneNumber</td>
-								  <td class="text-truncate text-center"><span class="badge bg-label-primary me-1">@string.Format("{0:N0}", book.TotalAmount)</span></td>
+								  <td class="text-truncate text-center"><span class="badge bg-label-primary me-1">@string.Format("{0:N0}", book.TotalAmount ?? "")</span></td>
 								  <td class="text-truncate">@string.Format("{0:dd/MM/yyyy HH:mm}", book.CheckInDate ?? "")</td>
 								  <td class="text-truncate">@string.Format("{0:dd/MM/yyyy HH:mm}", @book.CheckOutDate ?? "")</td>
 								  <td class="text-center">
