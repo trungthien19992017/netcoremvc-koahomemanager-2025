@@ -193,8 +193,8 @@
                                                     <th class="text-center" style="width:100px;">STT</th>
                                                     <th class="text-center" style="width:180px;">Ngày nhập</th>
                                                     <th class="text-center" style="width:300px;">Nội dung chi phí</th>
-                                                    <th class="text-center" style="width:150px;">Số lượng</th>
-                                                    <th class="text-center" style="width:250px;">Số tiền</th>
+                                                    <th class="text-center" style="width:100px;">Số lượng</th>
+                                                    <th class="text-center" style="width:180px;">Số tiền</th>
                                                     <th class="text-center" style="width:100px;">Hành động</th>
                                                 </tr>
                                             </thead>
@@ -205,12 +205,12 @@
                                                     {
 
                                                         <tr class="" data-changed="false">
-                                                            <td class="text-center"><input class="form-control" type="text" name="grid[@reportRowIndex].Id" value="@data.Id" readonly /></td>
-                                                            <td class="text-center"><input class="form-control" type="text" name="grid[@reportRowIndex].stt" value="@data.stt" readonly /></td>
-                                                            <td class="text-truncate"><input type="date" class="form-control track-change" placeholder="" name="grid[@reportRowIndex].ExpenseDatetime" aria-label="Ngày nhập" value="@data.ExpenseDatetime"></td>
-                                                            <td class="text-center"><input class="form-control track-change" type="text" name="grid[@reportRowIndex].Content" value="@data.Content" /></td>
-                                                            <td class="text-end"><input type="number" class="form-control track-change" placeholder="" name="grid[@reportRowIndex].Quantity" aria-label="Số lượng" value="@data.Quantity"></td>
-                                                            <td class="text-end"><input type="number" class="form-control track-change" placeholder="" name="grid[@reportRowIndex].TotalAmount" aria-label="Số tiền" value="@data.TotalAmount"></td>
+                                                            <td class=""><input class="form-control text-center" type="text" name="grid[@reportRowIndex].Id" value="@data.Id" readonly /></td>
+                                                            <td class=""><input class="form-control text-center" type="text" name="grid[@reportRowIndex].stt" value="@data.stt" readonly /></td>
+                                                            <td class=""><input type="date" class="form-control track-change text-center" placeholder="" name="grid[@reportRowIndex].ExpenseDatetime" aria-label="Ngày nhập" value="@data.ExpenseDatetime"></td>
+                                                            <td class=""><input class="form-control track-change text-start" type="text" name="grid[@reportRowIndex].Content" value="@data.Content" /></td>
+                                                            <td class=""><input type="number" class="form-control track-change text-end" placeholder="" name="grid[@reportRowIndex].Quantity" aria-label="Số lượng" value="@data.Quantity"></td>
+                                                            <td class=""><input type="number" class="form-control track-change text-end" placeholder="" name="grid[@reportRowIndex].TotalAmount" aria-label="Số tiền" value="@data.TotalAmount"></td>
                                                             <td class="text-center">
                                                                 <input type="hidden" name="grid[@reportRowIndex].isDeleted" value="false" class="isDeleted track-change">
                                                                 <button type="button" class="btn-delete btn btn-sm text-danger" onclick="toggleDelete(this)">
