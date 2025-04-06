@@ -36,6 +36,23 @@ public class HomeController : Controller
     _widget = widget;
   }
 
+  // kiem tra loi khi xu ly luu du lieu
+  private bool CheckForErrors(List<dynamic> resultList, out string errorMessage)
+  {
+    var errorMessages = resultList
+        .Where(item => ((IDictionary<string, object>)item).ContainsKey("ErrorMessage"))
+        .Select(item => item.ErrorMessage.ToString())
+        .ToList();
+
+    if (errorMessages.Any())
+    {
+      errorMessage = string.Join(", ", errorMessages);
+      return true;
+    }
+
+    errorMessage = null;
+    return false;
+  }
   public IActionResult Index()
     {
         return View();
@@ -134,6 +151,49 @@ public class HomeController : Controller
     return Ok(notifications);
   }
 
+
+
+  // xu ly import file excel de cap nhat va them moi du lieu
+  [HttpPost]
+  public async Task<IActionResult> ImportExcel(IFormCollection form, IFormFile file)
+  {
+    if (file == null || file.Length == 0)
+      return Json(new { success = false, errorMessage = "File is empty" });
+
+    // lay store import tu file
+    string? importSqlStore = await _report.ExtractImportDataToStoreName(file);
+    // lay store duoc tra ve tu input import
+    // lay gia tri sql store tu ajax gui len
+    string? sqlstore = form.ContainsKey("sqlstore") ? form["sqlstore"].ToString() : null;
+    if (sqlstore == null)
+    {
+      return Json(new { success = false, errorMessage = "Không tìm thấy store." });
+    }
+    // compare neu 2 store không khớp thì báo lỗi (tránh import file bậy)
+    if (sqlstore != importSqlStore)
+    {
+      return Json(new { success = false, errorMessage = "File không hợp lệ do không khớp store." });
+    }
+
+    //xu ly luu du lieu import
+    // Dictionary để nhóm dữ liệu theo số thứ tự [n]
+    // Chuyển đổi dữ liệu sang JSON (lay du lieu import va chuyen thanh json)
+    string importJsonData = await _report.ExtractImportDataToJson(file);
+    //end xu ly luu du lieu import
+    // xu ly luu du lieu
+    var importResultList = await _report.Import_Json_Update(null, importJsonData, sqlstore, null);
+    //kiem tra ton tai error message
+    // Kiểm tra và nối giá trị của ErrorMessage
+    if (CheckForErrors(importResultList, out string errorMessage))
+    {
+      return Json(new { success = false, errorMessage = errorMessage });
+    }
+    // khong tra ve Id, cung khong tra ve error message thi bao loi chua tra ve id
+    else
+    {
+      return Json(new { success = true });
+    }
+  }
 
   public IActionResult Privacy()
     {

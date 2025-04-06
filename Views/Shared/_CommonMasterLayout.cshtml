@@ -796,6 +796,92 @@
 
          });
 
+        // xu ly import file excel de cap nhat va them moi du lieu
+         $(document).ready(function () {
+           // Khi bấm nút → kích hoạt chọn file
+           document.getElementById("importFileBtn").addEventListener("click", function () {
+               document.getElementById("importFileInput").click();
+           });
+
+           // Khi người dùng chọn file → gửi file lên API
+           document.getElementById("importFileInput").addEventListener("change", async function () {
+               const file = this.files[0];
+               if (!file) return;
+
+               var sqlstore = $(this).data('sqlstore'); // lay du lieu store tu input import de xu ly (bat buoc)
+
+               const formData = new FormData();
+               formData.append("file", file);
+               formData.append("sqlstore", sqlstore);
+
+               // const resultDiv = document.getElementById("result");
+               // resultDiv.innerHTML = "Đang xử lý...";
+               rplm({
+                   title: "Xác nhận",
+                   text: "Nhập file sẽ mất một chút thời gian nhé",
+                   type: "warning",
+                   showCancelButton: true,
+                   confirmButtonText: "Đồng ý!",
+                   cancelButtonText: "Hủy!",
+                   animation: "tada",
+                   modalNOverlay: "backShadow",
+                   closeOnConfirm: false,
+                   closeOnCancel: false,
+                   showLoaderOnConfirm: true
+               },
+               function (isConfirm) {
+                   if (isConfirm) {
+                       // Gọi AJAX để gửi yêu cầu xóa
+                       $.ajax({
+                           url: '/Home/ImportExcel', // Controller xử lý xóa
+                           type: 'POST', // Hoặc 'GET' nếu phù hợp
+                           data: formData, // Truyền ID của dòng cần xóa và store xử lý
+                           processData: false, // Không chuyển `FormData` thành query string
+                           contentType: false, // Để trình duyệt tự động đặt `content-type`
+                           success: function (response) {
+                               if (response.success) {
+                                   rplm({
+                                     title: "Xử lý thành công!",
+                                     text: "Hành động của bạn đã được xử lý.",
+                                     type: "success",
+                                     timer: 2000,
+                                     confirmButtonText: 'Xác nhận',
+                                   }, function () {
+                                         // Sau khi đóng popup, reload lại trang
+                                         location.reload();
+                                     });
+                               } else {
+                                   rplm({
+                                       title: "Lỗi!",
+                                       text: response.errorMessage || "Có vấn đề xảy ra.",
+                                       type: "error",
+                                       timer: 2000,
+                                       confirmButtonText: 'Xác nhận',
+                                   });
+                               }
+                           },
+                           error: function () {
+                               rplm({
+                                   title: "Lỗi!",
+                                   text: "Lỗi khi kết nối đến máy chủ.",
+                                   type: "error",
+                                   timer: 2000,
+                                   confirmButtonText: 'Done',
+                               });
+                           }
+                       });
+                   } else {
+                       rplm({
+                           title: "Đã hủy!",
+                           text: "Hành động của bạn đã được hủy.",
+                           type: "error",
+                           timer: 2000,
+                           confirmButtonText: 'Done',
+                       });
+                   }
+               });
+           });
+         });
     </script>
 
     <!-- Page Scripts-->

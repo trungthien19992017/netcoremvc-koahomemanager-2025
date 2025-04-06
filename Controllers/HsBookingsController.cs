@@ -578,8 +578,7 @@ namespace KOAHome.Controllers
         // Kiểm tra và nối giá trị của ErrorMessage
         if (CheckForErrors(resultList, out string errorMessage))
         {
-          ViewBag.ErrorMessage = errorMessage;
-          return View();
+          return Json(new { success = false, errorMessage = errorMessage });
         }
         // khong tra ve Id, cung khong tra ve error message thi bao loi chua tra ve id
         else

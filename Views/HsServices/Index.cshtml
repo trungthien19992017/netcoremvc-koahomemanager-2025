@@ -261,7 +261,7 @@
                                 var endPageIndex = Math.Min(totalPage, page + pageDisplay / 2);
 
                                 //var link = "/san-pham/" + category.MetaTitle + "-" + category.ID;
-                                var link = "/ChiPhi/Index?ExpenseDatetimeFrom=" + Context.Request.Query["ExpenseDatetimeFrom"] + "&ExpenseDatetimeTo=" + Context.Request.Query["ExpenseDatetimeTo"];
+                                var link = "/HsServices/Index?ExpenseDatetimeFrom=" + Context.Request.Query["ExpenseDatetimeFrom"] + "&ExpenseDatetimeTo=" + Context.Request.Query["ExpenseDatetimeTo"];
                                 <nav>
                                     <ul class="pagination justify-content-center">
                                         @if (page > ViewBag.First)

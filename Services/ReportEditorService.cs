@@ -70,7 +70,7 @@ namespace KOAHome.Services
       }
 
       // Chuyển đổi dữ liệu sang JSON
-      return JsonConvert.SerializeObject(gridData.Values, Formatting.Indented);
+      return await Task.FromResult(JsonConvert.SerializeObject(gridData.Values, Formatting.Indented));
     }
 
     public async Task<List<dynamic>> ReportEditor_Json_Update(int? Id, string json, string sqlStore, string? connectionString)

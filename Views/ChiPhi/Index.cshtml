@@ -154,14 +154,14 @@
                                 <div class="row gx-3 gy-2 align-items-center">
                                     <div class="col-md-12 d-flex">
                                         <div class="demo-inline-spacing">
-                                            <a asp-action="Create" type="button" class="btn btn-icon btn-primary" data-bs-toggle="tooltip" data-bs-offset="0,4" data-bs-placement="top" data-bs-html="true"
-                                               title="<i class='ri-add-line'></i> <span>Thêm mới</span>">
-                                                <i class="ri-add-line"></i>
-                                            </a>
-                                            <a asp-action="Create" type="button" class="btn btn-icon btn-primary" data-bs-toggle="tooltip" data-bs-offset="0,4" data-bs-placement="top" data-bs-html="true"
-                                               title="<i class='ri-eye-line'></i> <span>Mô tả</span>">
-                                                <i class="ri-eye-line"></i>
-                                            </a>
+                                            <!-- Button import file excel -->
+                                            <button id="importFileBtn" class="btn btn-icon btn-primary" data-bs-toggle="tooltip" data-bs-offset="0,4" data-bs-placement="top" data-bs-html="true"
+                                                    title="<i class='ri-import-line'></i> <span>Nhập file</span>">
+                                                <i class="ri-import-line"></i>
+                                            </button>
+
+                                            <!-- Input file ẩn -->
+                                            <input type="file" id="importFileInput" data-sqlstore="HS_ChiPhi_Json_import" accept=".xlsx" style="display: none;" />
                                         </div>
                                     </div>
                                 </div>
