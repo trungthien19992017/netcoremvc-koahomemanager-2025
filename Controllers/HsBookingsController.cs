@@ -97,8 +97,6 @@ namespace KOAHome.Controllers
     {
       try
       {
-        string connectionString = await _datasrc.GetConnectionString(66);
-
         // Kiểm tra xem có key "isActive" không, nếu không có thì gán giá trị mặc định (null hoặc giá trị khác)
         string isActive = parameters.ContainsKey("isActive") ? parameters["isActive"] : "";
 
@@ -114,7 +112,7 @@ namespace KOAHome.Controllers
 
         //Phân trang
         // search
-        var resultList = await _report.Report_search(objParameters,"HS_Booking1_search", connectionString);
+        var resultList = await _report.Report_search(objParameters,"HS_Booking1_search", null);
         ViewBag.listbook_store = resultList;
 
         // khai bao service lien quan

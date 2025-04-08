@@ -85,11 +85,23 @@ namespace KOAHome.Controllers
     }
 
     // GET: NETReport/Viewer_Utility
-    public async Task<IActionResult> Viewer_Utility([FromQuery] Dictionary<string, string> parameters, string ReportCode)
+    public async Task<IActionResult> Viewer_Utility([FromQuery] Dictionary<string, string> parameters, string? ReportCode)
     {
       try
       {
-        string connectionString = await _datasrc.GetConnectionString(66);
+        // neu không trả về report code thì chuyển sang link lỗi
+        if (ReportCode == null)
+        {
+          return RedirectToAction("MiscError", "Pages");
+        }
+        ViewBag.ReportCode = ReportCode;
+
+        // lay thong tin report, va danh sach filter display cua report de xu ly
+        var report = await _report.NET_Report_Get(ReportCode);
+        var filterList = await _report.NET_Filter_WithReport_Get(ReportCode, null);
+        var displayList = await _report.NET_Display_WithReport_Get(ReportCode, null);
+
+        string connectionString = await _datasrc.GetConnectionString(report.DataSourceId);
 
         // Kiểm tra xem có key "isActive" không, nếu không có thì gán giá trị mặc định (null hoặc giá trị khác)
         string isActive = parameters.ContainsKey("isActive") ? parameters["isActive"] : "";

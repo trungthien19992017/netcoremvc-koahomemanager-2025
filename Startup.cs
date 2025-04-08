@@ -70,6 +70,12 @@ namespace KOAHome
         endpoints.MapControllerRoute(
             name: "default",
             pattern: "{controller=Dashboards}/{action=KoaDashboard}/{id?}");
+        // route cho report
+        endpoints.MapControllerRoute(
+              name: "report/viewer-utility",
+              pattern: "report/viewer-utility/{reportCode}",
+              defaults: new { controller = "NETReport", action = "Viewer_Utility" }
+          );
       });
     }
   }
