@@ -29,6 +29,9 @@ namespace KOAHome.Services
     public Task<string> ExtractImportDataToJson(IFormFile file);
     public Task<string> ExtractImportDataToStoreName(IFormFile file);
     public Task<List<dynamic>> Import_Json_Update(int? Id, string json, string sqlStore, string? connectionString);
+    public Task<dynamic> NET_Report_Get(string reportCode);
+    public Task<List<dynamic>> NET_Filter_WithReport_Get(string? reportCode, int? reportId);
+    public Task<List<dynamic>> NET_Display_WithReport_Get(string? reportCode, int? reportId);
   }
   public class ReportService : IReportService
   {
@@ -243,6 +246,65 @@ namespace KOAHome.Services
       resultList = await _con.Connection_GetDataFromQuery(parameters, sqlStore, connectionString, sqlQuery, sqlParams);
       return resultList;
     }
+    public async Task<dynamic> NET_Report_Get(string reportCode)
+    {
+      // su dung datasource config de lay du lieu
+      string connectionString = _configuration.GetConnectionString("ConfigConnection"); // Thay thế bằng chuỗi kết nối của bạn
+      // store get du lieu
+      string sqlStore = "NET_Report_sel";
+      // khai bao param lien quan
+      var parameters = new Dictionary<string, object>();
+      parameters.Add("ReportCode", reportCode);
 
+      // chuyen thanh cau query tu store va param truyen vao
+      var (sqlQuery, sqlParams) = await _con.Connection_GetQueryParam(parameters, sqlStore, connectionString);
+
+      // xu ly lay du lieu dua truyen store va param truyen vao
+      var result = await _con.Connection_GetSingleDataFromQuery(parameters, sqlStore, connectionString, sqlQuery, sqlParams);
+
+      return result;
+    }
+    public async Task<List<dynamic>> NET_Filter_WithReport_Get(string? reportCode, int? reportId)
+    {
+      // su dung datasource config de lay du lieu
+      string connectionString = _configuration.GetConnectionString("ConfigConnection"); // Thay thế bằng chuỗi kết nối của bạn
+      // store get du lieu
+      string sqlStore = "NET_Filter_WithReport_sel";
+      // khai bao param lien quan
+      var parameters = new Dictionary<string, object>();
+      parameters.Add("ReportCode", reportCode);
+      parameters.Add("ReportId", reportId);
+
+      // chuyen thanh cau query tu store va param truyen vao
+      var (sqlQuery, sqlParams) = await _con.Connection_GetQueryParam(parameters, sqlStore, connectionString);
+
+      var resultList = new List<dynamic>();
+
+      // xu ly lay du lieu dua truyen store va param truyen vao
+      resultList = await _con.Connection_GetDataFromQuery(parameters, sqlStore, connectionString, sqlQuery, sqlParams);
+
+      return resultList;
+    }
+    public async Task<List<dynamic>> NET_Display_WithReport_Get(string? reportCode, int? reportId)
+    {
+      // su dung datasource config de lay du lieu
+      string connectionString = _configuration.GetConnectionString("ConfigConnection"); // Thay thế bằng chuỗi kết nối của bạn
+      // store get du lieu
+      string sqlStore = "NET_Display_WithReport_sel";
+      // khai bao param lien quan
+      var parameters = new Dictionary<string, object>();
+      parameters.Add("ReportCode", reportCode);
+      parameters.Add("ReportId", reportId);
+
+      // chuyen thanh cau query tu store va param truyen vao
+      var (sqlQuery, sqlParams) = await _con.Connection_GetQueryParam(parameters, sqlStore, connectionString);
+
+      var resultList = new List<dynamic>();
+
+      // xu ly lay du lieu dua truyen store va param truyen vao
+      resultList = await _con.Connection_GetDataFromQuery(parameters, sqlStore, connectionString, sqlQuery, sqlParams);
+
+      return resultList;
+    }
   }
 }

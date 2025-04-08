@@ -33,8 +33,9 @@ namespace KOAHome.Controllers
     private readonly IFormService _form;
     private readonly IActionService _action;
     private readonly IWidgetService _widget;
+    private readonly IDRDatasourceService _datasrc;
 
-    public HsBookingsController(QLKCL_NEWContext db, ILogger<HsBookingsController> logger, IHsBookingTableService book, IHsBookingServiceService bookser, IReportEditorService re, IAttachmentService att, IHsCustomerService cus, IReportService report, IFormService form, IActionService action, IWidgetService widget)
+    public HsBookingsController(QLKCL_NEWContext db, ILogger<HsBookingsController> logger, IHsBookingTableService book, IHsBookingServiceService bookser, IReportEditorService re, IAttachmentService att, IHsCustomerService cus, IReportService report, IFormService form, IActionService action, IWidgetService widget, IDRDatasourceService datasrc)
     {
       _db = db;
       _logger = logger;
@@ -47,6 +48,7 @@ namespace KOAHome.Controllers
       _form = form;
       _action = action;
       _widget = widget;
+      _datasrc = datasrc;
     }
 
     // cac phuong thuc con de toi uu xu ly
@@ -91,10 +93,12 @@ namespace KOAHome.Controllers
     }
 
     // GET: HsBookings
-    public async Task<IActionResult> Index([FromQuery] Dictionary<string, string> parameters, int page = 1, int pageSize = 20)
+    public async Task<IActionResult> Index([FromQuery] Dictionary<string, string> parameters)
     {
       try
       {
+        string connectionString = await _datasrc.GetConnectionString(66);
+
         // Kiểm tra xem có key "isActive" không, nếu không có thì gán giá trị mặc định (null hoặc giá trị khác)
         string isActive = parameters.ContainsKey("isActive") ? parameters["isActive"] : "";
 
@@ -110,7 +114,7 @@ namespace KOAHome.Controllers
 
         //Phân trang
         // search
-        var resultList = await _report.Report_search(objParameters,"HS_Booking1_search", null);
+        var resultList = await _report.Report_search(objParameters,"HS_Booking1_search", connectionString);
         ViewBag.listbook_store = resultList;
 
         // khai bao service lien quan
@@ -209,7 +213,7 @@ namespace KOAHome.Controllers
 
             // xu ly file
             // Kiểm tra xem form có file nào không? Nếu có thì cập nhật file sau đó trả về danh sách file
-            await HandleFiles("BookingFile",form,null);
+            await HandleFiles("KOAAttachment", form,null);
 
             // Convert the IFormCollection to a dictionary of strings
             var formData = form.ToDictionary(
@@ -241,7 +245,7 @@ namespace KOAHome.Controllers
         
               // xu ly file
               // Kiểm tra xem form có file nào không
-              await HandleFiles("BookingFile",null,id);
+              await HandleFiles("KOAAttachment", null,id);
 
               //xu ly report form
               // Dictionary để nhóm dữ liệu theo số thứ tự [n]
@@ -313,7 +317,7 @@ namespace KOAHome.Controllers
 
             // xu ly file
             // Kiểm tra xem form có file nào không
-            await HandleFiles("BookingFile",null,id);
+            await HandleFiles("KOAAttachment", null,id);
       
             // danh sach service theo booking 
             var bookSerResultList = await _report.ReportDetail_FromParent("BookingID", (id ?? 0).ToString(), "HS_BookingService_search", null);
@@ -352,7 +356,7 @@ namespace KOAHome.Controllers
 
         // xu ly file
         // Kiểm tra xem form có file nào không
-        await HandleFiles("BookingFile",form,id);
+        await HandleFiles("KOAAttachment", form,id);
 
               // Convert the IFormCollection to a dictionary of strings
               var formData = form.ToDictionary(
@@ -380,7 +384,7 @@ namespace KOAHome.Controllers
         
                 // xu ly file
                 // Kiểm tra xem form có file nào không
-                await HandleFiles("BookingFile",null,id);
+                await HandleFiles("KOAAttachment", null,id);
 
                 if (!isSaveAttachment)
                 {

@@ -14,6 +14,7 @@ namespace KOAHome.Services
     public Task<(StringBuilder SqlQuery, List<SqlParameter> SqlParam)> Connection_GetQueryParam_Simple(Dictionary<string, object> parameters, string sqlStore, string? connectionString);
     public Task<(StringBuilder SqlQuery, List<SqlParameter> SqlParam)> Connection_GetQueryParam(Dictionary<string, object> parameters, string sqlStore, string? connectionString);
     public Task<List<dynamic>> Connection_GetDataFromQuery(Dictionary<string, object> parameters, string sqlStore, string? connectionString, StringBuilder sqlQuery, List<SqlParameter> sqlParams);
+    public Task<dynamic> Connection_GetSingleDataFromQuery(Dictionary<string, object> parameters, string sqlStore, string? connectionString, StringBuilder sqlQuery, List<SqlParameter> sqlParams);
 
   }
   public class ConnectionService : IConnectionService
@@ -202,6 +203,46 @@ namespace KOAHome.Services
       }
 
       return resultList;
+    }
+
+    public async Task<dynamic> Connection_GetSingleDataFromQuery(Dictionary<string, object> parameters, string sqlStore, string? connectionString, StringBuilder sqlQuery, List<SqlParameter> sqlParams)
+    {
+      // neu khong truyen connect string thi se lay connection string mac dinh
+      if (connectionString == null)
+      {
+        connectionString = _configuration.GetConnectionString("DefaultConnection"); // Thay thế bằng chuỗi kết nối của bạn
+      }
+
+      using (var connection = new SqlConnection(connectionString))
+      {
+        if (connection.State != ConnectionState.Open)
+        {
+          await connection.OpenAsync();
+        }
+        using (var command = new SqlCommand(sqlQuery.ToString(), connection))
+        {
+          command.Parameters.AddRange(sqlParams.ToArray());
+
+          using (var reader = await command.ExecuteReaderAsync())
+          {
+            if (await reader.ReadAsync())
+            {
+              var row = new ExpandoObject() as IDictionary<string, object>;
+              for (int i = 0; i < reader.FieldCount; i++)
+              {
+                object? value = reader.IsDBNull(i) ? null : reader.GetValue(i);
+                string key = reader.GetName(i);
+                row.Add(key, value);
+              }
+
+              return row; // ✅ chỉ trả về dòng đầu tiên
+            }
+          }
+        }
+        await connection.CloseAsync();
+      }
+
+      return null;
     }
   }
 }

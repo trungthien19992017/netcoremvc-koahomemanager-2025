@@ -1,6 +1,7 @@
 using KOAHome.EntityFramework;
 using Microsoft.EntityFrameworkCore;
 using KOAHome.Services;
+using System.Data.Common;
 //using KOAHome.Services;
 
 namespace KOAHome
@@ -38,6 +39,7 @@ namespace KOAHome
       services.AddScoped<IActionService, ActionService>();
       services.AddScoped<IConnectionService, ConnectionService>();
       services.AddScoped<IWidgetService, WidgetService>();
+      services.AddScoped<IDRDatasourceService, DRDatasourceService>();
     }
 
     // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.

@@ -40,7 +40,7 @@ namespace KOAHome.Services
       List<string> fileUrls = new List<string>();
       if (form.Files.Any())
       {
-        var folder = Path.Combine("img", objectTypeCode, DateTime.Now.ToString("ddMMyyyy", CultureInfo.InvariantCulture));
+        var folder = Path.Combine("AttachmentFiles", "FORM", objectTypeCode, DateTime.Now.ToString("yyyyMMdd", CultureInfo.InvariantCulture));
         var uploadFolder = Path.Combine("wwwroot", folder);
 
         // Kiểm tra và tạo thư mục nếu chưa tồn tại

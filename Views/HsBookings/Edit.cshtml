@@ -30,7 +30,7 @@
     <script>
         // xu ly hien thi file sau khi chon file
         $(document).ready(function () {
-        $('#BookingFile').on('change', function (event) {
+        $('#KOAAttachment').on('change', function (event) {
         let fileList = $('#fileList');
         fileList.empty(); // Xóa danh sách cũ
         $.each(event.target.files, function (index, file) {
@@ -306,10 +306,8 @@
                                 </div>
                                 <div class="col-md-3">
                                     <div class="form-floating form-floating-outline mb-6">
-                                        <input type="number" class="form-control" id="Deposit" placeholder="" name="Deposit" value="@(formData.ContainsKey("Deposit") ? formData["Deposit"] : "")" min="18" max="100">
+                                        <input type="number" class="form-control" id="Deposit" placeholder="" name="Deposit" value="@(formData.ContainsKey("Deposit") ? formData["Deposit"] : "")">
                                         <label for="Deposit">Cọc</label>
-                                        <div class="valid-feedback"> Looks good! </div>
-                                        <div class="invalid-feedback"> Cọc từ 18 đến 100. </div>
                                     </div>
                                 </div>
                                 <div class="col-md-3">
@@ -424,8 +422,8 @@
                             <div class="row gx-5 mb-5">
                                 <div class="col-md-4 card-header">
                                     <div class="mb-4">
-                                        <label for="BookingFile" class="form-label">File đính kèm</label>
-                                        <input class="form-control" type="file" id="BookingFile" name="BookingFile" multiple />
+                                        <label for="KOAAttachment" class="form-label">File đính kèm</label>
+                                        <input class="form-control" type="file" id="KOAAttachment" name="KOAAttachment" multiple />
                                         <ul id="fileList"></ul>
 
                                     </div>
