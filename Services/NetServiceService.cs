@@ -12,7 +12,10 @@ namespace KOAHome.Services
 {
   public interface INetServiceService
   {
+    // xu ly lay du lieu tra ve tu service
     public Task<List<SelectListItem>> NET_Service_DynamicExecute(int serviceId, Dictionary<string, object>? parameters);
+    // xu ly lay danh sach selectlist tu filter truyen vao
+    public Task<Dictionary<string, List<SelectListItem>>> NET_Service_GetListSelectListByFilter(List<dynamic>? filterList, Dictionary<string, object>? objParameters);
   }
   public class NetServiceService : INetServiceService
   {
@@ -56,6 +59,12 @@ namespace KOAHome.Services
         // xu ly lay du lieu dua truyen store va param truyen vao
         resultList = await _con.Connection_GetDataFromQuery(parameters, sqlStore, connectionString, sqlQuery, sqlParams);
 
+        // xoa param serviceid ngay de tranh loi phat sinh
+        if (parameters.ContainsKey("ServiceId"))
+        {
+          parameters.Remove("ServiceId");
+        }
+
       List<SelectListItem> listItems = resultList
           .Select(x => new SelectListItem
           {
@@ -65,6 +74,36 @@ namespace KOAHome.Services
           .ToList();
 
       return listItems;
+    }
+
+    public async Task<Dictionary<string, List<SelectListItem>>> NET_Service_GetListSelectListByFilter(List<dynamic>? filterList, Dictionary<string, object>? objParameters)
+    {
+      // doi voi cac filter co kieu select (select box, dropdownbox, tagbox,...), day cac bo select vao SelectListItem va đóng gói trong Dictionary để xử lý trên giao diện
+      // Tạo Dictionary chứa SelectList cho từng dropdown (theo DynamicFieldName)
+      var listFilterService = new Dictionary<string, List<SelectListItem>>();
+
+      if (filterList != null)
+      {
+        // 1. Khởi tạo danh sách Task chính xác
+        var serviceTasks = filterList
+            .Where(f => f.SeviceId != null)
+            .Select(async filter =>
+            {
+              // Tạo bản sao của objParameters cho mỗi filter de tranh ghi de
+              var clonedParameters = new Dictionary<string, object>(objParameters);
+              var selectList = await NET_Service_DynamicExecute((int)filter.SeviceId!, clonedParameters);
+              return (Code: filter.Code!, SelectList: selectList); // 👈 đây là fix
+            })
+            .ToList();
+
+        // 2. Chạy tất cả task song song
+        var serviceResults = await Task.WhenAll(serviceTasks);
+
+        // 3. Chuyển kết quả sang Dictionary<string, List<SelectListItem>>
+        listFilterService = serviceResults.ToDictionary(x => (string)x.Code, x => x.SelectList);
+      }
+
+      return listFilterService;
     }
 
   }

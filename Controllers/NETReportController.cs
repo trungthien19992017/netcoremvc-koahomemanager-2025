@@ -110,7 +110,7 @@ namespace KOAHome.Controllers
         // chuyen cau hinh report len giao dien de xu ly
         ViewBag.report = report;
 
-        string connectionString = null;
+        string? connectionString = null;
         //neu datasourceId la null thi lay connectionString mac dinh
         if (report.ContainsKey("DataSourceId"))
         {
@@ -159,16 +159,9 @@ namespace KOAHome.Controllers
         // Tạo Dictionary chứa SelectList cho từng dropdown (theo DynamicFieldName)
         var listFilterService = new Dictionary<string, List<SelectListItem>>();
 
-        foreach (var filter in filterList)
-        {
-          if (filter.SeviceId != null)
-          {
-            var selectList = await _netService.NET_Service_DynamicExecute(Convert.ToInt32(filter.SeviceId),objParameters);
-            listFilterService[filter.Code] = selectList;
-          }
-        }
-
-        // gan danh sach select cho cac filter
+        //Chuyển kết quả sang Dictionary<string, List<SelectListItem>>
+        listFilterService = await _netService.NET_Service_GetListSelectListByFilter(filterList,objParameters);
+        //  Gán danh sach select cho cac filter vào ViewBag
         ViewBag.DynamicServiceSelectOptions = listFilterService;
 
         // search
