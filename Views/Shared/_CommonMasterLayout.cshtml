@@ -19,6 +19,10 @@
     <!-- Thêm moment.js để xử lý ngày giờ chính xác -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.29.4/moment.min.js"></script>
 
+    @* xu ly xuat excel js *@
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/exceljs/4.3.0/exceljs.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
+
   @{
         string title = ViewData["title"] as string ?? "";
         string appName = TempData.Peek("appName") as string ?? "";
@@ -688,6 +692,202 @@
             });
         }
 
+        // ham xu ly chuyen html thanh text
+        function htmlToCleanText(html) {
+            const temp = document.createElement("div");
+            temp.innerHTML = html;
+
+            function processNode(node) {
+                let result = "";
+
+                node.childNodes.forEach((child) => {
+                    if (child.nodeType === Node.TEXT_NODE) {
+                        result += child.textContent.trim();
+                    } else if (child.nodeType === Node.ELEMENT_NODE) {
+                        const tag = child.tagName.toLowerCase();
+
+                        if (tag === "br") {
+                            result += "\n";
+                        } else if (tag === "div") {
+                            const inner = processNode(child);
+                            if (inner.trim()) result += inner.trim() + "\n"; // Xuống dòng sau mỗi div
+                        } else if (tag === "span" || tag === "b" || tag === "i") {
+                            result += processNode(child); // Lấy text của các thẻ inline
+                        } else {
+                            result += processNode(child); // fallback
+                        }
+                    }
+                });
+
+                return result;
+            }
+
+            return processNode(temp).trim();
+        }
+
+        // ham xu ly xuat excel thong qua exceljs
+        function exportTableToExcelJS(selector, filename = "export.xlsx") {
+            const table = document.querySelector(selector);
+            const workbook = new ExcelJS.Workbook();
+            const worksheet = workbook.addWorksheet("Danh sách");
+
+            // kiem tra cot co duoc export khong? (neu isexport = 0 hoac class contain d-none thi khong export)
+            const isCellExportable = (el) => {
+                const style = window.getComputedStyle(el);
+                const isHidden = style.display === "none" || el.classList.contains("d-none");
+                const hasAttr = el.hasAttribute("data-isexport");
+                const notExport = hasAttr && el.getAttribute("data-isexport") === "False";
+                return !isHidden && (!hasAttr || !notExport);
+            };
+
+            // to mau header export tuong ung voi mau header cua report
+            const rgbToHexARGB = (rgb) => {
+              const result = rgb.match(/\d+/g);
+              if (!result) return "FFFFFFFF"; // fallback trắng
+
+              const [r, g, b, a = "1"] = result.map(Number);
+              const alpha = Math.round((a * 255)).toString(16).padStart(2, '0').toUpperCase();
+              const red = r.toString(16).padStart(2, '0').toUpperCase();
+              const green = g.toString(16).padStart(2, '0').toUpperCase();
+              const blue = b.toString(16).padStart(2, '0').toUpperCase();
+
+              return `${alpha}${red}${green}${blue}`;
+          };
+
+            let rowIndex = 1;
+            let columnTracker = [];
+
+            // === GHI THEAD ===
+            table.querySelectorAll("thead tr").forEach(tr => {
+                const row = worksheet.getRow(rowIndex);
+                let colIndex = 1;
+
+                tr.querySelectorAll("th").forEach(th => {
+                    if (!isCellExportable(th)) return;
+
+                    while (columnTracker[colIndex]) colIndex++;
+
+                    const cell = row.getCell(colIndex);
+                    cell.value = th.innerText.trim();
+                    cell.font = { bold: true };
+                    const style = window.getComputedStyle(th);
+                    const bgColor = rgbToHexARGB(style.backgroundColor);
+
+                    cell.fill = {
+                        type: 'pattern',
+                        pattern: 'solid',
+                        fgColor: { argb: bgColor }
+                    };
+                    cell.border = { top: { style: 'thin' }, left: { style: 'thin' }, bottom: { style: 'thin' }, right: { style: 'thin' } };
+                    cell.alignment = { vertical: 'middle', horizontal: 'center', wrapText: true };
+
+                    const colspan = parseInt(th.getAttribute("colspan")) || 1;
+                    const rowspan = parseInt(th.getAttribute("rowspan")) || 1;
+
+                    if (colspan > 1 || rowspan > 1) {
+                        worksheet.mergeCells(rowIndex, colIndex, rowIndex + rowspan - 1, colIndex + colspan - 1);
+                    }
+
+                    if (rowspan > 1) {
+                        for (let i = 0; i < colspan; i++) {
+                            for (let r = 1; r < rowspan; r++) {
+                                columnTracker[colIndex + i] ??= {};
+                                columnTracker[colIndex + i][rowIndex + r] = true;
+                            }
+                        }
+                    }
+
+                    colIndex += colspan;
+                });
+
+                row.commit();
+                rowIndex++;
+                columnTracker = columnTracker.map(col => {
+                    if (col && col[rowIndex]) {
+                        delete col[rowIndex];
+                        return col;
+                    }
+                    return col;
+                });
+            });
+
+            // === GHI TBODY ===
+            const thList = Array.from(table.querySelectorAll("thead th")).filter(isCellExportable);
+
+            table.querySelectorAll("tbody tr").forEach(tr => {
+                const row = worksheet.getRow(rowIndex);
+                let colIndex = 1;
+
+                Array.from(tr.querySelectorAll("td")).forEach((td, idx) => {
+                    const relatedTh = table.querySelector(`thead th:nth-child(${idx + 1})`);
+                    if (!isCellExportable(td) || (relatedTh && !isCellExportable(relatedTh))) return;
+
+                    const cell = row.getCell(colIndex++);
+                    // kiem tra neu td dang input check box thi get giá trị check được
+                    const checkbox = td.querySelector('input[type="checkbox"]');
+                    if (checkbox) {
+                        cell.value = checkbox.checked ? "✔" : "✘"; // Hoặc "Có" / "Không"
+                    } else {
+                        const rawText = td.innerText.trim();
+
+                        // Kiểm tra tồn tại attribute
+                        const displayType = td.hasAttribute("data-displaytype") ? td.getAttribute("data-displaytype") : null;
+                        const displayFormat = td.hasAttribute("data-displayformat") ? td.getAttribute("data-displayformat") : null;
+
+                        // neu kieu date thi format date
+                        if (displayType === "date") {
+                            cell.value = rawText;
+                        // neu la number thi format number
+                        } else if (["int", "long", "float"].includes(displayType)) {
+                            const numberValue = parseFloat(rawText.replace(/,/g, ""));
+                            if (!isNaN(numberValue)) {
+                                cell.value = numberValue;
+                                cell.numFmt = displayFormat || "#,##0.##";
+                            } else {
+                                cell.value = rawText;
+                            } 
+                        } else {
+                            // fallback: giữ nguyên như hiện tại
+                            cell.value = rawText;
+                        }
+                    }
+                    // lay style tu thuoc tinh tren grid
+                    const style = window.getComputedStyle(td);
+                    const bgColor = rgbToHexARGB(style.backgroundColor);
+                    // Nếu màu nền là đen thì bỏ set màu nền
+                    const cellFillColor = (bgColor === "00000000") ? undefined : { type: 'pattern', pattern: 'solid', fgColor: { argb: bgColor } };
+
+                    // text align cho excel
+                    const textAlign = style.textAlign;
+                    const verticalAlign = style.verticalAlign;
+
+                    cell.fill = cellFillColor;
+                    cell.alignment = { vertical: verticalAlign, horizontal: textAlign, wrapText: true };
+                    cell.border = { top: { style: 'thin' }, left: { style: 'thin' }, bottom: { style: 'thin' }, right: { style: 'thin' } };
+                });
+
+                row.commit();
+                rowIndex++;
+            });
+
+            // === TỰ CĂN CỘT ===
+            worksheet.columns.forEach(column => {
+                let maxLength = 10;
+                column.eachCell({ includeEmpty: true }, cell => {
+                    const text = cell.value?.toString() || "";
+                    const firstLine = text.includes("\n") ? text.split("\n")[0] : text;
+                    maxLength = Math.max(maxLength, firstLine.length);
+                });
+                column.width = maxLength + 2;
+            });
+
+            // === TẢI FILE ===
+            workbook.xlsx.writeBuffer().then(buffer => {
+                const blob = new Blob([buffer], { type: "application/octet-stream" });
+                saveAs(blob, filename);
+            });
+        }
+
         // xu ly nút xuat export, phan trang doi voi table cau hinh class table-with-exportexcel
          function initExcelExportForTable(selector, options = {}) {
             // gia tri mac dinh
@@ -712,9 +912,20 @@
                      dom: '<"d-flex justify-content-between align-items-center datatable-top-component"<"d-flex gap-2"fl><"d-flex gap-2"B>>irtp',
                      buttons: [
                          {
-                             extend: "excelHtml5",
+                             // extend: "excelHtml5",
                              className: "buttons-excel buttons-html5 btn btn-primary",
                              text: '<i class="ri-upload-2-line"></i>',
+                              action: function () {
+                                const dt = table.DataTable();
+                                    dt.page.len(-1).draw(); // -1 = Hiển thị tất cả các dòng
+
+                                    setTimeout(() => {
+                                        exportTableToExcelJS('#DataTables_Table_0', config.filename + '.xlsx');
+    
+                                        // sau khi export xong, trở về số trang cũ
+                                        dt.page.len(20).draw(); // hoặc dt.page.len(oldLen).draw();
+                                    }, 500);
+                              },
                              filename: config.filename,
                              customize: config.customize || null,
                              exportOptions: config.exportOptions || {},
@@ -736,6 +947,10 @@
                                  // rows.eq(0).attr("s", "2");
                                  // $('row:first c', sheet).attr( 's', '42' );
                                  rows.eq(1).find("c").attr("s", "42");
+                                 
+                                // Tô màu cả 2 dòng header nếu có (dòng 0 và dòng 1)
+                                rows.eq(0).find("c").attr("s", "42"); // Style 42 là header
+                                rows.eq(1).find("c").attr("s", "42");
                              }
                          }
                      ],
@@ -743,13 +958,26 @@
                      lengthMenu: [10, 20, 50, 100], // Các tùy chọn số lượng bản ghi
                      pageLength: 20, // Mặc định hiển thị 25 bản ghi trên mỗi trang
                      lengthChange: true,
+                     // mac dinh sap xep theo controller
+                      ordering: true,        // bật tính năng sắp xếp
+                      order: [],             // KHÔNG sắp xếp cột nào mặc định
                      // hien thi
                      language: {
                              lengthMenu: "_MENU_",
                              search: "",
                              searchPlaceholder: "Tìm kiếm",
-                             info: "Hiển thị _START_ đến _END_ của _TOTAL_ kết quả"
-                         }
+                             info: "Hiển thị _START_ đến _END_ của _TOTAL_ kết quả",
+                              paginate: {
+                                  previous: "<i class='ri-arrow-left-s-line'></i>",  // hoặc "Trước"
+                                  next: "<i class='ri-arrow-right-s-line'></i>"       // hoặc "Tiếp"
+                              }
+                         },
+                    initComplete: function (settings, json) {
+                        console.log('Init complete:', settings);
+                    },
+                    drawCallback: function (settings) {
+                        console.log('Draw callback:', settings);
+                    }
                  });
 
                // Di chuyển phần phân trang ra ngoài bảng

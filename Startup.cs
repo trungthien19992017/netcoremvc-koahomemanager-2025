@@ -21,6 +21,9 @@ namespace KOAHome
       services.AddDbContext<QLKCL_NEWContext>(options =>
           options.UseSqlServer(
               Configuration.GetConnectionString("DefaultConnection")));
+      services.AddDbContext<TttConfigContext>(options =>
+          options.UseSqlServer(
+              Configuration.GetConnectionString("ConfigConnection")));
       services.AddDistributedMemoryCache();
       services.AddSession(options => {
         options.IdleTimeout = TimeSpan.FromMinutes(20);//You can set Time
@@ -40,6 +43,7 @@ namespace KOAHome
       services.AddScoped<IConnectionService, ConnectionService>();
       services.AddScoped<IWidgetService, WidgetService>();
       services.AddScoped<IDRDatasourceService, DRDatasourceService>();
+      services.AddScoped<INetServiceService, NetServiceService>();
     }
 
     // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.

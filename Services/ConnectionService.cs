@@ -14,7 +14,7 @@ namespace KOAHome.Services
     public Task<(StringBuilder SqlQuery, List<SqlParameter> SqlParam)> Connection_GetQueryParam_Simple(Dictionary<string, object> parameters, string sqlStore, string? connectionString);
     public Task<(StringBuilder SqlQuery, List<SqlParameter> SqlParam)> Connection_GetQueryParam(Dictionary<string, object> parameters, string sqlStore, string? connectionString);
     public Task<List<dynamic>> Connection_GetDataFromQuery(Dictionary<string, object> parameters, string sqlStore, string? connectionString, StringBuilder sqlQuery, List<SqlParameter> sqlParams);
-    public Task<dynamic> Connection_GetSingleDataFromQuery(Dictionary<string, object> parameters, string sqlStore, string? connectionString, StringBuilder sqlQuery, List<SqlParameter> sqlParams);
+    public Task<IDictionary<string, object>?> Connection_GetSingleDataFromQuery(Dictionary<string, object> parameters, string sqlStore, string? connectionString, StringBuilder sqlQuery, List<SqlParameter> sqlParams);
 
   }
   public class ConnectionService : IConnectionService
@@ -205,7 +205,7 @@ namespace KOAHome.Services
       return resultList;
     }
 
-    public async Task<dynamic> Connection_GetSingleDataFromQuery(Dictionary<string, object> parameters, string sqlStore, string? connectionString, StringBuilder sqlQuery, List<SqlParameter> sqlParams)
+    public async Task<IDictionary<string, object>?> Connection_GetSingleDataFromQuery(Dictionary<string, object> parameters, string sqlStore, string? connectionString, StringBuilder sqlQuery, List<SqlParameter> sqlParams)
     {
       // neu khong truyen connect string thi se lay connection string mac dinh
       if (connectionString == null)
@@ -232,7 +232,7 @@ namespace KOAHome.Services
               {
                 object? value = reader.IsDBNull(i) ? null : reader.GetValue(i);
                 string key = reader.GetName(i);
-                row.Add(key, value);
+                row[key] = value;
               }
 
               return row; // ✅ chỉ trả về dòng đầu tiên

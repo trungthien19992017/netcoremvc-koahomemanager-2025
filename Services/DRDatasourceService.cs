@@ -45,7 +45,7 @@ namespace KOAHome.Services
       var result = await _con.Connection_GetSingleDataFromQuery(parameters, sqlStore, connectionString, sqlQuery, sqlParams);
 
       // tra ve chuoi connection string
-      string resultConnectionString = $"Server={result.Host};Database={result.DBName};User Id={result.User ?? ""};Password={result.Password ?? ""};Trusted_Connection=True;MultipleActiveResultSets=true;TrustServerCertificate=True;Max Pool Size=100;";
+      string resultConnectionString = $"Server={result["Host"] ?? ""};Database={result["DBName"] ?? ""};User Id={result["User"] ?? ""};Password={result["Password"] ?? ""};Trusted_Connection=True;MultipleActiveResultSets=true;TrustServerCertificate=True;Max Pool Size=100;";
 
       return resultConnectionString;
     }

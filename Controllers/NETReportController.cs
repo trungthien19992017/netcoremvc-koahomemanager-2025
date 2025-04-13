@@ -3,6 +3,7 @@ using KOAHome.Services;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
+using static NuGet.Packaging.PackagingConstants;
 
 namespace KOAHome.Controllers
 {
@@ -20,8 +21,9 @@ namespace KOAHome.Controllers
     private readonly IActionService _action;
     private readonly IWidgetService _widget;
     private readonly IDRDatasourceService _datasrc;
+    private readonly INetServiceService _netService;
 
-    public NETReportController(QLKCL_NEWContext db, ILogger<HsBookingsController> logger, IHsBookingTableService book, IHsBookingServiceService bookser, IReportEditorService re, IAttachmentService att, IHsCustomerService cus, IReportService report, IFormService form, IActionService action, IWidgetService widget, IDRDatasourceService datasrc)
+    public NETReportController(QLKCL_NEWContext db, ILogger<HsBookingsController> logger, IHsBookingTableService book, IHsBookingServiceService bookser, IReportEditorService re, IAttachmentService att, IHsCustomerService cus, IReportService report, IFormService form, IActionService action, IWidgetService widget, IDRDatasourceService datasrc, INetServiceService netService)
     {
       _db = db;
       _logger = logger;
@@ -35,6 +37,7 @@ namespace KOAHome.Controllers
       _action = action;
       _widget = widget;
       _datasrc = datasrc;
+      _netService = netService;
     }
 
     // cac phuong thuc con de toi uu xu ly
@@ -85,6 +88,7 @@ namespace KOAHome.Controllers
     }
 
     // GET: NETReport/Viewer_Utility
+    [HttpGet]
     public async Task<IActionResult> Viewer_Utility([FromQuery] Dictionary<string, string> parameters, string? ReportCode)
     {
       try
@@ -98,28 +102,78 @@ namespace KOAHome.Controllers
 
         // lay thong tin report, va danh sach filter display cua report de xu ly
         var report = await _report.NET_Report_Get(ReportCode);
-        var filterList = await _report.NET_Filter_WithReport_Get(ReportCode, null);
-        var displayList = await _report.NET_Display_WithReport_Get(ReportCode, null);
-
-        string connectionString = await _datasrc.GetConnectionString(report.DataSourceId);
-
-        // Kiểm tra xem có key "isActive" không, nếu không có thì gán giá trị mặc định (null hoặc giá trị khác)
-        string isActive = parameters.ContainsKey("isActive") ? parameters["isActive"] : "";
-
-        // Service cho filter hoat dong
-        ViewBag.IsActiveOptions = new List<SelectListItem>
+        // tra ve page loi neu khong tim thay report
+        if (report == null)
         {
-            new SelectListItem { Value = "1", Text = "Có" , Selected = isActive == "1"},
-            new SelectListItem { Value = "2", Text = "Không" , Selected = isActive == "2"}
-        };
+          return RedirectToAction("MiscError", "Pages", new { errorMessage = "Không tìm thấy bảng" });
+        }
+        // chuyen cau hinh report len giao dien de xu ly
+        ViewBag.report = report;
 
-        // chuyen parameters thanh Idictionary<string, object>
+        string connectionString = null;
+        //neu datasourceId la null thi lay connectionString mac dinh
+        if (report.ContainsKey("DataSourceId"))
+        {
+          if (report["DataSourceId"] != null)
+          {
+            //lay connectionstring tu report de goi store
+            connectionString = await _datasrc.GetConnectionString(Convert.ToInt32(report["DataSourceId"]));
+          }
+        }
+
+        // khai bao cac du lieu report can su dung trong controller
+        string? sqlContent = report.ContainsKey("SqlContent") ? Convert.ToString(report["SqlContent"]) : "";
+        string? sqlDefaultContent = report.ContainsKey("SqlDefaultContent") ? Convert.ToString(report["SqlDefaultContent"]) : "";
+        string? storeDRDisplay = report.ContainsKey("StoreDRDisplay") ? Convert.ToString(report["StoreDRDisplay"]) : "";
+
+        if (sqlContent == null)
+        {
+          return RedirectToAction("MiscError", "Pages", new { errorMessage = "Không tồn tại store của bảng" });
+        }
+
+        // chuyen parameters cua bo loc thanh Idictionary<string, object>
         Dictionary<string, object> objParameters = parameters.ToDictionary(kvp => kvp.Key, kvp => (object)kvp.Value);
 
-        //Phân trang
+        // neu bo loc khong co va co store default filter thi lay du lieu mac dinh tu store
+        if (objParameters.Count() == 0 && sqlDefaultContent != null && sqlDefaultContent != "")
+        {
+          var defaultFilter = await _report.NET_Report_GetDefaultFilter(null, sqlDefaultContent, connectionString);
+          objParameters = defaultFilter != null ? new Dictionary<string, object>(defaultFilter) : new Dictionary<string, object>();
+        }
+
+        // chuyen bo loc len giao dien
+        ViewBag.ListFilterValue = objParameters;
+
+        // lay danh sach filter display cua report de xu ly
+        var filterList = await _report.NET_Filter_WithReport_Get(ReportCode, null);
+        var displayList = await _report.NET_Display_WithReport_Get(objParameters, ReportCode, null);
+        // tinh số cấp cha con của cột trong display report
+        int displayParentLevelNum = _report.Display_GetReportMaxParentLevel(displayList);
+        // chuyển cấu hình display lên giao diện để xử lý
+        ViewBag.displayList = displayList;
+        ViewBag.displayParentLevelNum = displayParentLevelNum;
+
+        // xu ly bo loc filter
+        ViewBag.ListFilterConfig = filterList;
+        // doi voi cac filter co kieu select (select box, dropdownbox, tagbox,...), day cac bo select vao SelectListItem va đóng gói trong Dictionary để xử lý trên giao diện
+        // Tạo Dictionary chứa SelectList cho từng dropdown (theo DynamicFieldName)
+        var listFilterService = new Dictionary<string, List<SelectListItem>>();
+
+        foreach (var filter in filterList)
+        {
+          if (filter.SeviceId != null)
+          {
+            var selectList = await _netService.NET_Service_DynamicExecute(Convert.ToInt32(filter.SeviceId),objParameters);
+            listFilterService[filter.Code] = selectList;
+          }
+        }
+
+        // gan danh sach select cho cac filter
+        ViewBag.DynamicServiceSelectOptions = listFilterService;
+
         // search
-        var resultList = await _report.Report_search(objParameters, "HS_Booking1_search", connectionString);
-        ViewBag.listbook_store = resultList;
+        var resultList = await _report.Report_search(objParameters, sqlContent, connectionString);
+        ViewBag.resultList = resultList;
 
         // khai bao service lien quan
         var service_parameters = new Dictionary<string, object>();
@@ -127,7 +181,6 @@ namespace KOAHome.Controllers
 
         //khai bao success
         ViewBag.success = "Thành công";
-
 
         return View();
       }

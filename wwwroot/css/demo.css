@@ -151,3 +151,8 @@
 .andalemono-font {
   font-family: 'Andale Mono', monospace;
 }
+
+/*custom file download tren grid*/
+.file-download-link {
+  width: 200px; /* hoặc bạn muốn 150px, 250px tùy layout */
+}

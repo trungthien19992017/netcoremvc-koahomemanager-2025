@@ -1,11 +1,28 @@
+@using KOAHome.Helpers
+@using System.Text.Json
 @{
-    ViewData["Title"] = "BOOKING";
+    ViewData["Title"] = "Dynamic report";
     Layout = "~/Views/Shared/_ContentNavbarLayout.cshtml";
     // var listcus = ViewBag.listcus as List<KOAHome.EntityFramework.HsCustomer>;
-    var listbook_store = ViewBag.listbook_store as List<dynamic>;
+    var resultList = ViewBag.resultList as List<dynamic>;
     var listbookser_info_store = ViewBag.listbookser_info_store as List<dynamic>;
 
-    var random = new Random();
+    // truyen cau hinh report de xu ly giao dien
+    var report = ViewBag.report as IDictionary<string, object>;
+
+    // truyen danh sach gia tri loc len giao dien
+    var listFilterValue = ViewBag.ListFilterValue as IDictionary<string, object>;
+    var listFilterConfig = ViewBag.ListFilterConfig as List<dynamic>;
+    var dynamicServiceSelectOptions = ViewBag.DynamicServiceSelectOptions as Dictionary<string, List<SelectListItem>>;
+
+    // truyen danh sach gia tri cot du lieu len giao dien
+    var displayList = ViewBag.displayList as List<dynamic>;
+    // tính cấp cha con display
+    int displayParentLevelNum = ViewBag.displayParentLevelNum;
+
+    // tao bien dem de dem row num cho report
+    var reportRowIndex = 1;
+
 }
 
 @section VendorStyles {
@@ -67,7 +84,7 @@
 <div class="content-wrapper">
     <!-- Content -->
     <div class="container-xxl flex-grow-1 container-p-y">
-        <h1 class="mb-1" id="header-title">Danh sách booking! </h1>
+        <h1 class="mb-1" id="header-title">@(listFilterValue.ContainsKey("title") ? listFilterValue["title"] : report.ContainsKey("Name") ? report["Name"] : "Danh sách")</h1>
         <div class="row gy-6">
             @* Data Table new *@
             <!-- Data Tables -->
@@ -90,31 +107,59 @@
                                                 <div id="accordionOne" class="accordion-collapse collapse" data-bs-parent="#accordionExample">
                                                     <div class="accordion-body">
                                                         @* filter *@
-                                                        <form method="get" action="/report/viewer-utility/@ViewBag.ReportCode" enctype="multipart/form-data">
+                                                        <form method="get" class="needs-validation" novalidate="" action="/report/viewer-utility/@ViewBag.ReportCode" enctype="multipart/form-data">
                                                             @* report code mac dinh truyen vao bo loc *@
                                                             <div class="row gx-3 gy-2 align-items-center">
-                                                                <div class="col-md-4 form-floating form-floating-outline mb-6">
-                                                                    <input class="form-control form-control-sm" type="search" placeholder="" id="PhoneNumber" name="PhoneNumber" value="@Context.Request.Query["PhoneNumber"]" autofocus />
-                                                                    <label for="PhoneNumber">SĐT</label>
-                                                                </div>
-                                                                <div class="col-md-4 form-floating form-floating-outline mb-6">
-                                                                    <input class="form-control form-control-sm" type="search" placeholder="" id="HoTen" name="HoTen" value="@Context.Request.Query["HoTen"]" />
-                                                                    <label for="HoTen">Họ tên</label>
-                                                                </div>
-                                                                <div class="col-md-4 form-floating form-floating-outline mb-6">
-                                                                    <input class="form-control form-control-sm" type="date" placeholder="" id="CheckInFrom" name="CheckInFrom" value="@Context.Request.Query["CheckInFrom"]" />
-                                                                    <label for="CheckInFrom">Check in từ</label>
-                                                                </div>
-                                                                <div class="col-md-4 form-floating form-floating-outline mb-6">
-                                                                    <input class="form-control form-control-sm" type="date" placeholder="" id="CheckInTo" name="CheckInTo" value="@Context.Request.Query["CheckInTo"]" />
-                                                                    <label for="CheckInTo">Check in đến</label>
-                                                                </div>
-                                                                <div class="col-md-4 form-floating form-floating-outline mb-6">
-                                                                    <select asp-items="ViewBag.IsActiveOptions"
-                                                                            class="form-select color-dropdown form-select-sm" placeholder="" id="isActive" name="isActive">
-                                                                    </select>
-                                                                    <label for="isActive">Hoạt động</label>
-                                                                </div>
+                                                                @* xu ly filter dong *@
+                                                                @foreach (var filter in listFilterConfig.OrderBy(p => p.OrderId).ToList())
+                                                                {
+                                                                    @* name: Key cua filter truyen vao, label: Ten filter, type: Loại filter, value: giá trị filter
+                                                                    , colspan: độ rộng filter *@
+                                                                    string name = filter.Code;
+                                                                    string label = filter.Name;
+                                                                    string type = filter.DynamicFieldName;
+                                                                    var value = listFilterValue.ContainsKey(name) ? listFilterValue[name] : "";
+                                                                    int colspan = Convert.ToInt32(filter.ColSpan);
+
+                                                                    @* neu colspan = 0 thi mac dinh = 4, neu khong thi lay colspan *@
+                                                                    <div class="col-md-@(Convert.ToInt32(filter.ColSpan) == 0 ? "4" : @filter.ColSpan) form-floating form-floating-outline mb-6">
+                                                                        @if (type == "TEXT BOX")
+                                                                        {
+                                                                            <input class="form-control form-control-sm" type="text" id="@name" name="@name" value="@value" @(filter.Required == true ? "required" : "") />
+                                                                        }
+                                                                        else if (type == "DATE BOX")
+                                                                        {
+                                                                            <input class="form-control form-control-sm" type="date" id="@name" name="@name" value="@value" @(filter.Required == true ? "required" : "")/>
+                                                                        }
+                                                                        else if (type == "SELECT BOX")
+                                                                        {
+                                                                            @* check selected cho item dung voi gia tri *@
+                                                                            var selectList = ViewBag.dynamicServiceSelectOptions[name] as List<SelectListItem> ?? new List<SelectListItem>();
+                                                                            @foreach (var item in selectList)
+                                                                            {
+                                                                                item.Selected = (item.Value.ToString() == value.ToString()); // currentValue là giá trị đang được chọn
+                                                                            }
+                                                                            var selectAttributes = new Dictionary<string, object>
+                                                                            {
+                                                                                { "class", "form-select color-dropdown form-select-sm" },
+                                                                                { "id", name },
+                                                                                { "name", name }
+                                                                            };
+
+                                                                            // neu bat buoc thi them truong bat buoc
+                                                                            if (filter.Required == true)
+                                                                            {
+                                                                                selectAttributes["required"] = "required";
+                                                                            }
+
+                                                                            @Html.DropDownList(name, selectList, "-- Chọn --", selectAttributes)
+                                                                        }
+                                                                        <label for="@name">@label</label>
+                                                                        <div class="valid-feedback"> Chính xác! </div>
+                                                                        <div class="invalid-feedback"> Không được bỏ trống. </div>
+                                                                    </div>
+                                                                }
+                                                            
                                                             </div>
                                                             @* end filter *@
                                                             @* nut xem *@
@@ -151,132 +196,448 @@
                                 @* end action top *@
                             </div>
                             @* end filter *@
-                            @* table *@
-                            <div class="card mb-6">
-                                <div class="card-body" id="vertical-example">
-                                    <div class="table-responsive" style="height: 400px">
-                                        <table class="table table-sm table-bordered table-hover display table-with-exportexcel">
-                                            <thead class="freepanze-head">
-                                                <tr>
-                                                    <th class="text-truncate">STT</th>
-                                                    <th></th>
-                                                    <th class="text-truncate freepanze-col">Họ Tên</th>
-                                                    <th class="text-truncate">SĐT</th>
-                                                    <th class="text-truncate">Tổng số tiền</th>
-                                                    <th class="text-truncate">Thời gian check in</th>
-                                                    <th class="text-truncate">Thời gian check out</th>
-                                                    <th class="text-truncate">Trạng thái thanh toán</th>
-                                                    <th class="text-truncate">Số giờ</th>
-                                                    <th class="text-truncate">Phòng</th>
-                                                    <th class="text-truncate">Tầng</th>
-                                                    <th class="text-truncate">Hoạt động</th>
-                                                    <th class="text-truncate">Ngày book phòng</th>
-                                                    <th class="text-truncate">Giới tính</th>
-                                                    <th class="text-truncate">CCCD</th>
-                                                    <th class="text-truncate">Lý do hủy phòng</th>
-                                                    <th class="text-truncate">Đơn giá</th>
-                                                    <th class="text-truncate">Phần trăm giảm giá (%)</th>
-                                                    <th class="text-truncate">Số tiền giảm giá phát sinh (VNĐ)</th>
-                                                    <th class="text-truncate">Lý do giảm giá</th>
-                                                    <th class="text-truncate">Dịch vụ</th>
-                                                    <th class="text-truncate">Dịch vụ</th>
-                                                </tr>
-                                            </thead>
-                                            <tbody class="overflow-auto">
-                                                @if (listbook_store != null)
-                                                {
-                                                    @foreach (var book in listbook_store)
-                                                    {
+          @* table *@
+      <div class="card mb-6">
+          <div class="card-body" id="vertical-example">
+            <div class="table-responsive" style="max-height: 400px">
+              <table border="1" cellpadding="5" cellspacing="0" style="width: 100%; text-align: center; table-layout: auto;" class="table table-sm table-bordered table-hover display table-with-exportexcel" >
+                <thead class="freepanze-head">
+                    <tr>
+                      @* neu display khong null thi tiep tuc *@
+                      @if (displayList != null)
+					  {
+                          @* voi moi cot dang co *@
+                          @* neu cot isdisplay = false thi không hien thi (chỉ lấy giá trị)  *@
+                          @foreach (var display in displayList.Where(p=> p.IsDisplay == false).OrderBy(p => p.ColNum ?? 0).ToList())
+                          {
+                            <th class="text-center d-none" rowspan="@displayParentLevelNum" data-code="@display.Code" data-index="@(display.ColNum ?? "0")" data-isexport="@(display.IsExport ?? "True")">@Html.Raw(display.Name)</th>
+                          }
+                          @* hien thi cot stt dau tien neu co *@
+						  @foreach (var display in displayList.Where(p=> p.IsDisplay == true && p.Code == "stt" && p.IsParent == false && string.IsNullOrEmpty(p.ParentCode)).OrderBy(p => p.ColNum ?? 0).ToList())
+                          {
+                            @* co dinh cot neu co cau hinh (chi ap dung cho cot 1 rowspan) *@
+                            <th class="text-center @(display.IsFreePane == true ? "freepanze-col" : "")" rowspan="@displayParentLevelNum" data-code="@display.Code" data-index="@(display.ColNum ?? "0")"  data-isexport="@(display.IsExport ?? "True")" style="min-width:@((display.Width ?? "200") + "px");@(display.CssHeader ?? "")">@Html.Raw(display.Name)</th>
+                          }
+                          @* them mot cot xu ly *@
+						  <th data-code="HandleColumn" data-index="2" rowspan="@displayParentLevelNum" data-isexport="False" >Xử lý</th>
+                          @* neu cot khong co parent code cung khong phai is parent thi xu ly rieng *@
+						  @foreach (var display in displayList.Where(p=> p.IsDisplay == true && p.Code != "stt" && p.IsParent == false && string.IsNullOrEmpty(p.ParentCode)).OrderBy(p => p.ColNum ?? 0).ToList())
+                          {
+                            @* co dinh cot neu co cau hinh (chi ap dung cho cot 1 rowspan) *@
+                            <th class="text-center @(display.IsFreePane == true ? "freepanze-col" : "")" rowspan="@displayParentLevelNum" data-code="@display.Code" data-index="@(display.ColNum ?? "0")"  data-isexport="@(display.IsExport ?? "True")" style="min-width:@((display.Width ?? "200") + "px");@(display.CssHeader ?? "")">@Html.Raw(display.Name)</th>
+                          }
+                          @* neu ton tai cot co isparent thi xu ly tiep cot 2 cap *@
+                          @if (displayList.Any(p => p.IsParent == true))
+                          {
+                            @* hien thi cot cha *@
+						    @foreach (var display in displayList.Where(p=> p.IsDisplay == true && p.IsParent == true).OrderBy(p => p.ColNum ?? 0).ToList())
+                            {
+                              @* dem so cot con de tinh colspan *@
+                              var countChild = displayList.Count(p => p.ParentCode == display.Code);
+                              @* neu co cot con thi xu ly tiep *@
+                              if (countChild > 0)
+                              {
+                                <th class="text-center" colspan="@countChild"  data-code="@display.Code"  data-isexport="@(display.IsExport ?? "True")" style="@(display.CssHeader ?? "")">@Html.Raw(display.Name)</th>
+                              }
+                              
+                            }
+                          }
+                      }
+                    </tr>
+                     @* neu co cap cha con thi tiep tuc *@
+                    @if (displayParentLevelNum > 1)
+                    {
+                    <tr>
+                      @* neu display khong null thi tiep tuc *@
+                      @if (displayList != null)
+					  {
+                          @* voi moi cot dang co *@
+                          @* neu ton tai cot co isparent thi xu ly tiep cot 2 cap *@
+                          @if (displayList.Any(p => p.IsParent == true))
+                          {
+                            @* hien thi cot cha *@
+						    @foreach (var display in displayList.Where(p=> p.IsDisplay == true && p.IsParent == true).OrderBy(p => p.ColNum ?? 0).ToList())
+                            {
+                              @* dem so cot con de tinh colspan *@
+                              var countChild = displayList.Count(p => p.ParentCode == display.Code);
+                              @* neu co cot con thi xu ly tiep *@
+                              @if (countChild > 0)
+                              {
+                                @foreach (var displaychild in displayList.Where(p=> p.IsDisplay == true && p.ParentCode == display.Code).OrderBy(p => p.ColNum ?? 0).ToList())
+                                {
+                                    <th class="text-center" data-code="@display.Code" data-index="@(displaychild.ColNum ?? "0")" data-isexport="@(displaychild.IsExport ?? "True")" style="min-width:@(displaychild.Width ?? "200")px;@(displaychild.CssHeader ?? "")">@Html.Raw(displaychild.Name)</th>
+                                }
+                              }
+                              
+                            }
+                          }
+                      }
+                    </tr>
+                    }
+                </thead>
+                  <tbody class="overflow-auto">
+                      @if (resultList != null && displayList != null)
+                      {
+                        @* voi moi dong resultlist *@
+                        @foreach (var result in resultList)
+                        {
+                            var dictionary = (IDictionary<string, object>)result;
+                            var Id = dictionary.ContainsKey("Id") ? Convert.ToInt32(dictionary["Id"]) : 0;
+                            @* lay gia tri to mau background row (BGColorRowClass) *@
+                            var bgColorRowClass = dictionary.ContainsKey("BGColorRowClass") ? Convert.ToString(dictionary["BGColorRowClass"]) : "";
 
-                                                        <tr class="@book.BGColorRowClass">
-                                                            <td class="text-center">@book.stt</td>
-                                                            <td class="text-center">
-                                                                <div class="demo-inline-spacing">
-                                                                    <div class="btn-group" id="dropdown-icon-demo">
-                                                                        <button type="button" class="btn btn-primary btn-xs dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false"><i class="ri-align-justify me-1"></i></button>
-                                                                        <ul class="dropdown-menu overflow-auto" style="max-height:200px">
-                                                                            <li>
-                                                                                <a asp-action="Edit" asp-route-id="@book.Id" class="dropdown-item"><i class="ri-pencil-line me-1 text-primary"></i> Chỉnh sửa</a>
-                                                                            </li>
-                                                                            <li>
-                                                                                <a asp-action="Details" asp-route-id="@book.Id" class="dropdown-item"><i class="ri-eye-line me-1 text-primary"></i> Xem</a>
-                                                                            </li>
-                                                                            <li>
-                                                                                <a asp-action="XacNhanThanhToan" asp-route-id="@book.Id" class="dropdown-item"><i class="ri-check-line me-1 text-primary"></i> Xác nhận đã thanh toán</a>
-                                                                            </li>
-                                                                            <li>
-                                                                                <a asp-action="DichVuPhatSinh" asp-route-id="@book.Id" class="dropdown-item"><i class="ri-add-line me-1 text-primary"></i> Dịch vụ phát sinh</a>
-                                                                            </li>
-                                                                            <li>
-                                                                                <a data-bs-toggle="modal" data-bs-target="#modal-GiamGiaPhatSinh" data-id="@book.Id" data-sqlstore="HS_Booking1_OtherDiscount_sel" data-action="GiamGiaPhatSinh" data-controller="HsBookings" class="dropdown-item popup-form-action"><i class="ri-money-dollar-box-line me-1 text-primary"></i> Giảm giá phát sinh</a>
-                                                                            </li>
-                                                                            <li>
-                                                                                <a data-bs-toggle="modal" data-bs-target="#modal-HuyPhong" data-id="@book.Id" data-sqlstore="HS_Booking1_Cancel_sel" class="dropdown-item popup-form-action"><i class="ri-close-line me-1 text-primary"></i> Hủy phòng</a>
-                                                                            </li>
-                                                                            <li>
-                                                                                <a data-id="@book.Id" data-confirmtext="Bạn có chắc chắn muốn xóa khum?" data-sqlstore="HS_Booking1_del" class="dropdown-item confirmAction"><i class="ri-delete-bin-6-line me-1 text-primary"></i> Xóa</a>
-                                                                            </li>
-                                                                        </ul>
-                                                                    </div>
-                                                                </div>
-                                                            </td>
-                                                            <td class="freepanze-col">
-                                                                <div class="d-flex align-items-center">
-                                                                    <div class="avatar @book.IsPayClass avatar-sm me-4"
-                                                                         data-bs-toggle="popover"
-                                                                         data-bs-placement="top"
-                                                                         data-bs-content="@book.CheckInInfo"
-                                                                         title="Thông tin đặt phòng">
-                                                                        <img src="~/img/avatars/@(random.Next(1,7)).png" alt="Avatar" class="rounded-circle">
-                                                                    </div>
-                                                                    <div>
-                                                                        <h6 class="mb-0 text-truncate">@book.LastName <span class="badge badge-center rounded-pill bg-danger">@book.NumberOfBooking</span></h6>
-                                                                        <small class="text-truncate">&#64;@book.MXH</small>
-                                                                    </div>
-                                                                </div>
-                                                            </td>
-                                                            <td class="text-truncate">@book.PhoneNumber</td>
-                                                            <td class="text-truncate text-center"><span class="badge bg-label-primary me-1">@string.Format("{0:N0}", book.TotalAmount ?? "")</span></td>
-                                                            <td class="text-truncate">@string.Format("{0:dd/MM/yyyy HH:mm}", book.CheckInDate ?? "")</td>
-                                                            <td class="text-truncate">@string.Format("{0:dd/MM/yyyy HH:mm}", @book.CheckOutDate ?? "")</td>
-                                                            <td class="text-center">
-                                                                <input type="checkbox" @(book.IsPay ? "checked" : "") disabled />
-                                                            </td>
-                                                            <td class="text-truncate">@book.TotalTime</td>
-                                                            <td><cusan class="badge @(book.RoomBadgeClass) rounded-pill">@book.RoomName</cusan></td>
-                                                            <td class="text-truncate">@book.Floor</td>
-                                                            <td class="text-center">
-                                                                <input type="checkbox" @(book.isActive ? "checked" : "") disabled />
-                                                            </td>
-                                                            <td class="text-truncate">@string.Format("{0:dd/MM/yyyy HH:mm}", @book.BookingDate ?? "")</td>
-                                                            <td><i class="@book.GenderIcon ri-22px @book.GenderColorClass"></i><span>@book.Gender</span></td>
-                                                            <td class="text-truncate">@book.CCCD</td>
-                                                            <td class="text-truncate">@book.ReasonCancel</td>
-                                                            <td class="text-truncate">@string.Format("{0:N0}", book.UnitPrice ?? "")</td>
-                                                            <td class="text-truncate">@book.DiscountPercent</td>
-                                                            <td class="text-truncate">@string.Format("{0:N0}", book.OtherDiscountAmount ?? "")</td>
-                                                            <td class="text-truncate">@book.ReasonDiscount</td>
-                                                            <td class="text-truncate">@book.ListDichVu</td>
-                                                            <td>
-                                                                <ul class="list-unstyled m-0 avatar-group d-flex align-items-center">
-                                                                    @* voi moi booking lay list book service hien thi *@
-                                                                    @foreach (var bookser in listbookser_info_store.Where(p => p.BookingID == book.Id).ToList())
-                                                                    {
-                                                                        <li data-bs-toggle="tooltip" data-popup="tooltip-custom" data-bs-placement="top" class="avatar avatar-xs pull-up" title="@bookser.DichVu">
-                                                                            <img src="~/img/ServiceImage/@bookser.ServiceImage" alt="Avatar" class="rounded-circle">
-                                                                        </li>
-                                                                    }
-                                                                </ul>
-                                                            </td>
-                                                        </tr>
+                            <tr class="@bgColorRowClass">
+                            @* voi moi cot dang co *@
+                            @* neu cot isdisplay = false thi khong hien thi  *@
+                            @foreach (var display in displayList.Where(p=> p.IsDisplay == false).OrderBy(p => p.ColNum ?? 0).ToList())
+                            {
+                                <td class="@FormatHelper.ParseTextAlignToClass(display.TextAlign) d-none" data-isexport="@(display.IsExport ?? "True")">
+                                    @{
+                                        object value;
+                                        if (dictionary.TryGetValue(display.Code, out value))
+                                        {
+                                            @Html.Raw(value)
+                                        }
+                                        else
+                                        {
+                                            <span class="text-muted">N/A</span> @* Giá trị mặc định *@
+                                        }
+                                    }
+                                </td>
+                            }
+                            @* hien thi cot stt dau tien neu co *@
+					        @foreach (var display in displayList.Where(p=> p.IsDisplay == true && p.Code == "stt" && p.IsParent == false && string.IsNullOrEmpty(p.ParentCode)).OrderBy(p => p.ColNum ?? 0).ToList())
+                            {
+                                @* neu isFreePane bang true thi them class freepanze-col *@
+                                <td class="text-center @(display.IsFreePane == true ? "freepanze-col" : "")" data-isexport="@(display.IsExport ?? "True")">
+                                    @{
+                                        object value;
+                                        if (dictionary.TryGetValue(display.Code, out value))
+                                        {
+                                           @Html.Raw(value);
+                                        }
+                                        else
+                                        {
+                                            <span class="text-muted">N/A</span> @* Giá trị mặc định *@
+                                        }
+                                    }
+                                </td>
+                            }
+                            @* them cot xu ly *@
+							<td class="text-center" data-isexport="False"> 
+                                  <div class="demo-inline-spacing">
+                                    <div class="btn-group" id="dropdown-icon-demo">
+                                      <button type="button" class="btn btn-primary btn-xs dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false"><i class="ri-align-justify me-1"></i></button>
+                                      <ul class="dropdown-menu overflow-auto" style="max-height:200px">
+                                        <li>
+                                          <a asp-action="Edit" asp-route-id="@Id" class="dropdown-item"><i class="ri-pencil-line me-1 text-primary"></i> Chỉnh sửa</a>
+                                        </li>
+                                        <li>
+                                          <a asp-action="Details" asp-route-id="@Id" class="dropdown-item"><i class="ri-eye-line me-1 text-primary"></i> Xem</a>
+                                        </li>
+                                        <li>
+                                          <a asp-action="XacNhanThanhToan" asp-route-id="@Id" class="dropdown-item"><i class="ri-check-line me-1 text-primary"></i> Xác nhận đã thanh toán</a>
+                                        </li>
+                                        <li>
+                                          <a asp-action="DichVuPhatSinh" asp-route-id="@Id" class="dropdown-item"><i class="ri-add-line me-1 text-primary"></i> Dịch vụ phát sinh</a>
+                                        </li>
+                                        <li>
+                                          <a data-bs-toggle="modal" data-bs-target="#modal-GiamGiaPhatSinh" data-id="@Id" data-sqlstore="HS_Booking1_OtherDiscount_sel" data-action="GiamGiaPhatSinh" data-controller="HsBookings" class="dropdown-item popup-form-action"><i class="ri-money-dollar-box-line me-1 text-primary"></i> Giảm giá phát sinh</a>
+
+                                        </li>
+                                        <li>
+                                          <a data-bs-toggle="modal" data-bs-target="#modal-HuyPhong" data-id="@Id" data-sqlstore="HS_Booking1_Cancel_sel" class="dropdown-item popup-form-action"><i class="ri-close-line me-1 text-primary"></i> Hủy phòng</a>
+                                        </li>
+                                        <li>
+                                          <a data-id="@Id" data-confirmtext="Bạn có chắc chắn muốn xóa khum?" data-sqlstore="HS_Booking1_del" class="dropdown-item confirmAction"><i class="ri-delete-bin-6-line me-1 text-primary"></i> Xóa</a>
+                                        </li>
+                                      </ul>
+                                    </div>
+                                  </div>
+							</td>
+                            @* neu cot khong co parent code cung khong phai is parent thi xu ly rieng *@
+					        @foreach (var display in displayList.Where(p=> p.IsDisplay == true && p.Code != "stt" && p.IsParent == false && string.IsNullOrEmpty(p.ParentCode)).OrderBy(p => p.ColNum ?? 0).ToList())
+                            {
+                                var displayType = display.Type as string ?? "link";
+                                var displayFormat = display.Format as string ?? "";
+                                @* neu isFreePane bang true thi them class freepanze-col *@
+                                <td class="@FormatHelper.ParseTextAlignToClass(display.TextAlign) @(display.IsFreePane == true ? "freepanze-col" : "")" data-isexport="@(display.IsExport ?? "True")" data-displaytype="@displayType" data-displayformat="@displayFormat">
+                                    @{
+                                        object value;
+                                        if (dictionary.TryGetValue(display.Code, out value))
+                                        {
+                                            string valueType = "";
+                                            // kiem tra kieu du lieu cua value
+                                            if (@value != null)
+                                            {
+                                               valueType = value.GetType().ToString();
+                                            }
+                                            // kiem tra kieu du lieu cua display
+                                            string[] stringVavlidType = ["string", "date", "datetime", "int", "long", "float", "textarea"];
+                                            // uu tien kiem tra kieu du lieu cua value roi den display
+                                            // neu kieu du lieu cua value la boolean thi su dung check box
+                                            @if (valueType == "System.Boolean")
+                                            {
+									            <input type="checkbox" @(Convert.ToBoolean(value) ? "checked" : "") disabled />
+                                                
+                                            }
+                                            else if (displayType == "icons")
+                                            {
+                                                var iconsJson = value?.ToString()?.Trim() ?? "";
+
+                                                // Nếu rỗng thì bỏ qua
+                                                if (!string.IsNullOrEmpty(iconsJson))
+                                                {
+                                                  // Đảm bảo chuỗi JSON luôn là mảng
+                                                  if (iconsJson.TrimStart().StartsWith("{"))
+                                                  {
+                                                      iconsJson = "[" + iconsJson + "]";
+                                                  }
+
+                                                  try
+                                                  {
+                                                      var icons = JsonSerializer.Deserialize<List<JsonElement>>(iconsJson);
+
+                                                      <ul class="list-unstyled m-0 avatar-group d-flex align-items-center">
+                                                      @foreach (var icon in icons)
+                                                      {
+                                                          var title = icon.GetProperty("title").GetString();
+                                                          var image = icon.GetProperty("image").GetString();
+                                                          <li data-bs-toggle="tooltip"
+                                                              data-popup="tooltip-custom"
+                                                              data-bs-placement="top"
+                                                              class="avatar avatar-xs pull-up"
+                                                              aria-label="@title"
+                                                              data-bs-original-title="@title">
+                                                              <img src="@image" alt="Avatar" class="rounded-circle" />
+                                                          </li>
+                                                      }
+                                                      </ul>
+                                                  }
+                                                  catch (Exception ex)
+                                                  {
+                                                      <span class="text-danger">N/A</span>
+                                                  }
+                                                }
+                                            }
+                                            // neu dang file thi hien thi icon tải nhiều file
+                                            else if (displayType == "file")
+                                            {
+                                                var filesJson = value?.ToString()?.Trim() ?? "";
+
+                                                // Nếu rỗng thì bỏ qua
+                                                if (!string.IsNullOrEmpty(filesJson))
+                                                {
+                                                    // Nếu là object đơn, bao lại thành mảng
+                                                    if (filesJson.StartsWith("{"))
+                                                    {
+                                                        filesJson = "[" + filesJson + "]";
+                                                    }
+
+                                                    try
+                                                    {
+                                                        var fileList = JsonSerializer.Deserialize<List<JsonElement>>(filesJson);
+
+                                                        if (fileList?.Count > 0)
+                                                        {
+                                                            <div class="d-flex flex-wrap gap-1">
+                                                                @foreach (var file in fileList)
+                                                                {
+                                                                    var fileName = file.GetProperty("fileName").GetString();
+                                                                    var url = file.GetProperty("url").GetString();
+                                                                    var displayName = fileName?.Length > 50 ? fileName.Substring(0, 50) + "..." : fileName;
+
+                                                                    <a href="@url" download class="btn btn-sm btn-outline-primary file-download-link" title="@fileName">
+                                                                        <i class="ri-download-2-fill"></i> @displayName
+                                                                    </a>
+                                                                }
+                                                            </div>
+                                                        }
+                                                    }
+                                                    catch
+                                                    {
+                                                        <span class="text-danger">Lỗi định dạng file JSON</span>
                                                     }
                                                 }
-                                            </tbody>
-                                        </table>
+                                            }
+                                            // neu la kieu link thi parse thanh html
+                                            else if (displayType == "link")
+                                            {
+                                                @Html.Raw(value);
+                                            }
+                                            // neu la kieu du lieu co the format duoc
+                                            else if (stringVavlidType.Contains(displayType))
+                                            {
+                                                @* kiem tra neu co format thi format lai chuoi *@
+                                                var displayValue = @FormatHelper.FormatDynamicValue(value, displayFormat);
+                                                <span style="white-space: pre-wrap">@displayValue</span>
+                                                
+                                            }
+                                            else
+                                            {
+                                                @Html.Raw(value);
+                                            }                                              }
+                                        else
+                                        {
+                                            <span class="text-muted">N/A</span> @* Giá trị mặc định *@
+                                        }
+                                    }
+                                </td>
+                            }
+                            @* neu ton tai cot co isparent thi xu ly tiep cot 2 cap *@
+                            @if (displayList.Any(p => p.IsParent == true))
+                            {
+                              @* hien thi cot cha *@
+						      @foreach (var display in displayList.Where(p=> p.IsDisplay == true && p.IsParent == true).OrderBy(p => p.ColNum ?? 0).ToList())
+                              {
+                                @* dem so cot con de tinh colspan *@
+                                var countChild = displayList.Count(p => p.ParentCode == display.Code);
+                                @* neu co cot con thi xu ly tiep *@
+                                if (countChild > 0)
+                                {
+                                  @foreach (var displaychild in displayList.Where(p=> p.IsDisplay == true && p.ParentCode == display.Code).OrderBy(p => p.ColNum ?? 0).ToList())
+                                  {
+                                      var displayType = display.Type as string ?? "link";
+                                      var displayFormat = display.Format as string ?? "";
+                                      <td class="@FormatHelper.ParseTextAlignToClass(display.TextAlign)" data-isexport="@(displaychild.IsExport ?? "0")" data-displaytype="@displayType" data-displayformat="@displayFormat">
+                                          @{
+                                              object value;
+                                              if (dictionary.TryGetValue(display.Code, out value))
+                                              {
+                                                  string valueType = "";
+                                                  // kiem tra kieu du lieu cua value
+                                                  if (@value != null)
+                                                  {
+                                                     valueType = value.GetType().ToString();
+                                                  }
+                                                  // kiem tra kieu du lieu cua display
+                                                  string[] stringVavlidType = ["string", "date", "datetime", "int", "long", "float", "textarea"];
+                                                  // uu tien kiem tra kieu du lieu cua value roi den display
+                                                  // neu kieu du lieu cua value la boolean thi su dung check box
+                                                  @if (valueType == "System.Boolean")
+                                                  {
+									                  <input type="checkbox" @(Convert.ToBoolean(value) ? "checked" : "") disabled />
+                                                
+                                                  }
+                                                  else if (displayType == "icons")
+                                                  {
+                                                      var iconsJson = value?.ToString()?.Trim() ?? "";
 
-                                    </div>
-                                </div>
-                            </div>
+                                                      // Nếu rỗng thì bỏ qua
+                                                      if (!string.IsNullOrEmpty(iconsJson))
+                                                      {
+                                                        // Đảm bảo chuỗi JSON luôn là mảng
+                                                        if (iconsJson.TrimStart().StartsWith("{"))
+                                                        {
+                                                            iconsJson = "[" + iconsJson + "]";
+                                                        }
+
+                                                        try
+                                                        {
+                                                            var icons = JsonSerializer.Deserialize<List<JsonElement>>(iconsJson);
+
+                                                            <ul class="list-unstyled m-0 avatar-group d-flex align-items-center">
+                                                            @foreach (var icon in icons)
+                                                            {
+                                                                var title = icon.GetProperty("title").GetString();
+                                                                var image = icon.GetProperty("image").GetString();
+                                                                <li data-bs-toggle="tooltip"
+                                                                    data-popup="tooltip-custom"
+                                                                    data-bs-placement="top"
+                                                                    class="avatar avatar-xs pull-up"
+                                                                    aria-label="@title"
+                                                                    data-bs-original-title="@title">
+                                                                    <img src="@image" alt="Avatar" class="rounded-circle" />
+                                                                </li>
+                                                            }
+                                                            </ul>
+                                                        }
+                                                        catch (Exception ex)
+                                                        {
+                                                            <span class="text-danger">N/A</span>
+                                                        }
+                                                      }
+                                                  }
+                                                  // neu dang file thi hien thi icon tải nhiều file
+                                                  else if (displayType == "file")
+                                                  {
+                                                      var filesJson = value?.ToString()?.Trim() ?? "";
+
+                                                      // Nếu rỗng thì bỏ qua
+                                                      if (!string.IsNullOrEmpty(filesJson))
+                                                      {
+                                                          // Nếu là object đơn, bao lại thành mảng
+                                                          if (filesJson.StartsWith("{"))
+                                                          {
+                                                              filesJson = "[" + filesJson + "]";
+                                                          }
+
+                                                          try
+                                                          {
+                                                              var fileList = JsonSerializer.Deserialize<List<JsonElement>>(filesJson);
+
+                                                              if (fileList?.Count > 0)
+                                                              {
+                                                                  <div class="d-flex flex-wrap gap-1">
+                                                                      @foreach (var file in fileList)
+                                                                      {
+                                                                          var fileName = file.GetProperty("fileName").GetString();
+                                                                          var url = file.GetProperty("url").GetString();
+                                                                          var displayName = fileName?.Length > 50 ? fileName.Substring(0, 50) + "..." : fileName;
+
+                                                                          <a href="@url" download class="btn btn-sm btn-outline-primary file-download-link" title="@fileName">
+                                                                              <i class="ri-download-2-fill"></i> @displayName
+                                                                          </a>
+                                                                      }
+                                                                  </div>
+                                                              }
+                                                          }
+                                                          catch
+                                                          {
+                                                              <span class="text-danger">Lỗi định dạng file JSON</span>
+                                                          }
+                                                      }
+                                                  }
+                                                  // neu la kieu link thi parse thanh html
+                                                  else if (displayType == "link")
+                                                  {
+                                                      @Html.Raw(value);
+                                                  }
+                                                  // neu la kieu du lieu co the format duoc
+                                                  else if (stringVavlidType.Contains(displayType))
+                                                  {
+                                                      @* kiem tra neu co format thi format lai chuoi *@
+                                                      var displayValue = @FormatHelper.FormatDynamicValue(value, displayFormat);
+                                                      <span style="white-space: pre-wrap">@displayValue</span>
+                                                
+                                                  }
+                                                  else
+                                                  {
+                                                      @Html.Raw(value);
+                                                  }
+                                              }
+                                              else
+                                              {
+                                                  <span class="text-muted">N/A</span> @* Giá trị mặc định *@
+                                              }
+                                          }
+                                      </td>
+                                  }
+                                }
+                              
+                              }
+                            }
+                          </tr>
+
+                          reportRowIndex ++;
+                        }
+                      }
+                  </tbody>
+            </table>
+		  </div>
+        </div>
+      </div>
+      @* end table *@
                         </div>
                     </div>
                     <!--/ Pagination Start -->

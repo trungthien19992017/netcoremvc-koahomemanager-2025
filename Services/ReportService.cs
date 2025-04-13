@@ -18,6 +18,7 @@ using System.Data;
 using System.Security.Cryptography;
 using System.Text.RegularExpressions;
 using OfficeOpenXml;
+using System.Reflection.Metadata;
 
 namespace KOAHome.Services
 {
@@ -29,19 +30,28 @@ namespace KOAHome.Services
     public Task<string> ExtractImportDataToJson(IFormFile file);
     public Task<string> ExtractImportDataToStoreName(IFormFile file);
     public Task<List<dynamic>> Import_Json_Update(int? Id, string json, string sqlStore, string? connectionString);
-    public Task<dynamic> NET_Report_Get(string reportCode);
+    /////////////////////////////////////// cac chuc nang xu ly cau hinh report ////////////////////////////////////
+    public Task<int?> GetReportIdFromCode(string reportCode);
+    public Task<IDictionary<string, object>?> NET_Report_Get(string reportCode);
     public Task<List<dynamic>> NET_Filter_WithReport_Get(string? reportCode, int? reportId);
-    public Task<List<dynamic>> NET_Display_WithReport_Get(string? reportCode, int? reportId);
+    public Task<List<dynamic>> NET_Display_WithReport_Get(Dictionary<string, object>? parameters, string? reportCode, int? reportId);
+    // lay danh sach bo loc mac dinh
+    public Task<IDictionary<string, object>?> NET_Report_GetDefaultFilter(Dictionary<string, object>? parameters, string sqlStore, string? connectionString);
+    // Hàm này sẽ tính độ sâu tối đa của cây phân cấp
+    // dung de tính số cấp cha con của cột hiển thị
+    public int Display_GetReportMaxParentLevel(List<dynamic> displayList);
   }
   public class ReportService : IReportService
   {
     private readonly QLKCL_NEWContext _db;
+    private readonly TttConfigContext _dbconfig;
     private readonly IHttpContextAccessor _httpContextAccessor;
     private readonly IConfiguration _configuration;
     private readonly IConnectionService _con;
-    public ReportService(QLKCL_NEWContext db, IHttpContextAccessor httpContextAccessor, IConfiguration configuration, IConnectionService con)
+    public ReportService(QLKCL_NEWContext db, TttConfigContext dbconfig, IHttpContextAccessor httpContextAccessor, IConfiguration configuration, IConnectionService con)
     {
       _db = db;
+      _dbconfig = dbconfig;
       _httpContextAccessor = httpContextAccessor;
       _configuration = configuration;
       _con = con;
@@ -246,7 +256,15 @@ namespace KOAHome.Services
       resultList = await _con.Connection_GetDataFromQuery(parameters, sqlStore, connectionString, sqlQuery, sqlParams);
       return resultList;
     }
-    public async Task<dynamic> NET_Report_Get(string reportCode)
+
+    public async Task<int?> GetReportIdFromCode(string reportCode)
+    {
+      int? reportId = null;
+      reportId = await _dbconfig.NetReports.Where(p => p.Code == reportCode).Select(p => (int?)p.Id).FirstOrDefaultAsync();
+
+      return reportId;
+    }
+    public async Task<IDictionary<string, object>?> NET_Report_Get(string reportCode)
     {
       // su dung datasource config de lay du lieu
       string connectionString = _configuration.GetConnectionString("ConfigConnection"); // Thay thế bằng chuỗi kết nối của bạn
@@ -285,26 +303,112 @@ namespace KOAHome.Services
 
       return resultList;
     }
-    public async Task<List<dynamic>> NET_Display_WithReport_Get(string? reportCode, int? reportId)
+        public async Task<List<dynamic>> NET_Display_WithReport_Get(Dictionary<string, object>? parameters, string? reportCode, int? reportId)
+        {
+            // su dung datasource config de lay du lieu
+            string connectionString = _configuration.GetConnectionString("ConfigConnection"); // Thay thế bằng chuỗi kết nối của bạn
+                                                                                              // store get du lieu
+            string sqlStore = "Store_DRDisplay";
+            // neu co report code thi chuyen ve report id
+            if (reportCode != null)
+            {
+                reportId = await GetReportIdFromCode(reportCode);
+            }
+            // neu parameter rong thi tu tao 1 parameter moi truyen vao
+            if (parameters == null)
+            {
+                parameters = new Dictionary<string, object>();
+            }
+
+            // chuyen tat ca param dang co thanh 1 chuoi json va truyen vao bien Param
+            var displayParameter = new Dictionary<string, object>();
+            if (!parameters.ContainsKey("Param"))
+            {
+                // cac du lieu parameter se add vao store display duoi dang bien param cach nhau bang dau ;
+                string displayParamString = string.Join(";", parameters.Select(kvp => $"{kvp.Key}={kvp.Value ?? ""}"));
+                parameters.Add("Param", displayParamString);
+            }
+            parameters.Add("ReportID", reportId);
+
+            // chuyen thanh cau query tu store va param truyen vao
+            var (sqlQuery, sqlParams) = await _con.Connection_GetQueryParam(parameters, sqlStore, connectionString);
+
+            var resultList = new List<dynamic>();
+
+            // xu ly lay du lieu dua truyen store va param truyen vao
+            resultList = await _con.Connection_GetDataFromQuery(parameters, sqlStore, connectionString, sqlQuery, sqlParams);
+
+            return resultList;
+        }
+
+    public async Task<IDictionary<string, object>?> NET_Report_GetDefaultFilter(Dictionary<string, object>? parameters, string sqlStore, string? connectionString)
     {
-      // su dung datasource config de lay du lieu
-      string connectionString = _configuration.GetConnectionString("ConfigConnection"); // Thay thế bằng chuỗi kết nối của bạn
-      // store get du lieu
-      string sqlStore = "NET_Display_WithReport_sel";
-      // khai bao param lien quan
-      var parameters = new Dictionary<string, object>();
-      parameters.Add("ReportCode", reportCode);
-      parameters.Add("ReportId", reportId);
+      // neu khong truyen connect string thi se lay connection string mac dinh
+      if (connectionString == null)
+      {
+        connectionString = _configuration.GetConnectionString("DefaultConnection"); // Thay thế bằng chuỗi kết nối của bạn
+      }
+
+      // neu parameter rong thi tu tao 1 parameter moi truyen vao
+      if (parameters == null)
+      {
+        parameters = new Dictionary<string, object>();
+      }
 
       // chuyen thanh cau query tu store va param truyen vao
       var (sqlQuery, sqlParams) = await _con.Connection_GetQueryParam(parameters, sqlStore, connectionString);
 
-      var resultList = new List<dynamic>();
-
       // xu ly lay du lieu dua truyen store va param truyen vao
-      resultList = await _con.Connection_GetDataFromQuery(parameters, sqlStore, connectionString, sqlQuery, sqlParams);
+      var result = await _con.Connection_GetSingleDataFromQuery(parameters, sqlStore, connectionString, sqlQuery, sqlParams);
 
-      return resultList;
+      return result;
+    }
+
+    // Hàm này sẽ tính độ sâu tối đa của cây phân cấp
+    // dung de tính số cấp của cột hiển thị
+    public int Display_GetReportMaxParentLevel(List<dynamic> displayList)
+    {
+      // B1: Tạo lookup table cho tra cứu nhanh theo Code
+      var lookup = displayList.ToDictionary(x => (string)x.Code, x => x);
+
+      // B2: Hàm tính độ sâu của từng item (truy ngược lên parent)
+      Dictionary<string, int> depthCache = new(); // Để tránh tính lại
+
+      int GetDepth(string code)
+      {
+        if (depthCache.ContainsKey(code))
+          return depthCache[code];
+
+        if (!lookup.ContainsKey(code))
+          return 1; // Nếu không tìm thấy code -> root
+
+        var item = lookup[code];
+        string parentCode = item.ParentCode as string;
+
+        int depth = 1;
+        if (!string.IsNullOrEmpty(parentCode) && lookup.ContainsKey(parentCode))
+        {
+          depth = 1 + GetDepth(parentCode);
+        }
+
+        depthCache[code] = depth;
+        return depth;
+      }
+
+      // B3: Duyệt tất cả items và lấy độ sâu lớn nhất
+      int maxDepth = 0;
+      foreach (var item in displayList)
+      {
+        string code = item.Code as string;
+        if (!string.IsNullOrEmpty(code))
+        {
+          int depth = GetDepth(code);
+          if (depth > maxDepth)
+            maxDepth = depth;
+        }
+      }
+
+      return maxDepth;
     }
   }
 }
