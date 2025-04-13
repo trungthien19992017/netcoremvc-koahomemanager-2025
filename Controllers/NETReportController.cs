@@ -3,6 +3,7 @@ using KOAHome.Services;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
+using System.Diagnostics;
 using static NuGet.Packaging.PackagingConstants;
 
 namespace KOAHome.Controllers
@@ -89,6 +90,7 @@ namespace KOAHome.Controllers
 
     // GET: NETReport/Viewer_Utility
     [HttpGet]
+    [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)] // Tắt cache mặc định cho action này nếu cần thiết
     public async Task<IActionResult> Viewer_Utility([FromQuery] Dictionary<string, string> parameters, string? ReportCode)
     {
       try
@@ -145,8 +147,21 @@ namespace KOAHome.Controllers
         ViewBag.ListFilterValue = objParameters;
 
         // lay danh sach filter display cua report de xu ly
-        var filterList = await _report.NET_Filter_WithReport_Get(ReportCode, null);
-        var displayList = await _report.NET_Display_WithReport_Get(objParameters, ReportCode, null);
+        var stopwatch = Stopwatch.StartNew();
+        var filterListTask = _report.NET_Filter_WithReport_Get(ReportCode, null);
+        stopwatch.Stop();
+        _logger.LogInformation($"Query filterListTask executed in {stopwatch.ElapsedMilliseconds} ms");
+
+        stopwatch.Restart();
+        var displayListTask = _report.NET_Display_WithReport_Get(objParameters, ReportCode, null);
+        stopwatch.Stop();
+        _logger.LogInformation($"Query displayListTask executed in {stopwatch.ElapsedMilliseconds} ms");
+
+        await Task.WhenAll(filterListTask, displayListTask);
+
+        var filterList = await filterListTask;
+        var displayList = await displayListTask;
+
         // tinh số cấp cha con của cột trong display report
         int displayParentLevelNum = _report.Display_GetReportMaxParentLevel(displayList);
         // chuyển cấu hình display lên giao diện để xử lý
@@ -165,12 +180,11 @@ namespace KOAHome.Controllers
         ViewBag.DynamicServiceSelectOptions = listFilterService;
 
         // search
+        stopwatch.Restart();
         var resultList = await _report.Report_search(objParameters, sqlContent, connectionString);
+        stopwatch.Stop();
+        _logger.LogInformation($"Query resultList executed in {stopwatch.ElapsedMilliseconds} ms");
         ViewBag.resultList = resultList;
-
-        // khai bao service lien quan
-        var service_parameters = new Dictionary<string, object>();
-        ViewBag.listbookser_info_store = await _report.Report_search(service_parameters, "HS_BookingService_Info", null);
 
         //khai bao success
         ViewBag.success = "Thành công";
@@ -183,75 +197,6 @@ namespace KOAHome.Controllers
         _logger.LogError(ex, "An error occurred while fetching booking service info.");
         // Optionally, return an error view
         return View("Error");
-      }
-    }
-
-    // GET: NETReportController/Details/5
-    public ActionResult Details(int id)
-    {
-      return View();
-    }
-
-    // GET: NETReportController/Create
-    public ActionResult Create()
-    {
-      return View();
-    }
-
-    // POST: NETReportController/Create
-    [HttpPost]
-    [ValidateAntiForgeryToken]
-    public ActionResult Create(IFormCollection collection)
-    {
-      try
-      {
-        return RedirectToAction(nameof(Index));
-      }
-      catch
-      {
-        return View();
-      }
-    }
-
-    // GET: NETReportController/Edit/5
-    public ActionResult Edit(int id)
-    {
-      return View();
-    }
-
-    // POST: NETReportController/Edit/5
-    [HttpPost]
-    [ValidateAntiForgeryToken]
-    public ActionResult Edit(int id, IFormCollection collection)
-    {
-      try
-      {
-        return RedirectToAction(nameof(Index));
-      }
-      catch
-      {
-        return View();
-      }
-    }
-
-    // GET: NETReportController/Delete/5
-    public ActionResult Delete(int id)
-    {
-      return View();
-    }
-
-    // POST: NETReportController/Delete/5
-    [HttpPost]
-    [ValidateAntiForgeryToken]
-    public ActionResult Delete(int id, IFormCollection collection)
-    {
-      try
-      {
-        return RedirectToAction(nameof(Index));
-      }
-      catch
-      {
-        return View();
       }
     }
   }

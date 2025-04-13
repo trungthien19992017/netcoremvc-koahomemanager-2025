@@ -5,6 +5,7 @@ using Microsoft.Data.SqlClient;
 using System.Dynamic;
 using System.Text;
 using System.Data;
+using Microsoft.Extensions.Caching.Memory;
 
 namespace KOAHome.Services
 {
@@ -19,12 +20,14 @@ namespace KOAHome.Services
     private readonly IHttpContextAccessor _httpContextAccessor;
     private readonly IConfiguration _configuration;
     private readonly IConnectionService _con;
-    public WidgetService(QLKCL_NEWContext db, IHttpContextAccessor httpContextAccessor, IConfiguration configuration, IConnectionService con)
+    private readonly IMemoryCache _cache;
+    public WidgetService(QLKCL_NEWContext db, IHttpContextAccessor httpContextAccessor, IConfiguration configuration, IConnectionService con, IMemoryCache cache)
     {
       _db = db;
       _httpContextAccessor = httpContextAccessor;
       _configuration = configuration;
       _con = con;
+      _cache = cache;
     }
 
     public async Task<IDictionary<string, object>> Widget_GetObject(Dictionary<string, object> parameters, string sqlStore, string? connectionString)

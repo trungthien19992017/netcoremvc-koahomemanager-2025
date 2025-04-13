@@ -54,7 +54,11 @@ namespace KOAHome.Controllers
     {
       Dictionary<string, object> objParameters = new Dictionary<string, object>();
       // lay danh sach thong bao
+
+      var stopwatch = Stopwatch.StartNew();
       var notifications = await _widget.Widget_GetList(objParameters, "HS_Notify_Search", null);
+      stopwatch.Stop();
+      _logger.LogInformation($"Query notifications executed in {stopwatch.ElapsedMilliseconds} ms");
       // tra ve json
       return Ok(notifications);
     }

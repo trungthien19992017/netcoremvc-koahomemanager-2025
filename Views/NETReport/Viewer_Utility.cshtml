@@ -1,11 +1,8 @@
 @using KOAHome.Helpers
 @using System.Text.Json
 @{
-    ViewData["Title"] = "Dynamic report";
     Layout = "~/Views/Shared/_ContentNavbarLayout.cshtml";
-    // var listcus = ViewBag.listcus as List<KOAHome.EntityFramework.HsCustomer>;
     var resultList = ViewBag.resultList as List<dynamic>;
-    var listbookser_info_store = ViewBag.listbookser_info_store as List<dynamic>;
 
     // truyen cau hinh report de xu ly giao dien
     var report = ViewBag.report as IDictionary<string, object>;
@@ -22,6 +19,9 @@
 
     // tao bien dem de dem row num cho report
     var reportRowIndex = 1;
+
+    // tra ve title cho page
+    ViewData["Title"] = listFilterValue.ContainsKey("title") ? listFilterValue["title"] : report.ContainsKey("Name") ? report["Name"] : "Danh sách";
 
 }
 
@@ -137,7 +137,10 @@
                                                                             var selectList = ViewBag.dynamicServiceSelectOptions[name] as List<SelectListItem> ?? new List<SelectListItem>();
                                                                             @foreach (var item in selectList)
                                                                             {
-                                                                                item.Selected = (item.Value.ToString() == value.ToString()); // currentValue là giá trị đang được chọn
+                                                                                if (value != null)
+                                                                                {
+                                                                                  item.Selected = (item.Value.ToString() == value.ToString()); // currentValue là giá trị đang được chọn
+                                                                                }
                                                                             }
                                                                             var selectAttributes = new Dictionary<string, object>
                                                                             {

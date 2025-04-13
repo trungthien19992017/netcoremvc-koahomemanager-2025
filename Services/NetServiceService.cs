@@ -7,6 +7,8 @@ using System.Text;
 using System.Data;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Newtonsoft.Json;
+using Microsoft.Extensions.Caching.Memory;
+using System.Diagnostics;
 
 namespace KOAHome.Services
 {
@@ -23,12 +25,16 @@ namespace KOAHome.Services
     private readonly IHttpContextAccessor _httpContextAccessor;
     private readonly IConfiguration _configuration;
     private readonly IConnectionService _con;
-    public NetServiceService(QLKCL_NEWContext db, IHttpContextAccessor httpContextAccessor, IConfiguration configuration, IConnectionService con)
+    private readonly IMemoryCache _cache;
+    private readonly ILogger<NetService> _logger;
+    public NetServiceService(QLKCL_NEWContext db, IHttpContextAccessor httpContextAccessor, IConfiguration configuration, IConnectionService con, IMemoryCache cache, ILogger<NetService> logger)
     {
       _db = db;
       _httpContextAccessor = httpContextAccessor;
       _configuration = configuration;
       _con = con;
+      _cache = cache;
+      _logger = logger;
     }
 
     public async Task<List<SelectListItem>> NET_Service_DynamicExecute(int serviceId, Dictionary<string, object>? parameters)
@@ -89,10 +95,41 @@ namespace KOAHome.Services
             .Where(f => f.SeviceId != null)
             .Select(async filter =>
             {
-              // Tạo bản sao của objParameters cho mỗi filter de tranh ghi de
-              var clonedParameters = new Dictionary<string, object>(objParameters);
-              var selectList = await NET_Service_DynamicExecute((int)filter.SeviceId!, clonedParameters);
-              return (Code: filter.Code!, SelectList: selectList); // 👈 đây là fix
+              var serviceId = (int)filter.SeviceId!;
+              var code = filter.Code!;
+
+              // Serialize param để tạo cache key
+              string paramKey = string.Join(";", objParameters
+                  .OrderBy(kvp => kvp.Key)
+                  .Select(kvp => $"{kvp.Key}={kvp.Value}"));
+
+              string cacheKey = $"Service_{serviceId}_{paramKey.GetHashCode()}";
+
+              List<SelectListItem> selectList;
+
+              var sw = Stopwatch.StartNew();
+
+              // Kiểm tra cache trước
+              if (!_cache.TryGetValue(cacheKey, out selectList))
+              {
+                _logger.LogInformation($"⏳ Đang gọi service {serviceId} cho filter '{code}'");
+
+                // Tạo bản sao của objParameters cho mỗi filter de tranh ghi de
+                var clonedParameters = new Dictionary<string, object>(objParameters);
+                selectList = await NET_Service_DynamicExecute(serviceId, clonedParameters);
+
+                // Lưu cache trong 5 phút (có thể tuỳ chỉnh)
+                _cache.Set(cacheKey, selectList, TimeSpan.FromMinutes(5));
+                _logger.LogInformation($"✅ Service {serviceId} filter '{code}' hoàn tất sau {sw.ElapsedMilliseconds}ms (không dùng cache)");
+              }
+              else
+              {
+                _logger.LogInformation($"⚡ Service {serviceId} filter '{code}' dùng cache sau {sw.ElapsedMilliseconds}ms");
+              }
+              sw.Stop();
+
+
+              return (Code: code, SelectList: selectList); // 👈 đây là fix
             })
             .ToList();
 
