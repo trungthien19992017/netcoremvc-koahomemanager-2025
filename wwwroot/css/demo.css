@@ -156,3 +156,13 @@
 .file-download-link {
   width: 200px; /* hoặc bạn muốn 150px, 250px tùy layout */
 }
+
+/*custom form label rieng cho html editor*/
+.htmleditor-form-label {
+  display: block;
+  margin-top: .5rem;
+  margin-bottom: .5rem;
+  color: #6c757d; /* Màu xám giống hình */
+  font-size: 1.0rem;
+  font-weight: 500;
+}

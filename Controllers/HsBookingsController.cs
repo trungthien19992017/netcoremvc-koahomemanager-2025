@@ -112,7 +112,10 @@ namespace KOAHome.Controllers
 
         //Phân trang
         // search
-        var resultList = await _report.Report_search(objParameters,"HS_Booking1_search", null);
+        var stopwatch = Stopwatch.StartNew();
+        var resultList = await _report.Report_search(objParameters, "HS_Booking1_search", null);
+        stopwatch.Stop();
+        _logger.LogInformation($"Query HS_Booking1_search executed in {stopwatch.ElapsedMilliseconds} ms");
         ViewBag.listbook_store = resultList;
 
         // khai bao service lien quan

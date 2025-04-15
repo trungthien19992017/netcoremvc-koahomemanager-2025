@@ -1,0 +1,837 @@
+@using KOAHome.Helpers
+@{
+    Layout = "~/Views/Shared/_ContentNavbarLayout.cshtml";
+    var formData = ViewBag.formData as IDictionary<string, object>;
+    // truyen cau hinh form de xu ly giao dien
+    var config_form = ViewBag.config_form as IDictionary<string, object>;
+    var config_formOptions = ParseDataHelper.ParseOptionsToDictionary(config_form.ContainsKey("Options") ? config_form["Options"].ToString() : "{}");
+    // mac dinh col count cua form = 3
+    var form_colCount = config_formOptions.ContainsKey("colCount") ? Convert.ToInt32(config_formOptions["colCount"]) : 3;
+
+    // truyen danh sach cấu hình form field len giao dien
+    var config_formfield = ViewBag.config_formfield as List<dynamic>;
+    var dynamicServiceSelectOptions = ViewBag.DynamicServiceSelectOptions as Dictionary<string, List<SelectListItem>>;
+
+    // tra ve title cho page
+    ViewData["Title"] = config_form.ContainsKey("FormTitle") ? config_form["FormTitle"] : "Thông tin";
+
+    var listbookserbybookingid_store = ViewBag.listbookserbybookingid_store as List<dynamic>;
+
+    // tao bien dem de dem row num cho report
+    var reportRowIndex = 1;
+}
+
+
+@section VendorStyles {
+    <link rel="stylesheet" href="~/vendor/libs/apex-charts/apex-charts.css" />
+}
+
+@section VendorScripts {
+    <script src="~/vendor/libs/apex-charts/apexcharts.js"></script>
+}
+
+@section PageScripts {
+    <script src="~/js/dashboards-analytics.js"></script>
+    @* thong bao day *@
+    <script src="~/js/ui-toasts.js"></script>
+    @* validate, kem cac file js ho tro *@
+    <script src="~/js/helper.js"></script>
+    <script src="~/js/flatpickr.js"></script>
+    <script src="~/js/form-validation.js"></script>
+
+    <script>
+
+        // them dong editor moi
+        function addNewRow() {
+        let table = document.getElementById("ReportEditor").getElementsByTagName('tbody')[0];
+        let newRow = table.insertRow();
+        let index = table.rows.length;
+
+
+        // Tạo danh sách option từ serviceList
+        var serviceList = @Html.Raw(Json.Serialize(ViewBag.ServiceId));
+
+        let serviceOptions = '<option value="">Chọn dịch vụ</option>';
+        serviceList.forEach(service => {
+        serviceOptions += `<option value="${service.value}">${service.text}</option>`;
+        });
+
+        newRow.innerHTML = `
+        <td class="text-center"><input class="form-control" type="text" name="grid[${index}].Id" readonly/></td>
+        <td class="text-center"><input class="form-control" type="text" name="grid[${index}].STT" value="${index}" readonly/></td>
+        <td class="text-center">
+        <select name="grid[${index}].ServiceID" class="form-select" data-placeholder="Dịch vụ">
+        ${serviceOptions}
+        </select>
+        </td>
+        <td>
+        <input type="number" class="form-control" placeholder="" name="grid[${index}].Quantity" aria-label="Số lượng" value="">
+        </td>
+        <td class="text-truncate">
+        <input readonly type="number" class="form-control" placeholder="" name="grid[${index}].TotalPrice" aria-label="Tổng số tiền" value="">
+        </td>
+        <td class="text-truncate text-center"><textarea row="2" class="form-control" placeholder="" name="grid[${index}].Description" aria-label="Ghi chú"></textarea></td>
+        <td class="text-truncate"><input type="datetime-local" class="form-control" placeholder="" name="grid[${index}].AdditionFromDate" aria-label="Thời gian phát sinh từ" value=""></td>
+        <td class="text-truncate"><input type="datetime-local" class="form-control" placeholder="" name="grid[${index}].AdditionToDate" aria-label="Thời gian phát sinh đến" value=""></td>
+        <td class="text-center">
+            <input type="hidden" name="grid[${index}].isDeleted" value="false" class="isDeleted">
+            <button type="button" class="btn-delete btn btn-sm text-danger" onclick="toggleDelete(this)">
+                <i class="ri-delete-bin-line ri-24px"></i>
+            </button>
+        </td>
+        `;
+
+        // Áp dụng Select2 cho select mới thêm
+        $(newRow).find("select").select2({
+            placeholder: "Chọn",
+            allowClear: true,
+            width: "100%"
+        });
+        }
+
+        // xu ly du lieu ngay trong report editor
+          var gridData = @Html.Raw(Json.Serialize(ViewBag.listbookserbybookingid_store));
+          if (gridData != null)
+          {
+            $(document).ready(function () {
+                $.each(gridData, function (index, rowData) {
+                    // Tìm tất cả input/select trong dòng có name động
+                    $(`#ReportEditor tbody tr:eq(${index})`).find("input, select, textarea").each(function () {
+                        let fieldName = $(this).attr("name"); // Lấy name của input
+                        if (!fieldName) return; // Nếu không có name, bỏ qua
+
+                        // Regex để lấy tên key từ `grid[index].FieldName`
+                        let match = fieldName.match(/\[(\d+)\]\.(\w+)/);
+                        if (!match) return; // Nếu không khớp format, bỏ qua
+
+                        let fieldKey = match[2]; // Lấy phần FieldName (ví dụ: "ServiceID", "Quantity",...)
+
+                        if (rowData.hasOwnProperty(fieldKey)) {
+                            let value = rowData[fieldKey];
+
+                            // Kiểm tra kiểu input và format lại nếu cần
+                            if ($(this).attr("type") === "datetime-local") {
+                                value = formatDateTimeLocal(value);
+                                // Gán giá trị vào input
+                                $(this).val(value);
+                            } else if ($(this).attr("type") === "date") {
+                                value = formatDate(value);
+                                // Gán giá trị vào input
+                                $(this).val(value);
+                            } else if ($(this).attr("type") === "time") {
+                                value = formatTime(value);
+                                // Gán giá trị vào input
+                                $(this).val(value);
+                            }
+                            // Nếu là select2, cần trigger để cập nhật giao diện
+                            if ($(this).is("select")) {
+                                $(this).trigger("change");
+                            }
+                        }
+                    });
+                });
+            });
+          }
+
+    </script>
+}
+
+@section success
+{
+    @if (ViewBag.success != null)
+    {
+
+        <!-- Toast with Placements -->
+        <div class="bs-toast toast  top-0 end-0 show toast-placement-ex1 m-2" style="position:absolute;" role="alert" aria-live="assertive" aria-atomic="true" data-bs-delay="2000">
+            <div class="toast-header">
+                <i class="ri-home-4-fill me-2 text-success"></i>
+                <div class="me-auto fw-medium">Thông báo</div><small class="text-muted">1 giây trước</small>
+                <button type="button" class="btn-close" data-bs-dismiss="toast" aria-label="Close"></button>
+            </div>
+            <div class="toast-body text-success">@ViewBag.success.</div>
+        </div>
+        <!-- Toast with Placements -->
+    }
+}
+
+@section ErrorMessage
+{
+    @if (ViewBag.ErrorMessage != null)
+    {
+        <!-- Toast with Placements -->
+        <div class="bs-toast toast  top-0 end-0 show toast-placement-ex1 m-2" style="position:absolute;" role="alert" aria-live="assertive" aria-atomic="true" data-bs-delay="2000">
+            <div class="toast-header">
+                <i class="ri-home-4-fill me-2 text-danger"></i>
+                <div class="me-auto fw-medium">Thông báo</div><small class="text-muted">1 giây trước</small>
+                <button type="button" class="btn-close" data-bs-dismiss="toast" aria-label="Close"></button>
+            </div>
+            <div class="toast-body text-danger">@ViewBag.ErrorMessage.</div>
+        </div>
+        <!-- Toast with Placements -->
+    }
+}
+
+@* ************** Content ************** *@
+<!-- Content wrapper -->
+<div class="content-wrapper">
+    <!-- Content -->
+
+    <div class="container-xxl flex-grow-1 container-p-y">
+        <!-- Booking form -->
+        <div class="row">
+            <div class="col-xl">
+                <div class="card mb-6">
+                    <div class="card-header d-flex justify-content-between align-items-center">
+                        <h5 class="mb-0">THÔNG TIN BOOKING</h5>
+                        <small class="text-body float-end">Thông tin thuê homestay của khách hàng</small>
+                    </div>
+                    <div class="card-body">
+                        <form id="create-form" class="needs-validation" novalidate="" method="post" asp-controller="NETForm" asp-action="Viewer" asp-route-formCode="@ViewBag.FormCode"
+                              asp-route-id="@ViewBag.id" @* action="/form/viewer/@ViewBag.FormCode/@ViewBag.id" *@ enctype="multipart/form-data">
+                        @* xu ly form dong *@
+                        @* xu ly voi moi field *@
+                        <div class="row gx-5 mb-5">
+                          @* chi lay cac field group hoac field không có parentId *@
+                          @foreach (var field in config_formfield.Where(p => p.ParentId == 0).OrderBy(p => p.TabIndex).ToList())
+                          {
+                              @* name: Key cua field truyen vao, label: Ten field, type: Loại field, value: giá trị field
+                              , field width: độ rộng field *@
+                              string name = field.Code;
+                              string label = field.Name;
+                              string type = field.FormFieldTypeCode;
+                              string field_options = field.Options;
+                              // chuyen thong tin options thanh Dictionary cho dễ xử lý
+                              var field_optionsDict = ParseDataHelper.ParseOptionsToDictionary(field_options);
+                              // chuyen thong tin editor options thanh Dictionary cho dễ xử lý
+                              var field_editoroptionsDict = ParseDataHelper.ParseEditorOptionsToDictionary(field_options);
+                              // col span mặc định là 3
+                              int field_colspan = Convert.ToInt32(field_optionsDict.ContainsKey("colSpan") ? Convert.ToInt32(field_optionsDict["colSpan"]) : 3);
+                              // col span mặc định là 1
+                              int field_colcount = Convert.ToInt32(field_optionsDict.ContainsKey("colCount") ? Convert.ToInt32(field_optionsDict["colCount"]) : 1);
+                              // tinh do rong cua field dua tren gia tri config
+                              int field_width = (12 / form_colCount * field_colspan);
+
+                              // lay thong tin validation
+                              string field_validates = field.Validates;
+                              // parse validation thanh List<Dictionary<string, object>>
+                              var field_validatesListDict = ParseDataHelper.ParseJsonToListDict(field_validates);
+
+                              // kiem tra bat buoc nhap
+                              bool isrequired = false;
+                              string required_message = "";
+                              var required_rule = ParseDataHelper.GetFormFieldValidate(field_validatesListDict,"required");
+                              if (required_rule != null && required_rule.Count > 0)
+                              {
+                                isrequired = true;
+                                required_message = required_rule.ContainsKey("message") ? required_rule["message"].ToString() : "Không được bỏ trống";
+                              }
+
+                              // kiem tra readonly
+                              bool isreadonly = field_editoroptionsDict.ContainsKey("readOnly") ? Convert.ToBoolean(field_editoroptionsDict["readOnly"]) : false;
+
+                              // nhan gia tri cua field
+                              var value = formData.ContainsKey(name) ? formData[name] : "";
+
+                              // neu type la GroupItem thi hiển thị group và gọi các field con
+                              if (type == "GroupItem")
+                              {
+                                <div class="@("col-md-" + field_width)">
+                                  <div class="row gx-5 mb-5">
+                                      <div class="col-md-12 card-header"><strong class="mb-0 text-primary">@label</strong></div>
+                                      @* goi vong lap de lay cac field con *@
+                                      @foreach (var fieldchild in config_formfield.Where(p => p.ParentId == field.Id).OrderBy(p => p.TabIndex).ToList())
+                                      {
+                                          @* name: Key cua field truyen vao, label: Ten field, type: Loại field, value: giá trị field
+                                          , field width: độ rộng field *@
+                                          string child_name = fieldchild.Code;
+                                          string child_label = fieldchild.Name;
+                                          string child_type = fieldchild.FormFieldTypeCode;
+                                          string child_field_options = fieldchild.Options;
+                                          // chuyen thong tin options thanh Dictionary cho dễ xử lý
+                                          var child_field_optionsDict = ParseDataHelper.ParseOptionsToDictionary(child_field_options);
+                                          // chuyen thong tin editor options thanh Dictionary cho dễ xử lý
+                                          var child_field_editoroptionsDict = ParseDataHelper.ParseEditorOptionsToDictionary(child_field_options);
+                                          // col span mặc định là 3
+                                          int child_field_colspan = Convert.ToInt32(child_field_optionsDict.ContainsKey("colSpan") ? Convert.ToInt32(child_field_optionsDict["colSpan"]) : 3);
+                                          // col span mặc định là 1
+                                          int child_field_colcount = Convert.ToInt32(child_field_optionsDict.ContainsKey("colCount") ? Convert.ToInt32(child_field_optionsDict["colCount"]) : 1);
+                                          // tinh do rong cua field dua tren gia tri config
+                                          int child_field_width = (12 / field_colcount * child_field_colspan);
+
+                                          // lay thong tin validation
+                                          string child_field_validates = fieldchild.Validates;
+                                          // parse validation thanh List<Dictionary<string, object>>
+                                          var child_field_validatesListDict = ParseDataHelper.ParseJsonToListDict(child_field_validates);
+
+                                          // kiem tra bat buoc nhap
+                                          bool child_isrequired = false;
+                                          string child_required_message = "";
+                                          var child_required_rule = ParseDataHelper.GetFormFieldValidate(child_field_validatesListDict,"required");
+                                          if (child_required_rule != null && child_required_rule.Count > 0)
+                                          {
+                                            child_isrequired = true;
+                                            child_required_message = child_required_rule.ContainsKey("message") ? child_required_rule["message"].ToString() : "Không được bỏ trống";
+                                          }
+
+                                          // kiem tra readonly
+                                          bool child_isreadonly = child_field_editoroptionsDict.ContainsKey("readOnly") ? Convert.ToBoolean(child_field_editoroptionsDict["readOnly"]) : false;
+
+                                          // nhan gia tri cua field
+                                          var child_value = formData.ContainsKey(child_name) ? formData[child_name] : "";
+                                          string[] noclasslabel_fieldtypes = ["RadioGroup","FileUploader","HTMLEditor"];
+                                          
+                                          <div class="col-md-@(Convert.ToInt32(child_field_width) == 0 ? "4" : child_field_width)">
+                                            <div class="@(
+                                                            noclasslabel_fieldtypes.Contains(child_type) ? "" : child_type == "CheckBox" ? "form-check mt-4" : "form-floating form-floating-outline mb-6"
+                                                          )">
+                                              @if (child_type == "TextBox")
+                                              {
+                                                  <input class="form-control form-control-sm" type="text" id="@child_name" name="@child_name" value="@child_value" @(child_isreadonly == true ? "readonly" : "") @(child_isrequired == true ? "required" : "") />
+                                              }
+                                              @if (child_type == "TextArea")
+                                              {
+                                                  // lấy thông tin chiều cao (mặc định 200)
+                                                  int height = child_field_editoroptionsDict.ContainsKey("height") ? Convert.ToInt32(child_field_editoroptionsDict["height"]) : 200;
+                                                  <textarea style="height:@(height + "px")" class="form-control" placeholder="@child_label" name="@child_name" id="@child_name" aria-label="@child_label" @(child_isreadonly == true ? "readonly" : "") @(child_isrequired == true ? "required" : "")>@child_value</textarea>
+                                              }
+                                              else if (child_type == "NumberBox")
+                                              {
+                                                  <input class="form-control form-control-sm" type="number" id="@child_name"  name="@child_name" value="@child_value" @(child_isreadonly == true ? "readonly" : "") @(child_isrequired == true ? "required" : "") />
+                                              }
+                                              else if (child_type == "DateBox")
+                                              {
+                                                  <input class="form-control form-control-sm" type="date" id="@child_name" name="@child_name" value="@child_value" @(child_isreadonly == true ? "readonly" : "") @(child_isrequired == true ? "required" : "")/>
+                                              }
+                                              else if (child_type == "EmptyBox")
+                                              {
+                                                  @* bỏ trống *@
+                                              }
+                                              else if (child_type == "SelectBox")
+                                              {
+                                                  @* check selected cho item dung voi gia tri *@
+                                                  var selectList = ViewBag.dynamicServiceSelectOptions[child_name] as List<SelectListItem> ?? new List<SelectListItem>();
+                                                  @foreach (var item in selectList)
+                                                  {
+                                                      if (child_value != null)
+                                                      {
+                                                        item.Selected = (item.Value.ToString() == child_value.ToString()); // currentValue là giá trị đang được chọn
+                                                      }
+                                                  }
+                                                  var selectAttributes = new Dictionary<string, object>
+                                                  {
+                                                      { "class", "form-select color-dropdown form-select-sm" },
+                                                      { "id", name },
+                                                      { "name", name }
+                                                  };
+
+                                                  // neu bat buoc thi them truong bat buoc
+                                                  if (child_isrequired == true)
+                                                  {
+                                                      selectAttributes["required"] = "required";
+                                                  }
+
+                                                  @Html.DropDownList(child_name, selectList, "-- Chọn --", selectAttributes)
+                                              }
+                                              else if (child_type == "RadioGroup")
+                                              {
+                                                  <div class="d-lg-inline-block"><p class="text-light fw-medium d-block">@child_label: </p></div>
+                                                  // check selected cho item dung voi gia tri
+                                                  var selectList = ViewBag.dynamicServiceSelectOptions[child_name] as List<SelectListItem> ?? new List<SelectListItem>();
+
+                                                  @if (selectList != null)
+                                                  {
+                                                    foreach (var item in selectList)
+                                                    {
+                                                        <div class="form-check form-check-inline">
+                                                            <input type="radio" class="form-check-input"
+                                                                    name="@item.Text"
+                                                                    id="@(item.Text + "_" + item.Value)"
+                                                                    value="@item.Value"
+                                                            @((child_value ?? "").ToString() == item.Value.ToString() ? "checked" : "") />
+                                                            <label class="form-check-label" for="@(item.Text + "_" + item.Value)">@item.Text</label>
+                                                        </div>
+                                                    }
+                                                  }
+                                              }
+                                              else if (child_type == "CheckBox")
+                                              {
+                                                  <input class="form-check-input" type="checkbox" id="@child_name" name="@child_name" value="true" @((child_value ?? "").ToString().ToLower() == "true" ? "checked" : "") />
+                                              }
+                                              else if (child_type == "FileUploader")
+                                              {
+                                                <div class="row gx-5 mb-5">
+                                                  <div class="col-md-4 card-header">
+                                                      <div class="mb-4">
+                                                          <label for="KOAAttachment" class="form-label">File đính kèm</label>
+                                                          <input class="form-control" type="file" id="KOAAttachment" name="KOAAttachment" data-target="@("#fileList-"+child_name)" multiple />
+                                                          <ul id="@("fileList-"+child_name)"></ul>
+
+                                                      </div>
+                                                  </div>
+                                                  @* Image slide *@
+                                                  <div class="col-md-8">
+                                                      <div id="carouselSlideImage"
+                                                      class="carousel slide carousel-fade w-50"
+                                                      data-bs-ride="carousel">
+                                                          <div class="carousel-indicators">
+                                                            @if (ViewBag.fileUrls != null)
+                                                            {
+                                                                bool isPreviousImg = true;
+                                                                for (int i = 0; i < ViewBag.fileUrls.Count; i++)
+                                                                {
+                                                                      var fileUrl = ViewBag.fileUrls[i];
+                                                                      int index = i;
+                                                                      // kiem tra khong phai la img thi bo qua
+                                                                      @if (!(fileUrl.EndsWith(".jpg") || fileUrl.EndsWith(".png") || fileUrl.EndsWith(".jpeg") || fileUrl.EndsWith(".gif")))
+                                                                      {
+                                                                          isPreviousImg = false;
+                                                                      }
+                                                                      else
+                                                                      {
+                                                                          // kiem tra file truoc do co phai la img khong? neu khong phai thi img sau phai tru 1
+                                                                          index = isPreviousImg == true ? index : index - 1;
+                                                                          <button type="button"
+                                                                                  data-bs-target="#carouselSlideImage"
+                                                                                  data-bs-slide-to="@index"
+                                                                                  class="@(index == 0 ? "active" : "")"
+                                                                                  aria-current="@(index == 0 ? "true" : "false")"
+                                                                                  aria-label="Slide @(index + 1)">
+                                                                          </button>
+                                                                      }
+                                                                  }
+                                                              }
+                                                          </div>
+                                                          <div class="carousel-inner">
+                                                              @if (ViewBag.fileUrls != null)
+                                                              {
+                                                                  bool isPreviousImg = true;
+                                                                  for (int i = 0; i < ViewBag.fileUrls.Count; i++)
+                                                                  {
+                                                                      var fileUrl = ViewBag.fileUrls[i];
+                                                                      string fileName = fileUrl.Substring(fileUrl.LastIndexOf('/') + 1);
+                                                                      int index = i;
+                                                                      // kiem tra khong phai la img thi bo qua
+                                                                      @if (!(fileUrl.EndsWith(".jpg") || fileUrl.EndsWith(".png") || fileUrl.EndsWith(".jpeg") || fileUrl.EndsWith(".gif")))
+                                                                      {
+                                                                          isPreviousImg = false;
+                                                                      }
+                                                                      else
+                                                                      {
+                                                                          // kiem tra file truoc do co phai la img khong? neu khong phai thi img sau phai tru 1
+                                                                          index = isPreviousImg == true ? index : index - 1;
+                                                                          <div class="carousel-item @(index == 0 ? "active" : "")">
+                                                                              <img class="d-block w-100" src="@fileUrl" alt="@fileName" />
+                                                                              <div class="carousel-caption d-none d-md-block">
+                                                                                  <h3 style="font-family: 'Shrikhand', cursive;font-weight:bold;"><a class="text-white" href="@fileUrl" target="_blank">@(fileUrl.Substring(fileUrl.LastIndexOf('/') + 1))</a></h3>
+                                                                              </div>
+                                                                          </div>
+                                                                      }
+                                                                  }
+                                                              }
+                                                          </div>
+                                                          <a class="carousel-control-prev" href="#carouselSlideImage" role="button" data-bs-slide="prev">
+                                                              <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+                                                              <span class="visually-hidden">Previous</span>
+                                                          </a>
+                                                          <a class="carousel-control-next" href="#carouselSlideImage" role="button" data-bs-slide="next">
+                                                              <span class="carousel-control-next-icon" aria-hidden="true"></span>
+                                                              <span class="visually-hidden">Next</span>
+                                                          </a>
+                                                      </div>
+                                                  </div>
+                                                  // end slide
+                                                </div>
+                                              }
+                                              else if (child_type == "HTMLEditor")
+                                              {
+                                                  <label for="@child_name" class="htmleditor-form-label">@child_label</label>
+                                                  // Quill Editor hiển thị
+                                                  <div id="@("editor-container-"+child_name)" style="height:300px;" class="quill-editor"></div>
+                                                  // Hidden input để submit
+                                                  <input type="hidden" id="@("editor-content-"+child_name)" name="@child_name" value="@child_value" />
+                                              }
+                                              else if (child_type == "DynamicReport")
+                                              {
+                                                  <div class="row gx-5 mb-5">
+                                                      <div class="col-md-12 card-header"><strong class="mb-0 text-primary">THÔNG TIN CHI TIẾT</strong></div>                        
+                                                      <div class="col-md-12 card-body">
+                                                          <div class="table-responsive">
+                                                              <div class="card-header d-flex align-items-center justify-content-between">
+                                                                  <button type="button" class="btn text-muted p-0" onclick="addNewRow()"><i class="ri-add-line ri-24px"></i></button>
+                                                              </div>
+                                                              <table id="ReportEditor" class="table table-sm table-bordered" style="table-layout: fixed;">
+                                                                  <colgroup>
+                                                                      <col span="1" style="visibility: collapse">
+                                                                  </colgroup>
+                                                                  <thead>
+                                                                      <tr>
+                                                                          <th class="text-center" style="width:70px;">Id</th>
+                                                                          <th class="text-center" style="width:100px;">STT</th>
+                                                                          <th class="text-center" style="width:300px;">Dịch vụ</th>
+                                                                          <th class="text-center" style="width:150px;">Số lượng</th>
+                                                                          <th class="text-center" style="width:150px;">Tổng số tiền</th>
+                                                                          <th class="text-center" style="width:250px;">Ghi chú</th>
+                                                                          <th class="text-center" style="width:260px;">Thời gian phát sinh từ (nếu có)</th>
+                                                                          <th class="text-center" style="width:260px;">Thời gian phát sinh đến (nếu có)</th>
+                                                                          <th class="text-center" style="width:100px;">Hành động</th>
+                                                                      </tr>
+                                                                  </thead>
+                                                                  <tbody>
+                                                                      @if (listbookserbybookingid_store != null)
+                                                                      {
+                                                                          @foreach (var ser in listbookserbybookingid_store)
+                                                                          { 
+
+                                                                              <tr class="">
+                                                                                  <td class="text-center"><input class="form-control" type="text" name="grid[@reportRowIndex].Id" value="@ser.Id" readonly /></td>
+                                                                                  <td class="text-center"><input class="form-control" type="text" name="grid[@reportRowIndex].stt" value="@ser.stt" readonly /></td>
+                                                                                  <td class="text-center">
+                                                                                      <select name="grid[@reportRowIndex].ServiceID" class="form-select" data-placeholder="Dịch vụ">
+                                                                                          <option value="" selected="@(ser.ServiceID.ToString() == "" ? "selected" : null)">Chọn dịch vụ</option>
+                                                                                          @foreach (var item in (SelectList)ViewData["ServiceId"])
+                                                                                          {
+                                                                                              <option value="@item.Value" selected="@(item.Value == ser.ServiceID.ToString() ? "selected" : null)">
+                                                                                                  @item.Text
+                                                                                              </option>
+                                                                                          }
+                                                                                      </select>
+                                                                                  </td>
+                                                                                  <td>
+                                                                                      <input type="number" class="form-control" placeholder="" name="grid[@reportRowIndex].Quantity" aria-label="Số lượng" value="@ser.Quantity">
+                                                                                  </td>
+                                                                                  <td class="text-truncate">
+                                                                                      <input type="number" readonly class="form-control" placeholder="" name="grid[@reportRowIndex].TotalPrice" aria-label="Tổng số tiền" value="@ser.TotalPrice">
+                                                                                  </td>
+                                                                                  <td class="text-truncate text-left"><textarea row="2" class="form-control" placeholder="" name="grid[@reportRowIndex].Description" aria-label="Ghi chú" value="@ser.Description"></textarea></td>
+                                                                                  <td class="text-truncate"><input type="datetime-local" class="form-control" placeholder="" name="grid[@reportRowIndex].AdditionFromDate" aria-label="Thời gian phát sinh từ" value="@ser.AdditionFromDate"></td>
+                                                                                  <td class="text-truncate"><input type="datetime-local" class="form-control" placeholder="" name="grid[@reportRowIndex].AdditionToDate" aria-label="Thời gian phát sinh đến" value="@ser.AdditionToDate"></td>
+                                                                                  <td class="text-center">
+                                                                                      <input type="hidden" name="grid[@reportRowIndex].isDeleted" value="false" class="isDeleted">
+                                                                                      <button type="button" class="btn-delete btn btn-sm text-danger" onclick="toggleDelete(this)">
+                                                                                          <i class="ri-delete-bin-line ri-24px"></i>
+                                                                                      </button>
+                                                                                  </td>
+                                                                              </tr>
+
+                                                                              reportRowIndex++;
+                                                                          }
+                                                                      }  
+                                                                  </tbody>
+                                                              </table>
+                                                          </div>
+                                                      </div>
+                                                  </div>
+                                              }
+
+                                              @{
+                                                // mot số trường sử dụng label riêng
+                                                string[] nolabel_fieldtypes = ["DynamicReport","FileUploader","HTMLEditor","RadioGroup","EmptyBox"];
+                                                if (!nolabel_fieldtypes.Contains(child_type))
+                                                {
+                                                    <label for="@child_name">@child_label</label>
+                                                }
+                                              }
+                                              <div class="valid-feedback"> Chính xác! </div>
+                                              <div class="invalid-feedback"> @child_required_message </div>
+                                          </div>
+                                        </div>
+                                      }
+                                  </div>
+                                </div>                              
+
+                              }
+                              else
+                              {
+                                // nếu không phải là group item và không có parentId thì xử lý bình thường
+                                string[] noclasslabel_fieldtypes = ["RadioGroup","FileUploader","HTMLEditor"];
+                                <div class="col-md-@(Convert.ToInt32(field_width) == 0 ? "4" : field_width)">
+                                  <div class="@(
+                                                  noclasslabel_fieldtypes.Contains(type) ? "" : type == "CheckBox" ? "form-check mt-4" : "form-floating form-floating-outline mb-6"
+                                                )">
+                                    @if (type == "TextBox")
+                                    {
+                                        <input class="form-control form-control-sm" type="text" id="@name" name="@name" value="@value" @(isreadonly == true ? "readonly" : "") @(isrequired == true ? "required" : "") />
+                                    }
+                                    else if (type == "TextArea")
+                                    {
+                                        // lấy thông tin chiều cao (mặc định 200)
+                                        int height = field_editoroptionsDict.ContainsKey("height") ? Convert.ToInt32(field_editoroptionsDict["height"]) : 200;
+                                        <textarea style="height:@(height + "px")" class="form-control" placeholder="@label" name="@name" id="@name" aria-label="@label" @(isreadonly == true ? "readonly" : "") @(isrequired == true ? "required" : "")>@value</textarea>
+                                    }
+                                    else if (type == "NumberBox")
+                                    {
+                                        <input class="form-control form-control-sm" type="number" id="@name"  name="@name" value="@value" @(isreadonly == true ? "readonly" : "") @(isrequired == true ? "required" : "") />
+                                    }
+                                    else if (type == "DateBox")
+                                    {
+                                        <input class="form-control form-control-sm" type="date" id="@name" name="@name" value="@value" @(isreadonly == true ? "readonly" : "") @(isrequired == true ? "required" : "")/>
+                                    }
+                                    else if (type == "EmptyBox")
+                                    {
+                                        @* bỏ trống *@
+                                    }
+                                    else if (type == "SelectBox")
+                                    {
+                                        // check selected cho item dung voi gia tri
+                                        var selectList = ViewBag.dynamicServiceSelectOptions[name] as List<SelectListItem> ?? new List<SelectListItem>();
+                                        @foreach (var item in selectList)
+                                        {
+                                            if (value != null)
+                                            {
+                                              item.Selected = (item.Value.ToString() == value.ToString()); // currentValue là giá trị đang được chọn
+                                            }
+                                        }
+                                        var selectAttributes = new Dictionary<string, object>
+                                        {
+                                            { "class", "form-select color-dropdown form-select-sm" },
+                                            { "id", name },
+                                            { "name", name }
+                                        };
+
+                                        // neu bat buoc thi them truong bat buoc
+                                        if (isrequired == true)
+                                        {
+                                            selectAttributes["required"] = "required";
+                                        }
+
+                                        @Html.DropDownList(name, selectList, "-- Chọn --", selectAttributes)
+                                    }
+                                    else if (type == "RadioGroup")
+                                    {
+                                        <div class="d-lg-inline-block"><p class="text-light fw-medium d-block">@label: </p></div>
+                                        // check selected cho item dung voi gia tri
+                                        var selectList = ViewBag.dynamicServiceSelectOptions[name] as List<SelectListItem> ?? new List<SelectListItem>();
+
+                                        @if (selectList != null)
+                                        {
+                                          foreach (var item in selectList)
+                                          {
+                                            <div class="form-check form-check-inline">
+                                                <input type="radio" class="form-check-input"
+                                                        name="@item.Text"
+                                                        id="@(item.Text + "_" + item.Value)"
+                                                        value="@item.Value"
+                                                @((value ?? "").ToString() == item.Value.ToString() ? "checked" : "") />
+                                                <label class="form-check-label" for="@(item.Text + "_" + item.Value)">@item.Text</label>
+                                            </div>
+                                          }
+                                        }
+                                    }
+                                    else if (type == "CheckBox")
+                                    {
+                                        <input class="form-check-input" type="checkbox" id="@name" name="@name" value="true" @((value ?? "").ToString().ToLower() == "true" ? "checked" : "") />
+                                    }
+                                    else if (type == "FileUploader")
+                                    {
+                                      <div class="row gx-5 mb-5">
+                                        <div class="col-md-4 card-header">
+                                            <div class="mb-4">
+                                                <label for="KOAAttachment" class="form-label">File đính kèm</label>
+                                                <input class="form-control" type="file" id="KOAAttachment" name="KOAAttachment" data-target="@("#fileList-"+name)" multiple />
+                                                <ul id="@("fileList-"+name)"></ul>
+                                                <ul id="fileList-fileuploader7120">
+                                                  <li class="mb-1 d-flex align-items-center justify-content-between">
+                                                    <span class="me-2 text-truncate" style="max-width: 200px;">2Ngay1Dem.png</span>
+                                                    <div class="btn-group btn-group-sm" role="group">
+                                                      <button type="button" class="btn btn-outline-primary" fdprocessedid="4hawo">Tải</button>
+                                                      <button type="button" class="btn btn-outline-danger" fdprocessedid="zl0uz">Xóa</button>
+                                                    </div>
+                                                  </li>
+                                                  <li class="mb-1 d-flex align-items-center justify-content-between">
+                                                    <span class="me-2 text-truncate" style="max-width: 200px;">5GioTang1Gio.png</span>
+                                                    <div class="btn-group btn-group-sm" role="group">
+                                                      <button type="button" class="btn btn-outline-primary" fdprocessedid="t80lh3">Tải</button>
+                                                      <button type="button" class="btn btn-outline-danger" fdprocessedid="422kf5">Xóa</button></div>
+                                                    </li>
+                                                  </ul>
+
+                                            </div>
+                                        </div>
+                                        @* Image slide *@
+                                        <div class="col-md-8">
+                                            <div id="carouselSlideImage"
+                                            class="carousel slide carousel-fade w-50"
+                                            data-bs-ride="carousel">
+                                                <div class="carousel-indicators">
+                                                  @if (ViewBag.fileUrls != null)
+                                                  {
+                                                      bool isPreviousImg = true;
+                                                      for (int i = 0; i < ViewBag.fileUrls.Count; i++)
+                                                      {
+                                                            var fileUrl = ViewBag.fileUrls[i];
+                                                            int index = i;
+                                                            // kiem tra khong phai la img thi bo qua
+                                                            @if (!(fileUrl.EndsWith(".jpg") || fileUrl.EndsWith(".png") || fileUrl.EndsWith(".jpeg") || fileUrl.EndsWith(".gif")))
+                                                            {
+                                                                isPreviousImg = false;
+                                                            }
+                                                            else
+                                                            {
+                                                                // kiem tra file truoc do co phai la img khong? neu khong phai thi img sau phai tru 1
+                                                                index = isPreviousImg == true ? index : index - 1;
+                                                                <button type="button"
+                                                                        data-bs-target="#carouselSlideImage"
+                                                                        data-bs-slide-to="@index"
+                                                                        class="@(index == 0 ? "active" : "")"
+                                                                        aria-current="@(index == 0 ? "true" : "false")"
+                                                                        aria-label="Slide @(index + 1)">
+                                                                </button>
+                                                            }
+                                                        }
+                                                    }
+                                                </div>
+                                                <div class="carousel-inner">
+                                                    @if (ViewBag.fileUrls != null)
+                                                    {
+                                                        bool isPreviousImg = true;
+                                                        for (int i = 0; i < ViewBag.fileUrls.Count; i++)
+                                                        {
+                                                            var fileUrl = ViewBag.fileUrls[i];
+                                                            string fileName = fileUrl.Substring(fileUrl.LastIndexOf('/') + 1);
+                                                            int index = i;
+                                                            // kiem tra khong phai la img thi bo qua
+                                                            @if (!(fileUrl.EndsWith(".jpg") || fileUrl.EndsWith(".png") || fileUrl.EndsWith(".jpeg") || fileUrl.EndsWith(".gif")))
+                                                            {
+                                                                isPreviousImg = false;
+                                                            }
+                                                            else
+                                                            {
+                                                                // kiem tra file truoc do co phai la img khong? neu khong phai thi img sau phai tru 1
+                                                                index = isPreviousImg == true ? index : index - 1;
+                                                                <div class="carousel-item @(index == 0 ? "active" : "")">
+                                                                    <img class="d-block w-100" src="@fileUrl" alt="@fileName" />
+                                                                    <div class="carousel-caption d-none d-md-block">
+                                                                        <h3 style="font-family: 'Shrikhand', cursive;font-weight:bold;"><a class="text-white" href="@fileUrl" target="_blank">@(fileUrl.Substring(fileUrl.LastIndexOf('/') + 1))</a></h3>
+                                                                    </div>
+                                                                </div>
+                                                            }
+                                                        }
+                                                    }
+                                                </div>
+                                                <a class="carousel-control-prev" href="#carouselSlideImage" role="button" data-bs-slide="prev">
+                                                    <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+                                                    <span class="visually-hidden">Previous</span>
+                                                </a>
+                                                <a class="carousel-control-next" href="#carouselSlideImage" role="button" data-bs-slide="next">
+                                                    <span class="carousel-control-next-icon" aria-hidden="true"></span>
+                                                    <span class="visually-hidden">Next</span>
+                                                </a>
+                                            </div>
+                                        </div>
+                                      </div>
+                                      // end slide
+                                    }
+                                    else if (type == "HTMLEditor")
+                                    {
+                                        <label for="@name" class="htmleditor-form-label">@label</label>
+                                        // Quill Editor hiển thị
+                                        <div id="@("editor-container-"+name)" style="height:300px;" class="quill-editor"></div>
+                                        // Hidden input để submit
+                                        <input type="hidden" id="@("editor-content-"+name)" name="@name" value="@value" />
+                                    }
+                                    else if (type == "DynamicReport")
+                                    {
+                                        <div class="row gx-5 mb-5">
+                                            <div class="col-md-12 card-header"><strong class="mb-0 text-primary">THÔNG TIN CHI TIẾT</strong></div>                        
+                                            <div class="col-md-12 card-body">
+                                                <div class="table-responsive">
+                                                    <div class="card-header d-flex align-items-center justify-content-between">
+                                                        <button type="button" class="btn text-muted p-0" onclick="addNewRow()"><i class="ri-add-line ri-24px"></i></button>
+                                                    </div>
+                                                    <table id="ReportEditor" class="table table-sm table-bordered" style="table-layout: fixed;">
+                                                        <colgroup>
+                                                            <col span="1" style="visibility: collapse">
+                                                        </colgroup>
+                                                        <thead>
+                                                            <tr>
+                                                                <th class="text-center" style="width:70px;">Id</th>
+                                                                <th class="text-center" style="width:100px;">STT</th>
+                                                                <th class="text-center" style="width:300px;">Dịch vụ</th>
+                                                                <th class="text-center" style="width:150px;">Số lượng</th>
+                                                                <th class="text-center" style="width:150px;">Tổng số tiền</th>
+                                                                <th class="text-center" style="width:250px;">Ghi chú</th>
+                                                                <th class="text-center" style="width:260px;">Thời gian phát sinh từ (nếu có)</th>
+                                                                <th class="text-center" style="width:260px;">Thời gian phát sinh đến (nếu có)</th>
+                                                                <th class="text-center" style="width:100px;">Hành động</th>
+                                                            </tr>
+                                                        </thead>
+                                                        <tbody>
+                                                            @if (listbookserbybookingid_store != null)
+                                                            {
+                                                                @foreach (var ser in listbookserbybookingid_store)
+                                                                { 
+
+                                                                    <tr class="">
+                                                                        <td class="text-center"><input class="form-control" type="text" name="grid[@reportRowIndex].Id" value="@ser.Id" readonly /></td>
+                                                                        <td class="text-center"><input class="form-control" type="text" name="grid[@reportRowIndex].stt" value="@ser.stt" readonly /></td>
+                                                                        <td class="text-center">
+                                                                            <select name="grid[@reportRowIndex].ServiceID" class="form-select" data-placeholder="Dịch vụ">
+                                                                                <option value="" selected="@(ser.ServiceID.ToString() == "" ? "selected" : null)">Chọn dịch vụ</option>
+                                                                                @foreach (var item in (SelectList)ViewData["ServiceId"])
+                                                                                {
+                                                                                    <option value="@item.Value" selected="@(item.Value == ser.ServiceID.ToString() ? "selected" : null)">
+                                                                                        @item.Text
+                                                                                    </option>
+                                                                                }
+                                                                            </select>
+                                                                        </td>
+                                                                        <td>
+                                                                            <input type="number" class="form-control" placeholder="" name="grid[@reportRowIndex].Quantity" aria-label="Số lượng" value="@ser.Quantity">
+                                                                        </td>
+                                                                        <td class="text-truncate">
+                                                                            <input type="number" readonly class="form-control" placeholder="" name="grid[@reportRowIndex].TotalPrice" aria-label="Tổng số tiền" value="@ser.TotalPrice">
+                                                                        </td>
+                                                                        <td class="text-truncate text-left"><textarea row="2" class="form-control" placeholder="" name="grid[@reportRowIndex].Description" aria-label="Ghi chú" value="@ser.Description"></textarea></td>
+                                                                        <td class="text-truncate"><input type="datetime-local" class="form-control" placeholder="" name="grid[@reportRowIndex].AdditionFromDate" aria-label="Thời gian phát sinh từ" value="@ser.AdditionFromDate"></td>
+                                                                        <td class="text-truncate"><input type="datetime-local" class="form-control" placeholder="" name="grid[@reportRowIndex].AdditionToDate" aria-label="Thời gian phát sinh đến" value="@ser.AdditionToDate"></td>
+                                                                        <td class="text-center">
+                                                                            <input type="hidden" name="grid[@reportRowIndex].isDeleted" value="false" class="isDeleted">
+                                                                            <button type="button" class="btn-delete btn btn-sm text-danger" onclick="toggleDelete(this)">
+                                                                                <i class="ri-delete-bin-line ri-24px"></i>
+                                                                            </button>
+                                                                        </td>
+                                                                    </tr>
+
+                                                                    reportRowIndex++;
+                                                                }
+                                                            }  
+                                                        </tbody>
+                                                    </table>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    }
+
+                                    @* neu type dynamic report hoac file uploadder thì tự check label riêng *@
+                                    @{
+                                      string[] nolabel_fieldtypes = ["DynamicReport","FileUploader","HTMLEditor","RadioGroup","EmptyBox"];
+                                      if (!nolabel_fieldtypes.Contains(type))
+                                      {
+                                        <label for="@name">@label</label>
+                                      }
+                                    }
+                                    <div class="valid-feedback"> Chính xác! </div>
+                                    <div class="invalid-feedback"> @required_message </div>
+                                </div>
+                              </div>
+                              }
+                          }
+                         </div>
+                        <button type="submit" class="btn btn-primary">Lưu</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!-- end Booking form -->
+    </div>
+    <!-- / Content -->
+
+    <div>
+        <a type="button" class="btn btn-primary" asp-action="Index"><i class="ri-arrow-left-circle-line"></i> Trở về</a>
+    </div>
+
+    @* @section Scripts {
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+}
+ *@

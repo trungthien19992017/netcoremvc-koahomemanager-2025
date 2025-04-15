@@ -9,15 +9,19 @@ using Microsoft.AspNetCore.Mvc.Rendering;
 using Newtonsoft.Json;
 using Microsoft.Extensions.Caching.Memory;
 using System.Diagnostics;
+using Newtonsoft.Json.Linq;
 
 namespace KOAHome.Services
 {
   public interface INetServiceService
   {
+    public int GetServiceId_FromFormFieldOptions(string json);
     // xu ly lay du lieu tra ve tu service
     public Task<List<SelectListItem>> NET_Service_DynamicExecute(int serviceId, Dictionary<string, object>? parameters);
     // xu ly lay danh sach selectlist tu filter truyen vao
     public Task<Dictionary<string, List<SelectListItem>>> NET_Service_GetListSelectListByFilter(List<dynamic>? filterList, Dictionary<string, object>? objParameters);
+    // xu ly lay danh sach selectlist tu service theo form field truyen vao
+    public Task<Dictionary<string, List<SelectListItem>>> NET_Service_GetListSelectListByFormField(List<dynamic>? config_formfield, Dictionary<string, object>? objParameters);
   }
   public class NetServiceService : INetServiceService
   {
@@ -35,6 +39,40 @@ namespace KOAHome.Services
       _con = con;
       _cache = cache;
       _logger = logger;
+    }
+    public int GetServiceId_FromFormFieldOptions(string json)
+    {
+      if (string.IsNullOrWhiteSpace(json))
+        return 0;
+
+      try
+      {
+        var jObj = JObject.Parse(json);
+
+        var serviceToken = jObj["editorOptions"]?["service"];
+
+        if (serviceToken != null)
+        {
+          // Nếu là số (int/long...)
+          if (serviceToken.Type == JTokenType.Integer)
+          {
+            return serviceToken.Value<int>();
+          }
+
+          // Nếu là chuỗi, thử parse thành int
+          if (serviceToken.Type == JTokenType.String &&
+              int.TryParse(serviceToken.ToString(), out int parsedVal))
+          {
+            return parsedVal;
+          }
+        }
+      }
+      catch (JsonException)
+      {
+        // Nếu JSON sai định dạng, return 0
+      }
+
+      return 0;
     }
 
     public async Task<List<SelectListItem>> NET_Service_DynamicExecute(int serviceId, Dictionary<string, object>? parameters)
@@ -82,6 +120,7 @@ namespace KOAHome.Services
       return listItems;
     }
 
+    // xu ly lay danh sach selectlist tu service theo filter truyen vao
     public async Task<Dictionary<string, List<SelectListItem>>> NET_Service_GetListSelectListByFilter(List<dynamic>? filterList, Dictionary<string, object>? objParameters)
     {
       // doi voi cac filter co kieu select (select box, dropdownbox, tagbox,...), day cac bo select vao SelectListItem va đóng gói trong Dictionary để xử lý trên giao diện
@@ -143,5 +182,66 @@ namespace KOAHome.Services
       return listFilterService;
     }
 
+    // xu ly lay danh sach selectlist tu service theo form field truyen vao
+    public async Task<Dictionary<string, List<SelectListItem>>> NET_Service_GetListSelectListByFormField(List<dynamic>? config_formfield, Dictionary<string, object>? objParameters)
+    {
+      // doi voi cac filter co kieu select (select box, dropdownbox, tagbox,...), day cac bo select vao SelectListItem va đóng gói trong Dictionary để xử lý trên giao diện
+      // Tạo Dictionary chứa SelectList cho từng dropdown (theo DynamicFieldName)
+      var config_formfieldService = new Dictionary<string, List<SelectListItem>>();
+
+      if (config_formfield != null)
+      {
+        // 1. Khởi tạo danh sách Task chính xác
+        var serviceTasks = config_formfield
+            .Where(f => GetServiceId_FromFormFieldOptions(f.Options) != 0)
+            .Select(async field =>
+            {
+              var serviceId = GetServiceId_FromFormFieldOptions(field.Options)!;
+              var code = field.Code!;
+
+              // Serialize param để tạo cache key
+              string paramKey = string.Join(";", objParameters
+                  .OrderBy(kvp => kvp.Key)
+                  .Select(kvp => $"{kvp.Key}={kvp.Value}"));
+
+              string cacheKey = $"Service_{serviceId}_{paramKey.GetHashCode()}";
+
+              List<SelectListItem> selectList;
+
+              var sw = Stopwatch.StartNew();
+
+              // Kiểm tra cache trước
+              if (!_cache.TryGetValue(cacheKey, out selectList))
+              {
+                _logger.LogInformation($"⏳ Đang gọi service {serviceId} cho filter '{code}'");
+
+                // Tạo bản sao của objParameters cho mỗi filter de tranh ghi de
+                var clonedParameters = new Dictionary<string, object>(objParameters);
+                selectList = await NET_Service_DynamicExecute(serviceId, clonedParameters);
+
+                // Lưu cache trong 5 phút (có thể tuỳ chỉnh)
+                _cache.Set(cacheKey, selectList, TimeSpan.FromMinutes(5));
+                _logger.LogInformation($"✅ Service {serviceId} filter '{code}' hoàn tất sau {sw.ElapsedMilliseconds}ms (không dùng cache)");
+              }
+              else
+              {
+                _logger.LogInformation($"⚡ Service {serviceId} filter '{code}' dùng cache sau {sw.ElapsedMilliseconds}ms");
+              }
+              sw.Stop();
+
+
+              return (Code: code, SelectList: selectList); // 👈 đây là fix
+            })
+            .ToList();
+
+        // 2. Chạy tất cả task song song
+        var serviceResults = await Task.WhenAll(serviceTasks);
+
+        // 3. Chuyển kết quả sang Dictionary<string, List<SelectListItem>>
+        config_formfieldService = serviceResults.ToDictionary(x => (string)x.Code, x => x.SelectList);
+      }
+
+      return config_formfieldService;
+    }
   }
 }

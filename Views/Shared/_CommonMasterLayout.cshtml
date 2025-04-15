@@ -19,9 +19,6 @@
     <!-- Thêm moment.js để xử lý ngày giờ chính xác -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.29.4/moment.min.js"></script>
 
-    @* xu ly xuat excel js *@
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/exceljs/4.3.0/exceljs.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
 
   @{
         string title = ViewData["title"] as string ?? "";
@@ -75,7 +72,8 @@
           // tim kiem trong select box
         $(document).ready(function () {
             function initSelect2() {
-                $("select").not(".select2-hidden-accessible").select2({
+              // không áp dụng cho Quiff HTML editor
+                $("select") .not(".ql-toolbar select, .ql-container select, .ql-editor select").not(".select2-hidden-accessible").select2({
                     placeholder: "Chọn",
                     allowClear: true,
                     width: "100%"
@@ -1110,6 +1108,132 @@
                });
            });
          });
+
+        // xử lý Quill HTML editor cho field form
+        document.addEventListener("DOMContentLoaded", function () {
+        var quillEditors = {}; // Lưu danh sách editor
+            document.querySelectorAll(".quill-editor").forEach(function (el) {
+                var id = el.id.replace("editor-container-", ""); // lấy fieldName
+                var hiddenInput = document.getElementById("editor-content-" + id);
+
+                // Khởi tạo Quill
+                var quill = new Quill("#" + el.id, {
+                    theme: "snow",
+                    placeholder: "Nhập nội dung tại đây...",
+                    modules: {
+                        toolbar: [
+                            ['bold', 'italic', 'underline', 'strike'],        // toggled buttons
+                            ['blockquote', 'code-block'],
+                            ['link', 'image', 'video', 'formula'],
+
+                            [{ 'header': 1 }, { 'header': 2 }],               // custom button values
+                            [{ 'list': 'ordered'}, { 'list': 'bullet' }, { 'list': 'check' }],
+                            [{ 'script': 'sub'}, { 'script': 'super' }],      // superscript/subscript
+                            [{ 'indent': '-1'}, { 'indent': '+1' }],          // outdent/indent
+                            [{ 'direction': 'rtl' }],                         // text direction
+
+                            [{ 'size': ['small', false, 'large', 'huge'] }],  // custom dropdown
+                            [{ 'header': [1, 2, 3, 4, 5, 6, false] }],
+
+                            [{ 'color': [] }, { 'background': [] }],          // dropdown with defaults from theme
+                            [{ 'font': [] }],
+                            [{ 'align': [] }],
+
+                            ['clean']                                         // remove formatting button
+                          ]
+                    }
+                });
+
+                // Gán giá trị từ input nếu có (khi edit)
+                if (hiddenInput.value) {
+                    quill.root.innerHTML = hiddenInput.value;
+                }
+
+                // Lưu vào danh sách
+                quillEditors[id] = quill;
+            });
+
+            // Khi submit: đồng bộ nội dung
+            document.querySelector("form").addEventListener("submit", function () {
+                for (var id in quillEditors) {
+                    var editor = quillEditors[id];
+                    var html = editor.root.innerHTML;
+                    document.getElementById("editor-content-" + id).value = html;
+                }
+            });
+        });
+        
+    //     // Hàm xử lý thay đổi cho input file
+    //     $(document).ready(function () {
+    //     function handleFileInputChange(input) {
+    //         let targetSelector = $(input).data("target");
+    //         if (!targetSelector) return;
+
+    //         let fileList = $(targetSelector);
+    //         fileList.empty();
+
+    //         $.each(input.files, function (index, file) {
+    //             fileList.append('<li>' + file.name + '</li>');
+    //         });
+    //     }
+
+    //     // Gắn sự kiện cho tất cả input[type="file"] có data-target
+    //     $('input[type="file"][data-target]').on('change', function (event) {
+    //         handleFileInputChange(this);
+    //     });
+    // });
+
+         // Hàm xử lý thay đổi cho input file
+        $(document).ready(function () {
+            function handleFileInputChange(input) {
+                let targetSelector = $(input).data("target");
+                if (!targetSelector) return;
+
+                let fileList = $(targetSelector);
+                fileList.empty();
+
+                $.each(input.files, function (index, file) {
+                    const listItem = $('<li class="mb-1 d-flex align-items-center justify-content-between"></li>');
+
+                    const fileName = $('<span class="me-2 text-truncate" style="max-width: 200px;"></span>').text(file.name);
+
+                    const btnGroup = $('<div class="btn-group btn-group-sm" role="group"></div>');
+                    const downloadBtn = $('<button type="button" class="btn btn-outline-primary">Tải</button>');
+                    const deleteBtn = $('<button type="button" class="btn btn-outline-danger">Xóa</button>');
+
+                    // Handler: Xóa file khỏi danh sách
+                    deleteBtn.on('click', function () {
+                        listItem.remove();
+                        // Optionally reset input file (reset toàn bộ)
+                        input.value = "";
+                    });
+
+                    // Handler: Tải file nếu bạn có đường dẫn file cũ từ server (optional)
+                    downloadBtn.on('click', function () {
+                        // Bạn cần thay bằng link thực tế ở đây
+                        const blobUrl = URL.createObjectURL(file); // Dùng tạm blob khi upload mới
+                        const a = $('<a></a>')
+                            .attr('href', blobUrl)
+                            .attr('download', file.name)
+                            .css('display', 'none');
+                        $('body').append(a);
+                        a[0].click();
+                        a.remove();
+                        URL.revokeObjectURL(blobUrl);
+                    });
+
+                    btnGroup.append(downloadBtn, deleteBtn);
+                    listItem.append(fileName, btnGroup);
+                    fileList.append(listItem);
+                });
+            }
+
+            // Áp dụng cho tất cả input[type=file] có data-target
+            $('input[type="file"][data-target]').on('change', function () {
+                handleFileInputChange(this);
+            });
+        });
+
     </script>
 
     <!-- Page Scripts-->

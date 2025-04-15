@@ -80,6 +80,12 @@ namespace KOAHome
               pattern: "report/viewer-utility/{reportCode}",
               defaults: new { controller = "NETReport", action = "Viewer_Utility" }
           );
+        // route cho form
+        endpoints.MapControllerRoute(
+              name: "form/viewer",
+              pattern: "form/viewer/{formCode}/{id?}",
+              defaults: new { controller = "NETForm", action = "Viewer"}
+          );
       });
     }
   }

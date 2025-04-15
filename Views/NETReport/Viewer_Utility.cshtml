@@ -185,7 +185,7 @@
                                 <div class="row gx-3 gy-2 align-items-center table-top-action">
                                     <div class="col-md-12 d-flex">
                                         <div class="demo-inline-spacing table-action">
-                                            <a asp-action="Create" type="button" class="btn btn-icon btn-primary" data-bs-toggle="tooltip" data-bs-offset="0,4" data-bs-placement="top" data-bs-html="true"
+                                            <a asp-controller="NETForm" asp-action="Viewer" asp-route-formCode="F0_HS_Booking1" type="button" class="btn btn-icon btn-primary" data-bs-toggle="tooltip" data-bs-offset="0,4" data-bs-placement="top" data-bs-html="true"
                                                title="<i class='ri-add-line'></i> <span>Thêm mới</span>">
                                                 <i class="ri-add-line"></i>
                                             </a>
@@ -333,7 +333,7 @@
                                                       <button type="button" class="btn btn-primary btn-xs dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false"><i class="ri-align-justify me-1"></i></button>
                                                       <ul class="dropdown-menu overflow-auto" style="max-height:200px">
                                                         <li>
-                                                          <a asp-action="Edit" asp-route-id="@Id" class="dropdown-item"><i class="ri-pencil-line me-1 text-primary"></i> Chỉnh sửa</a>
+                                                          <a asp-controller="NETForm" asp-action="Viewer" asp-route-formCode="F0_HS_Booking1" asp-route-id="@Id" class="dropdown-item"><i class="ri-pencil-line me-1 text-primary"></i> Chỉnh sửa</a>
                                                         </li>
                                                         <li>
                                                           <a asp-action="Details" asp-route-id="@Id" class="dropdown-item"><i class="ri-eye-line me-1 text-primary"></i> Xem</a>
@@ -345,14 +345,14 @@
                                                           <a asp-action="DichVuPhatSinh" asp-route-id="@Id" class="dropdown-item"><i class="ri-add-line me-1 text-primary"></i> Dịch vụ phát sinh</a>
                                                         </li>
                                                         <li>
-                                                          <a data-bs-toggle="modal" data-bs-target="#modal-GiamGiaPhatSinh" data-id="@Id" data-sqlstore="HS_Booking1_OtherDiscount_sel" data-action="GiamGiaPhatSinh" data-controller="HsBookings" class="dropdown-item popup-form-action"><i class="ri-money-dollar-box-line me-1 text-primary"></i> Giảm giá phát sinh</a>
+                                                          <a href="" data-bs-toggle="modal" data-bs-target="#modal-GiamGiaPhatSinh" data-id="@Id" data-sqlstore="HS_Booking1_OtherDiscount_sel" data-action="GiamGiaPhatSinh" data-controller="HsBookings" class="dropdown-item popup-form-action"><i class="ri-money-dollar-box-line me-1 text-primary"></i> Giảm giá phát sinh</a>
 
                                                         </li>
                                                         <li>
-                                                          <a data-bs-toggle="modal" data-bs-target="#modal-HuyPhong" data-id="@Id" data-sqlstore="HS_Booking1_Cancel_sel" class="dropdown-item popup-form-action"><i class="ri-close-line me-1 text-primary"></i> Hủy phòng</a>
+                                                          <a href="" data-bs-toggle="modal" data-bs-target="#modal-HuyPhong" data-id="@Id" data-sqlstore="HS_Booking1_Cancel_sel" class="dropdown-item popup-form-action"><i class="ri-close-line me-1 text-primary"></i> Hủy phòng</a>
                                                         </li>
                                                         <li>
-                                                          <a data-id="@Id" data-confirmtext="Bạn có chắc chắn muốn xóa khum?" data-sqlstore="HS_Booking1_del" class="dropdown-item confirmAction"><i class="ri-delete-bin-6-line me-1 text-primary"></i> Xóa</a>
+                                                          <a href="" data-id="@Id" data-confirmtext="Bạn có chắc chắn muốn xóa khum?" data-sqlstore="HS_Booking1_del" class="dropdown-item confirmAction"><i class="ri-delete-bin-6-line me-1 text-primary"></i> Xóa</a>
                                                         </li>
                                                       </ul>
                                                     </div>
