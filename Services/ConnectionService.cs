@@ -15,6 +15,7 @@ namespace KOAHome.Services
     public Task<(StringBuilder SqlQuery, List<SqlParameter> SqlParam)> Connection_GetQueryParam(Dictionary<string, object> parameters, string sqlStore, string? connectionString);
     public Task<List<dynamic>> Connection_GetDataFromQuery(Dictionary<string, object> parameters, string sqlStore, string? connectionString, StringBuilder sqlQuery, List<SqlParameter> sqlParams);
     public Task<IDictionary<string, object>?> Connection_GetSingleDataFromQuery(Dictionary<string, object> parameters, string sqlStore, string? connectionString, StringBuilder sqlQuery, List<SqlParameter> sqlParams);
+    public bool CheckForErrors(List<dynamic> resultList, out string errorMessage);
 
   }
   public class ConnectionService : IConnectionService
@@ -243,6 +244,24 @@ namespace KOAHome.Services
       }
 
       return null;
+    }
+
+    // kiểm tra lỗi và trả về message
+    public bool CheckForErrors(List<dynamic> resultList, out string errorMessage)
+    {
+      var errorMessages = resultList
+          .Where(item => ((IDictionary<string, object>)item).ContainsKey("ErrorMessage"))
+          .Select(item => item.ErrorMessage.ToString())
+          .ToList();
+
+      if (errorMessages.Any())
+      {
+        errorMessage = string.Join(", ", errorMessages);
+        return true;
+      }
+
+      errorMessage = null;
+      return false;
     }
   }
 }

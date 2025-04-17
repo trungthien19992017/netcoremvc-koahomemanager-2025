@@ -1183,55 +1183,239 @@
     //     });
     // });
 
-         // Hàm xử lý thay đổi cho input file
-        $(document).ready(function () {
-            function handleFileInputChange(input) {
-                let targetSelector = $(input).data("target");
-                if (!targetSelector) return;
+        //  // Hàm xử lý thay đổi cho input file
+        // $(document).ready(function () {
+        //     function handleFileInputChange(input) {
+        //         let targetSelector = $(input).data("target");
+        //         if (!targetSelector) return;
 
-                let fileList = $(targetSelector);
-                fileList.empty();
+        //         let fileList = $(targetSelector);
+        //         fileList.empty();
 
-                $.each(input.files, function (index, file) {
-                    const listItem = $('<li class="mb-1 d-flex align-items-center justify-content-between"></li>');
+        //         $.each(input.files, function (index, file) {
+        //             const listItem = $('<li class="mb-1 d-flex align-items-center justify-content-between"></li>');
 
-                    const fileName = $('<span class="me-2 text-truncate" style="max-width: 200px;"></span>').text(file.name);
+        //             const fileName = $('<span class="me-2 text-truncate" style="max-width: 200px;"></span>').text(file.name);
 
-                    const btnGroup = $('<div class="btn-group btn-group-sm" role="group"></div>');
-                    const downloadBtn = $('<button type="button" class="btn btn-outline-primary">Tải</button>');
-                    const deleteBtn = $('<button type="button" class="btn btn-outline-danger">Xóa</button>');
+        //             const btnGroup = $('<div class="btn-group btn-group-sm" role="group"></div>');
+        //             const downloadBtn = $('<button type="button" class="btn btn-outline-primary">Tải</button>');
+        //             const deleteBtn = $('<button type="button" class="btn btn-outline-danger">Xóa</button>');
 
-                    // Handler: Xóa file khỏi danh sách
-                    deleteBtn.on('click', function () {
-                        listItem.remove();
-                        // Optionally reset input file (reset toàn bộ)
-                        input.value = "";
-                    });
+        //             // Handler: Xóa file khỏi danh sách
+        //             deleteBtn.on('click', function () {
+        //                 listItem.remove();
+        //                 // Optionally reset input file (reset toàn bộ)
+        //                 input.value = "";
+        //             });
 
-                    // Handler: Tải file nếu bạn có đường dẫn file cũ từ server (optional)
-                    downloadBtn.on('click', function () {
-                        // Bạn cần thay bằng link thực tế ở đây
-                        const blobUrl = URL.createObjectURL(file); // Dùng tạm blob khi upload mới
-                        const a = $('<a></a>')
-                            .attr('href', blobUrl)
-                            .attr('download', file.name)
-                            .css('display', 'none');
+        //             // Handler: Tải file nếu bạn có đường dẫn file cũ từ server (optional)
+        //             downloadBtn.on('click', function () {
+        //                 // Bạn cần thay bằng link thực tế ở đây
+        //                 const blobUrl = URL.createObjectURL(file); // Dùng tạm blob khi upload mới
+        //                 const a = $('<a></a>')
+        //                     .attr('href', blobUrl)
+        //                     .attr('download', file.name)
+        //                     .css('display', 'none');
+        //                 $('body').append(a);
+        //                 a[0].click();
+        //                 a.remove();
+        //                 URL.revokeObjectURL(blobUrl);
+        //             });
+
+        //             btnGroup.append(downloadBtn, deleteBtn);
+        //             listItem.append(fileName, btnGroup);
+        //             fileList.append(listItem);
+        //         });
+        //     }
+
+        //     // Áp dụng cho tất cả input[type=file] có data-target
+        //     $('input[type="file"][data-target]').on('change', function () {
+        //         handleFileInputChange(this);
+        //     });
+        // });
+
+        // Hàm xử lý thay đổi cho input file
+         $(document).ready(function () {
+            const fileMap = @Html.Raw(Json.Serialize(ViewBag.FileUrls)); // { "KOAAttachment": ["/path/file1.png", ...] }
+            function createFileListItem(name, url = null, file = null, input = null) {
+                const listItem = $('<li class="mb-1 d-flex align-items-center justify-content-between"></li>');
+                const fileName = $('<span class="me-2 text-truncate" style="max-width: 200px;"></span>').text(name);
+                const btnGroup = $('<div class="btn-group btn-group-sm" role="group"></div>');
+
+                const downloadBtn = $('<button type="button" class="btn btn-outline-primary">Tải</button>');
+                const deleteBtn = $('<button type="button" class="btn btn-outline-danger">Xóa</button>');
+
+                downloadBtn.on('click', function () {
+                    if (url) {
+                        window.open(url, '_blank');
+                    } else if (file) {
+                        const blobUrl = URL.createObjectURL(file);
+                        const a = $('<a></a>').attr('href', blobUrl).attr('download', file.name).css('display', 'none');
                         $('body').append(a);
                         a[0].click();
                         a.remove();
                         URL.revokeObjectURL(blobUrl);
-                    });
-
-                    btnGroup.append(downloadBtn, deleteBtn);
-                    listItem.append(fileName, btnGroup);
-                    fileList.append(listItem);
+                    }
                 });
+
+                deleteBtn.on('click', function () {
+                    listItem.remove();
+                    if (input) {
+                        input.value = "";
+                    }
+                });
+
+                btnGroup.append(downloadBtn, deleteBtn);
+                listItem.append(fileName, btnGroup);
+                return listItem;
             }
 
-            // Áp dụng cho tất cả input[type=file] có data-target
+            // function cập nhật slide mỗi khi chọn lại file
+            function updateCarouselFromFiles(carouselSelector, files) {
+                const $carousel = $(carouselSelector);
+                const $inner = $carousel.find('.carousel-inner');
+                const $indicators = $carousel.find('.carousel-indicators');
+
+                $inner.empty();
+                $indicators.empty();
+
+                let slideIndex = 0;
+                for (let i = 0; i < files.length; i++) {
+                    const file = files[i];
+                    const fileName = file.name;
+                    const fileExt = fileName.toLowerCase().split('.').pop();
+
+                    if (['jpg', 'jpeg', 'png', 'gif'].includes(fileExt)) {
+                        const imgURL = URL.createObjectURL(file);
+
+                        const itemClass = slideIndex === 0 ? 'carousel-item active' : 'carousel-item';
+
+                        const $item = $(`
+                            <div class="${itemClass}">
+                                <img class="d-block w-100 carousel-blur-img" src="${imgURL}" alt="${fileName}" />
+                                <div class="carousel-caption d-none d-md-block text-shadow">
+                                    <h3><a class="text-white" href="${imgURL}" target="_blank">${fileName}</a></h3>
+                                </div>
+                            </div>
+                        `);
+
+                        const $indicator = $(`<button type="button"
+                                                   data-bs-target="${carouselSelector}"
+                                                   data-bs-slide-to="${slideIndex}"
+                                                   class="${slideIndex === 0 ? "active" : ""}"
+                                                   aria-current="${slideIndex === 0 ? "true" : "false"}"
+                                                   aria-label="Slide ${slideIndex + 1}"></button>`);
+
+                        $inner.append($item);
+                        $indicators.append($indicator);
+                        slideIndex++;
+                    }
+                }
+
+                // Reset lại slide về slide đầu tiên
+                const carouselInstance = bootstrap.Carousel.getOrCreateInstance($carousel[0]);
+                carouselInstance.to(0);
+            }
+
+            function handleFileInputChange(input) {
+                let targetSelector = $(input).data("target");
+                const carouselSelector = $(input).data("carousel");
+                if (!targetSelector) return;
+
+                let fileList = $(targetSelector);
+                fileList.empty(); // Xoá toàn bộ
+
+                const validImageFiles = [];
+
+                $.each(input.files, function (index, file) {
+                    const listItem = createFileListItem(file.name, null, file, input);
+                    fileList.append(listItem);
+
+                    // Nếu là ảnh thì thêm vào mảng để update slide
+                    const ext = file.name.toLowerCase().split('.').pop();
+                    if (['jpg', 'jpeg', 'png', 'gif'].includes(ext)) {
+                        validImageFiles.push(file);
+                    }
+                });
+                // Nếu có carousel liên quan thì cập nhật lại slide
+                if (carouselSelector && validImageFiles.length > 0) {
+                    updateCarouselFromFiles(carouselSelector, validImageFiles);
+                }
+            }
+
+            // Load từ server
+            if (typeof fileMap !== "undefined") {
+                for (const inputName in fileMap) {
+                    const filePaths = fileMap[inputName];
+                    const fileListId = "#fileList-" + inputName;
+
+                    if (Array.isArray(filePaths)) {
+                        const container = $(fileListId);
+                        $.each(filePaths, function (_, filePath) {
+                            const fileName = filePath.split('/').pop();
+                            const listItem = createFileListItem(fileName, filePath);
+                            container.append(listItem);
+                        });
+                    }
+                }
+            }
+
+            // Apply change handler cho tất cả input file có data-target
             $('input[type="file"][data-target]').on('change', function () {
                 handleFileInputChange(this);
             });
+        });
+
+        // xử lý control List selection của form
+        document.addEventListener("DOMContentLoaded", function () {
+            document.querySelectorAll(".selection-list").forEach(list => {
+                list.addEventListener("click", function (e) {
+                    const item = e.target.closest(".selection-item");
+                    if (!item) return;
+
+                    item.classList.toggle("selected");
+
+                    const selectedValues = Array.from(list.querySelectorAll(".selection-item.selected"))
+                        .map(el => el.dataset.value);
+
+                    const hiddenInputId = list.dataset.target;
+                    document.getElementById(hiddenInputId).value = selectedValues.join(",");
+                });
+            });
+        });
+
+
+        // xử lý custom tagbox
+        $(function() {
+            // --- Khởi tạo Tagify cho tất cả input có class 'tag-input' ---
+            $(".tag-input").each(function () {
+                    const raw = $(this).attr("data-jsonwhitelist") || "";
+                // const whitelist = raw.split(",").map(x => x.trim()); // Chuyển chuỗi thành mảng
+                let whitelist = [];
+
+                try {
+                    whitelist = JSON.parse(raw);
+                    console.log("WHITELIST PARSED:", whitelist);
+                } catch (e) {
+                    console.warn("Invalid whitelist JSON", e);
+                }
+
+                new Tagify(this, {
+                    placeholder: "Có thể nhập hoặc chọn danh mục có sẵn",
+                    whitelist: whitelist,
+                    tagTextProp: "label", // <-- Cái này rất quan trọng!
+                    originalInputValueFormat: valuesArr => valuesArr.map(tag => tag.value).join(','), // chỉ lưu value
+                    dropdown: {
+                        enabled: 0,
+                        closeOnSelect: true,
+                        maxItems: 10,
+                        position: "text", // hoặc 'manual' nếu muốn kiểm soát chặt chẽ
+                        highlightFirst: true,
+                        mapValueTo: "label",    // ← dùng 'label' để hiển thị trong dropdown
+                    }
+                });
+            });
+
         });
 
     </script>

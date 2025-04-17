@@ -41,47 +41,6 @@ namespace KOAHome.Controllers
       _netService = netService;
     }
 
-    // cac phuong thuc con de toi uu xu ly
-    private async Task HandleFiles(string objectTypeCode, IFormCollection? form, int? id)
-    {
-      if (form != null)
-      {
-        if (form.Files.Any())
-        {
-          List<string> fileUrls = await _att.UpdateFiles(form); // Gọi service để lưu file
-          ViewBag.fileUrls = fileUrls; // Truyền danh sách file về View (neu co)
-        }
-        else if (id != null)
-        {
-          List<string> fileUrls = await _att.GetFiles(id, objectTypeCode); // Gọi service để get file tu objectId va ObjectTypeCode
-          ViewBag.fileUrls = fileUrls; // Truyền danh sách file về View (neu co)
-
-        }
-      }
-      else if (id != null)
-      {
-        List<string> fileUrls = await _att.GetFiles(id, objectTypeCode); // Gọi service để get file tu objectId va ObjectTypeCode
-        ViewBag.fileUrls = fileUrls; // Truyền danh sách file về View (neu co)
-      }
-    }
-
-    private bool CheckForErrors(List<dynamic> resultList, out string errorMessage)
-    {
-      var errorMessages = resultList
-          .Where(item => ((IDictionary<string, object>)item).ContainsKey("ErrorMessage"))
-          .Select(item => item.ErrorMessage.ToString())
-          .ToList();
-
-      if (errorMessages.Any())
-      {
-        errorMessage = string.Join(", ", errorMessages);
-        return true;
-      }
-
-      errorMessage = null;
-      return false;
-    }
-
     // GET: NETReportController
     public ActionResult Index()
     {

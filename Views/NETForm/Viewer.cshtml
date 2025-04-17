@@ -1,3 +1,5 @@
+@using Newtonsoft.Json
+@using Newtonsoft.Json.Serialization
 @using KOAHome.Helpers
 @{
     Layout = "~/Views/Shared/_ContentNavbarLayout.cshtml";
@@ -11,6 +13,9 @@
     // truyen danh sach cấu hình form field len giao dien
     var config_formfield = ViewBag.config_formfield as List<dynamic>;
     var dynamicServiceSelectOptions = ViewBag.DynamicServiceSelectOptions as Dictionary<string, List<SelectListItem>>;
+
+    // nhan thong tin attachment neu co
+    var fileUrlsDict = ViewBag.fileUrls as Dictionary<string, List<string>>;
 
     // tra ve title cho page
     ViewData["Title"] = config_form.ContainsKey("FormTitle") ? config_form["FormTitle"] : "Thông tin";
@@ -187,7 +192,7 @@
                     </div>
                     <div class="card-body">
                         <form id="create-form" class="needs-validation" novalidate="" method="post" asp-controller="NETForm" asp-action="Viewer" asp-route-formCode="@ViewBag.FormCode"
-                              asp-route-id="@ViewBag.id" @* action="/form/viewer/@ViewBag.FormCode/@ViewBag.id" *@ enctype="multipart/form-data">
+                              asp-route-id="@ViewBag.id" enctype="multipart/form-data">
                         @* xu ly form dong *@
                         @* xu ly voi moi field *@
                         <div class="row gx-5 mb-5">
@@ -282,7 +287,7 @@
                                           
                                           <div class="col-md-@(Convert.ToInt32(child_field_width) == 0 ? "4" : child_field_width)">
                                             <div class="@(
-                                                            noclasslabel_fieldtypes.Contains(child_type) ? "" : child_type == "CheckBox" ? "form-check mt-4" : "form-floating form-floating-outline mb-6"
+                                                            noclasslabel_fieldtypes.Contains(child_type) ? "" : child_type == "CheckBox" ? "form-check mt-4" : child_type == "Switch" ? "form-check form-switch me-n3" : "form-floating form-floating-outline mb-6"
                                                           )">
                                               @if (child_type == "TextBox")
                                               {
@@ -300,7 +305,9 @@
                                               }
                                               else if (child_type == "DateBox")
                                               {
-                                                  <input class="form-control form-control-sm" type="date" id="@child_name" name="@child_name" value="@child_value" @(child_isreadonly == true ? "readonly" : "") @(child_isrequired == true ? "required" : "")/>
+                                                  @* mac dinh datetype la date *@
+                                                  string datetype = child_field_editoroptionsDict.ContainsKey("type") ? (child_field_editoroptionsDict["type"].ToString() ?? "date") : "date";
+                                                  <input class="form-control form-control-sm" type="@datetype" id="@child_name" name="@child_name" value="@child_value" @(child_isreadonly == true ? "readonly" : "") @(child_isrequired == true ? "required" : "")/>
                                               }
                                               else if (child_type == "EmptyBox")
                                               {
@@ -332,6 +339,74 @@
 
                                                   @Html.DropDownList(child_name, selectList, "-- Chọn --", selectAttributes)
                                               }
+                                              else if (child_type == "DropDownBox")
+                                              {
+                                                  @* check selected cho item dung voi gia tri *@
+                                                  var selectList = ViewBag.dynamicServiceSelectOptions[child_name] as List<SelectListItem> ?? new List<SelectListItem>();
+                                                  @foreach (var item in selectList)
+                                                  {
+                                                      if (child_value != null)
+                                                      {
+                                                        item.Selected = (item.Value.ToString() == child_value.ToString()); // currentValue là giá trị đang được chọn
+                                                      }
+                                                  }
+                                                  var selectAttributes = new Dictionary<string, object>
+                                                  {
+                                                      { "class", "form-select color-dropdown form-select-sm" },
+                                                      { "id", name },
+                                                      { "name", name },
+                                                      { "multiple", "multiple" } // <== Bắt buộc
+                                                  };
+
+                                                  // neu bat buoc thi them truong bat buoc
+                                                  if (child_isrequired == true)
+                                                  {
+                                                      selectAttributes["required"] = "required";
+                                                  }
+
+                                                  @Html.DropDownList(child_name, selectList, "-- Chọn --", selectAttributes)
+                                              }
+                                              else if (child_type == "TagBox")
+                                              {
+                                                  // check selected cho item dung voi gia tri
+                                                  var selectList = ViewBag.dynamicServiceSelectOptions[child_name] as List<SelectListItem> ?? new List<SelectListItem>();
+                                                  var tagBoxWhitelist = selectList.Select(x => new {
+                                                      value = x.Value,
+                                                      label = x.Text
+                                                  });
+
+                                                  // serialize whitelist tiếng Việt không bị escape unicode
+                                                  var whitelistJson = JsonConvert.SerializeObject(tagBoxWhitelist, new JsonSerializerSettings
+                                                  {
+                                                      StringEscapeHandling = StringEscapeHandling.Default
+                                                  });
+
+                                                  <input id="@child_name" class="tag-input form-control h-auto" name="@child_name" value="@child_value" data-jsonwhitelist='@Html.Raw(whitelistJson)' aria-label="@child_label" tabindex="-1">
+                                              }
+                                              else if (child_type == "ListSelection")
+                                              {
+                                                  // check selected cho item dung voi gia tri
+                                                  var selectList = ViewBag.dynamicServiceSelectOptions[child_name] as List<SelectListItem> ?? new List<SelectListItem>();
+                                                  string inputName = child_name; // ví dụ: "ListSelectionInput"
+                                                  var selectedValues = (value.ToString() ?? "").Split(',', StringSplitOptions.RemoveEmptyEntries).ToList();
+                                                  string hiddenInputId = $"hidden_{inputName}";
+
+                                                  <div class="selection-container">
+                                                      <label>@label</label>
+                                                      <input type="hidden" name="@inputName" id="@hiddenInputId" value="@value" />
+    
+                                                      <div class="selection-list" data-target="@hiddenInputId">
+                                                          @foreach (var item in selectList)
+                                                          {
+                                                              bool isSelected = selectedValues.Contains(item.Value);
+                                                              <div class="selection-item @(isSelected ? "selected" : "")"
+                                                                   data-value="@item.Value">
+                                                                  @item.Text
+                                                              </div>
+                                                          }
+                                                      </div>
+                                                  </div>
+                                              }
                                               else if (child_type == "RadioGroup")
                                               {
                                                   <div class="d-lg-inline-block"><p class="text-light fw-medium d-block">@child_label: </p></div>
@@ -353,93 +428,101 @@
                                                     }
                                                   }
                                               }
-                                              else if (child_type == "CheckBox")
+                                              else if (child_type == "CheckBox" || child_type == "Switch")
                                               {
                                                   <input class="form-check-input" type="checkbox" id="@child_name" name="@child_name" value="true" @((child_value ?? "").ToString().ToLower() == "true" ? "checked" : "") />
                                               }
                                               else if (child_type == "FileUploader")
                                               {
+                                                string codeUpload = child_field_optionsDict.ContainsKey("codeUpload") ? (child_field_optionsDict["codeUpload"].ToString() ?? "") : "";
+                                                var fileList = new List<string>();
+                                                if (fileUrlsDict != null)
+                                                {
+                                                    fileList = fileUrlsDict != null && fileUrlsDict.ContainsKey(codeUpload)
+                                                    ? fileUrlsDict[codeUpload]
+                                                    : new List<string>();
+                                                }
                                                 <div class="row gx-5 mb-5">
                                                   <div class="col-md-4 card-header">
                                                       <div class="mb-4">
-                                                          <label for="KOAAttachment" class="form-label">File đính kèm</label>
-                                                          <input class="form-control" type="file" id="KOAAttachment" name="KOAAttachment" data-target="@("#fileList-"+child_name)" multiple />
-                                                          <ul id="@("fileList-"+child_name)"></ul>
-
+                                                          <label for="@child_name" class="form-label">@child_label</label>
+                                                          <input class="form-control" type="file" id="@codeUpload" name="@codeUpload" data-target="@("#fileList-"+codeUpload)" data-carousel="@("#carouselSlideImage-"+codeUpload)" multiple />
+                                                          @* tao danh sach file rong de xu ly js hiển thị *@
+                                                          <ul id="@("fileList-"+codeUpload)"></ul>
                                                       </div>
                                                   </div>
-                                                  @* Image slide *@
-                                                  <div class="col-md-8">
-                                                      <div id="carouselSlideImage"
-                                                      class="carousel slide carousel-fade w-50"
-                                                      data-bs-ride="carousel">
-                                                          <div class="carousel-indicators">
-                                                            @if (ViewBag.fileUrls != null)
-                                                            {
-                                                                bool isPreviousImg = true;
-                                                                for (int i = 0; i < ViewBag.fileUrls.Count; i++)
+                                                    @* Image slide *@
+                                                     <div class="col-md-8">
+                                                        <div id="@("carouselSlideImage-"+codeUpload)"
+                                                              class="carousel slide carousel-fade w-50"
+                                                              data-bs-ride="carousel">
+                                                            <div class="carousel-indicators">
+                                                                @if (fileList != null)
                                                                 {
-                                                                      var fileUrl = ViewBag.fileUrls[i];
-                                                                      int index = i;
-                                                                      // kiem tra khong phai la img thi bo qua
-                                                                      @if (!(fileUrl.EndsWith(".jpg") || fileUrl.EndsWith(".png") || fileUrl.EndsWith(".jpeg") || fileUrl.EndsWith(".gif")))
-                                                                      {
-                                                                          isPreviousImg = false;
-                                                                      }
-                                                                      else
-                                                                      {
-                                                                          // kiem tra file truoc do co phai la img khong? neu khong phai thi img sau phai tru 1
-                                                                          index = isPreviousImg == true ? index : index - 1;
-                                                                          <button type="button"
-                                                                                  data-bs-target="#carouselSlideImage"
-                                                                                  data-bs-slide-to="@index"
-                                                                                  class="@(index == 0 ? "active" : "")"
-                                                                                  aria-current="@(index == 0 ? "true" : "false")"
-                                                                                  aria-label="Slide @(index + 1)">
-                                                                          </button>
-                                                                      }
-                                                                  }
-                                                              }
-                                                          </div>
-                                                          <div class="carousel-inner">
-                                                              @if (ViewBag.fileUrls != null)
-                                                              {
-                                                                  bool isPreviousImg = true;
-                                                                  for (int i = 0; i < ViewBag.fileUrls.Count; i++)
-                                                                  {
-                                                                      var fileUrl = ViewBag.fileUrls[i];
-                                                                      string fileName = fileUrl.Substring(fileUrl.LastIndexOf('/') + 1);
-                                                                      int index = i;
-                                                                      // kiem tra khong phai la img thi bo qua
-                                                                      @if (!(fileUrl.EndsWith(".jpg") || fileUrl.EndsWith(".png") || fileUrl.EndsWith(".jpeg") || fileUrl.EndsWith(".gif")))
-                                                                      {
-                                                                          isPreviousImg = false;
-                                                                      }
-                                                                      else
-                                                                      {
-                                                                          // kiem tra file truoc do co phai la img khong? neu khong phai thi img sau phai tru 1
-                                                                          index = isPreviousImg == true ? index : index - 1;
-                                                                          <div class="carousel-item @(index == 0 ? "active" : "")">
-                                                                              <img class="d-block w-100" src="@fileUrl" alt="@fileName" />
-                                                                              <div class="carousel-caption d-none d-md-block">
-                                                                                  <h3 style="font-family: 'Shrikhand', cursive;font-weight:bold;"><a class="text-white" href="@fileUrl" target="_blank">@(fileUrl.Substring(fileUrl.LastIndexOf('/') + 1))</a></h3>
-                                                                              </div>
-                                                                          </div>
-                                                                      }
-                                                                  }
-                                                              }
-                                                          </div>
-                                                          <a class="carousel-control-prev" href="#carouselSlideImage" role="button" data-bs-slide="prev">
-                                                              <span class="carousel-control-prev-icon" aria-hidden="true"></span>
-                                                              <span class="visually-hidden">Previous</span>
-                                                          </a>
-                                                          <a class="carousel-control-next" href="#carouselSlideImage" role="button" data-bs-slide="next">
-                                                              <span class="carousel-control-next-icon" aria-hidden="true"></span>
-                                                              <span class="visually-hidden">Next</span>
-                                                          </a>
-                                                      </div>
-                                                  </div>
-                                                  // end slide
+                                                                    bool isPreviousImg = true;
+                                                                    for (int i = 0; i < fileList.Count; i++)
+                                                                    {
+                                                                        var fileUrl = fileList[i];
+                                                                        int index = i;
+                                                                        // kiem tra khong phai la img thi bo qua
+                                                                        @if (!(fileUrl.EndsWith(".jpg") || fileUrl.EndsWith(".png") || fileUrl.EndsWith(".jpeg") || fileUrl.EndsWith(".gif")))
+                                                                        {
+                                                                            isPreviousImg = false;
+                                                                        }
+                                                                        else
+                                                                        {
+                                                                            // kiem tra file truoc do co phai la img khong? neu khong phai thi img sau phai tru 1
+                                                                            index = isPreviousImg == true ? index : index - 1;
+                                                                            <button type="button"
+                                                                                    data-bs-target="@("#carouselSlideImage-"+codeUpload)"
+                                                                                    data-bs-slide-to="@index"
+                                                                                    class="@(index == 0 ? "active" : "")"
+                                                                                    aria-current="@(index == 0 ? "true" : "false")"
+                                                                                    aria-label="Slide @(index + 1)">
+                                                                            </button>
+                                                                        }
+                                                                    }
+                                                                }
+                                                            </div>
+                                                            <div class="carousel-inner">
+                                                                @if (fileList != null)
+                                                                {
+                                                                    bool isPreviousImg = true;
+                                                                    for (int i = 0; i < fileList.Count; i++)
+                                                                    {
+                                                                        var fileUrl = fileList[i];
+                                                                        string fileName = fileUrl.Substring(fileUrl.LastIndexOf('/') + 1);
+                                                                        int index = i;
+                                                                        // kiem tra khong phai la img thi bo qua
+                                                                        @if (!(fileUrl.EndsWith(".jpg") || fileUrl.EndsWith(".png") || fileUrl.EndsWith(".jpeg") || fileUrl.EndsWith(".gif")))
+                                                                        {
+                                                                            isPreviousImg = false;
+                                                                        }
+                                                                        else
+                                                                        {
+                                                                            // kiem tra file truoc do co phai la img khong? neu khong phai thi img sau phai tru 1
+                                                                            index = isPreviousImg == true ? index : index - 1;
+                                                                            <div class="carousel-item @(index == 0 ? "active" : "")">
+                                                                                <img class="d-block w-100" src="@fileUrl" alt="@fileName" />
+                                                                                <div class="carousel-caption d-none d-md-block">
+                                                                                    <h3 style="font-family: 'Shrikhand', cursive;font-weight:bold;"><a class="text-white" href="@fileUrl" target="_blank">@(fileUrl.Substring(fileUrl.LastIndexOf('/') + 1))</a></h3>
+                                                                                </div>
+                                                                            </div>
+                                                                        }
+                                                                    }
+                                                                }
+                                                            </div>
+                                                            <a class="carousel-control-prev" href="@("#carouselSlideImage-"+codeUpload)" role="button" data-bs-slide="prev">
+                                                                <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+                                                                <span class="visually-hidden">Previous</span>
+                                                            </a>
+                                                            <a class="carousel-control-next" href="@("#carouselSlideImage-"+codeUpload)" role="button" data-bs-slide="next">
+                                                                <span class="carousel-control-next-icon" aria-hidden="true"></span>
+                                                                <span class="visually-hidden">Next</span>
+                                                            </a>
+                                                        </div>
+                                                    </div>
+                                                    @* end slide *@
                                                 </div>
                                               }
                                               else if (child_type == "HTMLEditor")
@@ -525,7 +608,7 @@
 
                                               @{
                                                 // mot số trường sử dụng label riêng
-                                                string[] nolabel_fieldtypes = ["DynamicReport","FileUploader","HTMLEditor","RadioGroup","EmptyBox"];
+                                                string[] nolabel_fieldtypes = ["DynamicReport","FileUploader","HTMLEditor","RadioGroup","EmptyBox","ListSelection"];
                                                 if (!nolabel_fieldtypes.Contains(child_type))
                                                 {
                                                     <label for="@child_name">@child_label</label>
@@ -546,7 +629,7 @@
                                 string[] noclasslabel_fieldtypes = ["RadioGroup","FileUploader","HTMLEditor"];
                                 <div class="col-md-@(Convert.ToInt32(field_width) == 0 ? "4" : field_width)">
                                   <div class="@(
-                                                  noclasslabel_fieldtypes.Contains(type) ? "" : type == "CheckBox" ? "form-check mt-4" : "form-floating form-floating-outline mb-6"
+                                                  noclasslabel_fieldtypes.Contains(type) ? "" : type == "CheckBox" ? "form-check mt-4" : type == "Switch" ? "form-check form-switch me-n3" : "form-floating form-floating-outline mb-6"
                                                 )">
                                     @if (type == "TextBox")
                                     {
@@ -564,7 +647,9 @@
                                     }
                                     else if (type == "DateBox")
                                     {
-                                        <input class="form-control form-control-sm" type="date" id="@name" name="@name" value="@value" @(isreadonly == true ? "readonly" : "") @(isrequired == true ? "required" : "")/>
+                                        @* mac dinh datetype la date *@
+                                        string datetype = field_editoroptionsDict.ContainsKey("type") ? (field_editoroptionsDict["type"].ToString() ?? "date") : "date";
+                                        <input class="form-control form-control-sm" type="@datetype" id="@name" name="@name" value="@value" @(isreadonly == true ? "readonly" : "") @(isrequired == true ? "required" : "")/>
                                     }
                                     else if (type == "EmptyBox")
                                     {
@@ -596,6 +681,63 @@
 
                                         @Html.DropDownList(name, selectList, "-- Chọn --", selectAttributes)
                                     }
+                                    else if (type == "DropDownBox")
+                                    {
+                                        // check selected cho item dung voi gia tri
+                                        var selectList = ViewBag.dynamicServiceSelectOptions[name] as List<SelectListItem> ?? new List<SelectListItem>();
+                                        @foreach (var item in selectList)
+                                        {
+                                            if (value != null)
+                                            {
+                                              item.Selected = (item.Value.ToString() == value.ToString()); // currentValue là giá trị đang được chọn
+                                            }
+                                        }
+                                        var selectAttributes = new Dictionary<string, object>
+                                        {
+                                            { "class", "form-select color-dropdown form-select-sm" },
+                                            { "id", name },
+                                            { "name", name },
+                                            { "multiple", "multiple" } // <== Bắt buộc
+                                        };
+
+                                        // neu bat buoc thi them truong bat buoc
+                                        if (isrequired == true)
+                                        {
+                                            selectAttributes["required"] = "required";
+                                        }
+
+                                        @Html.DropDownList(name, selectList, "-- Chọn --", selectAttributes)
+                                    }
+                                    else if (type == "TagBox")
+                                    {
+                                        // check selected cho item dung voi gia tri
+                                        var selectList = ViewBag.dynamicServiceSelectOptions[name] as List<SelectListItem> ?? new List<SelectListItem>();
+                                        <input id="@name" class="tag-input form-control h-auto" name="@name" value="@value" data-whitelist='@Html.Raw(Json.Serialize(@selectList))' aria-label="@label" tabindex="-1">
+                                    }
+                                    else if (type == "ListSelection")
+                                    {
+                                        // check selected cho item dung voi gia tri
+                                        var selectList = ViewBag.dynamicServiceSelectOptions[name] as List<SelectListItem> ?? new List<SelectListItem>();
+                                        string inputName = name; // ví dụ: "ListSelectionInput"
+                                        var selectedValues = (value.ToString() ?? "").Split(',', StringSplitOptions.RemoveEmptyEntries).ToList();
+                                        string hiddenInputId = $"hidden_{inputName}";
+
+                                        <div class="selection-container">
+                                            <label>@label</label>
+                                            <input type="hidden" name="@inputName" id="@hiddenInputId" value="@value" />
+    
+                                            <div class="selection-list" data-target="@hiddenInputId">
+                                                @foreach (var item in selectList)
+                                                {
+                                                    bool isSelected = selectedValues.Contains(item.Value);
+                                                    <div class="selection-item @(isSelected ? "selected" : "")"
+                                                         data-value="@item.Value">
+                                                        @item.Text
+                                                    </div>
+                                                }
+                                            </div>
+                                        </div>
+                                    }
                                     else if (type == "RadioGroup")
                                     {
                                         <div class="d-lg-inline-block"><p class="text-light fw-medium d-block">@label: </p></div>
@@ -617,109 +759,102 @@
                                           }
                                         }
                                     }
-                                    else if (type == "CheckBox")
+                                    else if (type == "CheckBox" || type == "Switch")
                                     {
                                         <input class="form-check-input" type="checkbox" id="@name" name="@name" value="true" @((value ?? "").ToString().ToLower() == "true" ? "checked" : "") />
                                     }
                                     else if (type == "FileUploader")
                                     {
+                                      string codeUpload = field_optionsDict.ContainsKey("codeUpload") ? (field_optionsDict["codeUpload"].ToString() ?? "") : "";
+                                      var fileList = new List<string>();
+                                      if (fileUrlsDict != null)
+                                      {
+                                          fileList = fileUrlsDict != null && fileUrlsDict.ContainsKey(codeUpload)
+                                          ? fileUrlsDict[codeUpload]
+                                          : new List<string>();
+                                      }
                                       <div class="row gx-5 mb-5">
                                         <div class="col-md-4 card-header">
                                             <div class="mb-4">
-                                                <label for="KOAAttachment" class="form-label">File đính kèm</label>
-                                                <input class="form-control" type="file" id="KOAAttachment" name="KOAAttachment" data-target="@("#fileList-"+name)" multiple />
-                                                <ul id="@("fileList-"+name)"></ul>
-                                                <ul id="fileList-fileuploader7120">
-                                                  <li class="mb-1 d-flex align-items-center justify-content-between">
-                                                    <span class="me-2 text-truncate" style="max-width: 200px;">2Ngay1Dem.png</span>
-                                                    <div class="btn-group btn-group-sm" role="group">
-                                                      <button type="button" class="btn btn-outline-primary" fdprocessedid="4hawo">Tải</button>
-                                                      <button type="button" class="btn btn-outline-danger" fdprocessedid="zl0uz">Xóa</button>
-                                                    </div>
-                                                  </li>
-                                                  <li class="mb-1 d-flex align-items-center justify-content-between">
-                                                    <span class="me-2 text-truncate" style="max-width: 200px;">5GioTang1Gio.png</span>
-                                                    <div class="btn-group btn-group-sm" role="group">
-                                                      <button type="button" class="btn btn-outline-primary" fdprocessedid="t80lh3">Tải</button>
-                                                      <button type="button" class="btn btn-outline-danger" fdprocessedid="422kf5">Xóa</button></div>
-                                                    </li>
-                                                  </ul>
-
+                                                <label for="@name" class="form-label">@label</label>
+                                                <input class="form-control" type="file" id="@codeUpload" name="@codeUpload" data-target="@("#fileList-"+codeUpload)" data-carousel="@("#carouselSlideImage-"+codeUpload)" multiple />
+                                                @* tao danh sach file rong de xu ly js hiển thị *@
+                                                <ul id="@("fileList-"+codeUpload)"></ul>
                                             </div>
                                         </div>
-                                        @* Image slide *@
-                                        <div class="col-md-8">
-                                            <div id="carouselSlideImage"
-                                            class="carousel slide carousel-fade w-50"
-                                            data-bs-ride="carousel">
-                                                <div class="carousel-indicators">
-                                                  @if (ViewBag.fileUrls != null)
-                                                  {
-                                                      bool isPreviousImg = true;
-                                                      for (int i = 0; i < ViewBag.fileUrls.Count; i++)
+                                          @* Image slide *@
+                                           <div class="col-md-8">
+                                              <div id="@("carouselSlideImage-"+codeUpload)"
+                                                    class="carousel slide carousel-fade w-50"
+                                                    data-bs-ride="carousel">
+                                                  <div class="carousel-indicators">
+                                                      @if (fileList != null)
                                                       {
-                                                            var fileUrl = ViewBag.fileUrls[i];
-                                                            int index = i;
-                                                            // kiem tra khong phai la img thi bo qua
-                                                            @if (!(fileUrl.EndsWith(".jpg") || fileUrl.EndsWith(".png") || fileUrl.EndsWith(".jpeg") || fileUrl.EndsWith(".gif")))
-                                                            {
-                                                                isPreviousImg = false;
-                                                            }
-                                                            else
-                                                            {
-                                                                // kiem tra file truoc do co phai la img khong? neu khong phai thi img sau phai tru 1
-                                                                index = isPreviousImg == true ? index : index - 1;
-                                                                <button type="button"
-                                                                        data-bs-target="#carouselSlideImage"
-                                                                        data-bs-slide-to="@index"
-                                                                        class="@(index == 0 ? "active" : "")"
-                                                                        aria-current="@(index == 0 ? "true" : "false")"
-                                                                        aria-label="Slide @(index + 1)">
-                                                                </button>
-                                                            }
-                                                        }
-                                                    }
-                                                </div>
-                                                <div class="carousel-inner">
-                                                    @if (ViewBag.fileUrls != null)
-                                                    {
-                                                        bool isPreviousImg = true;
-                                                        for (int i = 0; i < ViewBag.fileUrls.Count; i++)
-                                                        {
-                                                            var fileUrl = ViewBag.fileUrls[i];
-                                                            string fileName = fileUrl.Substring(fileUrl.LastIndexOf('/') + 1);
-                                                            int index = i;
-                                                            // kiem tra khong phai la img thi bo qua
-                                                            @if (!(fileUrl.EndsWith(".jpg") || fileUrl.EndsWith(".png") || fileUrl.EndsWith(".jpeg") || fileUrl.EndsWith(".gif")))
-                                                            {
-                                                                isPreviousImg = false;
-                                                            }
-                                                            else
-                                                            {
-                                                                // kiem tra file truoc do co phai la img khong? neu khong phai thi img sau phai tru 1
-                                                                index = isPreviousImg == true ? index : index - 1;
-                                                                <div class="carousel-item @(index == 0 ? "active" : "")">
-                                                                    <img class="d-block w-100" src="@fileUrl" alt="@fileName" />
-                                                                    <div class="carousel-caption d-none d-md-block">
-                                                                        <h3 style="font-family: 'Shrikhand', cursive;font-weight:bold;"><a class="text-white" href="@fileUrl" target="_blank">@(fileUrl.Substring(fileUrl.LastIndexOf('/') + 1))</a></h3>
-                                                                    </div>
-                                                                </div>
-                                                            }
-                                                        }
-                                                    }
-                                                </div>
-                                                <a class="carousel-control-prev" href="#carouselSlideImage" role="button" data-bs-slide="prev">
-                                                    <span class="carousel-control-prev-icon" aria-hidden="true"></span>
-                                                    <span class="visually-hidden">Previous</span>
-                                                </a>
-                                                <a class="carousel-control-next" href="#carouselSlideImage" role="button" data-bs-slide="next">
-                                                    <span class="carousel-control-next-icon" aria-hidden="true"></span>
-                                                    <span class="visually-hidden">Next</span>
-                                                </a>
-                                            </div>
-                                        </div>
+                                                          bool isPreviousImg = true;
+                                                          for (int i = 0; i < fileList.Count; i++)
+                                                          {
+                                                              var fileUrl = fileList[i];
+                                                              int index = i;
+                                                              // kiem tra khong phai la img thi bo qua
+                                                              @if (!(fileUrl.EndsWith(".jpg") || fileUrl.EndsWith(".png") || fileUrl.EndsWith(".jpeg") || fileUrl.EndsWith(".gif")))
+                                                              {
+                                                                  isPreviousImg = false;
+                                                              }
+                                                              else
+                                                              {
+                                                                  // kiem tra file truoc do co phai la img khong? neu khong phai thi img sau phai tru 1
+                                                                  index = isPreviousImg == true ? index : index - 1;
+                                                                  <button type="button"
+                                                                          data-bs-target="@("#carouselSlideImage-"+codeUpload)"
+                                                                          data-bs-slide-to="@index"
+                                                                          class="@(index == 0 ? "active" : "")"
+                                                                          aria-current="@(index == 0 ? "true" : "false")"
+                                                                          aria-label="Slide @(index + 1)">
+                                                                  </button>
+                                                              }
+                                                          }
+                                                      }
+                                                  </div>
+                                                  <div class="carousel-inner">
+                                                      @if (fileList != null)
+                                                      {
+                                                          bool isPreviousImg = true;
+                                                          for (int i = 0; i < fileList.Count; i++)
+                                                          {
+                                                              var fileUrl = fileList[i];
+                                                              string fileName = fileUrl.Substring(fileUrl.LastIndexOf('/') + 1);
+                                                              int index = i;
+                                                              // kiem tra khong phai la img thi bo qua
+                                                              @if (!(fileUrl.EndsWith(".jpg") || fileUrl.EndsWith(".png") || fileUrl.EndsWith(".jpeg") || fileUrl.EndsWith(".gif")))
+                                                              {
+                                                                  isPreviousImg = false;
+                                                              }
+                                                              else
+                                                              {
+                                                                  // kiem tra file truoc do co phai la img khong? neu khong phai thi img sau phai tru 1
+                                                                  index = isPreviousImg == true ? index : index - 1;
+                                                                  <div class="carousel-item @(index == 0 ? "active" : "")">
+                                                                      <img class="d-block w-100" src="@fileUrl" alt="@fileName" />
+                                                                      <div class="carousel-caption d-none d-md-block">
+                                                                          <h3 style="font-family: 'Shrikhand', cursive;font-weight:bold;"><a class="text-white" href="@fileUrl" target="_blank">@(fileUrl.Substring(fileUrl.LastIndexOf('/') + 1))</a></h3>
+                                                                      </div>
+                                                                  </div>
+                                                              }
+                                                          }
+                                                      }
+                                                  </div>
+                                                  <a class="carousel-control-prev" href="@("#carouselSlideImage-"+codeUpload)" role="button" data-bs-slide="prev">
+                                                      <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+                                                      <span class="visually-hidden">Previous</span>
+                                                  </a>
+                                                  <a class="carousel-control-next" href="@("#carouselSlideImage-"+codeUpload)" role="button" data-bs-slide="next">
+                                                      <span class="carousel-control-next-icon" aria-hidden="true"></span>
+                                                      <span class="visually-hidden">Next</span>
+                                                  </a>
+                                              </div>
+                                          </div>
+                                          @* end slide *@
                                       </div>
-                                      // end slide
                                     }
                                     else if (type == "HTMLEditor")
                                     {
@@ -804,7 +939,7 @@
 
                                     @* neu type dynamic report hoac file uploadder thì tự check label riêng *@
                                     @{
-                                      string[] nolabel_fieldtypes = ["DynamicReport","FileUploader","HTMLEditor","RadioGroup","EmptyBox"];
+                                      string[] nolabel_fieldtypes = ["DynamicReport","FileUploader","HTMLEditor","RadioGroup","EmptyBox","ListSelection"];
                                       if (!nolabel_fieldtypes.Contains(type))
                                       {
                                         <label for="@name">@label</label>
@@ -816,6 +951,7 @@
                               </div>
                               }
                           }
+
                          </div>
                         <button type="submit" class="btn btn-primary">Lưu</button>
                         </form>

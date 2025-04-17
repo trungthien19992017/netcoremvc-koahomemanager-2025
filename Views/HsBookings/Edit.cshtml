@@ -5,6 +5,16 @@
     var formData = ViewBag.formData as IDictionary<string, object>;
     var listbookserbybookingid_store = ViewBag.listbookserbybookingid_store as List<dynamic>;
 
+    // nhan thong tin attachment neu co
+    var fileUrlsDict = ViewBag.fileUrls as Dictionary<string, List<string>>;
+    var fileList = new List<string>();
+    if (fileUrlsDict != null)
+    {
+        fileList = fileUrlsDict != null && fileUrlsDict.ContainsKey("KOAAttachment")
+        ? fileUrlsDict["KOAAttachment"]
+        : new List<string>();
+    }
+
     // tao bien dem de dem row num cho report
     var reportRowIndex = 1;
 }
@@ -446,18 +456,18 @@
 
                                     </div>
                                 </div>
-                                <!-- Image slide -->
+                                @* Image slide *@
                                 <div class="col-md-8">
-                                    <div id="carouselSlideImage"
-                                    class="carousel slide carousel-fade w-50"
-                                    data-bs-ride="carousel">
+                                    <div id="carouselSlideImage-KOAAttachment"
+                                         class="carousel slide carousel-fade w-50"
+                                         data-bs-ride="carousel">
                                         <div class="carousel-indicators">
-                                          @if (ViewBag.fileUrls != null)
-                                          {
-                                              bool isPreviousImg = true;
-                                              for (int i = 0; i < ViewBag.fileUrls.Count; i++)
-                                              {
-                                                    var fileUrl = ViewBag.fileUrls[i];
+                                            @if (fileList != null)
+                                            {
+                                                bool isPreviousImg = true;
+                                                for (int i = 0; i < fileList.Count; i++)
+                                                {
+                                                    var fileUrl = fileList[i];
                                                     int index = i;
                                                     // kiem tra khong phai la img thi bo qua
                                                     @if (!(fileUrl.EndsWith(".jpg") || fileUrl.EndsWith(".png") || fileUrl.EndsWith(".jpeg") || fileUrl.EndsWith(".gif")))
@@ -469,7 +479,7 @@
                                                         // kiem tra file truoc do co phai la img khong? neu khong phai thi img sau phai tru 1
                                                         index = isPreviousImg == true ? index : index - 1;
                                                         <button type="button"
-                                                                data-bs-target="#carouselSlideImage"
+                                                                data-bs-target="#carouselSlideImage-KOAAttachment"
                                                                 data-bs-slide-to="@index"
                                                                 class="@(index == 0 ? "active" : "")"
                                                                 aria-current="@(index == 0 ? "true" : "false")"
@@ -480,12 +490,12 @@
                                             }
                                         </div>
                                         <div class="carousel-inner">
-                                            @if (ViewBag.fileUrls != null)
+                                            @if (fileList != null)
                                             {
                                                 bool isPreviousImg = true;
-                                                for (int i = 0; i < ViewBag.fileUrls.Count; i++)
+                                                for (int i = 0; i < fileList.Count; i++)
                                                 {
-                                                    var fileUrl = ViewBag.fileUrls[i];
+                                                    var fileUrl = fileList[i];
                                                     string fileName = fileUrl.Substring(fileUrl.LastIndexOf('/') + 1);
                                                     int index = i;
                                                     // kiem tra khong phai la img thi bo qua
@@ -507,11 +517,11 @@
                                                 }
                                             }
                                         </div>
-                                        <a class="carousel-control-prev" href="#carouselSlideImage" role="button" data-bs-slide="prev">
+                                        <a class="carousel-control-prev" href="#carouselSlideImage-KOAAttachment" role="button" data-bs-slide="prev">
                                             <span class="carousel-control-prev-icon" aria-hidden="true"></span>
                                             <span class="visually-hidden">Previous</span>
                                         </a>
-                                        <a class="carousel-control-next" href="#carouselSlideImage" role="button" data-bs-slide="next">
+                                        <a class="carousel-control-next" href="#carouselSlideImage-KOAAttachment" role="button" data-bs-slide="next">
                                             <span class="carousel-control-next-icon" aria-hidden="true"></span>
                                             <span class="visually-hidden">Next</span>
                                         </a>

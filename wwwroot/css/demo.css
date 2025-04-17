@@ -166,3 +166,67 @@
   font-size: 1.0rem;
   font-weight: 500;
 }
+  /*xử lý ảnh slide của form*/
+ .carousel-item img {
+  filter: brightness(80%) blur(1px); /* làm mờ và tối ảnh */
+  object-fit: cover;
+  height: 400px; /* hoặc chiều cao bạn muốn */
+}
+
+.carousel-caption {
+  background-color: rgba(0, 0, 0, 0.5); /* nền bán trong suốt */
+  padding: 10px 20px;
+  border-radius: 10px;
+}
+
+  .carousel-caption h3 {
+    color: #fff;
+    text-shadow: 1px 1px 4px rgba(0,0,0,0.9); /* làm nổi chữ */
+    font-size: 1.75rem;
+  }
+}
+
+/* Custom list selection của form */
+.selection-container h5 {
+  font-weight: 600;
+  margin-bottom: 0.75rem;
+  color: #333;
+}
+
+.selection-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.selection-item {
+  min-width: 100px;
+  padding: 10px 16px;
+  border-radius: 12px;
+  border: 1.5px solid #ccc;
+  background-color: #fff;
+  color: #888;
+  text-align: center;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.25s ease;
+  user-select: none;
+}
+
+  .selection-item:hover {
+    border-color: #999;
+    background-color: #f2f2f2;
+  }
+
+  .selection-item.selected {
+    border-color: #81C784; /* Màu viền xanh lá */
+    background-color: #E8F5E9; /* Nền xanh lá nhạt */
+    color: #2E7D32; /* Màu chữ xanh lá đậm */
+    font-weight: 600;
+  }
+
+  /*custom lai tag box*/
+  .tagify {
+      display:flex;
+  }

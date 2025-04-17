@@ -34,8 +34,9 @@ namespace KOAHome.Controllers
     private readonly IActionService _action;
     private readonly IWidgetService _widget;
     private readonly IDRDatasourceService _datasrc;
+    private readonly IConnectionService _con;
 
-    public HsBookingsController(QLKCL_NEWContext db, ILogger<HsBookingsController> logger, IHsBookingTableService book, IHsBookingServiceService bookser, IReportEditorService re, IAttachmentService att, IHsCustomerService cus, IReportService report, IFormService form, IActionService action, IWidgetService widget, IDRDatasourceService datasrc)
+    public HsBookingsController(QLKCL_NEWContext db, ILogger<HsBookingsController> logger, IHsBookingTableService book, IHsBookingServiceService bookser, IReportEditorService re, IAttachmentService att, IHsCustomerService cus, IReportService report, IFormService form, IActionService action, IWidgetService widget, IDRDatasourceService datasrc, IConnectionService con)
     {
       _db = db;
       _logger = logger;
@@ -49,47 +50,7 @@ namespace KOAHome.Controllers
       _action = action;
       _widget = widget;
       _datasrc = datasrc;
-    }
-
-    // cac phuong thuc con de toi uu xu ly
-    private async Task HandleFiles(string objectTypeCode, IFormCollection? form, int? id)
-    {
-      if (form != null)
-      {
-        if (form.Files.Any())
-        {
-          List<string> fileUrls = await _att.UpdateFiles(form); // Gọi service để lưu file
-          ViewBag.fileUrls = fileUrls; // Truyền danh sách file về View (neu co)
-        }
-        else if (id != null)
-        {
-          List<string> fileUrls = await _att.GetFiles(id, objectTypeCode); // Gọi service để get file tu objectId va ObjectTypeCode
-          ViewBag.fileUrls = fileUrls; // Truyền danh sách file về View (neu co)
-
-        }
-      }
-      else if (id != null)
-      {
-        List<string> fileUrls = await _att.GetFiles(id, objectTypeCode); // Gọi service để get file tu objectId va ObjectTypeCode
-        ViewBag.fileUrls = fileUrls; // Truyền danh sách file về View (neu co)
-      }
-    }
-
-    private bool CheckForErrors(List<dynamic> resultList, out string errorMessage)
-    {
-      var errorMessages = resultList
-          .Where(item => ((IDictionary<string, object>)item).ContainsKey("ErrorMessage"))
-          .Select(item => item.ErrorMessage.ToString())
-          .ToList();
-
-      if (errorMessages.Any())
-      {
-        errorMessage = string.Join(", ", errorMessages);
-        return true;
-      }
-
-      errorMessage = null;
-      return false;
+      _con = con;
     }
 
     // GET: HsBookings
@@ -214,7 +175,7 @@ namespace KOAHome.Controllers
 
             // xu ly file
             // Kiểm tra xem form có file nào không? Nếu có thì cập nhật file sau đó trả về danh sách file
-            await HandleFiles("KOAAttachment", form,null);
+            ViewBag.fileUrls = await _att.HandleFiles("KOAAttachment", form,null);
 
             // Convert the IFormCollection to a dictionary of strings
             var formData = form.ToDictionary(
@@ -246,7 +207,7 @@ namespace KOAHome.Controllers
         
               // xu ly file
               // Kiểm tra xem form có file nào không
-              await HandleFiles("KOAAttachment", null,id);
+              ViewBag.fileUrls = await _att.HandleFiles("KOAAttachment", null,id);
 
               //xu ly report form
               // Dictionary để nhóm dữ liệu theo số thứ tự [n]
@@ -257,7 +218,7 @@ namespace KOAHome.Controllers
               //kiem tra ton tai error message tu result list tra ve
               // Kiểm tra và nối giá trị của ErrorMessage
               // Nếu có ErrorMessages, nối chúng lại thành một chuỗi
-              if (CheckForErrors(reportResultList, out string errorMessage))
+              if (_con.CheckForErrors(reportResultList, out string errorMessage))
               {
                 ViewBag.ErrorMessage = errorMessage;
                 return View();
@@ -274,7 +235,7 @@ namespace KOAHome.Controllers
               //kiem tra ton tai error message tu result list tra ve
               // Kiểm tra và nối giá trị của ErrorMessage
               // Nếu có ErrorMessages, nối chúng lại thành một chuỗi
-              if (CheckForErrors(resultList, out string errorMessage))
+              if (_con.CheckForErrors(resultList, out string errorMessage))
               {
                   ViewBag.ErrorMessage = errorMessage;
                   return View();
@@ -318,7 +279,7 @@ namespace KOAHome.Controllers
 
             // xu ly file
             // Kiểm tra xem form có file nào không
-            await HandleFiles("KOAAttachment", null,id);
+            ViewBag.fileUrls = await _att.HandleFiles("KOAAttachment", null,id);
       
             // danh sach service theo booking 
             var bookSerResultList = await _report.ReportDetail_FromParent("BookingID", (id ?? 0).ToString(), "HS_BookingService_search", null);
@@ -357,7 +318,7 @@ namespace KOAHome.Controllers
 
         // xu ly file
         // Kiểm tra xem form có file nào không
-        await HandleFiles("KOAAttachment", form,id);
+        ViewBag.fileUrls = await _att.HandleFiles("KOAAttachment", form,id);
 
               // Convert the IFormCollection to a dictionary of strings
               var formData = form.ToDictionary(
@@ -385,7 +346,7 @@ namespace KOAHome.Controllers
         
                 // xu ly file
                 // Kiểm tra xem form có file nào không
-                await HandleFiles("KOAAttachment", null,id);
+                ViewBag.fileUrls = await _att.HandleFiles("KOAAttachment", null,id);
 
                 if (!isSaveAttachment)
                 {
@@ -400,7 +361,7 @@ namespace KOAHome.Controllers
                 var reportResultList = await _re.ReportEditor_Json_Update(id, reportJsonData, "HS_BookingService_Json_ups", null);
                 //kiem tra ton tai error message
                 // Kiểm tra và nối giá trị của ErrorMessage
-                if (CheckForErrors(reportResultList, out string errorMessage))
+                if (_con.CheckForErrors(reportResultList, out string errorMessage))
                 {
                     ViewBag.ErrorMessage = errorMessage;
                     return View();
@@ -423,7 +384,7 @@ namespace KOAHome.Controllers
               {
                 //kiem tra ton tai error message
                 // Kiểm tra và nối giá trị của ErrorMessage
-                if (CheckForErrors(resultList, out string errorMessage))
+                if (_con.CheckForErrors(resultList, out string errorMessage))
                 {
                     ViewBag.ErrorMessage = errorMessage;
                     return View();
@@ -493,7 +454,7 @@ namespace KOAHome.Controllers
       {
         //kiem tra ton tai error message
         // Kiểm tra và nối giá trị của ErrorMessage
-        if (CheckForErrors(resultList, out string errorMessage))
+        if (_con.CheckForErrors(resultList, out string errorMessage))
         {
           ViewBag.ErrorMessage = errorMessage;
           return View();
@@ -581,7 +542,7 @@ namespace KOAHome.Controllers
       {
         //kiem tra ton tai error message
         // Kiểm tra và nối giá trị của ErrorMessage
-        if (CheckForErrors(resultList, out string errorMessage))
+        if (_con.CheckForErrors(resultList, out string errorMessage))
         {
           return Json(new { success = false, errorMessage = errorMessage });
         }
@@ -666,7 +627,7 @@ namespace KOAHome.Controllers
       var reportResultList = await _re.ReportEditor_Json_Update(id, reportJsonData, "HS_BookingService_PhatSinh_Json_ups", null);
       //kiem tra ton tai error message
       // Kiểm tra và nối giá trị của ErrorMessage
-      if (CheckForErrors(reportResultList, out string errorMessage))
+      if (_con.CheckForErrors(reportResultList, out string errorMessage))
       {
         ViewBag.ErrorMessage = errorMessage;
         return View();
@@ -699,7 +660,7 @@ namespace KOAHome.Controllers
         {
           //kiem tra ton tai error message
           // Kiểm tra và nối giá trị của ErrorMessage
-          if (CheckForErrors(resultList, out string errorMessage1))
+          if (_con.CheckForErrors(resultList, out string errorMessage1))
           {
             ViewBag.ErrorMessage = errorMessage1;
             return View();
