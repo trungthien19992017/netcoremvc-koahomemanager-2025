@@ -13,7 +13,7 @@ namespace KOAHome.Controllers
 {
   public class NETReportController : Controller
   {
-    private readonly ILogger<HsBookingsController> _logger;
+    private readonly ILogger<NETReportController> _logger;
     private readonly QLKCL_NEWContext _db;
     private readonly IHsBookingTableService _book;
     private readonly IHsBookingServiceService _bookser;
@@ -28,7 +28,7 @@ namespace KOAHome.Controllers
     private readonly INetServiceService _netService;
     private readonly IConnectionService _con;
 
-    public NETReportController(QLKCL_NEWContext db, ILogger<HsBookingsController> logger, IHsBookingTableService book, IHsBookingServiceService bookser, IReportEditorService re, IAttachmentService att, IHsCustomerService cus, IReportService report, IFormService form, IActionService action, IWidgetService widget, IDRDatasourceService datasrc, INetServiceService netService, IConnectionService con)
+    public NETReportController(QLKCL_NEWContext db, ILogger<NETReportController> logger, IHsBookingTableService book, IHsBookingServiceService bookser, IReportEditorService re, IAttachmentService att, IHsCustomerService cus, IReportService report, IFormService form, IActionService action, IWidgetService widget, IDRDatasourceService datasrc, INetServiceService netService, IConnectionService con)
     {
       _db = db;
       _logger = logger;

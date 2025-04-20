@@ -90,5 +90,41 @@ namespace KOAHome.Helpers
       return new FormCollection(dict);
     }
 
+    // chuyển dữ liệu query param dạng "PhoneNumber=&HoTen=&isActive=1&CheckInFrom=2025-04-01&CheckInTo=2025-04-09" thanh Dictionary
+    public static Dictionary<string, object> ParseQueryParamsToDictionary(string query)
+    {
+      var result = new Dictionary<string, object>();
+
+      if (string.IsNullOrWhiteSpace(query))
+        return result;
+
+      // Xóa dấu ? nếu có
+      if (query.StartsWith("?"))
+        query = query.Substring(1);
+
+      var pairs = query.Split('&', StringSplitOptions.RemoveEmptyEntries);
+
+      foreach (var pair in pairs)
+      {
+        var keyValue = pair.Split('=', 2); // Split thành key=value
+        if (keyValue.Length == 2)
+        {
+          var key = Uri.UnescapeDataString(keyValue[0]);
+          var valueStr = Uri.UnescapeDataString(keyValue[1]);
+
+          // Tùy chọn: xử lý giá trị kiểu bool, int, datetime...
+          object value = valueStr;
+
+          if (bool.TryParse(valueStr, out var boolVal)) value = boolVal;
+          else if (int.TryParse(valueStr, out var intVal)) value = intVal;
+          else if (DateTime.TryParse(valueStr, out var dateVal)) value = dateVal;
+
+          result[key] = value;
+        }
+      }
+
+      return result;
+    }
+
   }
 }

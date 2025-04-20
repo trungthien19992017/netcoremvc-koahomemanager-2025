@@ -2,7 +2,6 @@
 @using Newtonsoft.Json.Serialization
 @using KOAHome.Helpers
 @{
-    Layout = "~/Views/Shared/_ContentNavbarLayout.cshtml";
     // lay thong tin
     var id = ViewData["id"] as int?;
     var formCode = ViewData["formCode"] as string;
@@ -14,8 +13,6 @@
     if (config_form != null)
     {
         config_formOptions = ParseDataHelper.ParseOptionsToDictionary(config_form.ContainsKey("Options") ? config_form["Options"].ToString() : "{}");
-        // tra ve title cho page
-        ViewData["Title"] = config_form.ContainsKey("FormTitle") ? config_form["FormTitle"] : "Thông tin";
         // mac dinh col count cua form = 3
         form_colCount = config_formOptions.ContainsKey("colCount") ? Convert.ToInt32(config_formOptions["colCount"]) : 3;
     }
@@ -34,44 +31,12 @@
     var reportRowIndex = 1;
 }
 
+<style>
+    .select2-container {
+        z-index: 9999 !important;
+    }
+</style>
 
-@section VendorStyles {
-    <link rel="stylesheet" href="~/vendor/libs/apex-charts/apex-charts.css" />
-}
-
-@section VendorScripts {
-    <script src="~/vendor/libs/apex-charts/apexcharts.js"></script>
-}
-
-@section PageScripts {
-    <script src="~/js/dashboards-analytics.js"></script>
-    @* thong bao day *@
-    <script src="~/js/ui-toasts.js"></script>
-    @* validate, kem cac file js ho tro *@
-    <script src="~/js/helper.js"></script>
-    <script src="~/js/flatpickr.js"></script>
-    <script src="~/js/form-validation.js"></script>
-
-    <script>
-          // tự động add param từ link vào hidden input
-        window.addEventListener("DOMContentLoaded", () => {
-          const urlParams = new URLSearchParams(window.location.search);
-          const hiddenDiv = document.getElementById("hiddenInputs");
-
-          urlParams.forEach((value, key) => {
-            const input = document.createElement("input");
-            input.type = "hidden";
-            input.name = "q_"+key;
-            input.value = value;
-            hiddenDiv.appendChild(input);
-          });
-        });
-
-    </script>
-}
-
-@section success
-{
     @if (ViewData["success"] != null)
     {
 
@@ -86,10 +51,9 @@
         </div>
         <!-- Toast with Placements -->
     }
-}
 
-@section ErrorMessage
-{
+
+
     @if (ViewData["ErrorMessage"] != null)
     {
         <!-- Toast with Placements -->
@@ -103,27 +67,21 @@
         </div>
         <!-- Toast with Placements -->
     }
-}
 
-@* ************** Content ************** *@
-<!-- Content wrapper -->
-<div class="content-wrapper">
-    <!-- Content -->
-
-    <div class="container-xxl flex-grow-1 container-p-y">
-        <!-- Booking form -->
-        <div class="row">
-            <div class="col-xl">
-                <div class="card mb-6">
-                    <div class="card-header d-flex justify-content-between align-items-center">
-                        <h5 class="mb-0">THÔNG TIN BOOKING</h5>
-                        <small class="text-body float-end">Thông tin thuê homestay của khách hàng</small>
-                    </div>
-                    <div class="card-body">
+<form id="create-form" class="needs-validation modal-formpopup" novalidate="" method="post" asp-controller="NETForm" asp-action="PopupForm" asp-route-formCode="@formCode"
+      asp-route-id="@id" enctype="multipart/form-data">
+<div class="modal-dialog modal-xl modal-dialog-centered" role="document">
+    <div class="modal-content card mb-6">
+        <div class="modal-header">
+            <h5 class="modal-title card-header" id="modalCenterTitle">GIẢM GIÁ PHÁT SINH</h5>
+            <button type="button"
+                    class="btn-close"
+                    data-bs-dismiss="modal"
+                    aria-label="Close"></button>
+        </div>
+        <div class="modal-body card-body">
                         @if (config_form != null)
                         {
-                          <form id="create-form" class="needs-validation" novalidate="" method="post" asp-controller="NETForm" asp-action="Viewer" asp-route-formCode="@formCode"
-                                asp-route-id="@id" enctype="multipart/form-data">
                           @* hidden input để xử lý ẩn truyền dữ liệu từ param link vào bằng js *@
                           <div id="hiddenInputs"></div>
                           @* xu ly form dong *@
@@ -307,7 +265,8 @@
                                                     });
 
                                                     <input id="@child_name" class="tag-input form-control h-auto" name="@child_name" value="@child_value" data-jsonwhitelist='@whitelistJson' aria-label="@child_label" tabindex="-1">
-                                                }                                                else if (child_type == "ListSelection")
+                                                }
+                                                else if (child_type == "ListSelection")
                                                 {
                                                     // check selected cho item dung voi gia tri
                                                     var selectList = dynamicServiceSelectOptions[child_name] as List<SelectListItem> ?? new List<SelectListItem>();
@@ -879,22 +838,114 @@
                                 }
                             }
                               </div>
-                          <button type="submit" class="btn btn-primary">Lưu</button>
-                          </form>
+                          @* <button type="submit" class="btn btn-primary">Lưu</button> *@
                         }
-                    </div>
-                </div>
-            </div>
         </div>
-        <!-- end Booking form -->
+        <div class="modal-footer">
+            <button type="button" class="btn btn-outline-secondary modal-btn-close" data-bs-dismiss="modal">
+                Close
+            </button>
+            <button type="button" class="btn btn-primary modal-btn-submit">Lưu</button>
+        </div>
     </div>
-    <!-- / Content -->
+</div>
+ </form>
 
-    <div>
-        <a type="button" class="btn btn-primary" href="javascript:history.back()"><i class="ri-arrow-left-circle-line"></i> Trở về</a>
-    </div>
 
-    @* @section Scripts {
-    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
-}
- *@
+@* xử lý hiển thị form popup  *@
+    <script>
+
+          // tim kiem trong select box
+        $(document).ready(function () {
+            function initSelect2() {
+              debugger;
+              // không áp dụng cho Quiff HTML editor
+                $("select") .not(".ql-toolbar select, .ql-container select, .ql-editor select").not(".select2-hidden-accessible").select2({
+                    placeholder: "Chọn",
+                    allowClear: true,
+                    width: "100%"
+                });
+            }
+
+            // Khởi tạo Select2 cho các select đã có sẵn
+            initSelect2();
+
+        });
+
+         $(document).ready(function () {
+            const urlParams = new URLSearchParams(window.location.search);
+            const hiddenDiv = document.getElementById("hiddenInputs");
+
+            urlParams.forEach((value, key) => {
+              const input = document.createElement("input");
+              input.type = "hidden";
+              input.name = "q_"+key;
+              input.value = value;
+              hiddenDiv.appendChild(input);
+            });
+
+           $(".modal-btn-submit").click(function () {
+             debugger;
+              let form = $(this).closest("form");
+
+              // Custom validate nếu cần ở đây
+              if (!form.get(0).checkValidity()) {
+                  form.addClass("was-validated");
+                  return;
+              }
+
+              form.trigger("submit"); // Gọi sự kiện submit chính
+          });
+
+          $(".modal-formpopup").on("submit", function (e) {
+              e.preventDefault();
+              debugger;
+              let form = $(this);
+              let formData = new FormData(this);
+
+              // Có thể gọi thêm các validate custom ở đây nếu cần
+
+              $.ajax({
+                  type: form.attr("method"),
+                  url: form.attr("action"),
+                  data: formData,
+                  processData: false,
+                  contentType: false,
+                  success: function (data) {
+                      if (data.success) {
+                          rplm({
+                              title: "Xử lý thành công!",
+                              text: "Hành động của bạn đã được xử lý.",
+                              type: "success",
+                              timer: 2000,
+                              confirmButtonText: 'Xác nhận',
+                          }, function () {
+                              $("#" + modalId + " .modal-btn-close").trigger("click");
+                              location.reload();
+                          });
+                      } else {
+                          rplm({
+                              title: "Lỗi!",
+                              text: data.errorMessage || "Có vấn đề xảy ra.",
+                              type: "error",
+                              timer: 2000,
+                              confirmButtonText: 'Xác nhận',
+                          });
+                      }
+                  },
+                  error: function (xhr) {
+                      rplm({
+                          title: "Lỗi!",
+                          text: xhr.responseText || "Có vấn đề xảy ra.",
+                          type: "error",
+                          timer: 2000,
+                          confirmButtonText: 'Xác nhận',
+                      });
+                  }
+              });
+          });
+        });
+
+
+
+    </script>

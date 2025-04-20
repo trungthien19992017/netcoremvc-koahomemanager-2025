@@ -865,57 +865,6 @@
                     <div class="col-12 report-pagination d-flex justify-content-end mt-3">
                     </div>
                     <!--/ Pagination End -->
-                    @*                     <!--/ Pagination Start -->
-                    @if (listbook_store.Count() > 0)
-                    {
-                        <div class="col-12">
-                            <!-- Phân trang -->
-                            @if (ViewBag.TotalPage > 1)
-                            {
-                                var pageDisplay = (int)ViewBag.MaxPage;
-                                int totalPage = (int)ViewBag.TotalPage;
-                                int page = (int)ViewBag.Page;
-
-                                // Create numeric links
-                                var startPageIndex = Math.Max(1, page - pageDisplay / 2);
-                                var endPageIndex = Math.Min(totalPage, page + pageDisplay / 2);
-
-                                //var link = "/san-pham/" + category.MetaTitle + "-" + category.ID;
-                                var link = "/HsBookings?PhoneNumber=" + Context.Request.Query["PhoneNumber"] + "&HoTen=" + Context.Request.Query["HoTen"] + "&CheckInFrom=" + Context.Request.Query["CheckInFrom"] + "&CheckInTo=" + Context.Request.Query["CheckInTo"] + "&IsActive=" + Context.Request.Query["IsActive"];
-                                <nav>
-                                    <ul class="pagination justify-content-center">
-                                        @if (page > ViewBag.First)
-                                        {
-                                            <li class="page-item"><a href="@link&page=@ViewBag.First" title="Trang đầu" class="page-link first"><i class="ri-arrow-left-double-line"></i></a></li>
-                                            <li class="page-item">
-                                                <a href="@link&page=@ViewBag.Prev" title="Trang trước" class="page-link prev"><i class="ri-arrow-left-s-line"></i></a>
-                                            </li>
-
-                                        }
-                                        @for (int i = startPageIndex; i <= endPageIndex; i++)
-                                        {
-                                            if (page == i)
-                                            {
-                                                <li class="page-item active"> <a href="@link&page=@i" class="page-link" title="Trang @i">@i</a></li>
-                                            }
-                                            else
-                                            {
-                                                <li class="page-item"><a href="@link&page=@i" title="Trang @i" class="page-link pos">@i</a></li>
-                                            }
-                                        }
-                                        @if (page < totalPage)
-                                        {
-                                            <li class="page-item"><a href="@link&page=@ViewBag.Next" class="page-link next" title="Trang sau"><i class="ri-arrow-right-s-line"></i></a></li>
-                                            <li class="page-item"> <a href="@link&page=@ViewBag.Last" class="page-link last" title="Trang cuối"><i class="ri-arrow-right-double-line"></i></a></li>
-                                        }
-
-                                    </ul>
-                                </nav>
-
-                            }
-                        </div>
-                    }
-                    <!--/ Pagination End --> *@
                 </div>
             </div>
             @* end data table new *@
