@@ -32,7 +32,13 @@
 }
 
 <style>
-    .select2-container {
+    .modal-PopupForm .select2-container--open,
+    /* Áp dụng z-index cao cho dropdown render trong modal */
+    .select2-container--open {
+        z-index: 9999 !important;
+    }
+
+    .select2-dropdown {
         z-index: 9999 !important;
     }
 </style>
