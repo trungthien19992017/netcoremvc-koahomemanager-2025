@@ -186,8 +186,16 @@ namespace KOAHome.Controllers
             // gui form data len view de hien thi
             ViewBag.formData = formData;
 
-            // xu ly luu form
-            var resultList = await _form.Form_ups(formData,null,"HS_Booking1_ups", null);
+            // Tách lại query param gốc từ form input "q_"
+            var queryParamerter = form
+                .Where(kv => kv.Key.StartsWith("q_"))
+                .ToDictionary(
+                    kv => kv.Key.Substring(2),
+                    kv => (object)kv.Value.ToString()
+                );
+
+      // xu ly luu form
+      var resultList = await _form.Form_ups(formData,null,"HS_Booking1_ups", null);
             //kiem tra du lieu id tra ve
             var id_return = resultList
             .Where(item => ((IDictionary<string, object>)item).ContainsKey("Id"))
@@ -214,7 +222,7 @@ namespace KOAHome.Controllers
               // Chuyển đổi dữ liệu sang JSON (loc du lieu form tra ve lay du lieu grid va chuyen thanh json)
               string reportJsonData = await _re.ExtractGridDataToJson(form);
               //end xu ly report form
-              var reportResultList = await _re.ReportEditor_Json_Update(id, reportJsonData, "HS_BookingService_Json_ups", null);
+              var reportResultList = await _re.ReportEditor_Json_Update(queryParamerter, id, reportJsonData, "HS_BookingService_Json_ups", null);
               //kiem tra ton tai error message tu result list tra ve
               // Kiểm tra và nối giá trị của ErrorMessage
               // Nếu có ErrorMessages, nối chúng lại thành một chuỗi
@@ -358,7 +366,7 @@ namespace KOAHome.Controllers
                 // Chuyển đổi dữ liệu sang JSON (loc du lieu form tra ve lay du lieu grid va chuyen thanh json)
                 string reportJsonData = await _re.ExtractGridDataToJson(form);
                 //end xu ly report form
-                var reportResultList = await _re.ReportEditor_Json_Update(id, reportJsonData, "HS_BookingService_Json_ups", null);
+                var reportResultList = await _re.ReportEditor_Json_Update(null, id, reportJsonData, "HS_BookingService_Json_ups", null);
                 //kiem tra ton tai error message
                 // Kiểm tra và nối giá trị của ErrorMessage
                 if (_con.CheckForErrors(reportResultList, out string errorMessage))
@@ -624,7 +632,7 @@ namespace KOAHome.Controllers
       // Chuyển đổi dữ liệu sang JSON (loc du lieu form tra ve lay du lieu grid va chuyen thanh json)
       string reportJsonData = await _re.ExtractGridDataToJson(form);
       //end xu ly report form
-      var reportResultList = await _re.ReportEditor_Json_Update(id, reportJsonData, "HS_BookingService_PhatSinh_Json_ups", null);
+      var reportResultList = await _re.ReportEditor_Json_Update(null, id, reportJsonData, "HS_BookingService_PhatSinh_Json_ups", null);
       //kiem tra ton tai error message
       // Kiểm tra và nối giá trị của ErrorMessage
       if (_con.CheckForErrors(reportResultList, out string errorMessage))

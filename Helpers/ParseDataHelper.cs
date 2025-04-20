@@ -1,3 +1,4 @@
+using Microsoft.Extensions.Primitives;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 
@@ -56,6 +57,37 @@ namespace KOAHome.Helpers
       );
 
       return item;
+    }
+
+    public static string GetQueryStringFromForm(IFormCollection form, string prefix = "q_")
+    {
+      var query = form
+          .Where(kvp => kvp.Key.StartsWith(prefix))
+          .Select(kvp =>
+              $"{Uri.EscapeDataString(kvp.Key.Substring(prefix.Length))}={Uri.EscapeDataString(kvp.Value)}"
+          );
+
+      return string.Join("&", query);
+    }
+
+    public static IFormCollection RemovePrefix_FromFormKey(IFormCollection form, string prefix = "q_")
+    {
+      var dict = new Dictionary<string, StringValues>();
+
+      foreach (var kvp in form)
+      {
+        string key = kvp.Key;
+
+        // Nếu key bắt đầu bằng tiền tố q_, thì loại bỏ tiền tố đó
+        if (key.StartsWith(prefix))
+        {
+          key = key.Substring(prefix.Length);
+        }
+
+        dict[key] = kvp.Value;
+      }
+
+      return new FormCollection(dict);
     }
 
   }

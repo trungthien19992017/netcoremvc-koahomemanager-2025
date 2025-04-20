@@ -6,8 +6,9 @@
     var formData = ViewBag.formData as IDictionary<string, object>;
     // truyen cau hinh form de xu ly giao dien
     var config_form = ViewBag.config_form as IDictionary<string, object>;
-    var config_formOptions = ParseDataHelper.ParseOptionsToDictionary(config_form.ContainsKey("Options") ? config_form["Options"].ToString() : "{}");
     // mac dinh col count cua form = 3
+    var config_formOptions = ParseDataHelper.ParseOptionsToDictionary(config_form.ContainsKey("Options") ? config_form["Options"].ToString() : "{}");
+
     var form_colCount = config_formOptions.ContainsKey("colCount") ? Convert.ToInt32(config_formOptions["colCount"]) : 3;
 
     // truyen danh sach cấu hình form field len giao dien
@@ -20,7 +21,7 @@
     // tra ve title cho page
     ViewData["Title"] = config_form.ContainsKey("FormTitle") ? config_form["FormTitle"] : "Thông tin";
 
-    var listbookserbybookingid_store = ViewBag.listbookserbybookingid_store as List<dynamic>;
+    var reportResultList = ViewBag.reportResultList as List<dynamic>;
 
     // tao bien dem de dem row num cho report
     var reportRowIndex = 1;
@@ -94,49 +95,19 @@
         });
         }
 
-        // xu ly du lieu ngay trong report editor
-          var gridData = @Html.Raw(Json.Serialize(ViewBag.listbookserbybookingid_store));
-          if (gridData != null)
-          {
-            $(document).ready(function () {
-                $.each(gridData, function (index, rowData) {
-                    // Tìm tất cả input/select trong dòng có name động
-                    $(`#ReportEditor tbody tr:eq(${index})`).find("input, select, textarea").each(function () {
-                        let fieldName = $(this).attr("name"); // Lấy name của input
-                        if (!fieldName) return; // Nếu không có name, bỏ qua
+          // tự động add param từ link vào hidden input
+        window.addEventListener("DOMContentLoaded", () => {
+          const urlParams = new URLSearchParams(window.location.search);
+          const hiddenDiv = document.getElementById("hiddenInputs");
 
-                        // Regex để lấy tên key từ `grid[index].FieldName`
-                        let match = fieldName.match(/\[(\d+)\]\.(\w+)/);
-                        if (!match) return; // Nếu không khớp format, bỏ qua
-
-                        let fieldKey = match[2]; // Lấy phần FieldName (ví dụ: "ServiceID", "Quantity",...)
-
-                        if (rowData.hasOwnProperty(fieldKey)) {
-                            let value = rowData[fieldKey];
-
-                            // Kiểm tra kiểu input và format lại nếu cần
-                            if ($(this).attr("type") === "datetime-local") {
-                                value = formatDateTimeLocal(value);
-                                // Gán giá trị vào input
-                                $(this).val(value);
-                            } else if ($(this).attr("type") === "date") {
-                                value = formatDate(value);
-                                // Gán giá trị vào input
-                                $(this).val(value);
-                            } else if ($(this).attr("type") === "time") {
-                                value = formatTime(value);
-                                // Gán giá trị vào input
-                                $(this).val(value);
-                            }
-                            // Nếu là select2, cần trigger để cập nhật giao diện
-                            if ($(this).is("select")) {
-                                $(this).trigger("change");
-                            }
-                        }
-                    });
-                });
-            });
-          }
+          urlParams.forEach((value, key) => {
+            const input = document.createElement("input");
+            input.type = "hidden";
+            input.name = "q_"+key;
+            input.value = value;
+            hiddenDiv.appendChild(input);
+          });
+        });
 
     </script>
 }
@@ -193,6 +164,8 @@
                     <div class="card-body">
                         <form id="create-form" class="needs-validation" novalidate="" method="post" asp-controller="NETForm" asp-action="Viewer" asp-route-formCode="@ViewBag.FormCode"
                               asp-route-id="@ViewBag.id" enctype="multipart/form-data">
+                        @* hidden input để xử lý ẩn truyền dữ liệu từ param link vào bằng js *@
+                        <div id="hiddenInputs"></div>
                         @* xu ly form dong *@
                         @* xu ly voi moi field *@
                         <div class="row gx-5 mb-5">
@@ -315,6 +288,8 @@
                                               }
                                               else if (child_type == "SelectBox")
                                               {
+                                                  @* kiem tra neu co data fill store thi truyen vao (fill giá trị cho các field khác dựa vào giá trị của select box thông qua store) *@
+                                                  var dataFillStore = child_field_editoroptionsDict.ContainsKey("dataFillStore") ? (child_field_editoroptionsDict["dataFillStore"].ToString() ?? "") : "";
                                                   @* check selected cho item dung voi gia tri *@
                                                   var selectList = ViewBag.dynamicServiceSelectOptions[child_name] as List<SelectListItem> ?? new List<SelectListItem>();
                                                   @foreach (var item in selectList)
@@ -328,7 +303,8 @@
                                                   {
                                                       { "class", "form-select color-dropdown form-select-sm" },
                                                       { "id", name },
-                                                      { "name", name }
+                                                      { "name", name },
+                                                      { "data-datafillstore", dataFillStore}
                                                   };
 
                                                   // neu bat buoc thi them truong bat buoc
@@ -419,18 +395,18 @@
                                                     {
                                                         <div class="form-check form-check-inline">
                                                             <input type="radio" class="form-check-input"
-                                                                    name="@item.Text"
-                                                                    id="@(item.Text + "_" + item.Value)"
+                                                                    name="@child_name"
+                                                                    id="@(child_name + "_" + item.Value)"
                                                                     value="@item.Value"
                                                             @((child_value ?? "").ToString() == item.Value.ToString() ? "checked" : "") />
-                                                            <label class="form-check-label" for="@(item.Text + "_" + item.Value)">@item.Text</label>
+                                                            <label class="form-check-label" for="@(child_name + "_" + item.Value)">@item.Text</label>
                                                         </div>
                                                     }
                                                   }
                                               }
                                               else if (child_type == "CheckBox" || child_type == "Switch")
                                               {
-                                                  <input class="form-check-input" type="checkbox" id="@child_name" name="@child_name" value="true" @((child_value ?? "").ToString().ToLower() == "true" ? "checked" : "") />
+                                                  <input class="form-check-input" type="checkbox" id="@child_name" name="@child_name" value="true" @((child_value ?? "").ToString().ToLower() == "true" ? "checked" : "") @(child_isreadonly == true ? "readonly" : "") @(child_isrequired == true ? "required" : "")/>
                                               }
                                               else if (child_type == "FileUploader")
                                               {
@@ -560,9 +536,9 @@
                                                                       </tr>
                                                                   </thead>
                                                                   <tbody>
-                                                                      @if (listbookserbybookingid_store != null)
+                                                                      @if (reportResultList != null)
                                                                       {
-                                                                          @foreach (var ser in listbookserbybookingid_store)
+                                                                          @foreach (var ser in reportResultList)
                                                                           { 
 
                                                                               <tr class="">
@@ -657,6 +633,8 @@
                                     }
                                     else if (type == "SelectBox")
                                     {
+                                        @* kiem tra neu co data fill store thi truyen vao (fill giá trị cho các field khác dựa vào giá trị của select box thông qua store) *@
+                                        var dataFillStore = field_editoroptionsDict.ContainsKey("dataFillStore") ? (field_editoroptionsDict["dataFillStore"].ToString() ?? "") : "";
                                         // check selected cho item dung voi gia tri
                                         var selectList = ViewBag.dynamicServiceSelectOptions[name] as List<SelectListItem> ?? new List<SelectListItem>();
                                         @foreach (var item in selectList)
@@ -670,7 +648,8 @@
                                         {
                                             { "class", "form-select color-dropdown form-select-sm" },
                                             { "id", name },
-                                            { "name", name }
+                                            { "name", name },
+                                            { "data-dataFillStore", dataFillStore}
                                         };
 
                                         // neu bat buoc thi them truong bat buoc
@@ -712,7 +691,18 @@
                                     {
                                         // check selected cho item dung voi gia tri
                                         var selectList = ViewBag.dynamicServiceSelectOptions[name] as List<SelectListItem> ?? new List<SelectListItem>();
-                                        <input id="@name" class="tag-input form-control h-auto" name="@name" value="@value" data-whitelist='@Html.Raw(Json.Serialize(@selectList))' aria-label="@label" tabindex="-1">
+                                        var tagBoxWhitelist = selectList.Select(x => new {
+                                            value = x.Value,
+                                            label = x.Text
+                                        });
+
+                                        // serialize whitelist tiếng Việt không bị escape unicode
+                                        var whitelistJson = JsonConvert.SerializeObject(tagBoxWhitelist, new JsonSerializerSettings
+                                        {
+                                            StringEscapeHandling = StringEscapeHandling.Default
+                                        });
+
+                                        <input id="@name" class="tag-input form-control h-auto" name="@name" value="@value" data-jsonwhitelist='@Html.Raw(whitelistJson)' aria-label="@label" tabindex="-1">
                                     }
                                     else if (type == "ListSelection")
                                     {
@@ -750,18 +740,18 @@
                                           {
                                             <div class="form-check form-check-inline">
                                                 <input type="radio" class="form-check-input"
-                                                        name="@item.Text"
-                                                        id="@(item.Text + "_" + item.Value)"
+                                                        name="@name"
+                                                        id="@(name + "_" + item.Value)"
                                                         value="@item.Value"
                                                 @((value ?? "").ToString() == item.Value.ToString() ? "checked" : "") />
-                                                <label class="form-check-label" for="@(item.Text + "_" + item.Value)">@item.Text</label>
+                                                <label class="form-check-label" for="@(name + "_" + item.Value)">@item.Text</label>
                                             </div>
                                           }
                                         }
                                     }
                                     else if (type == "CheckBox" || type == "Switch")
                                     {
-                                        <input class="form-check-input" type="checkbox" id="@name" name="@name" value="true" @((value ?? "").ToString().ToLower() == "true" ? "checked" : "") />
+                                        <input class="form-check-input" type="checkbox" id="@name" name="@name" value="true" @((value ?? "").ToString().ToLower() == "true" ? "checked" : "") @(isreadonly == true ? "readonly" : "") @(isrequired == true ? "required" : "")/>
                                     }
                                     else if (type == "FileUploader")
                                     {
@@ -891,9 +881,9 @@
                                                             </tr>
                                                         </thead>
                                                         <tbody>
-                                                            @if (listbookserbybookingid_store != null)
+                                                            @if (reportResultList != null)
                                                             {
-                                                                @foreach (var ser in listbookserbybookingid_store)
+                                                                @foreach (var ser in reportResultList)
                                                                 { 
 
                                                                     <tr class="">
@@ -951,8 +941,7 @@
                               </div>
                               }
                           }
-
-                         </div>
+                            </div>
                         <button type="submit" class="btn btn-primary">Lưu</button>
                         </form>
                     </div>
@@ -964,7 +953,7 @@
     <!-- / Content -->
 
     <div>
-        <a type="button" class="btn btn-primary" asp-action="Index"><i class="ri-arrow-left-circle-line"></i> Trở về</a>
+        <a type="button" class="btn btn-primary" href="javascript:history.back()"><i class="ri-arrow-left-circle-line"></i> Trở về</a>
     </div>
 
     @* @section Scripts {

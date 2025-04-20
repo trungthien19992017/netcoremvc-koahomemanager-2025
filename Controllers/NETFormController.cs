@@ -1,4 +1,5 @@
 using KOAHome.EntityFramework;
+using KOAHome.Helpers;
 using KOAHome.Services;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -91,7 +92,7 @@ namespace KOAHome.Controllers
         string? storeGetData = config_form.ContainsKey("StoreGetData") ? Convert.ToString(config_form["StoreGetData"]) : "";
         //string? storeSetData = config_form.ContainsKey("StoreSetData") ? Convert.ToString(config_form["StoreSetData"]) : "";
 
-        if (storeDefaultData == null && storeGetData == null)
+        if (string.IsNullOrWhiteSpace(storeDefaultData) && string.IsNullOrWhiteSpace(storeGetData) == null)
         {
           return RedirectToAction("MiscError", "Pages", new { errorMessage = "Không tồn tại store lây dữ liệu biểu mẫu" });
         }
@@ -128,14 +129,26 @@ namespace KOAHome.Controllers
         ViewBag.fileUrls = await _att.HandleFiles(attObjectTypeCodes, null, id);
 
         // danh sach service theo booking 
-        var bookSerResultList = await _report.ReportDetail_FromParent("BookingID", (id ?? 0).ToString(), "HS_BookingService_search", null);
-        ViewBag.listbookserbybookingid_store = bookSerResultList;
+        var reportResultList = await _report.ReportDetail_FromParent("BookingID", (id ?? 0).ToString(), "HS_BookingService_search", null);
+        ViewBag.reportResultList = reportResultList;
 
         // set readonly form neu co isreadonly = false
         ViewBag.IsReadOnly = isReadOnly;
 
         // dùng tạm để test dynamic report
         ViewData["ServiceId"] = new SelectList(_db.HsServices.Where(p => p.IsActive == true).OrderBy(p => p.OrderId), "ServiceId", "Name");
+
+        // neu co loi tu action POST tra ve thi bao loi
+        if (TempData["ErrorMessage"] != null)
+        {
+          ViewBag.ErrorMessage = TempData["ErrorMessage"];
+          return View();
+        }
+        else
+        {
+          //khai bao success
+          ViewBag.success = "Thành công";
+        }
 
         return View();
       }
@@ -152,15 +165,32 @@ namespace KOAHome.Controllers
     // POST: HsBookings/Edit/5
     // To protect from overposting attacks, enable the specific properties you want to bind to.
     // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
-    [HttpPost("/form/viewer/{FormCode}/{id}")]
+    [HttpPost("/form/viewer/{FormCode}/{id?}")]
     //[HttpPost]
     [ValidateAntiForgeryToken]
-    public async Task<IActionResult> Viewer(string? FormCode, int? id, [FromForm] IFormCollection form, [FromQuery] Dictionary<string, string> parameters)
+    public async Task<IActionResult> Viewer(string? FormCode, int? id, [FromForm] IFormCollection form)
     {
+      // reset tempdata error message
+      TempData["ErrorMessage"] = null;
+
       // mac dinh id = 0
       id ??= 0;
-      ViewBag.id = id;
-      ViewBag.FormCode = FormCode;
+
+      // Nếu bạn cần redirect (ví dụ sau khi lưu), có thể dùng:
+      // Tách các form input có tiền tố "q_" vì tiền tố q_ là các query param từ link
+      string queryString = ParseDataHelper.GetQueryStringFromForm(form);
+      string currentPath = HttpContext.Request.Path;
+
+      // Tách lại query param gốc từ form input "q_" để lọc dữ liệu khi xử lý
+      var queryParamerter = form
+          .Where(kv => kv.Key.StartsWith("q_"))
+          .ToDictionary(
+              kv => kv.Key.Substring(2),
+              kv => (object)kv.Value.ToString()
+          );
+
+      // xử lý form để loại các tiền tố q_ ra khỏi Key
+      form = ParseDataHelper.RemovePrefix_FromFormKey(form);
 
       // dùng tạm để test dynamic report
       ViewData["ServiceId"] = new SelectList(_db.HsServices.Where(p => p.IsActive == true).OrderBy(p => p.OrderId), "ServiceId", "Name");
@@ -170,11 +200,9 @@ namespace KOAHome.Controllers
       // tra ve page loi neu khong tim thay report
       if (config_form == null)
       {
-        ViewBag.ErrorMessage = "Không tìm thấy biểu mẫu";
-        return View();
+        TempData["ErrorMessage"] = "Không tìm thấy biểu mẫu";
+        return Redirect($"{currentPath}?{queryString}");
       }
-      // chuyen cau hinh form len giao dien de xu ly
-      ViewBag.config_form = config_form;
 
       string? connectionString = null;
       //neu datasourceId la null thi lay connectionString mac dinh
@@ -191,42 +219,16 @@ namespace KOAHome.Controllers
       string? storeSetData = config_form.ContainsKey("StoreSetData") ? Convert.ToString(config_form["StoreSetData"]) : "";
       //string? storeSetData = config_form.ContainsKey("StoreSetData") ? Convert.ToString(config_form["StoreSetData"]) : "";
 
-      if (storeSetData == null)
+      if (string.IsNullOrWhiteSpace(storeSetData))
       {
-        ViewBag.ErrorMessage = "Không tồn tại store xử lý dữ liệu biểu mẫu";
-        return View();
+        TempData["ErrorMessage"] = "Không tồn tại store xử lý dữ liệu biểu mẫu";
+        return Redirect($"{currentPath}?{queryString}");
       }
-
-      // chuyen parameters cua duong dan thanh Idictionary<string, object>
-      Dictionary<string, object> objParameters = parameters.ToDictionary(kvp => kvp.Key, kvp => (object)kvp.Value);
-
-      // lay danh sach dynamic field cua form de xu ly
-      var stopwatch = Stopwatch.StartNew();
-      var config_formfield = await _form.NET_Form_VersionField_WithForm_sel(FormCode, null);
-      stopwatch.Stop();
-      _logger.LogInformation($"Query config_formfieldTask executed in {stopwatch.ElapsedMilliseconds} ms");
-
-      // chuyển cấu hình form field lên giao diện để xử lý
-      ViewBag.config_formfield = config_formfield;
-
-      // doi voi cac fiekd co kieu select (select box, dropdownbox, tagbox,...), day cac bo select vao SelectListItem va đóng gói trong Dictionary để xử lý trên giao diện
-      // Tạo Dictionary chứa SelectList cho từng dropdown (theo DynamicFieldName)
-      var config_formfieldService = new Dictionary<string, List<SelectListItem>>();
-
-      //Chuyển kết quả sang Dictionary<string, List<SelectListItem>>
-      config_formfieldService = await _netService.NET_Service_GetListSelectListByFormField(config_formfield, objParameters);
-      //  Gán danh sach select cho cac filter vào ViewBag
-      ViewBag.DynamicServiceSelectOptions = config_formfieldService;
-
-      // danh sach service theo booking (khong co du lieu)
-      var bookSerResultList = await _report.ReportDetail_FromParent("BookingID", id.ToString(), "HS_BookingService_search", null);
-      ViewBag.listbookserbybookingid_store = bookSerResultList;
 
       // xu ly file
       // Kiểm tra xem form có file nào không
       // lay danh sach object type code tu config form neu co field file uploader
       string attObjectTypeCodes = config_form.ContainsKey("AttObjectTypeCodes") ? Convert.ToString(config_form["AttObjectTypeCodes"]) : "";
-      ViewBag.fileUrls = await _att.HandleFiles(attObjectTypeCodes, form, id);
 
       // Convert the IFormCollection to a dictionary of strings
       var formData = form.ToDictionary(
@@ -234,8 +236,9 @@ namespace KOAHome.Controllers
                       pair => (object)pair.Value.ToString()  // Ensure each value is a string (flatten StringValues)
                   );
 
-      // gui form data len view de hien thi
-      ViewBag.formData = formData;
+      //// gui form data len view de hien thi
+      //ViewBag.formData = formData;
+
 
       var resultList = await _form.Form_ups(formData, id, storeSetData, connectionString);
       //kiem tra du lieu id tra ve
@@ -260,7 +263,8 @@ namespace KOAHome.Controllers
 
         if (!isSaveAttachment)
         {
-          ViewBag.ErrorMessage = "Lưu file không thành công";
+          TempData["ErrorMessage"] = "Lưu file không thành công";
+          return Redirect($"{currentPath}?{queryString}");
         }
 
         //xu ly report form
@@ -268,26 +272,19 @@ namespace KOAHome.Controllers
         // Chuyển đổi dữ liệu sang JSON (loc du lieu form tra ve lay du lieu grid va chuyen thanh json)
         string reportJsonData = await _re.ExtractGridDataToJson(form);
         //end xu ly report form
-        var reportResultList = await _re.ReportEditor_Json_Update(id, reportJsonData, "HS_BookingService_Json_ups", null);
+        var reportResultList = await _re.ReportEditor_Json_Update(queryParamerter, id, reportJsonData, "HS_BookingService_Json_ups", null);
         //kiem tra ton tai error message
         // Kiểm tra và nối giá trị của ErrorMessage
         if (_con.CheckForErrors(reportResultList, out string errorMessage))
         {
-          ViewBag.ErrorMessage = errorMessage;
-          return View();
+          TempData["ErrorMessage"] = errorMessage;
+          return Redirect($"{currentPath}?{queryString}");
         }
         // khong tra ve Id, cung khong tra ve error message thi bao loi chua tra ve id
         else
         {
-
-          bookSerResultList = await _report.ReportDetail_FromParent("BookingID", id.ToString(), "HS_BookingService_search", null);
-          ViewBag.listbookserbybookingid_store = bookSerResultList;
-          //khai bao phan tu chua data
-          formData = (Dictionary<string, object>)await _form.Form_sel(id, "HS_Booking1_sel", null);
-          ViewBag.formData = formData;
-
           ViewBag.success = "Xử lý thành công"; // Gán vào ViewBag
-          return View();
+          return Redirect($"{currentPath}?{queryString}");
         }
       }
       else
@@ -296,14 +293,14 @@ namespace KOAHome.Controllers
         // Kiểm tra và nối giá trị của ErrorMessage
         if (_con.CheckForErrors(resultList, out string errorMessage))
         {
-          ViewBag.ErrorMessage = errorMessage;
-          return View();
+          TempData["ErrorMessage"] = errorMessage;
+          return Redirect($"{currentPath}?{queryString}");
         }
         // khong tra ve Id, cung khong tra ve error message thi bao loi chua tra ve id
         else
         {
-          ViewBag.ErrorMessage = "Chưa trả về Id";
-          return View();
+          TempData["ErrorMessage"] = "Chưa trả về Id";
+          return Redirect($"{currentPath}?{queryString}");
         }
       }
     }

@@ -20,6 +20,8 @@ namespace KOAHome.Services
     public Task<List<SelectListItem>> NET_Service_DynamicExecute(int serviceId, Dictionary<string, object>? parameters);
     // xu ly lay danh sach selectlist tu filter truyen vao
     public Task<Dictionary<string, List<SelectListItem>>> NET_Service_GetListSelectListByFilter(List<dynamic>? filterList, Dictionary<string, object>? objParameters);
+    // xu ly lay danh sach selectlist tu service theo display truyen vao
+    public Task<Dictionary<string, List<SelectListItem>>> NET_Service_GetListSelectListByDisplay(List<dynamic>? displayList, Dictionary<string, object>? objParameters);
     // xu ly lay danh sach selectlist tu service theo form field truyen vao
     public Task<Dictionary<string, List<SelectListItem>>> NET_Service_GetListSelectListByFormField(List<dynamic>? config_formfield, Dictionary<string, object>? objParameters);
   }
@@ -180,6 +182,67 @@ namespace KOAHome.Services
       }
 
       return listFilterService;
+    }
+    // xu ly lay danh sach selectlist tu service theo display truyen vao
+    public async Task<Dictionary<string, List<SelectListItem>>> NET_Service_GetListSelectListByDisplay(List<dynamic>? displayList, Dictionary<string, object>? objParameters)
+    {
+      // doi voi cac display co kieu select (select box, dropdownbox, tagbox,...), day cac bo select vao SelectListItem va đóng gói trong Dictionary để xử lý trên giao diện
+      // Tạo Dictionary chứa SelectList cho từng dropdown (theo DynamicFieldName)
+      var listDisplayService = new Dictionary<string, List<SelectListItem>>();
+
+      if (displayList != null)
+      {
+        // 1. Khởi tạo danh sách Task chính xác
+        var serviceTasks = displayList
+            .Where(f => f.ServiceId != null)
+            .Select(async display =>
+            {
+              var serviceId = (int)display.ServiceId!;
+              var code = display.Code!;
+
+              // Serialize param để tạo cache key
+              string paramKey = string.Join(";", objParameters
+                  .OrderBy(kvp => kvp.Key)
+                  .Select(kvp => $"{kvp.Key}={kvp.Value}"));
+
+              string cacheKey = $"Service_{serviceId}_{paramKey.GetHashCode()}";
+
+              List<SelectListItem> selectList;
+
+              var sw = Stopwatch.StartNew();
+
+              // Kiểm tra cache trước
+              if (!_cache.TryGetValue(cacheKey, out selectList))
+              {
+                _logger.LogInformation($"⏳ Đang gọi service {serviceId} cho display '{code}'");
+
+                // Tạo bản sao của objParameters cho mỗi display de tranh ghi de
+                var clonedParameters = new Dictionary<string, object>(objParameters);
+                selectList = await NET_Service_DynamicExecute(serviceId, clonedParameters);
+
+                // Lưu cache trong 5 phút (có thể tuỳ chỉnh)
+                _cache.Set(cacheKey, selectList, TimeSpan.FromMinutes(5));
+                _logger.LogInformation($"✅ Service {serviceId} display '{code}' hoàn tất sau {sw.ElapsedMilliseconds}ms (không dùng cache)");
+              }
+              else
+              {
+                _logger.LogInformation($"⚡ Service {serviceId} display '{code}' dùng cache sau {sw.ElapsedMilliseconds}ms");
+              }
+              sw.Stop();
+
+
+              return (Code: code, SelectList: selectList); // 👈 đây là fix
+            })
+            .ToList();
+
+        // 2. Chạy tất cả task song song
+        var serviceResults = await Task.WhenAll(serviceTasks);
+
+        // 3. Chuyển kết quả sang Dictionary<string, List<SelectListItem>>
+        listDisplayService = serviceResults.ToDictionary(x => (string)x.Code, x => x.SelectList);
+      }
+
+      return listDisplayService;
     }
 
     // xu ly lay danh sach selectlist tu service theo form field truyen vao

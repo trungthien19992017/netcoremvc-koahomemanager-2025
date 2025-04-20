@@ -18,8 +18,9 @@ namespace KOAHome.Controllers
     private readonly IReportService _report;
     private readonly IFormService _form;
     private readonly IActionService _action;
+    private readonly IConnectionService _con;
 
-    public HsServicesController(QLKCL_NEWContext db, ILogger<HsBookingsController> logger, IHsBookingTableService book, IHsBookingServiceService bookser, IReportEditorService re, IAttachmentService att, IHsCustomerService cus, IReportService report, IFormService form, IActionService action)
+    public HsServicesController(QLKCL_NEWContext db, ILogger<HsBookingsController> logger, IHsBookingTableService book, IHsBookingServiceService bookser, IReportEditorService re, IAttachmentService att, IHsCustomerService cus, IReportService report, IFormService form, IActionService action, IConnectionService con)
     {
       _db = db;
       _logger = logger;
@@ -31,23 +32,7 @@ namespace KOAHome.Controllers
       _report = report;
       _form = form;
       _action = action;
-    }
-
-    private bool CheckForErrors(List<dynamic> resultList, out string errorMessage)
-    {
-      var errorMessages = resultList
-          .Where(item => ((IDictionary<string, object>)item).ContainsKey("ErrorMessage"))
-          .Select(item => item.ErrorMessage.ToString())
-          .ToList();
-
-      if (errorMessages.Any())
-      {
-        errorMessage = string.Join(", ", errorMessages);
-        return true;
-      }
-
-      errorMessage = null;
-      return false;
+      _con = con;
     }
 
     // GET: HsServicesController
@@ -99,7 +84,7 @@ namespace KOAHome.Controllers
     // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
     [HttpPost]
     [ValidateAntiForgeryToken]
-    public async Task<IActionResult> Edit(int id, [FromForm] IFormCollection form)
+    public async Task<IActionResult> Edit([FromForm] IFormCollection form)
     {
       // reset tempdata error message
       TempData["ErrorMessage"] = null;
@@ -109,18 +94,26 @@ namespace KOAHome.Controllers
                       pair => (object)pair.Value.ToString()  // Ensure each value is a string (flatten StringValues)
                   );
 
-      // gui form data len view de hien thi
-      ViewBag.formData = formData;
+      //// gui form data len view de hien thi
+      //ViewBag.formData = formData;
+
+      // Tách lại query param gốc từ form input "q_"
+      var queryParamerter = form
+          .Where(kv => kv.Key.StartsWith("q_"))
+          .ToDictionary(
+              kv => kv.Key.Substring(2),
+              kv => (object)kv.Value.ToString()
+          );
 
       //xu ly report editor
       // Dictionary để nhóm dữ liệu theo số thứ tự [n]
       // Chuyển đổi dữ liệu sang JSON (loc du lieu form tra ve lay du lieu grid va chuyen thanh json)
       string reportJsonData = await _re.ExtractGridDataToJson(form);
       //end xu ly report form
-      var reportResultList = await _re.ReportEditor_Json_Update(id, reportJsonData, "HS_Service_Json_ups", null);
+      var reportResultList = await _re.ReportEditor_Json_Update(queryParamerter, null, reportJsonData, "HS_Service_Json_ups", null);
       //kiem tra ton tai error message
       // Kiểm tra và nối giá trị của ErrorMessage
-      if (CheckForErrors(reportResultList, out string errorMessage))
+      if (_con.CheckForErrors(reportResultList, out string errorMessage))
       {
         //ViewBag.ErrorMessage = errorMessage;
         TempData["ErrorMessage"] = errorMessage;

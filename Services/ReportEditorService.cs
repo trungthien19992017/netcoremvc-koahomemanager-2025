@@ -14,7 +14,7 @@ namespace KOAHome.Services
   public interface IReportEditorService
   {
     public Task<string> ExtractGridDataToJson(IFormCollection form);
-    public Task<List<dynamic>> ReportEditor_Json_Update(int? Id, string json, string sqlStore, string? connectionString);
+    public Task<List<dynamic>> ReportEditor_Json_Update(Dictionary<string, object>? parameters, int? Id, string json, string sqlStore, string? connectionString);
 
   }
   public class ReportEditorService : IReportEditorService
@@ -73,20 +73,25 @@ namespace KOAHome.Services
       return await Task.FromResult(JsonConvert.SerializeObject(gridData.Values, Formatting.Indented));
     }
 
-    public async Task<List<dynamic>> ReportEditor_Json_Update(int? Id, string json, string sqlStore, string? connectionString)
+    public async Task<List<dynamic>> ReportEditor_Json_Update(Dictionary<string, object>? parameters, int? Id, string json, string sqlStore, string? connectionString)
     {
+      if (parameters == null)
+      {
+        parameters = new Dictionary<string, object>();
+      }
+      // nếu chưa tồn tại Id thì thêm vào
+      if (!parameters.ContainsKey("Id"))
+      {
+        parameters.Add("Id", Id ?? (object)DBNull.Value);
+      }
+      // them chuỗi json xử lý dữ liệu
+      parameters.Add("json", string.IsNullOrEmpty(json) ? (object)DBNull.Value : json);
+
       // neu khong truyen connect string thi se lay connection string mac dinh
       if (connectionString == null)
       {
         connectionString = _configuration.GetConnectionString("DefaultConnection"); // Thay thế bằng chuỗi kết nối của bạn
       }
-
-      // Dictionary chứa các tham số
-      var parameters = new Dictionary<string, object>
-      {
-          { "Id", Id ?? (object)DBNull.Value },
-          { "json", string.IsNullOrEmpty(json) ? (object)DBNull.Value : json }
-      };
 
       //voi du lieu param lay tu store, kiem tra dinh dang de xu ly
       // kiem tra du lieu nhap vao co trong store thi dua vao lenh xu ly

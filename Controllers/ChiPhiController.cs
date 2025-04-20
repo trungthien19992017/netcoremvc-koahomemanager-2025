@@ -112,15 +112,23 @@ namespace KOAHome.Controllers
                       pair => (object)pair.Value.ToString()  // Ensure each value is a string (flatten StringValues)
                   );
 
-      // gui form data len view de hien thi
-      ViewBag.formData = formData;
+      //// gui form data len view de hien thi
+      //ViewBag.formData = formData;
+
+      // Tách lại query param gốc từ form input "q_"
+      var queryParamerter = form
+          .Where(kv => kv.Key.StartsWith("q_"))
+          .ToDictionary(
+              kv => kv.Key.Substring(2),
+              kv => (object)kv.Value.ToString()
+          );
 
       //xu ly report editor
       // Dictionary để nhóm dữ liệu theo số thứ tự [n]
       // Chuyển đổi dữ liệu sang JSON (loc du lieu form tra ve lay du lieu grid va chuyen thanh json)
       string reportJsonData = await _re.ExtractGridDataToJson(form);
       //end xu ly report form
-      var reportResultList = await _re.ReportEditor_Json_Update(id, reportJsonData, "HS_ChiPhi_Json_ups", null);
+      var reportResultList = await _re.ReportEditor_Json_Update(queryParamerter, id, reportJsonData, "HS_ChiPhi_Json_ups", null);
       //kiem tra ton tai error message
       // Kiểm tra và nối giá trị của ErrorMessage
       if (CheckForErrors(reportResultList, out string errorMessage))
