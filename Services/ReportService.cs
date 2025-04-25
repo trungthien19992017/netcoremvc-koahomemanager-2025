@@ -138,7 +138,7 @@ namespace KOAHome.Services
     // tach du lieu import thanh chuoi json
     public async Task<string> ExtractImportDataToJson(IFormFile file)
     {
-      var result = new Dictionary<int, Dictionary<string, string>>();
+      var result = new Dictionary<int, Dictionary<string, object>>();
 
       string sqlstore = "";
 
@@ -185,14 +185,23 @@ namespace KOAHome.Services
 
             if (!hasData) continue; // Nếu dòng trống thì bỏ qua
 
-            var rowData = new Dictionary<string, string>();
+            var rowData = new Dictionary<string, object>();
 
             // Lưu trữ các giá trị vào Dictionary theo tên cột
             for (int col = 1; col <= colCount; col++)
             {
-              var key = columnNames[col - 1];
-              var value = worksheet.Cells[row, col].Value?.ToString().Trim() ?? string.Empty;
-              rowData[key] = value;
+              var key = columnNames[col - 1]; var rawValue = worksheet.Cells[row, col].Value?.ToString().Trim() ?? string.Empty;
+              try
+              {
+                // Nếu rawValue là một JSON object hoặc array hợp lệ, parse thành JToken
+                var token = JToken.Parse(rawValue);
+                rowData[key] = token;
+              }
+              catch
+              {
+                // Nếu không parse được, giữ nguyên như string
+                rowData[key] = rawValue;
+              }
             }
 
             result[row - 2] = rowData; // Lưu dữ liệu theo chỉ số dòng (dòng 3 là rowIndex = 1)

@@ -204,13 +204,43 @@
                                                                                 }
                                                                             }
                                                                             var selectAttributes = new Dictionary<string, object>
-                                                                    {
-                                                                    { "class", "form-select color-dropdown form-select-sm" },
-                                                                    { "id", name },
-                                                                    { "name", name }
-                                                                    };
+                                                                                                  {
+                                                                                                      { "class", "form-select color-dropdown form-select-sm" },
+                                                                                                      { "id", name },
+                                                                                                      { "name", name }
+                                                                                                  };
 
                                                                                                                             // neu bat buoc thi them truong bat buoc
+                                                                            if (filter.Required == true)
+                                                                            {
+                                                                                selectAttributes["required"] = "required";
+                                                                            }
+
+                                                                            @Html.DropDownList(name, selectList, "-- Chọn --", selectAttributes)
+                                                                        }
+                                                                        else if (type == "TREEVIEW MULTIPLE")
+                                                                        {
+                                                                            @* check selected cho item dung voi gia tri *@
+                                                                            var selectList = dynamicServiceSelectOptions[name] as List<SelectListItem> ?? new List<SelectListItem>();
+                                                                            @foreach (var item in selectList)
+                                                                            {
+                                                                                if (value != null)
+                                                                                {
+                                                                                  // split chuoi value thanh List string để xử lý
+                                                                                  var splitvalue = value.ToString().Split(",", StringSplitOptions.RemoveEmptyEntries);
+                                                                                  // kiểm tra cac giá trị có khớp không
+                                                                                  item.Selected = (splitvalue.Any(s => s.Trim().Equals(item.Value.ToString(), StringComparison.OrdinalIgnoreCase))); // currentValue là giá trị đang được chọn
+                                                                                }
+                                                                            }
+                                                                            var selectAttributes = new Dictionary<string, object>
+                                                                            {
+                                                                                { "class", "form-select color-dropdown form-select-sm" },
+                                                                                { "id", name },
+                                                                                { "name", name },
+                                                                                { "multiple", "multiple" }
+                                                                            };
+
+                                                                            // neu bat buoc thi them truong bat buoc
                                                                             if (filter.Required == true)
                                                                             {
                                                                                 selectAttributes["required"] = "required";

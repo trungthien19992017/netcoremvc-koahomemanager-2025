@@ -55,7 +55,7 @@ namespace KOAHome.Controllers
     // GET: NETReport/Viewer_Utility
     [HttpGet]
     [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)] // Tắt cache mặc định cho action này nếu cần thiết
-    public async Task<IActionResult> Viewer_Utility([FromQuery] Dictionary<string, string> parameters, string? ReportCode)
+    public async Task<IActionResult> Viewer_Utility(string? ReportCode)
     {
       try
       {
@@ -65,6 +65,9 @@ namespace KOAHome.Controllers
           return RedirectToAction("MiscError", "Pages");
         }
         ViewData["ReportCode"] = ReportCode;
+
+        // Lấy dynamic query parameters
+        var parameters= Request.Query;
 
         // lay thong tin report, va danh sach filter display cua report de xu ly
         var report = await _report.NET_Report_Get(ReportCode);
@@ -98,8 +101,13 @@ namespace KOAHome.Controllers
         }
 
         // chuyen parameters cua bo loc thanh Idictionary<string, object>
-        Dictionary<string, object> objParameters = parameters.ToDictionary(kvp => kvp.Key, kvp => (object)kvp.Value);
+        //Dictionary<string, object> objParameters = parameters.ToDictionary(kvp => kvp.Key, kvp => (object)(kvp.Value.Count > 1 ? kvp.Value.Split(',', StringSplitOptions.RemoveEmptyEntries) : kvp.Value.ToString()));
 
+        // With this corrected version:  
+        Dictionary<string, object> objParameters = parameters.ToDictionary(
+            kvp => kvp.Key,
+            kvp => (object)(kvp.Value.ToString())
+        );
         // neu bo loc khong co va co store default filter thi lay du lieu mac dinh tu store
         if (objParameters.Count() == 0 && sqlDefaultContent != null && sqlDefaultContent != "")
         {
@@ -172,7 +180,7 @@ namespace KOAHome.Controllers
     // GET: NETReport/Editor_Utility
     [HttpGet]
     [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)] // Tắt cache mặc định cho action này nếu cần thiết
-    public async Task<IActionResult> Editor_Utility([FromQuery] Dictionary<string, string> parameters, string? ReportCode, int? id)
+    public async Task<IActionResult> Editor_Utility(string? ReportCode, int? id)
     {
       try
       {
@@ -182,6 +190,9 @@ namespace KOAHome.Controllers
           return RedirectToAction("MiscError", "Pages");
         }
         ViewData["ReportCode"] = ReportCode;
+
+        // Lấy dynamic query parameters
+        var parameters = Request.Query;
 
         // lay thong tin report, va danh sach filter display cua report de xu ly
         var report = await _report.NET_Report_Get(ReportCode);
@@ -215,7 +226,7 @@ namespace KOAHome.Controllers
         }
 
         // chuyen parameters cua bo loc thanh Idictionary<string, object>
-        Dictionary<string, object> objParameters = parameters.ToDictionary(kvp => kvp.Key, kvp => (object)kvp.Value);
+        Dictionary<string, object> objParameters = parameters.ToDictionary(kvp => kvp.Key, kvp => (object)kvp.Value.ToString());
 
         // neu bo loc khong co va co store default filter thi lay du lieu mac dinh tu store
         if (objParameters.Count() == 0 && sqlDefaultContent != null && sqlDefaultContent != "")

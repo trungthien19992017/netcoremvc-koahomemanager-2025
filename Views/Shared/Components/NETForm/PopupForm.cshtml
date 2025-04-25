@@ -250,8 +250,12 @@
                                                             <option value="">-- Chọn --</option>
                                                             @foreach (var item in selectList)
                                                             {
+                                                                child_value ??= "";
+                                                                // split chuoi value thanh List string để xử lý
+                                                                var splitvalue = child_value.ToString().Split(",", StringSplitOptions.RemoveEmptyEntries);
+                                                                // kiểm tra cac giá trị có khớp không
                                                                 <option value="@item.Value"
-                                                                        selected="@(item.Value.ToString() == (child_value ?? "").ToString() ? "selected" : null)">
+                                                                        selected="@((splitvalue.Any(s => s.Trim().Equals(item.Value.ToString(), StringComparison.OrdinalIgnoreCase))) ? "selected" : null)">
                                                                     @item.Text
                                                                 </option>
                                                             }
@@ -584,8 +588,12 @@
                                                   <option value="">-- Chọn --</option>
                                                   @foreach (var item in selectList)
                                                   {
+                                                      value ??= "";
+                                                      // split chuoi value thanh List string để xử lý
+                                                      var splitvalue = value.ToString().Split(",", StringSplitOptions.RemoveEmptyEntries);
+                                                      // kiểm tra cac giá trị có khớp không
                                                       <option value="@item.Value"
-                                                              selected="@(item.Value.ToString() == (value ?? "").ToString() ? "selected" : null)">
+                                                              selected="@((splitvalue.Any(s => s.Trim().Equals(item.Value.ToString(), StringComparison.OrdinalIgnoreCase))) ? "selected" : null)">
                                                           @item.Text
                                                       </option>
                                                   }

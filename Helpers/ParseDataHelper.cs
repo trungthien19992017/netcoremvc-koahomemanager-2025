@@ -1,3 +1,4 @@
+using Microsoft.EntityFrameworkCore.Metadata.Internal;
 using Microsoft.Extensions.Primitives;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
@@ -129,15 +130,32 @@ namespace KOAHome.Helpers
     }
 
     // thay thế đường dẫn bằng cách replace những tham số bằng result của dòng dữ liệu
-    public static string GetReplaceLinkWithResult(string value, IDictionary<string, object> resultDict)
+    public static string GetReplaceLinkWithResult(string value, IDictionary<string, object>? resultDict, Dictionary<string, object>? paramDict)
     {
       if (string.IsNullOrEmpty(value)) return value;
+
+      // them moi dictionary neu không có dictionary truyền vào
+      if (resultDict == null)
+      {
+        resultDict = new Dictionary<string, object>();
+      }
+      if (paramDict == null)
+      {
+        paramDict = new Dictionary<string, object>();
+      }
+
+      // gộp giá trị result va param để replace link (ưu tiên result)
+      // Nếu muốn key trùng thì result ghi đè param:
+      var mergedDict = paramDict
+          .Concat(resultDict)
+          .GroupBy(kvp => kvp.Key)
+          .ToDictionary(g => g.Key, g => g.Last().Value); // dict2 ưu tiên
 
       // 1. Replace placeholders trong dấu {}
       var replaced = Regex.Replace(value, @"\{(.*?)\}", match =>
       {
         var key = match.Groups[1].Value;
-        return resultDict.TryGetValue(key, out var val) ? val?.ToString() ?? "" : "";
+        return mergedDict.TryGetValue(key, out var val) ? val?.ToString() ?? "" : "";
       });
 
       // 2. Replace các query string dạng key=value
@@ -159,7 +177,7 @@ namespace KOAHome.Helpers
         }
 
         // Nếu tồn tại trong dict
-        if (resultDict.TryGetValue(rightKey, out var val))
+        if (mergedDict.TryGetValue(rightKey, out var val))
         {
           return $"{prefix}{leftKey}={val}";
         }
@@ -171,7 +189,7 @@ namespace KOAHome.Helpers
       return replaced;
     }
 
-    public static IDictionary<string, object> GetReplacePopupLinkWithResult(string value, IDictionary<string, object> resultDict)
+    public static IDictionary<string, object> GetReplacePopupLinkWithResult(string value, IDictionary<string, object>? resultDict, Dictionary<string, object>? paramDict)
     {
       var result = new Dictionary<string, object>();
       if (string.IsNullOrEmpty(value)) return result;
@@ -188,7 +206,7 @@ namespace KOAHome.Helpers
 
         if (key.Equals("LINK", StringComparison.OrdinalIgnoreCase))
         {
-          val = GetReplaceLinkWithResult(val, resultDict);
+          val = GetReplaceLinkWithResult(val, resultDict, paramDict);
         }
 
         result[key] = val;

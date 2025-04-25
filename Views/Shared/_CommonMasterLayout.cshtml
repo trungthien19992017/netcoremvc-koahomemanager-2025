@@ -284,14 +284,18 @@
           // Khi trang load xong, hủy timeout và ẩn spinner
           $(window).on("load", function () {
               clearTimeout(loadingTimeout);
-              $("#loading-overlay").hide();
+              if ($("#loading-overlay").length) {
+                  $("#loading-overlay").hide();
+              }
           });
 
           // Khi submit form, chỉ hiển thị sau 2 giây
           $(document).on("submit", "form", function () {
               clearTimeout(loadingTimeout);
               loadingTimeout = setTimeout(() => {
-                  $("#loading-overlay").show();
+                  if ($("#loading-overlay").length) {
+                      $("#loading-overlay").show();
+                  }
               }, 1000);
           });
 
@@ -299,20 +303,26 @@
           $(document).ajaxStart(function () {
               clearTimeout(loadingTimeout);
               loadingTimeout = setTimeout(() => {
-                  $("#loading-overlay").show();
+                if ($("#loading-overlay").length) {
+                    $("#loading-overlay").show();
+                }
               }, 1000);
           });
 
           // Khi AJAX request hoàn tất, ẩn spinner ngay lập tức
           $(document).ajaxComplete(function () {
               clearTimeout(loadingTimeout);
-              $("#loading-overlay").hide();
+              if ($("#loading-overlay").length) {
+                  $("#loading-overlay").hide();
+              }
           });
 
           // Ẩn spinner nếu có lỗi khi tải trang hoặc request thất bại
           $(window).on("error", function () {
               clearTimeout(loadingTimeout);
-              $("#loading-overlay").hide();
+              if ($("#loading-overlay").length) {
+                  $("#loading-overlay").hide();
+              }
           });
         });
 
@@ -352,6 +362,7 @@
                                type: "success",
                                timer: 2000,
                                confirmButtonText: 'Xác nhận',
+                               html: true
                            }, function () {
                                // reload lại sau khi đóng popup
                                location.reload();
@@ -363,6 +374,7 @@
                                type: "error",
                                timer: 2000,
                                confirmButtonText: 'Xác nhận',
+                               html: true
                            });
                        }
                    },
@@ -373,6 +385,7 @@
                            type: "error",
                            timer: 2000,
                            confirmButtonText: 'Done',
+                           html: true
                        });
                    }
                });
@@ -394,7 +407,8 @@
                   modalNOverlay: "backShadow",
                   closeOnConfirm: false,
                   closeOnCancel: false,
-                  showLoaderOnConfirm: true
+                  showLoaderOnConfirm: true,
+                  html: true
                }, function (isConfirm) {
                    if (isConfirm) {
                        handleAjaxConfirmed();
@@ -405,6 +419,7 @@
                            type: "error",
                            timer: 2000,
                            confirmButtonText: 'Done',
+                           html: true
                        });
                    }
                });
@@ -532,6 +547,7 @@
                             type: "success",
                             timer: 2000,
                             confirmButtonText: 'Xác nhận',
+                            html: true
                           }, function (){
                                 $("#"+modalId+" .modal-btn-close").trigger("click");// Đóng modal
                                 // Sau khi đóng popup, reload lại trang
@@ -544,6 +560,7 @@
                               type: "error",
                               timer: 2000,
                               confirmButtonText: 'Xác nhận',
+                              html: true
                           });
                       }
                     },
@@ -555,6 +572,7 @@
                             type: "error",
                             timer: 2000,
                             confirmButtonText: 'Xác nhận',
+                            html: true
                         });
                     }
                 });
@@ -1088,6 +1106,8 @@
          $(document).ready(function () {
            // Khi bấm nút → kích hoạt chọn file
            document.getElementById("importFileBtn").addEventListener("click", function () {
+              // reset file truoc khi click
+               document.getElementById("importFileInput").value = "";
                document.getElementById("importFileInput").click();
            });
 
@@ -1115,7 +1135,8 @@
                    modalNOverlay: "backShadow",
                    closeOnConfirm: false,
                    closeOnCancel: false,
-                   showLoaderOnConfirm: true
+                   showLoaderOnConfirm: true,
+                   html: true
                },
                function (isConfirm) {
                    if (isConfirm) {
@@ -1134,6 +1155,7 @@
                                      type: "success",
                                      timer: 2000,
                                      confirmButtonText: 'Xác nhận',
+                                     html: true
                                    }, function () {
                                          // Sau khi đóng popup, reload lại trang
                                          location.reload();
@@ -1143,9 +1165,13 @@
                                        title: "Lỗi!",
                                        text: response.errorMessage || "Có vấn đề xảy ra.",
                                        type: "error",
-                                       timer: 2000,
+                                       timer: 20000,
                                        confirmButtonText: 'Xác nhận',
-                                   });
+                                       html: true
+                                   }, function () {
+                                         // Sau khi đóng popup, reload lại trang
+                                         location.reload();
+                                     });
                                }
                            },
                            error: function () {
@@ -1155,6 +1181,7 @@
                                    type: "error",
                                    timer: 2000,
                                    confirmButtonText: 'Done',
+                                   html: true
                                });
                            }
                        });
@@ -1165,6 +1192,7 @@
                            type: "error",
                            timer: 2000,
                            confirmButtonText: 'Done',
+                           html: true
                        });
                    }
                });

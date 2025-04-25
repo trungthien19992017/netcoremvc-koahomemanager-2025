@@ -50,7 +50,7 @@ namespace KOAHome.Controllers
     }
 
     // GET: HsBookings/Edit/5
-    public async Task<IActionResult> Viewer(string? FormCode, int? id, [FromQuery] Dictionary<string, string> parameters, bool isReadOnly = false)
+    public async Task<IActionResult> Viewer(string? FormCode, int? id, bool isReadOnly = false)
     {
       try
       {
@@ -66,6 +66,9 @@ namespace KOAHome.Controllers
           return View();
         }
         ViewData["FormCode"] = FormCode;
+
+        // Lấy dynamic query parameters
+        var parameters = Request.Query;
 
         // lay thong tin report, va danh sach filter display cua report de xu ly
         var config_form = await _form.NET_Form_Get(FormCode);
@@ -101,7 +104,7 @@ namespace KOAHome.Controllers
         }
 
         // chuyen parameters cua duong dan thanh Idictionary<string, object>
-        Dictionary<string, object> objParameters = parameters.ToDictionary(kvp => kvp.Key, kvp => (object)kvp.Value);
+        Dictionary<string, object> objParameters = parameters.ToDictionary(kvp => kvp.Key, kvp => (object)kvp.Value.ToString());
 
         // lay danh sach dynamic field cua form de xu ly
         var stopwatch = Stopwatch.StartNew();

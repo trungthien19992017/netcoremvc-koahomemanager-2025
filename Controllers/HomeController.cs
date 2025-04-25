@@ -21,8 +21,9 @@ public class HomeController : Controller
   private readonly IActionService _action;
   private readonly IWidgetService _widget;
   private readonly IDRDatasourceService _datasrc;
+  private readonly IConnectionService _con;
 
-  public HomeController(QLKCL_NEWContext db, ILogger<HomeController> logger, IHsBookingTableService book, IHsBookingServiceService bookser, IReportEditorService re, IAttachmentService att, IHsCustomerService cus, IReportService report, IFormService form, IActionService action, IWidgetService widget, IDRDatasourceService datasrc)
+  public HomeController(QLKCL_NEWContext db, ILogger<HomeController> logger, IHsBookingTableService book, IHsBookingServiceService bookser, IReportEditorService re, IAttachmentService att, IHsCustomerService cus, IReportService report, IFormService form, IActionService action, IWidgetService widget, IDRDatasourceService datasrc, IConnectionService con)
   {
     _db = db;
     _logger = logger;
@@ -36,25 +37,9 @@ public class HomeController : Controller
     _action = action;
     _widget = widget;
     _datasrc = datasrc;
+    _con = con;
   }
 
-  // kiem tra loi khi xu ly luu du lieu
-  private bool CheckForErrors(List<dynamic> resultList, out string errorMessage)
-  {
-    var errorMessages = resultList
-        .Where(item => ((IDictionary<string, object>)item).ContainsKey("ErrorMessage"))
-        .Select(item => item.ErrorMessage.ToString())
-        .ToList();
-
-    if (errorMessages.Any())
-    {
-      errorMessage = string.Join(", ", errorMessages);
-      return true;
-    }
-
-    errorMessage = null;
-    return false;
-  }
   public IActionResult Index()
     {
         return View();
@@ -196,7 +181,7 @@ public class HomeController : Controller
     var importResultList = await _report.Import_Json_Update(null, importJsonData, sqlstore, null);
     //kiem tra ton tai error message
     // Kiểm tra và nối giá trị của ErrorMessage
-    if (CheckForErrors(importResultList, out string errorMessage))
+    if (_con.CheckForErrors(importResultList, out string errorMessage))
     {
       return Json(new { success = false, errorMessage = errorMessage });
     }

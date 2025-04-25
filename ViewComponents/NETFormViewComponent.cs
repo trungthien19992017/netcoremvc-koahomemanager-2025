@@ -45,7 +45,7 @@ namespace KOAHome.ViewComponents
       _con = con;
     }
 
-    public async Task<IViewComponentResult> InvokeAsync([FromQuery] Dictionary<string, string> parameters, int? id, string FormCode, bool? isReadOnly = false)
+    public async Task<IViewComponentResult> InvokeAsync(int? id, string FormCode, bool? isReadOnly = false)
     {
       try
       {
@@ -61,6 +61,9 @@ namespace KOAHome.ViewComponents
           return View("PopupForm");
         }
         ViewData["FormCode"] = FormCode;
+
+        // Lấy dynamic query parameters
+        var parameters = Request.Query;
 
         // lay thong tin report, va danh sach filter display cua report de xu ly
         var config_form = await _form.NET_Form_Get(FormCode);
@@ -96,7 +99,7 @@ namespace KOAHome.ViewComponents
         }
 
         // chuyen parameters cua bo loc thanh Idictionary<string, object>
-        Dictionary<string, object> objParameters = parameters.ToDictionary(kvp => kvp.Key, kvp => (object)kvp.Value);
+        Dictionary<string, object> objParameters = parameters.ToDictionary(kvp => kvp.Key, kvp => (object)kvp.Value.ToString());
 
         // lay danh sach dynamic field cua form de xu ly
         var stopwatch = Stopwatch.StartNew();

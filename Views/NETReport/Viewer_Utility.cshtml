@@ -9,7 +9,7 @@
     string ReportCode = ViewData["ReportCode"] as string;
 
     // truyen danh sach gia tri loc len giao dien
-    var listFilterValue = ViewData["ListFilterValue"] as IDictionary<string, object>;
+    var listFilterValue = ViewData["ListFilterValue"] as Dictionary<string, object>;
     var listFilterConfig = ViewData["ListFilterConfig"] as List<dynamic>;
     var dynamicServiceSelectOptions = ViewData["DynamicServiceSelectOptions"] as Dictionary<string, List<SelectListItem>>;
 
@@ -209,7 +209,10 @@
                                                                             {
                                                                                 if (value != null)
                                                                                 {
-                                                                                  item.Selected = (item.Value.ToString() == value.ToString()); // currentValue là giá trị đang được chọn
+                                                                                  // split chuoi value thanh List string để xử lý
+                                                                                  var splitvalue = value.ToString().Split(",", StringSplitOptions.RemoveEmptyEntries);
+                                                                                  // kiểm tra cac giá trị có khớp không
+                                                                                  item.Selected = (splitvalue.Any(s => s.Trim().Equals(item.Value.ToString(), StringComparison.OrdinalIgnoreCase))); // currentValue là giá trị đang được chọn
                                                                                 }
                                                                             }
                                                                             var selectAttributes = new Dictionary<string, object>
@@ -256,14 +259,93 @@
                                 <div class="row gx-3 gy-2 align-items-center">
                                     <div class="col-md-12 d-flex">
                                         <div class="demo-inline-spacing table-action">
-                                            <a asp-controller="NETForm" asp-action="Viewer" asp-route-formCode="F0_HS_Booking1" type="button" class="btn btn-icon btn-primary" data-bs-toggle="tooltip" data-bs-offset="0,4" data-bs-placement="top" data-bs-html="true"
-                                               title="<i class='ri-add-line'></i> <span>Thêm mới</span>">
-                                                <i class="ri-add-line"></i>
-                                            </a>
-                                            <a asp-action="Create" type="button" class="btn btn-icon btn-primary" data-bs-toggle="tooltip" data-bs-offset="0,4" data-bs-placement="top" data-bs-html="true"
-                                               title="<i class='ri-eye-line'></i> <span>Mô tả</span>">
-                                                <i class="ri-eye-line"></i>
-                                            </a>
+                                          @* xu ly action list detail top *@
+                                          @foreach(var action in actionlistdetailList_top.OrderBy(p=> p.ActionListDetailOrderId).ToList())
+                                          {
+                                            var actionDict = (IDictionary<string, object>)action;
+                                            string actionName = actionDict.ContainsKey("ActionName") ? (actionDict["ActionName"].ToString() ?? "") : "";
+                                            string actionCode = actionDict.ContainsKey("ActionCode") ? (actionDict["ActionCode"].ToString() ?? "") : "";
+                                            bool actionIsTop = actionDict.ContainsKey("IsTop") ? Convert.ToBoolean(actionDict["IsTop"]) : false;
+                                            string actionIcon = actionDict.ContainsKey("ActionIcon") ? (actionDict["ActionIcon"].ToString() ?? "") : "";
+                                            string actionType = actionDict["Type"].ToString() ?? "";
+                                            string actionValue = actionDict["Value"].ToString() ?? "";
+
+                                            if (actionType == "LINK")
+                                            {
+                                              string url = ParseDataHelper.GetReplaceLinkWithResult(actionValue, null, listFilterValue);
+                                              <a href="@url" type="button" class="btn btn-icon btn-primary" data-bs-toggle="tooltip" data-bs-offset="0,4" data-bs-placement="top" data-bs-html="true"
+                                                  title="<i class='@(actionIcon)'></i> <span>@actionName</span>">
+                                                  <i class="@(actionIcon)"></i>
+                                              </a>
+                                            }
+                                            else if (actionType == "STORE")
+                                            {
+                                              string actionStore = actionValue;
+                                              // cac thong tin xac nhan, neu co thi truyen vao action
+                                              bool isPopupConfirm = Convert.ToBoolean(actionDict["IsPopupConfirm"]);
+                                              int? dataSourceID  = actionDict.TryGetValue("DataSourceID", out var num) && num is int val ? Convert.ToInt32(num) : null;
+                                              string confirmButtonText = !string.IsNullOrWhiteSpace(actionDict["ConfirmButtonText"].ToString()) ? actionDict["ConfirmButtonText"].ToString() : null;
+                                              string confirmTitle = !string.IsNullOrWhiteSpace(actionDict["ConfirmTitle"].ToString()) ? actionDict["ConfirmTitle"].ToString() : null;
+                                              string confirmText = !string.IsNullOrWhiteSpace(actionDict["ConfirmText"].ToString()) ? actionDict["ConfirmText"].ToString() : null;
+                                                @if (isPopupConfirm){
+                                                  <a href="" data-isconfirm="@isPopupConfirm" data-confirmtext="@confirmText" data-confirmtitle ="@confirmTitle" data-confirmbutton ="@confirmButtonText" data-sqlstore="@actionStore" data-datasourceid="@dataSourceID" type="button" class="btn btn-icon btn-primary confirmAction" data-bs-toggle="tooltip" data-bs-offset="0,4" data-bs-placement="top" data-bs-html="true"
+                                                     title="<i class='@(actionIcon)'></i> <span>@actionName</span>">
+                                                    <i class="@(actionIcon)"></i>
+                                                  </a>
+                                                }
+                                                else{
+                                                  <a href="" data-sqlstore="@actionStore" data-datasourceid="@dataSourceID" type="button" class="btn btn-icon btn-primary confirmAction" data-bs-toggle="tooltip" data-bs-offset="0,4" data-bs-placement="top" data-bs-html="true"
+                                                      title="<i class='@(actionIcon)'></i> <span>@actionName</span>">
+                                                      <i class="@(actionIcon)"></i>
+                                                  </a>
+                                                }
+                                                @* thiếu đoạn xử lý store với IsChooseData, sẽ bổ sung sau *@
+                                            }
+                                            else if (actionType == "POPUPFORM")
+                                            {
+                                              var popupDictValue = ParseDataHelper.GetReplacePopupLinkWithResult(actionValue, null, listFilterValue);
+                                              string actionFormCode = popupDictValue.ContainsKey("FORMCODE") ? popupDictValue["FORMCODE"].ToString() ?? "" : "";
+                                              string actionLink = popupDictValue.ContainsKey("LINK") ? popupDictValue["LINK"].ToString() ?? "" : "";
+                                              <a href="" data-bs-toggle="modal" data-bs-target="#modal-PopupForm" data-actionlink = "@actionLink" type="button" class="btn btn-icon btn-primary popupform-action" data-bs-toggle="tooltip" data-bs-offset="0,4" data-bs-placement="top" data-bs-html="true"
+                                                   title="<i class='@(actionIcon)'></i> <span>@actionName</span>">
+                                                  <i class="@(actionIcon)"></i>
+                                              </a>
+                                            }
+                                            else if (actionType == "IMPORT_FILEEXCEL")
+                                            {
+                                              @* Button import file excel *@
+                                              <button id="importFileBtn" class="btn btn-icon btn-primary" data-bs-toggle="tooltip" data-bs-offset="0,4" data-bs-placement="top" data-bs-html="true"
+                                                   title="<i class='@(actionIcon)'></i> <span>@actionName</span>">
+                                                  <i class="@(actionIcon)"></i>
+                                              </button>
+
+                                              @* Input file ẩn *@
+                                              <input type="file" id="importFileInput" data-sqlstore="@actionValue" accept=".xlsx" style="display: none;" />
+                                            }
+                                            else if (actionType == "DOWNLOADFILETEMPLATE")
+                                            {
+                                              // lấy thông tin file template để xuất
+                                              string fileTemplate = actionDict.ContainsKey("FileTemplate") ? (actionDict["FileTemplate"].ToString() ?? "") : "";
+                                              string url = "";
+                                              if (!string.IsNullOrWhiteSpace(fileTemplate))
+                                              {
+                                                // kiếm tra đường dẫn chưa có dấu / thì thêm vào
+                                                url = (fileTemplate.StartsWith("/") ? fileTemplate : ("/" + fileTemplate));
+                                              }
+                                              <a href="@url" type="button" class="btn btn-icon btn-primary" data-bs-toggle="tooltip" data-bs-offset="0,4" data-bs-placement="top" data-bs-html="true"
+                                                  title="<i class='@(actionIcon)'></i> <span>@actionName</span>">
+                                                  <i class="@(actionIcon)"></i>
+                                              </a>
+                                            }
+                                            else
+                                            {
+                                              string url = ParseDataHelper.GetReplaceLinkWithResult(actionValue, null, listFilterValue);
+                                              <a href="@url" type="button" class="btn btn-icon btn-primary" data-bs-toggle="tooltip" data-bs-offset="0,4" data-bs-placement="top" data-bs-html="true"
+                                                  title="<i class='@(actionIcon)'></i> <span>@actionName</span>">
+                                                  <i class="@(actionIcon)"></i>
+                                              </a>
+                                            }
+                                          }
                                         </div>
                                     </div>
                                 </div>
@@ -417,13 +499,15 @@
                                                         {
                                                           var actionDict = (IDictionary<string, object>)action;
                                                           string actionName = actionDict.ContainsKey("ActionName") ? (actionDict["ActionName"].ToString() ?? "") : "";
+                                                          string actionCode = actionDict.ContainsKey("ActionCode") ? (actionDict["ActionCode"].ToString() ?? "") : "";
+                                                          bool actionIsTop = actionDict.ContainsKey("IsTop") ? Convert.ToBoolean(actionDict["IsTop"]) : false;
                                                           string actionIcon = actionDict.ContainsKey("ActionIcon") ? (actionDict["ActionIcon"].ToString() ?? "") : "";
                                                           string actionType = actionDict["Type"].ToString() ?? "";
                                                           string actionValue = actionDict["Value"].ToString() ?? "";
 
                                                           if (actionType == "LINK")
                                                           {
-                                                            string url = ParseDataHelper.GetReplaceLinkWithResult(actionValue, dictionary);
+                                                            string url = ParseDataHelper.GetReplaceLinkWithResult(actionValue, dictionary, listFilterValue);
                                                             <li>
                                                                 <a href="@url" class="dropdown-item"><i class="@(actionIcon + " me-1 text-primary")"></i> @actionName</a>
                                                             </li>
@@ -448,7 +532,7 @@
                                                           }
                                                           else if (actionType == "POPUPFORM")
                                                           {
-                                                            var popupDictValue = ParseDataHelper.GetReplacePopupLinkWithResult(actionValue, dictionary);
+                                                            var popupDictValue = ParseDataHelper.GetReplacePopupLinkWithResult(actionValue, dictionary, listFilterValue);
                                                             string actionFormCode = popupDictValue.ContainsKey("FORMCODE") ? popupDictValue["FORMCODE"].ToString() ?? "" : "";
                                                             string actionLink = popupDictValue.ContainsKey("LINK") ? popupDictValue["LINK"].ToString() ?? "" : "";
                                                             <li>
@@ -457,8 +541,9 @@
                                                           }
                                                           else
                                                           {
+                                                            string url = ParseDataHelper.GetReplaceLinkWithResult(actionValue, dictionary, listFilterValue);
                                                             <li>
-                                                                <a asp-action="DichVuPhatSinh" asp-route-id="@Id" class="dropdown-item"><i class="@(actionIcon + " me-1 text-primary")"></i> @actionName</a>
+                                                                <a href="@url" class="dropdown-item"><i class="@(actionIcon + " me-1 text-primary")"></i> @actionName</a>
                                                             </li>
                                                           }
                                                         }

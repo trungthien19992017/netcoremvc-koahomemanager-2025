@@ -251,7 +251,7 @@ namespace KOAHome.Services
     {
       var errorMessages = resultList
           .Where(item => ((IDictionary<string, object>)item).ContainsKey("ErrorMessage"))
-          .Select(item => item.ErrorMessage.ToString())
+          .Select(item => item.ErrorMessage.ToString().Replace("\\n", "<br/>"))
           .ToList();
 
       if (errorMessages.Any())
