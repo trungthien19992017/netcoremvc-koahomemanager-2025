@@ -5,7 +5,7 @@
          function initSelect2() {
              debugger;
              // không áp dụng cho Quiff HTML editor
-               $("select") .not(".ql-toolbar select, .ql-container select, .ql-editor select").not(".select2-hidden-accessible").select2({
+           $("select").not(".ql-toolbar select, .ql-container select, .ql-editor select").not(".select2-hidden-accessible").not(".dataTables_length select").select2({
                    placeholder: "Chọn",
                    allowClear: true,
                    width: "100%"
@@ -872,7 +872,6 @@
                             className: "buttons-excel buttons-html5 btn btn-primary",
                             text: '<i class="ri-upload-2-line"></i>',
                              action: function () {
-                               dt = $table.DataTable();
                                    dt.page.len(-1).draw(); // -1 = Hiển thị tất cả các dòng
 
                                    setTimeout(() => {

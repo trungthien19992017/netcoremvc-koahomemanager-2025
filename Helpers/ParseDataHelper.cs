@@ -1,6 +1,7 @@
 using Microsoft.Extensions.Primitives;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
+using System.Text.RegularExpressions;
 
 namespace KOAHome.Helpers
 {
@@ -87,7 +88,8 @@ namespace KOAHome.Helpers
         dict[key] = kvp.Value;
       }
 
-      return new FormCollection(dict);
+      // Truyền lại form.Files để giữ nguyên file upload
+      return new FormCollection(dict, form.Files);
     }
 
     // chuyển dữ liệu query param dạng "PhoneNumber=&HoTen=&isActive=1&CheckInFrom=2025-04-01&CheckInTo=2025-04-09" thanh Dictionary
@@ -121,6 +123,75 @@ namespace KOAHome.Helpers
 
           result[key] = value;
         }
+      }
+
+      return result;
+    }
+
+    // thay thế đường dẫn bằng cách replace những tham số bằng result của dòng dữ liệu
+    public static string GetReplaceLinkWithResult(string value, IDictionary<string, object> resultDict)
+    {
+      if (string.IsNullOrEmpty(value)) return value;
+
+      // 1. Replace placeholders trong dấu {}
+      var replaced = Regex.Replace(value, @"\{(.*?)\}", match =>
+      {
+        var key = match.Groups[1].Value;
+        return resultDict.TryGetValue(key, out var val) ? val?.ToString() ?? "" : "";
+      });
+
+      // 2. Replace các query string dạng key=value
+      replaced = Regex.Replace(replaced, @"([?&])(\w+)=([A-Za-z_<>]+)", match =>
+      {
+        string prefix = match.Groups[1].Value; // ? hoặc &
+        string leftKey = match.Groups[2].Value; // key hiển thị
+        string rightKey = match.Groups[3].Value; // key tra cứu
+
+        // Nếu là số thì giữ nguyên
+        if (int.TryParse(rightKey, out _))
+          return match.Value;
+
+        // Nếu bọc trong <>, thì chỉ lấy tên
+        if (rightKey.StartsWith("<") && rightKey.EndsWith(">"))
+        {
+          string stripped = rightKey.Substring(1, rightKey.Length - 2);
+          return $"{prefix}{leftKey}={stripped}";
+        }
+
+        // Nếu tồn tại trong dict
+        if (resultDict.TryGetValue(rightKey, out var val))
+        {
+          return $"{prefix}{leftKey}={val}";
+        }
+
+        // Không có thì để rỗng
+        return $"{prefix}{leftKey}=";
+      });
+
+      return replaced;
+    }
+
+    public static IDictionary<string, object> GetReplacePopupLinkWithResult(string value, IDictionary<string, object> resultDict)
+    {
+      var result = new Dictionary<string, object>();
+      if (string.IsNullOrEmpty(value)) return result;
+
+      var parts = value.Split(',');
+
+      foreach (var part in parts)
+      {
+        var keyValue = part.Split(':', 2);
+        if (keyValue.Length != 2) continue;
+
+        var key = keyValue[0].Trim();
+        var val = keyValue[1].Trim();
+
+        if (key.Equals("LINK", StringComparison.OrdinalIgnoreCase))
+        {
+          val = GetReplaceLinkWithResult(val, resultDict);
+        }
+
+        result[key] = val;
       }
 
       return result;

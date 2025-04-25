@@ -11,6 +11,7 @@ namespace KOAHome.Services
   public interface IActionService
   {
     public Task<List<dynamic>> Action_store(Dictionary<string, object> parameters, string sqlStore, string? connectionString);
+    public Task<List<dynamic>> NET_ActionListDetail_WithObject_Get(string? objectCode, int? objectId, string actionListTypeCode);
   }
   public class ActionService : IActionService
   {
@@ -48,5 +49,27 @@ namespace KOAHome.Services
       return resultList;
     }
 
+    public async Task<List<dynamic>> NET_ActionListDetail_WithObject_Get(string? objectCode, int? objectId, string actionListTypeCode)
+    {
+      // su dung datasource config de lay du lieu
+      string connectionString = _configuration.GetConnectionString("ConfigConnection"); // Thay thế bằng chuỗi kết nối của bạn
+      // store get du lieu
+      string sqlStore = "NET_ActionListDetail_WithObject_sel";
+      // khai bao param lien quan
+      var parameters = new Dictionary<string, object>();
+      parameters.Add("ObjectCode", objectCode);
+      parameters.Add("ObjectId", objectId);
+      parameters.Add("ActionListTypeCode", actionListTypeCode);
+
+      // chuyen thanh cau query tu store va param truyen vao
+      var (sqlQuery, sqlParams) = await _con.Connection_GetQueryParam(parameters, sqlStore, connectionString);
+
+      var resultList = new List<dynamic>();
+
+      // xu ly lay du lieu dua truyen store va param truyen vao
+      resultList = await _con.Connection_GetDataFromQuery(parameters, sqlStore, connectionString, sqlQuery, sqlParams);
+
+      return resultList;
+    }
   }
 }

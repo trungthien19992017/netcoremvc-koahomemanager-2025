@@ -92,6 +92,12 @@ namespace KOAHome
               pattern: "form/viewer/{formCode}/{id?}",
               defaults: new { controller = "NETForm", action = "Viewer"}
           );
+        // route cho form popup
+        endpoints.MapControllerRoute(
+              name: "form/popup-viewer",
+              pattern: "form/popup-viewer/{formCode}/{id?}",
+              defaults: new { controller = "NETForm", action = "PopupForm" }
+          );
       });
     }
   }

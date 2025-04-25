@@ -266,7 +266,7 @@ namespace KOAHome.Controllers
             }
 
             //khai bao phan tu chua data
-            var formData = await _form.Form_sel(id, "HS_Booking1_sel", null);
+            var formData = await _form.Form_sel(null, id, "HS_Booking1_sel", null);
             ViewBag.formData = formData;
 
 
@@ -381,7 +381,7 @@ namespace KOAHome.Controllers
                   bookSerResultList = await _report.ReportDetail_FromParent("BookingID", id.ToString(), "HS_BookingService_search", null);
                   ViewBag.listbookserbybookingid_store = bookSerResultList;
                   //khai bao phan tu chua data
-                  formData = (Dictionary<string, object>)await _form.Form_sel(id, "HS_Booking1_sel", null);
+                  formData = (Dictionary<string, object>)await _form.Form_sel(null, id, "HS_Booking1_sel", null);
                   ViewBag.formData = formData;
 
                   ViewBag.success = "Xử lý thành công"; // Gán vào ViewBag
@@ -415,7 +415,7 @@ namespace KOAHome.Controllers
       }
 
       //khai bao phan tu chua data
-      var formData = await _form.Form_sel(id, "HS_Booking1_Payment_sel", null);
+      var formData = await _form.Form_sel(null, id, "HS_Booking1_Payment_sel", null);
       ViewBag.formData = formData;
 
       return View();
@@ -451,7 +451,7 @@ namespace KOAHome.Controllers
         id = (int)id_return;
 
         //khai bao phan tu chua data
-        formData = (Dictionary<string, object>)await _form.Form_sel(id, "HS_Booking1_Payment_sel", null);
+        formData = (Dictionary<string, object>)await _form.Form_sel(null, id, "HS_Booking1_Payment_sel", null);
         ViewBag.formData = formData;
 
         ViewBag.success = "Xử lý thành công"; // Gán vào ViewBag
@@ -482,7 +482,7 @@ namespace KOAHome.Controllers
       int id = int.TryParse(value, out int parsedId) ? parsedId : 0;
 
       //khai bao phan tu chua data
-      var formData = await _form.Form_sel(id, "HS_Booking1_OtherDiscount_sel", null);
+      var formData = await _form.Form_sel(null, id, "HS_Booking1_OtherDiscount_sel", null);
       ViewBag.formData = formData;
 
       // xu ly cac du lieu select box va radio tren giao dien
@@ -539,7 +539,7 @@ namespace KOAHome.Controllers
         id = (int)id_return;
 
         //khai bao phan tu chua data
-        formData = (Dictionary<string, object>) await _form.Form_sel(id, "HS_Booking1_OtherDiscount_sel", null);
+        formData = (Dictionary<string, object>) await _form.Form_sel(null, id, "HS_Booking1_OtherDiscount_sel", null);
         ViewBag.formData = formData;
 
         ViewBag.success = "Xử lý thành công"; // Gán vào ViewBag
@@ -571,7 +571,7 @@ namespace KOAHome.Controllers
       }
 
       //khai bao phan tu chua data
-      var formData = await _form.Form_sel(id, "HS_Booking1_DichVuPhatSinh_sel", null);
+      var formData = await _form.Form_sel(null, id, "HS_Booking1_DichVuPhatSinh_sel", null);
       ViewBag.formData = formData;
 
       // danh sach service theo booking 
@@ -658,7 +658,7 @@ namespace KOAHome.Controllers
           bookSerResultList = await _report.ReportDetail_FromParent("BookingID", id.ToString(), "HS_BookingService_search", null);
           ViewBag.listbookserbybookingid_store = bookSerResultList;
           //khai bao phan tu chua data
-          formData = (Dictionary<string, object>)await _form.Form_sel(id, "HS_Booking1_DichVuPhatSinh_sel", null);
+          formData = (Dictionary<string, object>)await _form.Form_sel(null, id, "HS_Booking1_DichVuPhatSinh_sel", null);
           ViewBag.formData = formData;
 
           ViewBag.success = "Xử lý thành công"; // Gán vào ViewBag
@@ -727,7 +727,7 @@ namespace KOAHome.Controllers
         id = (int)id_return;
 
         //khai bao phan tu chua data
-        formData = (Dictionary<string, object>)await _form.Form_sel(id, "HS_Booking1_Cancel_sel", null);
+        formData = (Dictionary<string, object>)await _form.Form_sel(null, id, "HS_Booking1_Cancel_sel", null);
         ViewBag.formData = formData;
 
         ViewBag.success = "Xử lý thành công"; // Gán vào ViewBag

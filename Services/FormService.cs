@@ -10,7 +10,7 @@ namespace KOAHome.Services
 {
   public interface IFormService
   {
-    public Task<IDictionary<string, object>> Form_sel(int? Id, string sqlStore, string? connectionString);
+    public Task<IDictionary<string, object>> Form_sel(Dictionary<string, object>? parameters, int? Id, string sqlStore, string? connectionString);
     public Task<List<dynamic>> Form_ups(Dictionary<string, object> parameters, int? id, string sqlStore, string? connectionString);
     public Task<IDictionary<string, object>> Form_GetDataFill_FromSelection(Dictionary<string, object> parameters, string sqlStore, string? connectionString);
     // xu ly cau hinh form
@@ -37,18 +37,23 @@ namespace KOAHome.Services
       _con = con;
     }
 
-    public async Task<IDictionary<string, object>> Form_sel(int? Id, string sqlStore, string? connectionString)
+    public async Task<IDictionary<string, object>> Form_sel(Dictionary<string, object>? parameters, int? Id, string sqlStore, string? connectionString)
     {
       // neu khong truyen connect string thi se lay connection string mac dinh
       if (connectionString == null)
       {
         connectionString = _configuration.GetConnectionString("DefaultConnection"); // Thay thế bằng chuỗi kết nối của bạn
       }
-      // Dictionary chứa các tham số
-      var parameters = new Dictionary<string, object>
+      if (parameters == null)
       {
-          { "Id", Id}
-      };
+        parameters = new Dictionary<string, object>();
+      }
+
+      // neu chua ton tai Id them them vao
+      if (!parameters.ContainsKey("Id"))
+      {
+        parameters.Add("Id", Id);
+      }
 
       // chuyen thanh cau query tu store va param truyen vao
       var (sqlQuery, sqlParams) = await _con.Connection_GetQueryParam(parameters, sqlStore, connectionString);

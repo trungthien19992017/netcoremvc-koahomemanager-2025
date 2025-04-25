@@ -28,14 +28,16 @@ namespace KOAHome.Services
   public class NetServiceService : INetServiceService
   {
     private readonly QLKCL_NEWContext _db;
+    private readonly TttConfigContext _dbconfig;
     private readonly IHttpContextAccessor _httpContextAccessor;
     private readonly IConfiguration _configuration;
     private readonly IConnectionService _con;
     private readonly IMemoryCache _cache;
     private readonly ILogger<NetService> _logger;
-    public NetServiceService(QLKCL_NEWContext db, IHttpContextAccessor httpContextAccessor, IConfiguration configuration, IConnectionService con, IMemoryCache cache, ILogger<NetService> logger)
+    public NetServiceService(QLKCL_NEWContext db, IHttpContextAccessor httpContextAccessor, IConfiguration configuration, IConnectionService con, IMemoryCache cache, ILogger<NetService> logger, TttConfigContext dbconfig)
     {
       _db = db;
+      _dbconfig = dbconfig;
       _httpContextAccessor = httpContextAccessor;
       _configuration = configuration;
       _con = con;
@@ -81,8 +83,13 @@ namespace KOAHome.Services
     {
         // su dung datasource config de lay du lieu
         string connectionString = _configuration.GetConnectionString("ConfigConnection"); // Thay thế bằng chuỗi kết nối của bạn
-                                                                                          // store get du lieu
-        string sqlStore = "NET_Service_DynamicExecute";
+
+        // lấy các cột service cần xử lý
+        string colValue = _dbconfig.NetServices.FindAsync(serviceId).Result.ColValue.ToString() ?? "Id";
+        string colDisplay = _dbconfig.NetServices.FindAsync(serviceId).Result.ColDisplay.ToString() ?? "Name";
+
+      // store get du lieu
+      string sqlStore = "NET_Service_DynamicExecute";
         // neu parameter rong thi tu tao 1 parameter moi truyen vao
         if (parameters == null)
         {
@@ -112,10 +119,15 @@ namespace KOAHome.Services
         }
 
       List<SelectListItem> listItems = resultList
-          .Select(x => new SelectListItem
+          .Select(x => 
           {
-            Value = x.Id.ToString(),    // hoặc x.GetType().GetProperty("Id") nếu không chắc
-            Text = x.Name.ToString()
+            var dict = x as IDictionary<string, object>;
+
+            return new SelectListItem
+            {
+                Value = dict.ContainsKey(colValue) ? dict[colValue]?.ToString() ?? "" : "",
+                Text = dict.ContainsKey(colDisplay) ? dict[colDisplay]?.ToString() ?? "" : ""
+            };
           })
           .ToList();
 

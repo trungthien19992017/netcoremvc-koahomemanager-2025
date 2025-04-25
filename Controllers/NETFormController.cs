@@ -122,7 +122,7 @@ namespace KOAHome.Controllers
         ViewData["DynamicServiceSelectOptions"] = config_formfieldService;
 
         //khai bao phan tu chua data
-        var formData = await _form.Form_sel(id, (id == 0 ? storeDefaultData : storeGetData), connectionString);
+        var formData = await _form.Form_sel(objParameters, id, (id == 0 ? storeDefaultData : storeGetData), connectionString);
         ViewData["formData"] = formData;
 
         // xu ly file
@@ -233,6 +233,8 @@ namespace KOAHome.Controllers
       // lay danh sach object type code tu config form neu co field file uploader
       string attObjectTypeCodes = config_form.ContainsKey("AttObjectTypeCodes") ? Convert.ToString(config_form["AttObjectTypeCodes"]) : "";
 
+      await _att.HandleFiles(attObjectTypeCodes, form, id);
+
       // Convert the IFormCollection to a dictionary of strings
       var formData = form.ToDictionary(
                       pair => pair.Key,
@@ -257,11 +259,6 @@ namespace KOAHome.Controllers
 
         // xu ly luu bang attachment
         bool isSaveAttachment = await _att.SaveAttachmentTable(form, id ?? 0);
-
-        // xu ly file
-        // Kiểm tra xem form có file nào không
-        // lay danh sach object type code tu config form neu co field file uploader
-        attObjectTypeCodes = config_form.ContainsKey("AttObjectTypeCodes") ? Convert.ToString(config_form["AttObjectTypeCodes"]) : "";
 
         if (!isSaveAttachment)
         {
@@ -309,9 +306,9 @@ namespace KOAHome.Controllers
 
     // popup form view component
     [HttpGet]
-    public async Task<IActionResult> PopupForm(string FormCode, int? id, string queryParams, bool? isReadOnly = false)
+    public async Task<IActionResult> PopupForm([FromQuery] Dictionary<string, string> parameters, string FormCode, int? id, bool? isReadOnly = false)
     {
-      return ViewComponent("NETForm", new { id, FormCode, queryParams, isReadOnly });
+      return ViewComponent("NETForm", new { parameters, id, FormCode, isReadOnly });
     }
 
     [HttpPost]

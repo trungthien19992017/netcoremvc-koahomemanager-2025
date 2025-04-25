@@ -64,7 +64,7 @@ namespace KOAHome.Controllers
         {
           return RedirectToAction("MiscError", "Pages");
         }
-        ViewBag.ReportCode = ReportCode;
+        ViewData["ReportCode"] = ReportCode;
 
         // lay thong tin report, va danh sach filter display cua report de xu ly
         var report = await _report.NET_Report_Get(ReportCode);
@@ -74,7 +74,7 @@ namespace KOAHome.Controllers
           return RedirectToAction("MiscError", "Pages", new { errorMessage = "Không tìm thấy bảng" });
         }
         // chuyen cau hinh report len giao dien de xu ly
-        ViewBag.report = report;
+        ViewData["report"] = report;
 
         string? connectionString = null;
         //neu datasourceId la null thi lay connectionString mac dinh
@@ -108,7 +108,7 @@ namespace KOAHome.Controllers
         }
 
         // chuyen bo loc len giao dien
-        ViewBag.ListFilterValue = objParameters;
+        ViewData["ListFilterValue"] = objParameters;
 
         // lay danh sach filter display cua report de xu ly
         var stopwatch = Stopwatch.StartNew();
@@ -129,11 +129,11 @@ namespace KOAHome.Controllers
         // tinh số cấp cha con của cột trong display report
         int displayParentLevelNum = _report.Display_GetReportMaxParentLevel(displayList);
         // chuyển cấu hình display lên giao diện để xử lý
-        ViewBag.displayList = displayList;
-        ViewBag.displayParentLevelNum = displayParentLevelNum;
+        ViewData["displayList"] = displayList;
+        ViewData["displayParentLevelNum"] = displayParentLevelNum;
 
         // xu ly bo loc filter
-        ViewBag.ListFilterConfig = filterList;
+        ViewData["ListFilterConfig"] = filterList;
         // doi voi cac filter co kieu select (select box, dropdownbox, tagbox,...), day cac bo select vao SelectListItem va đóng gói trong Dictionary để xử lý trên giao diện
         // Tạo Dictionary chứa SelectList cho từng dropdown (theo DynamicFieldName)
         var listFilterService = new Dictionary<string, List<SelectListItem>>();
@@ -141,17 +141,22 @@ namespace KOAHome.Controllers
         //Chuyển kết quả sang Dictionary<string, List<SelectListItem>>
         listFilterService = await _netService.NET_Service_GetListSelectListByFilter(filterList,objParameters);
         //  Gán danh sach select cho cac filter vào ViewBag
-        ViewBag.DynamicServiceSelectOptions = listFilterService;
+        ViewData["DynamicServiceSelectOptions"] = listFilterService;
+
+        // lấy danh sách action list detail theo object code là report code
+        var actionlistdetailList = await _action.NET_ActionListDetail_WithObject_Get(ReportCode, null, "REPORT");
+        // chuyển action list detail lên giao diện để xử lý
+        ViewData["actionlistdetailList"] = actionlistdetailList;
 
         // search
         stopwatch.Restart();
         var resultList = await _report.Report_search(objParameters, sqlContent, connectionString);
         stopwatch.Stop();
         _logger.LogInformation($"Query resultList executed in {stopwatch.ElapsedMilliseconds} ms");
-        ViewBag.resultList = resultList;
+        ViewData["resultList"] = resultList;
 
         //khai bao success
-        ViewBag.success = "Thành công";
+        ViewData["success"] = "Thành công";
 
         return View();
       }
@@ -176,7 +181,7 @@ namespace KOAHome.Controllers
         {
           return RedirectToAction("MiscError", "Pages");
         }
-        ViewBag.ReportCode = ReportCode;
+        ViewData["ReportCode"] = ReportCode;
 
         // lay thong tin report, va danh sach filter display cua report de xu ly
         var report = await _report.NET_Report_Get(ReportCode);
@@ -186,7 +191,7 @@ namespace KOAHome.Controllers
           return RedirectToAction("MiscError", "Pages", new { errorMessage = "Không tìm thấy bảng" });
         }
         // chuyen cau hinh report len giao dien de xu ly
-        ViewBag.report = report;
+        ViewData["report"] = report;
 
         string? connectionString = null;
         //neu datasourceId la null thi lay connectionString mac dinh
@@ -226,7 +231,7 @@ namespace KOAHome.Controllers
         }
 
         // chuyen bo loc len giao dien
-        ViewBag.ListFilterValue = objParameters;
+        ViewData["ListFilterValue"] = objParameters;
 
         // lay danh sach filter display cua report de xu ly
         var stopwatch = Stopwatch.StartNew();
@@ -247,11 +252,11 @@ namespace KOAHome.Controllers
         // tinh số cấp cha con của cột trong display report
         int displayParentLevelNum = _report.Display_GetReportMaxParentLevel(displayList);
         // chuyển cấu hình display lên giao diện để xử lý
-        ViewBag.displayList = displayList;
-        ViewBag.displayParentLevelNum = displayParentLevelNum;
+        ViewData["displayList"] = displayList;
+        ViewData["displayParentLevelNum"] = displayParentLevelNum;
 
         // xu ly bo loc filter
-        ViewBag.ListFilterConfig = filterList;
+        ViewData["ListFilterConfig"] = filterList;
         // doi voi cac filter co kieu select (select box, dropdownbox, tagbox,...), day cac bo select vao SelectListItem va đóng gói trong Dictionary để xử lý trên giao diện
         // Tạo Dictionary chứa SelectList cho từng dropdown (theo DynamicFieldName)
         var listFilterService = new Dictionary<string, List<SelectListItem>>();
@@ -259,7 +264,7 @@ namespace KOAHome.Controllers
         //Chuyển kết quả sang Dictionary<string, List<SelectListItem>>
         listFilterService = await _netService.NET_Service_GetListSelectListByFilter(filterList, objParameters);
         //  Gán danh sach select cho cac filter vào ViewBag
-        ViewBag.DynamicServiceSelectOptions = listFilterService;
+        ViewData["DynamicServiceSelectOptions"] = listFilterService;
 
 
         // doi voi cac display co kieu select (select box, dropdownbox, tagbox,...), day cac bo select vao SelectListItem va đóng gói trong Dictionary để xử lý trên giao diện
@@ -269,24 +274,24 @@ namespace KOAHome.Controllers
         //Chuyển kết quả sang Dictionary<string, List<SelectListItem>>
         listDisplayService = await _netService.NET_Service_GetListSelectListByDisplay(displayList, objParameters);
         //  Gán danh sach select cho cac display vào ViewBag
-        ViewBag.EditorDynamicServiceSelectOptions = listDisplayService;
+        ViewData["EditorDynamicServiceSelectOptions"] = listDisplayService;
 
         // search
         stopwatch.Restart();
         var resultList = await _report.Report_search(objParameters, sqlContent, connectionString);
         stopwatch.Stop();
         _logger.LogInformation($"Query resultList executed in {stopwatch.ElapsedMilliseconds} ms");
-        ViewBag.resultList = resultList;
+        ViewData["resultList"] = resultList;
 
         // neu co loi tu action POST tra ve thi bao loi
         if (TempData["ErrorMessage"] != null)
         {
-          ViewBag.ErrorMessage = TempData["ErrorMessage"];
+          ViewData["ErrorMessage"] = TempData["ErrorMessage"];
         }
         else
         {
           //khai bao success
-          ViewBag.success = "Thành công";
+          ViewData["success"] = "Thành công";
         }
 
         return View();
@@ -366,9 +371,6 @@ namespace KOAHome.Controllers
                         pair => (object)pair.Value.ToString()  // Ensure each value is a string (flatten StringValues)
                     );
 
-        //// gui form data len view de hien thi
-        //ViewBag.formData = formData;
-
         //xu ly report editor
         // Dictionary để nhóm dữ liệu theo số thứ tự [n]
         // Chuyển đổi dữ liệu sang JSON (loc du lieu form tra ve lay du lieu grid va chuyen thanh json)
@@ -385,7 +387,6 @@ namespace KOAHome.Controllers
         // khong tra ve Id, cung khong tra ve error message thi bao loi chua tra ve id
         else
         {
-          ViewBag.success = "Xử lý thành công"; // Gán vào ViewBag
           return Redirect($"{currentPath}?{queryString}");
         }
       }

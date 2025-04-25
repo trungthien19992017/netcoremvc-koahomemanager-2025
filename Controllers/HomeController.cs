@@ -20,8 +20,9 @@ public class HomeController : Controller
   private readonly IFormService _form;
   private readonly IActionService _action;
   private readonly IWidgetService _widget;
+  private readonly IDRDatasourceService _datasrc;
 
-  public HomeController(QLKCL_NEWContext db, ILogger<HomeController> logger, IHsBookingTableService book, IHsBookingServiceService bookser, IReportEditorService re, IAttachmentService att, IHsCustomerService cus, IReportService report, IFormService form, IActionService action, IWidgetService widget)
+  public HomeController(QLKCL_NEWContext db, ILogger<HomeController> logger, IHsBookingTableService book, IHsBookingServiceService bookser, IReportEditorService re, IAttachmentService att, IHsCustomerService cus, IReportService report, IFormService form, IActionService action, IWidgetService widget, IDRDatasourceService datasrc)
   {
     _db = db;
     _logger = logger;
@@ -34,6 +35,7 @@ public class HomeController : Controller
     _form = form;
     _action = action;
     _widget = widget;
+    _datasrc = datasrc;
   }
 
   // kiem tra loi khi xu ly luu du lieu
@@ -95,9 +97,19 @@ public class HomeController : Controller
         formData.Remove("sqlstore");
       }
 
+      // lay gia tri sql store tu ajax gui len
+      int? datasourceid = formData.ContainsKey("datasourceid") ? Convert.ToInt32(formData["datasourceid"]) : null;
+      string? connectionString = null;
+      //neu datasourceId la null thi lay connectionString mac dinh
+      if (datasourceid != null)
+      {
+        //lay connectionstring tu cau hinh form de goi store
+        connectionString = await _datasrc.GetConnectionString((int)datasourceid);
+      }
+      
 
       // xu ly luu form
-      var resultList = await _action.Action_store(formData, sqlstore, null);
+      var resultList = await _action.Action_store(formData, sqlstore, connectionString);
       //kiem tra du lieu success tra ve
       var success_return = resultList
       .Where(item => ((IDictionary<string, object>)item).ContainsKey("Success"))

@@ -45,7 +45,7 @@ namespace KOAHome.ViewComponents
       _con = con;
     }
 
-    public async Task<IViewComponentResult> InvokeAsync(int? id, string FormCode, string queryParams, bool? isReadOnly = false)
+    public async Task<IViewComponentResult> InvokeAsync([FromQuery] Dictionary<string, string> parameters, int? id, string FormCode, bool? isReadOnly = false)
     {
       try
       {
@@ -95,13 +95,8 @@ namespace KOAHome.ViewComponents
           return View("PopupForm");
         }
 
-        Dictionary<string, object> objParameters = new Dictionary<string, object>();
-        // nếu tồn tại query param thì chuyển thành dạng Dictionary
-        if (!string.IsNullOrWhiteSpace(queryParams))
-        {
-          // chuyen parameters cua duong dan thanh Idictionary<string, object>
-          objParameters = ParseDataHelper.ParseQueryParamsToDictionary(queryParams);
-        }
+        // chuyen parameters cua bo loc thanh Idictionary<string, object>
+        Dictionary<string, object> objParameters = parameters.ToDictionary(kvp => kvp.Key, kvp => (object)kvp.Value);
 
         // lay danh sach dynamic field cua form de xu ly
         var stopwatch = Stopwatch.StartNew();
@@ -122,7 +117,7 @@ namespace KOAHome.ViewComponents
         ViewData["DynamicServiceSelectOptions"] = config_formfieldService;
 
         //khai bao phan tu chua data
-        var formData = await _form.Form_sel(id, (id == 0 ? storeDefaultData : storeGetData), connectionString);
+        var formData = await _form.Form_sel(objParameters, id, (id == 0 ? storeDefaultData : storeGetData), connectionString);
         ViewData["formData"] = formData;
 
         // xu ly file

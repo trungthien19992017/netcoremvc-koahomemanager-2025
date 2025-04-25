@@ -2,20 +2,27 @@
 @using System.Text.Json
 @{
     Layout = "~/Views/Shared/_ContentNavbarLayout.cshtml";
-    var resultList = ViewBag.resultList as List<dynamic>;
+    var resultList = ViewData["resultList"] as List<dynamic>;
 
     // truyen cau hinh report de xu ly giao dien
-    var report = ViewBag.report as IDictionary<string, object>;
+    var report = ViewData["report"] as IDictionary<string, object>;
+    string ReportCode = ViewData["ReportCode"] as string;
 
     // truyen danh sach gia tri loc len giao dien
-    var listFilterValue = ViewBag.ListFilterValue as IDictionary<string, object>;
-    var listFilterConfig = ViewBag.ListFilterConfig as List<dynamic>;
-    var dynamicServiceSelectOptions = ViewBag.DynamicServiceSelectOptions as Dictionary<string, List<SelectListItem>>;
+    var listFilterValue = ViewData["ListFilterValue"] as IDictionary<string, object>;
+    var listFilterConfig = ViewData["ListFilterConfig"] as List<dynamic>;
+    var dynamicServiceSelectOptions = ViewData["DynamicServiceSelectOptions"] as Dictionary<string, List<SelectListItem>>;
 
     // truyen danh sach gia tri cot du lieu len giao dien
-    var displayList = ViewBag.displayList as List<dynamic>;
+    var displayList = ViewData["displayList"] as List<dynamic>;
     // tính cấp cha con display
-    int displayParentLevelNum = ViewBag.displayParentLevelNum;
+    int displayParentLevelNum = Convert.ToInt32(ViewData["displayParentLevelNum"]);
+
+    // truyen danh sach gia tri action du lieu len giao dien
+    var actionlistdetailList = ViewData["actionlistdetailList"] as List<dynamic>;
+    // phan biet action top va grid
+    var actionlistdetailList_top = actionlistdetailList.Where(p => p.IsTop == true).ToList();
+    var actionlistdetailList_grid = actionlistdetailList.Where(p => p.IsTop == null || p.IsTop == false).ToList();
 
     // tao bien dem de dem row num cho report
     var reportRowIndex = 1;
@@ -50,12 +57,23 @@
  
           $(document).on('click', '.popupform-action', function (e) {
               const $btn = $(this);
-              const id = $btn.data('id');
-              const formCode = $btn.data('formcode');
-              const isReadOnly = $btn.data('isReadOnly');
+              const actionlink = $btn.data('actionlink') ?? null;
+              const id = $btn.data('id') ?? "";
+              const formCode = $btn.data('formcode') ?? "";
+              const isReadOnly = $btn.data('isreadonly') ?? false;
               const queryParams = new URLSearchParams(window.location.search).toString(); // lấy full query string
 
-              const url = `/NETForm/PopupForm?id=${id}&FormCode=${formCode}&queryParams=${encodeURIComponent(queryParams)}&isReadOnly=${isReadOnly}`;
+              // có 2 cách lấy, 1 là lấy từ link, 2  là lấy từ form code và id
+              let url = ""
+              if (actionlink != null){
+                url = actionlink;
+                if (queryParams !== "") {
+                    url += (actionlink.includes('?') ? '&' : '?') + queryParams;
+                }
+              }
+              else{
+                url = `/form/popup-viewer/${formCode}/${id}?${queryParams}&isReadOnly=${isReadOnly}`;
+              }
 
               $('#modal-PopupForm').html('<div class="text-center">Đang tải...</div>');
 
@@ -71,8 +89,8 @@
 }
 @section success
 {
-    @if (ViewBag.success != null)
-    {
+    @if (ViewData["success"] != null)
+{
 
         <!-- Toast with Placements -->
         <div class="bs-toast toast  top-0 end-0 show toast-placement-ex1 m-2" style="position:absolute;" role="alert" aria-live="assertive" aria-atomic="true" data-bs-delay="2000">
@@ -81,7 +99,7 @@
                 <div class="me-auto fw-medium">Thông báo</div><small class="text-muted">1 giây trước</small>
                 <button type="button" class="btn-close" data-bs-dismiss="toast" aria-label="Close"></button>
             </div>
-            <div class="toast-body text-success">@ViewBag.success.</div>
+            <div class="toast-body text-success">@ViewData["success"].</div>
         </div>
         <!-- Toast with Placements -->
     }
@@ -89,7 +107,7 @@
 
 @section ErrorMessage
 {
-    @if (ViewBag.ErrorMessage != null)
+    @if (ViewData["ErrorMessage"] != null)
     {
         <!-- Toast with Placements -->
         <div class="bs-toast toast  top-0 end-0 show toast-placement-ex1 m-2" style="position:absolute;" role="alert" aria-live="assertive" aria-atomic="true" data-bs-delay="2000">
@@ -98,7 +116,7 @@
                 <div class="me-auto fw-medium">Thông báo</div><small class="text-muted">1 giây trước</small>
                 <button type="button" class="btn-close" data-bs-dismiss="toast" aria-label="Close"></button>
             </div>
-            <div class="toast-body text-danger">@ViewBag.ErrorMessage.</div>
+            <div class="toast-body text-danger">@ViewData["ErrorMessage"].</div>
         </div>
         <!-- Toast with Placements -->
     }
@@ -133,7 +151,7 @@
                                                 <div id="accordionOne" class="accordion-collapse collapse" data-bs-parent="#accordionExample">
                                                     <div class="accordion-body">
                                                         @* filter *@
-                                                        <form method="get" class="needs-validation" novalidate="" action="/report/viewer-utility/@ViewBag.ReportCode" enctype="multipart/form-data">
+                                                        <form method="get" class="needs-validation" novalidate="" action="/report/viewer-utility/@ReportCode" enctype="multipart/form-data">
                                                             @* report code mac dinh truyen vao bo loc *@
                                                             <div class="row gx-3 gy-2 align-items-center">
                                                                 @* xu ly filter dong *@
@@ -160,7 +178,7 @@
                                                                         else if (type == "SELECT BOX")
                                                                         {
                                                                             @* check selected cho item dung voi gia tri *@
-                                                                            var selectList = ViewBag.dynamicServiceSelectOptions[name] as List<SelectListItem> ?? new List<SelectListItem>();
+                                                                            var selectList = dynamicServiceSelectOptions[name] as List<SelectListItem> ?? new List<SelectListItem>();
                                                                             @foreach (var item in selectList)
                                                                             {
                                                                                 if (value != null)
@@ -173,6 +191,33 @@
                                                                                 { "class", "form-select color-dropdown form-select-sm" },
                                                                                 { "id", name },
                                                                                 { "name", name }
+                                                                            };
+
+                                                                            // neu bat buoc thi them truong bat buoc
+                                                                            if (filter.Required == true)
+                                                                            {
+                                                                                selectAttributes["required"] = "required";
+                                                                            }
+
+                                                                            @Html.DropDownList(name, selectList, "-- Chọn --", selectAttributes)
+                                                                        }
+                                                                        else if (type == "TREEVIEW MULTIPLE")
+                                                                        {
+                                                                            @* check selected cho item dung voi gia tri *@
+                                                                            var selectList = dynamicServiceSelectOptions[name] as List<SelectListItem> ?? new List<SelectListItem>();
+                                                                            @foreach (var item in selectList)
+                                                                            {
+                                                                                if (value != null)
+                                                                                {
+                                                                                  item.Selected = (item.Value.ToString() == value.ToString()); // currentValue là giá trị đang được chọn
+                                                                                }
+                                                                            }
+                                                                            var selectAttributes = new Dictionary<string, object>
+                                                                            {
+                                                                                { "class", "form-select color-dropdown form-select-sm" },
+                                                                                { "id", name },
+                                                                                { "name", name },
+                                                                                { "multiple", "multiple" }
                                                                             };
 
                                                                             // neu bat buoc thi them truong bat buoc
@@ -244,7 +289,7 @@
                                         <tr>
                                           @* neu display khong null thi tiep tuc *@
                                           @if (displayList != null)
-					                                {
+					                      {
                                               @* voi moi cot dang co *@
                                               @* neu cot isdisplay = false thi không hien thi (chỉ lấy giá trị)  *@
                                               @foreach (var display in displayList.Where(p=> p.IsDisplay == false).OrderBy(p => p.ColNum ?? 0).ToList())
@@ -252,15 +297,15 @@
                                                 <th class="text-center d-none" rowspan="@displayParentLevelNum" data-code="@display.Code" data-index="@(display.ColNum ?? "0")" data-isexport="@(display.IsExport ?? "True")">@Html.Raw(display.Name)</th>
                                               }
                                               @* hien thi cot stt dau tien neu co *@
-						                                  @foreach (var display in displayList.Where(p=> p.IsDisplay == true && p.Code == "stt" && p.IsParent == false && string.IsNullOrEmpty(p.ParentCode)).OrderBy(p => p.ColNum ?? 0).ToList())
+						                      @foreach (var display in displayList.Where(p=> p.IsDisplay == true && p.Code == "stt" && p.IsParent == false && string.IsNullOrEmpty(p.ParentCode)).OrderBy(p => p.ColNum ?? 0).ToList())
                                               {
                                                 @* co dinh cot neu co cau hinh (chi ap dung cho cot 1 rowspan) *@
                                                 <th class="text-center @(display.IsFreePane == true ? "freepanze-col" : "")" rowspan="@displayParentLevelNum" data-code="@display.Code" data-index="@(display.ColNum ?? "0")"  data-isexport="@(display.IsExport ?? "True")" style="min-width:@((display.Width ?? "200") + "px");@(display.CssHeader ?? "")">@Html.Raw(display.Name)</th>
                                               }
                                               @* them mot cot xu ly *@
-						                                  <th class="text-center" data-code="HandleColumn" data-index="2" rowspan="@displayParentLevelNum" data-isexport="False" style="width:50px" >Xử lý</th>
+						                        <th class="text-center" data-code="HandleColumn" data-index="2" rowspan="@displayParentLevelNum" data-isexport="False" style="width:50px" >Xử lý</th>
                                               @* neu cot khong co parent code cung khong phai is parent thi xu ly rieng *@
-						                                  @foreach (var display in displayList.Where(p=> p.IsDisplay == true && p.Code != "stt" && p.IsParent == false && string.IsNullOrEmpty(p.ParentCode)).OrderBy(p => p.ColNum ?? 0).ToList())
+						                      @foreach (var display in displayList.Where(p=> p.IsDisplay == true && p.Code != "stt" && p.IsParent == false && string.IsNullOrEmpty(p.ParentCode)).OrderBy(p => p.ColNum ?? 0).ToList())
                                               {
                                                 @* co dinh cot neu co cau hinh (chi ap dung cho cot 1 rowspan) *@
                                                 <th class="text-center @(display.IsFreePane == true ? "freepanze-col" : "")" rowspan="@displayParentLevelNum" data-code="@display.Code" data-index="@(display.ColNum ?? "0")"  data-isexport="@(display.IsExport ?? "True")" style="min-width:@((display.Width ?? "200") + "px");@(display.CssHeader ?? "")">@Html.Raw(display.Name)</th>
@@ -289,13 +334,13 @@
                                         <tr>
                                           @* neu display khong null thi tiep tuc *@
                                           @if (displayList != null)
-					                                {
+					                      {
                                               @* voi moi cot dang co *@
                                               @* neu ton tai cot co isparent thi xu ly tiep cot 2 cap *@
                                               @if (displayList.Any(p => p.IsParent == true))
                                               {
                                                 @* hien thi cot cha *@
-						                                    @foreach (var display in displayList.Where(p=> p.IsDisplay == true && p.IsParent == true).OrderBy(p => p.ColNum ?? 0).ToList())
+						                        @foreach (var display in displayList.Where(p=> p.IsDisplay == true && p.IsParent == true).OrderBy(p => p.ColNum ?? 0).ToList())
                                                 {
                                                   @* dem so cot con de tinh colspan *@
                                                   var countChild = displayList.Count(p => p.ParentCode == display.Code);
@@ -345,7 +390,7 @@
                                                     </td>
                                                 }
                                                 @* hien thi cot stt dau tien neu co *@
-					                                      @foreach (var display in displayList.Where(p=> p.IsDisplay == true && p.Code == "stt" && p.IsParent == false && string.IsNullOrEmpty(p.ParentCode)).OrderBy(p => p.ColNum ?? 0).ToList())
+					                            @foreach (var display in displayList.Where(p=> p.IsDisplay == true && p.Code == "stt" && p.IsParent == false && string.IsNullOrEmpty(p.ParentCode)).OrderBy(p => p.ColNum ?? 0).ToList())
                                                 {
                                                     @* neu isFreePane bang true thi them class freepanze-col *@
                                                     <td class="text-center @(display.IsFreePane == true ? "freepanze-col" : "")" data-isexport="@(display.IsExport ?? "True")">
@@ -363,39 +408,66 @@
                                                     </td>
                                                 }
                                                 @* them cot xu ly *@
-							                                  <td class="text-center" data-isexport="False"> 
+							                     <td class="text-center" data-isexport="False"> 
                                                   <div class="demo-inline-spacing">
                                                     <div class="btn-group" id="dropdown-icon-demo">
                                                       <button type="button" class="btn btn-primary btn-xs dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false"><i class="ri-align-justify me-1"></i></button>
                                                       <ul class="dropdown-menu overflow-auto" style="max-height:200px">
-                                                        <li>
-                                                          <a asp-controller="NETForm" asp-action="Viewer" asp-route-formCode="F0_HS_Booking1" asp-route-id="@Id" class="dropdown-item"><i class="ri-pencil-line me-1 text-primary"></i> Chỉnh sửa</a>
-                                                        </li>
-                                                        <li>
-                                                          <a asp-controller="NETForm" asp-action="Viewer" asp-route-formCode="F0_HS_Booking1" asp-route-id="@Id" asp-route-isReadOnly="true" class="dropdown-item"><i class="ri-eye-line me-1 text-primary"></i> Xem</a>
-                                                        </li>
-                                                        <li>
-                                                          <a asp-action="XacNhanThanhToan" asp-route-id="@Id" class="dropdown-item"><i class="ri-check-line me-1 text-primary"></i> Xác nhận đã thanh toán</a>
-                                                        </li>
-                                                        <li>
-                                                          <a asp-action="DichVuPhatSinh" asp-route-id="@Id" class="dropdown-item"><i class="ri-add-line me-1 text-primary"></i> Dịch vụ phát sinh</a>
-                                                        </li>
-                                                        <li>
-                                                          <a href="" data-bs-toggle="modal" data-bs-target="#modal-PopupForm" data-formCode="F0_HS_Booking1" data-id="@Id" class="dropdown-item popupform-action"><i class="ri-money-dollar-box-line me-1 text-primary"></i> Giảm giá phát sinh</a>
+                                                        @foreach(var action in actionlistdetailList_grid.OrderBy(p=> p.ActionListDetailOrderId).ToList())
+                                                        {
+                                                          var actionDict = (IDictionary<string, object>)action;
+                                                          string actionName = actionDict.ContainsKey("ActionName") ? (actionDict["ActionName"].ToString() ?? "") : "";
+                                                          string actionIcon = actionDict.ContainsKey("ActionIcon") ? (actionDict["ActionIcon"].ToString() ?? "") : "";
+                                                          string actionType = actionDict["Type"].ToString() ?? "";
+                                                          string actionValue = actionDict["Value"].ToString() ?? "";
 
-                                                        </li>
-                                                        <li>
-                                                          <a href="" data-bs-toggle="modal" data-bs-target="#modal-PopupForm" data-formCode="F0_HS_Booking1_Cancel" data-id="@Id" class="dropdown-item popupform-action"><i class="ri-close-line me-1 text-primary"></i> Hủy phòng</a>
-                                                        </li>
-                                                        <li>
-                                                          <a href="" data-id="@Id" data-confirmtext="Bạn có chắc chắn muốn xóa khum?" data-sqlstore="HS_Booking1_del" class="dropdown-item confirmAction"><i class="ri-delete-bin-6-line me-1 text-primary"></i> Xóa</a>
-                                                        </li>
+                                                          if (actionType == "LINK")
+                                                          {
+                                                            string url = ParseDataHelper.GetReplaceLinkWithResult(actionValue, dictionary);
+                                                            <li>
+                                                                <a href="@url" class="dropdown-item"><i class="@(actionIcon + " me-1 text-primary")"></i> @actionName</a>
+                                                            </li>
+                                                          }
+                                                          else if (actionType == "STORE")
+                                                          {
+                                                            string actionStore = actionValue;
+                                                            // cac thong tin xac nhan, neu co thi truyen vao action
+                                                            bool isPopupConfirm = Convert.ToBoolean(actionDict["IsPopupConfirm"]);
+                                                            int? dataSourceID  = actionDict.TryGetValue("DataSourceID", out var num) && num is int val ? Convert.ToInt32(num) : null;
+                                                            string confirmButtonText = !string.IsNullOrWhiteSpace(actionDict["ConfirmButtonText"].ToString()) ? actionDict["ConfirmButtonText"].ToString() : null;
+                                                            string confirmTitle = !string.IsNullOrWhiteSpace(actionDict["ConfirmTitle"].ToString()) ? actionDict["ConfirmTitle"].ToString() : null;
+                                                            string confirmText = !string.IsNullOrWhiteSpace(actionDict["ConfirmText"].ToString()) ? actionDict["ConfirmText"].ToString() : null;
+                                                            <li>
+                                                              @if (isPopupConfirm){
+                                                                <a href="" data-id="@Id" data-isconfirm="@isPopupConfirm" data-confirmtext="@confirmText" data-confirmtitle ="@confirmTitle" data-confirmbutton ="@confirmButtonText" data-sqlstore="@actionStore" data-datasourceid="@dataSourceID" class="dropdown-item confirmAction"><i class="@(actionIcon + " me-1 text-primary")"></i> @actionName</a>
+                                                              }
+                                                              else{
+                                                                <a href="" data-id="@Id" data-sqlstore="@actionStore" data-datasourceid="@dataSourceID" class="dropdown-item confirmAction"><i class="@(actionIcon + " me-1 text-primary")"></i> @actionName</a>
+                                                              }
+                                                            </li>
+                                                          }
+                                                          else if (actionType == "POPUPFORM")
+                                                          {
+                                                            var popupDictValue = ParseDataHelper.GetReplacePopupLinkWithResult(actionValue, dictionary);
+                                                            string actionFormCode = popupDictValue.ContainsKey("FORMCODE") ? popupDictValue["FORMCODE"].ToString() ?? "" : "";
+                                                            string actionLink = popupDictValue.ContainsKey("LINK") ? popupDictValue["LINK"].ToString() ?? "" : "";
+                                                            <li>
+                                                              <a href="" data-bs-toggle="modal" data-bs-target="#modal-PopupForm" data-actionlink = "@actionLink" class="dropdown-item popupform-action"><i class="@(actionIcon + " me-1 text-primary")"></i> @actionName</a>
+                                                            </li>
+                                                          }
+                                                          else
+                                                          {
+                                                            <li>
+                                                                <a asp-action="DichVuPhatSinh" asp-route-id="@Id" class="dropdown-item"><i class="@(actionIcon + " me-1 text-primary")"></i> @actionName</a>
+                                                            </li>
+                                                          }
+                                                        }
                                                       </ul>
                                                     </div>
                                                   </div>
-							                                  </td>
+							                    </td>
                                                 @* neu cot khong co parent code cung khong phai is parent thi xu ly rieng *@
-					                                      @foreach (var display in displayList.Where(p=> p.IsDisplay == true && p.Code != "stt" && p.IsParent == false && string.IsNullOrEmpty(p.ParentCode)).OrderBy(p => p.ColNum ?? 0).ToList())
+					                            @foreach (var display in displayList.Where(p=> p.IsDisplay == true && p.Code != "stt" && p.IsParent == false && string.IsNullOrEmpty(p.ParentCode)).OrderBy(p => p.ColNum ?? 0).ToList())
                                                 {
                                                     var displayType = display.Type as string ?? "link";
                                                     var displayFormat = display.Format as string ?? "";
@@ -417,7 +489,7 @@
                                                                 // neu kieu du lieu cua value la boolean thi su dung check box
                                                                 @if (valueType == "System.Boolean")
                                                                 {
-									                                                  <input type="checkbox" @(Convert.ToBoolean(value) ? "checked" : "") disabled />
+									                                <input type="checkbox" @(Convert.ToBoolean(value) ? "checked" : "") disabled />
                                                 
                                                                 }
                                                                 else if (displayType == "icons")

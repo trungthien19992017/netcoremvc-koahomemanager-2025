@@ -2,23 +2,24 @@
 @using System.Text.Json
 @{
     Layout = "~/Views/Shared/_ContentNavbarLayout.cshtml";
-    var resultList = ViewBag.resultList as List<dynamic>;
+    var resultList = ViewData["resultList"] as List<dynamic>;
 
     // truyen cau hinh report de xu ly giao dien
-    var report = ViewBag.report as IDictionary<string, object>;
+    var report = ViewData["report"] as IDictionary<string, object>;
+    string ReportCode = ViewData["ReportCode"] as string;
 
     // truyen danh sach gia tri loc len giao dien
-    var listFilterValue = ViewBag.ListFilterValue as IDictionary<string, object>;
-    var listFilterConfig = ViewBag.ListFilterConfig as List<dynamic>;
+    var listFilterValue = ViewData["ListFilterValue"] as IDictionary<string, object>;
+    var listFilterConfig = ViewData["ListFilterConfig"] as List<dynamic>;
     // danh sách select list chứa danh mục của các selectbox, radio, dropdownbox thuoc filter
-    var dynamicServiceSelectOptions = ViewBag.DynamicServiceSelectOptions as Dictionary<string, List<SelectListItem>>;
+    var dynamicServiceSelectOptions = ViewData["DynamicServiceSelectOptions"] as Dictionary<string, List<SelectListItem>>;
     // danh sách select list chứa danh mục của các selectbox, radio, dropdownbox thuoc display editor
-    var editorDynamicServiceSelectOptions = ViewBag.EditorDynamicServiceSelectOptions as Dictionary<string, List<SelectListItem>>;
+    var editorDynamicServiceSelectOptions = ViewData["EditorDynamicServiceSelectOptions"] as Dictionary<string, List<SelectListItem>>;
 
     // truyen danh sach gia tri cot du lieu len giao dien
-    var displayList = ViewBag.displayList as List<dynamic>;
+    var displayList = ViewData["displayList"] as List<dynamic>;
     // tính cấp cha con display
-    int displayParentLevelNum = ViewBag.displayParentLevelNum;
+    int displayParentLevelNum = Convert.ToInt32(ViewData["displayParentLevelNum"]);
 
     // tao bien dem de dem row num cho report
     var reportRowIndex = 1;
@@ -105,7 +106,7 @@
 }
 @section success
 {
-    @if (ViewBag.success != null)
+    @if (ViewData["success"] != null)
     {
 
         <!-- Toast with Placements -->
@@ -115,7 +116,7 @@
                 <div class="me-auto fw-medium">Thông báo</div><small class="text-muted">1 giây trước</small>
                 <button type="button" class="btn-close" data-bs-dismiss="toast" aria-label="Close"></button>
             </div>
-            <div class="toast-body text-success">@ViewBag.success.</div>
+            <div class="toast-body text-success">@ViewData["success"].</div>
         </div>
         <!-- Toast with Placements -->
     }
@@ -123,7 +124,7 @@
 
 @section ErrorMessage
 {
-    @if (ViewBag.ErrorMessage != null)
+    @if (ViewData["ErrorMessage"] != null)
     {
         <!-- Toast with Placements -->
         <div class="bs-toast toast  top-0 end-0 show toast-placement-ex1 m-2" style="position:absolute;" role="alert" aria-live="assertive" aria-atomic="true" data-bs-delay="2000">
@@ -132,7 +133,7 @@
                 <div class="me-auto fw-medium">Thông báo</div><small class="text-muted">1 giây trước</small>
                 <button type="button" class="btn-close" data-bs-dismiss="toast" aria-label="Close"></button>
             </div>
-            <div class="toast-body text-danger">@ViewBag.ErrorMessage.</div>
+            <div class="toast-body text-danger">@ViewData["ErrorMessage"].</div>
         </div>
         <!-- Toast with Placements -->
     }
@@ -167,7 +168,7 @@
                                                 <div id="accordionOne" class="accordion-collapse collapse" data-bs-parent="#accordionExample">
                                                     <div class="accordion-body">
                                                         @* filter *@
-                                                        <form method="get" class="needs-validation" novalidate="" action="/report/editor-utility/@ViewBag.ReportCode" enctype="multipart/form-data">
+                                                        <form method="get" class="needs-validation" novalidate="" action="/report/editor-utility/@ReportCode" enctype="multipart/form-data">
                                                             @* report code mac dinh truyen vao bo loc *@
                                                             <div class="row gx-3 gy-2 align-items-center">
                                                                 @* xu ly filter dong *@
@@ -194,7 +195,7 @@
                                                                         else if (type == "SELECT BOX")
                                                                         {
                                                                             @* check selected cho item dung voi gia tri *@
-                                                                            var selectList = ViewBag.dynamicServiceSelectOptions[name] as List<SelectListItem> ?? new List<SelectListItem>();
+                                                                            var selectList = dynamicServiceSelectOptions[name] as List<SelectListItem> ?? new List<SelectListItem>();
                                                                             @foreach (var item in selectList)
                                                                             {
                                                                                 if (value != null)
@@ -244,7 +245,7 @@
                             </div>
                             @* end filter *@
                             @* form xu ly luu editor *@
-                            <form id="create-form" class="needs-validation" novalidate="" method="post" asp-controller="NETReport" asp-action="Editor_Utility" asp-route-reportCode="@ViewBag.ReportCode" enctype="multipart/form-data">
+                            <form id="create-form" class="needs-validation" novalidate="" method="post" asp-controller="NETReport" asp-action="Editor_Utility" asp-route-reportCode="@ReportCode" enctype="multipart/form-data">
                               <div class="card-body">
                                     @* action top *@
                                     <div class="gx-3 gy-2 align-items-center report-top-action">
@@ -571,7 +572,7 @@
                                                                                 else if (displayType == "combobox")
                                                                                 {
                                                                                     // check selected cho item dung voi gia tri
-                                                                                    var selectList = ViewBag.editorDynamicServiceSelectOptions[display.Code] as List<SelectListItem> ?? new List<SelectListItem>();
+                                                                                    var selectList = editorDynamicServiceSelectOptions[display.Code] as List<SelectListItem> ?? new List<SelectListItem>();
                                                                                     @foreach (var item in selectList)
                                                                                     {
                                                                                         if (value != null)
@@ -596,7 +597,7 @@
                                                                                 else if (displayType == "radio")
                                                                                 {
                                                                                     // check selected cho item dung voi gia tri
-                                                                                    var selectList = ViewBag.editorDynamicServiceSelectOptions[display.Code] as List<SelectListItem> ?? new List<SelectListItem>();
+                                                                                    var selectList = editorDynamicServiceSelectOptions[display.Code] as List<SelectListItem> ?? new List<SelectListItem>();
 
                                                                                     @if (selectList != null)
                                                                                     {
@@ -778,7 +779,7 @@
                                                                                             else if (displayType == "combobox")
                                                                                             {
                                                                                                 // check selected cho item dung voi gia tri
-                                                                                                var selectList = ViewBag.editorDynamicServiceSelectOptions[displaychild.Code] as List<SelectListItem> ?? new List<SelectListItem>();
+                                                                                                var selectList = editorDynamicServiceSelectOptions[displaychild.Code] as List<SelectListItem> ?? new List<SelectListItem>();
                                                                                                 @foreach (var item in selectList)
                                                                                                 {
                                                                                                     if (value != null)
@@ -803,7 +804,7 @@
                                                                                             else if (displayType == "radio")
                                                                                             {
                                                                                                 // check selected cho item dung voi gia tri
-                                                                                                var selectList = ViewBag.editorDynamicServiceSelectOptions[displaychild.Code] as List<SelectListItem> ?? new List<SelectListItem>();
+                                                                                                var selectList = editorDynamicServiceSelectOptions[displaychild.Code] as List<SelectListItem> ?? new List<SelectListItem>();
 
                                                                                                 @if (selectList != null)
                                                                                                 {

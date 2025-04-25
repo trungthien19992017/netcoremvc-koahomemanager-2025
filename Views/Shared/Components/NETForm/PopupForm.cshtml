@@ -10,8 +10,10 @@
     var config_form = ViewData["config_form"] as IDictionary<string, object>;
     var config_formOptions = null as IDictionary<string, object>;
     var form_colCount = 3;
+    string formTitle = "";
     if (config_form != null)
     {
+        formTitle = config_form.ContainsKey("FormTitle") ? config_form["FormTitle"].ToString() : "Thông tin";
         config_formOptions = ParseDataHelper.ParseOptionsToDictionary(config_form.ContainsKey("Options") ? config_form["Options"].ToString() : "{}");
         // mac dinh col count cua form = 3
         form_colCount = config_formOptions.ContainsKey("colCount") ? Convert.ToInt32(config_formOptions["colCount"]) : 3;
@@ -79,7 +81,7 @@
 <div class="modal-dialog modal-xl modal-dialog-centered" role="document">
     <div class="modal-content card mb-6">
         <div class="modal-header">
-            <h5 class="modal-title card-header" id="modalCenterTitle">GIẢM GIÁ PHÁT SINH</h5>
+            <h5 class="modal-title card-header" id="modalCenterTitle">@formTitle</h5>
             <button type="button"
                     class="btn-close"
                     data-bs-dismiss="modal"
@@ -228,7 +230,7 @@
                                                         @foreach (var item in selectList)
                                                         {
                                                             <option value="@item.Value"
-                                                                    selected="@(item.Value.ToString() == child_value.ToString() ? "selected" : null)">
+                                                                    selected="@(item.Value.ToString() == (child_value ?? "").ToString() ? "selected" : null)">
                                                                 @item.Text
                                                             </option>
                                                         }
@@ -249,7 +251,7 @@
                                                             @foreach (var item in selectList)
                                                             {
                                                                 <option value="@item.Value"
-                                                                        selected="@(item.Value.ToString() == child_value.ToString() ? "selected" : null)">
+                                                                        selected="@(item.Value.ToString() == (child_value ?? "").ToString() ? "selected" : null)">
                                                                     @item.Text
                                                                 </option>
                                                             }
@@ -562,7 +564,7 @@
                                               @foreach (var item in selectList)
                                               {
                                                   <option value="@item.Value"
-                                                          selected="@(item.Value.ToString() == value.ToString() ? "selected" : null)">
+                                                          selected="@(item.Value.ToString() == (value ?? "").ToString() ? "selected" : null)">
                                                       @item.Text
                                                   </option>
                                               }
@@ -583,7 +585,7 @@
                                                   @foreach (var item in selectList)
                                                   {
                                                       <option value="@item.Value"
-                                                              selected="@(item.Value.ToString() == value.ToString() ? "selected" : null)">
+                                                              selected="@(item.Value.ToString() == (value ?? "").ToString() ? "selected" : null)">
                                                           @item.Text
                                                       </option>
                                                   }
@@ -866,8 +868,8 @@
             function initSelect2() {
               debugger;
               // không áp dụng cho Quiff HTML editor
-                $("select") .not(".ql-toolbar select, .ql-container select, .ql-editor select").not(".select2-hidden-accessible").select2({
-                    placeholder: "Chọn",
+            $("select") .not(".ql-toolbar select, .ql-container select, .ql-editor select").not(".select2-hidden-accessible").not(".dataTables_length select").select2({
+                placeholder: "Chọn",
                     allowClear: true,
                     width: "100%"
                 });
@@ -878,6 +880,7 @@
 
         });
 
+        // xử lý form popup
          $(document).ready(function () {
             const urlParams = new URLSearchParams(window.location.search);
             const hiddenDiv = document.getElementById("hiddenInputs");
@@ -952,6 +955,32 @@
           });
         });
 
+        // sau khi load, tu dong cap nhat format date
+        $(document).ready(function () {
+            // Lấy tất cả các input có type="date" hoặc "datetime-local"
+            $('input[type="date"], input[type="datetime-local"]').each(function () {
+                let originalValue = $(this).attr('value');
 
+                if (originalValue) {
+                    if ($(this).attr("type") === "date") {
+                        // Kiểm tra xem đã đúng định dạng YYYY-MM-DD chưa
+                        let isoDateRegex = /^\d{4}-\d{2}-\d{2}$/;
+                        if (!isoDateRegex.test(originalValue)) {
+                            let formattedDate = moment(originalValue, ["M/D/YYYY h:mm:ss A", "DD/MM/YYYY", "YYYY-MM-DD"]).format("YYYY-MM-DD");
+                            $(this).val(formattedDate); // Điền trực tiếp vào value
+                            $(this).attr("value", formattedDate); // Cập nhật lại giá trị trong HTML
+                        }
+                    } else if ($(this).attr("type") === "datetime-local") {
+                        // Kiểm tra xem đã đúng định dạng YYYY-MM-DDTHH:mm chưa
+                        let isoDateTimeRegex = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}$/;
+                        if (!isoDateTimeRegex.test(originalValue)) {
+                            let formattedDateTime = moment(originalValue, ["M/D/YYYY h:mm:ss A", "DD/MM/YYYY HH:mm:ss", "YYYY-MM-DDTHH:mm:ss"]).format("YYYY-MM-DDTHH:mm");
+                            $(this).val(formattedDateTime); // Điền trực tiếp vào value
+                            $(this).attr("value", formattedDateTime); // Cập nhật lại giá trị trong HTML
+                        }
+                    }
+                }
+            });
+        });
 
     </script>
