@@ -34,28 +34,6 @@
             const module = await import(`${modulePath}?v=${Date.now()}`);
             console.log("Reloaded module:", module);
         }
-
-
-        $(document).ready(function () {
-            $("#menuTop #menuTopNavbar .nav-item").click(async function (e) {
-                e.preventDefault();
-
-                // Remove active class từ tất cả menu top
-                $(".nav-item").removeClass("isActive");
-
-                // Thêm active class vào item được chọn
-                $(this).addClass("isActive");
-
-                // Lấy giá trị của menu được chọn
-                var menu = $(this).data("menu");
-
-                // Load Partial View của menu left tương ứng
-                $("#menuLeft").load("/Home/LoadVerticalNavbar?menu=" + menu, async function () {
-                    // Reload helpers.js
-                    reloadESModule("/vendor/js/helpers.js");
-                });
-            });
-        });
     </script>
 }
 
@@ -76,13 +54,10 @@
     <!-- Layout page -->
     <div class="layout-page">
       <!-- Navbar -->
-    <!-- Menu Top -->
-    <div id="menuTop">
       @if (@ViewData["isNavbar"] != null && Convert.ToBoolean(@ViewData["isNavbar"]))
       {
         @await Html.PartialAsync("Sections/Navbar/_Navbar")
       }
-    </div>
       <!-- / Navbar -->
 
 

@@ -1,0 +1,785 @@
+@using KOAHome.Helpers
+@using System.Text.Json
+@{
+    var resultList = ViewData["resultList"] as List<dynamic>;
+
+    // truyen cau hinh report de xu ly giao dien
+    var report = ViewData["report"] as IDictionary<string, object>;
+    string ReportCode = ViewData["ReportCode"] as string;
+
+    // truyen danh sach gia tri loc len giao dien
+    var listFilterValue = ViewData["ListFilterValue"] as Dictionary<string, object>;
+    var listFilterConfig = ViewData["ListFilterConfig"] as List<dynamic>;
+
+
+    // danh sách select list chứa danh mục của các selectbox, radio, dropdownbox thuoc filter
+    var dynamicServiceSelectOptions = ViewData["DynamicServiceSelectOptions"] as Dictionary<string, List<SelectListItem>>;
+    // danh sách select list chứa danh mục của các selectbox, radio, dropdownbox thuoc display editor
+    var editorDynamicServiceSelectOptions = ViewData["EditorDynamicServiceSelectOptions"] as Dictionary<string, List<SelectListItem>>;
+
+    // truyen danh sach gia tri cot du lieu len giao dien
+    var displayList = ViewData["displayList"] as List<dynamic>;
+    // tính cấp cha con display
+    int displayParentLevelNum = ViewData.ContainsKey("displayParentLevelNum") ? Convert.ToInt32(ViewData["displayParentLevelNum"]) : 1;
+
+    // truyen danh sach gia tri action du lieu len giao dien
+    var actionlistdetailList = ViewData["actionlistdetailList"] as List<dynamic>;
+
+    var actionlistdetailList_top = null as List<dynamic>;
+    var actionlistdetailList_grid = null as List<dynamic>;
+    // neu ton tai action list detail
+    if (actionlistdetailList != null)
+    {
+        // phan biet action top va grid
+        actionlistdetailList_top = actionlistdetailList.Where(p => p.IsTop == true).ToList();
+        actionlistdetailList_grid = actionlistdetailList.Where(p => p.IsTop == null || p.IsTop == false).ToList();
+    }
+
+    // tao bien dem de dem row num cho report
+    var reportRowIndex = 1;
+
+}
+            <div>
+              @* table *@
+              <div class="card mb-6">
+                  <div class="card-body" id="vertical-example">
+                    @* boc cac thanh phan cua table lai *@
+                    <div id="@("table-viewer-" + (ReportCode ?? "emptycode") + "-wrap")">
+                    @* action top *@
+                    <div class="gx-3 gy-2 align-items-center report-top-action">
+                    </div>
+                    @* end action top *@
+                    <div class="d-flex justify-content-between align-items-center mt-3">
+                        @* hien thi so dong duoc hien thi *@
+                        <div class="report-info d-flex gap-2"></div>
+                    </div>
+                    <div class="table-responsive" style="max-height: 400px">
+                      <table id="@("table-viewer-" + (ReportCode ?? "emptycode"))" id="@("table-viewer-" + (ReportCode ?? "emptycode"))" data-table-displayname="@(report.ContainsKey("Name") ? (report["Name"].ToString() ?? "Danh sách") : "Danh sách")" border="1" cellpadding="5" cellspacing="0" style="width: 100%; text-align: center; table-layout: auto;" class="table table-sm table-bordered table-hover display table-with-exportexcel">
+                        <thead class="freepanze-head">
+                            <tr>
+                              @* neu display khong null thi tiep tuc *@
+                              @if (displayList != null)
+					          {
+                                  @* voi moi cot dang co *@
+                                  @* neu cot isdisplay = false thi không hien thi (chỉ lấy giá trị)  *@
+                                  @foreach (var display in displayList.Where(p=> p.IsDisplay == false).OrderBy(p => p.ColNum ?? 0).ToList())
+                                  {
+                                    <th class="text-center d-none" rowspan="@displayParentLevelNum" data-code="@display.Code" data-index="@(display.ColNum ?? "0")" data-isexport="@(display.IsExport ?? "True")">@Html.Raw(display.Name)</th>
+                                  }
+                                  @* hien thi cot stt dau tien neu co *@
+						          @foreach (var display in displayList.Where(p=> p.IsDisplay == true && p.Code == "stt" && p.IsParent == false && string.IsNullOrEmpty(p.ParentCode)).OrderBy(p => p.ColNum ?? 0).ToList())
+                                  {
+                                    @* co dinh cot neu co cau hinh (chi ap dung cho cot 1 rowspan) *@
+                                    <th class="text-center @(display.IsFreePane == true ? "freepanze-col" : "")" rowspan="@displayParentLevelNum" data-code="@display.Code" data-index="@(display.ColNum ?? "0")"  data-isexport="@(display.IsExport ?? "True")" style="min-width:@((display.Width ?? "200") + "px");@(display.CssHeader ?? "")">@Html.Raw(display.Name)</th>
+                                  }
+                                  @* them mot cot xu ly *@
+						            <th class="text-center" data-code="HandleColumn" data-index="2" rowspan="@displayParentLevelNum" data-isexport="False" style="width:50px" >Xử lý</th>
+                                  @* neu cot khong co parent code cung khong phai is parent thi xu ly rieng *@
+						          @foreach (var display in displayList.Where(p=> p.IsDisplay == true && p.Code != "stt" && p.IsParent == false && string.IsNullOrEmpty(p.ParentCode)).OrderBy(p => p.ColNum ?? 0).ToList())
+                                  {
+                                    @* co dinh cot neu co cau hinh (chi ap dung cho cot 1 rowspan) *@
+                                    <th class="text-center @(display.IsFreePane == true ? "freepanze-col" : "")" rowspan="@displayParentLevelNum" data-code="@display.Code" data-index="@(display.ColNum ?? "0")"  data-isexport="@(display.IsExport ?? "True")" style="min-width:@((display.Width ?? "200") + "px");@(display.CssHeader ?? "")">@Html.Raw(display.Name)</th>
+                                  }
+                                  @* neu ton tai cot co isparent thi xu ly tiep cot 2 cap *@
+                                  @if (displayList.Any(p => p.IsParent == true))
+                                  {
+                                    @* hien thi cot cha *@
+						                        @foreach (var display in displayList.Where(p=> p.IsDisplay == true && p.IsParent == true).OrderBy(p => p.ColNum ?? 0).ToList())
+                                    {
+                                      @* dem so cot con de tinh colspan *@
+                                      var countChild = displayList.Count(p => p.ParentCode == display.Code);
+                                      @* neu co cot con thi xu ly tiep *@
+                                      if (countChild > 0)
+                                      {
+                                        <th class="text-center" colspan="@countChild"  data-code="@display.Code"  data-isexport="@(display.IsExport ?? "True")" style="@(display.CssHeader ?? "")">@Html.Raw(display.Name)</th>
+                                      }
+                              
+                                    }
+                                  }
+                              }
+                            </tr>
+                              @* neu co cap cha con thi tiep tuc *@
+                            @if (displayParentLevelNum > 1)
+                            {
+                            <tr>
+                              @* neu display khong null thi tiep tuc *@
+                              @if (displayList != null)
+					          {
+                                  @* voi moi cot dang co *@
+                                  @* neu ton tai cot co isparent thi xu ly tiep cot 2 cap *@
+                                  @if (displayList.Any(p => p.IsParent == true))
+                                  {
+                                    @* hien thi cot cha *@
+						            @foreach (var display in displayList.Where(p=> p.IsDisplay == true && p.IsParent == true).OrderBy(p => p.ColNum ?? 0).ToList())
+                                    {
+                                      @* dem so cot con de tinh colspan *@
+                                      var countChild = displayList.Count(p => p.ParentCode == display.Code);
+                                      @* neu co cot con thi xu ly tiep *@
+                                      @if (countChild > 0)
+                                      {
+                                        @foreach (var displaychild in displayList.Where(p=> p.IsDisplay == true && p.ParentCode == display.Code).OrderBy(p => p.ColNum ?? 0).ToList())
+                                        {
+                                            <th class="text-center" data-code="@display.Code" data-index="@(displaychild.ColNum ?? "0")" data-isexport="@(displaychild.IsExport ?? "True")" style="min-width:@(displaychild.Width ?? "200")px;@(displaychild.CssHeader ?? "")">@Html.Raw(displaychild.Name)</th>
+                                        }
+                                      }
+                              
+                                    }
+                                  }
+                              }
+                            </tr>
+                            }
+                        </thead>
+                          <tbody class="overflow-auto">
+                              @if (resultList != null && displayList != null)
+                              {
+                                @* voi moi dong resultlist *@
+                                @foreach (var result in resultList)
+                                {
+                                    var dictionary = (IDictionary<string, object>)result;
+                                    var Id = dictionary.ContainsKey("Id") ? Convert.ToInt32(dictionary["Id"]) : 0;
+                                    @* lay gia tri to mau background row (BGColorRowClass) *@
+                                    var bgColorRowClass = dictionary.ContainsKey("BGColorRowClass") ? Convert.ToString(dictionary["BGColorRowClass"]) : "";
+
+                                    <tr class="@bgColorRowClass">
+                                    @* voi moi cot dang co *@
+                                    @* neu cot isdisplay = false thi khong hien thi  *@
+                                    @foreach (var display in displayList.Where(p=> p.IsDisplay == false).OrderBy(p => p.ColNum ?? 0).ToList())
+                                    {
+                                        <td class="@FormatHelper.ParseTextAlignToClass(display.TextAlign) d-none" data-isexport="@(display.IsExport ?? "True")">
+                                            @{
+                                                object value;
+                                                if (dictionary.TryGetValue(display.Code, out value))
+                                                {
+                                                    @Html.Raw(value)
+                                                }
+                                                else
+                                                {
+                                                    <span class="text-muted">N/A</span> @* Giá trị mặc định *@
+                                                }
+                                            }
+                                        </td>
+                                    }
+                                    @* hien thi cot stt dau tien neu co *@
+					                @foreach (var display in displayList.Where(p=> p.IsDisplay == true && p.Code == "stt" && p.IsParent == false && string.IsNullOrEmpty(p.ParentCode)).OrderBy(p => p.ColNum ?? 0).ToList())
+                                    {
+                                        @* neu isFreePane bang true thi them class freepanze-col *@
+                                        <td class="text-center @(display.IsFreePane == true ? "freepanze-col" : "")" data-isexport="@(display.IsExport ?? "True")">
+                                            @{
+                                                object value;
+                                                if (dictionary.TryGetValue(display.Code, out value))
+                                                {
+                                                    @Html.Raw(value);
+                                                }
+                                                else
+                                                {
+                                                    <span class="text-muted">N/A</span> @* Giá trị mặc định *@
+                                                }
+                                            }
+                                        </td>
+                                    }
+                                    @* them cot xu ly *@
+							          <td class="text-center" data-isexport="False"> 
+                                      <div class="demo-inline-spacing">
+                                        <div class="btn-group" id="dropdown-icon-demo">
+                                          <button type="button" class="btn btn-primary btn-xs dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false"><i class="ri-align-justify me-1"></i></button>
+                                          <ul class="dropdown-menu overflow-auto" style="max-height:200px">
+                                            @foreach(var action in actionlistdetailList_grid.OrderBy(p=> p.ActionListDetailOrderId).ToList())
+                                            {
+                                              var actionDict = (IDictionary<string, object>)action;
+                                              string actionName = actionDict.ContainsKey("ActionName") ? (actionDict["ActionName"].ToString() ?? "") : "";
+                                              string actionCode = actionDict.ContainsKey("ActionCode") ? (actionDict["ActionCode"].ToString() ?? "") : "";
+                                              bool actionIsTop = actionDict.ContainsKey("IsTop") ? Convert.ToBoolean(actionDict["IsTop"]) : false;
+                                              string actionIcon = actionDict.ContainsKey("ActionIcon") ? (actionDict["ActionIcon"].ToString() ?? "") : "";
+                                              string actionType = actionDict["Type"].ToString() ?? "";
+                                              string actionValue = actionDict["Value"].ToString() ?? "";
+
+                                              if (actionType == "LINK")
+                                              {
+                                                string url = ParseDataHelper.GetReplaceLinkWithResult(actionValue, dictionary, listFilterValue);
+                                                <li>
+                                                    <a href="@url" class="dropdown-item"><i class="@(actionIcon + " me-1 text-primary")"></i> @actionName</a>
+                                                </li>
+                                              }
+                                              else if (actionType == "STORE")
+                                              {
+                                                string actionStore = actionValue;
+                                                // cac thong tin xac nhan, neu co thi truyen vao action
+                                                bool isPopupConfirm = Convert.ToBoolean(actionDict["IsPopupConfirm"]);
+                                                int? dataSourceID  = actionDict.TryGetValue("DataSourceID", out var num) && num is int val ? Convert.ToInt32(num) : null;
+                                                string confirmButtonText = !string.IsNullOrWhiteSpace(actionDict["ConfirmButtonText"].ToString()) ? actionDict["ConfirmButtonText"].ToString() : null;
+                                                string confirmTitle = !string.IsNullOrWhiteSpace(actionDict["ConfirmTitle"].ToString()) ? actionDict["ConfirmTitle"].ToString() : null;
+                                                string confirmText = !string.IsNullOrWhiteSpace(actionDict["ConfirmText"].ToString()) ? actionDict["ConfirmText"].ToString() : null;
+                                                <li>
+                                                  @if (isPopupConfirm){
+                                                    <a href="" data-id="@Id" data-isconfirm="@isPopupConfirm" data-confirmtext="@confirmText" data-confirmtitle ="@confirmTitle" data-confirmbutton ="@confirmButtonText" data-sqlstore="@actionStore" data-datasourceid="@dataSourceID" class="dropdown-item confirmAction"><i class="@(actionIcon + " me-1 text-primary")"></i> @actionName</a>
+                                                  }
+                                                  else{
+                                                    <a href="" data-id="@Id" data-sqlstore="@actionStore" data-datasourceid="@dataSourceID" class="dropdown-item confirmAction"><i class="@(actionIcon + " me-1 text-primary")"></i> @actionName</a>
+                                                  }
+                                                </li>
+                                              }
+                                              else if (actionType == "POPUPFORM")
+                                              {
+                                                var popupDictValue = ParseDataHelper.GetReplacePopupLinkWithResult(actionValue, dictionary, listFilterValue);
+                                                string actionFormCode = popupDictValue.ContainsKey("FORMCODE") ? popupDictValue["FORMCODE"].ToString() ?? "" : "";
+                                                string actionLink = popupDictValue.ContainsKey("LINK") ? popupDictValue["LINK"].ToString() ?? "" : "";
+                                                <li>
+                                                  <a href="" data-bs-toggle="modal" data-bs-target="#modal-PopupForm" data-actionlink = "@actionLink" class="dropdown-item popupform-action"><i class="@(actionIcon + " me-1 text-primary")"></i> @actionName</a>
+                                                </li>
+                                              }
+                                              else
+                                              {
+                                                string url = ParseDataHelper.GetReplaceLinkWithResult(actionValue, dictionary, listFilterValue);
+                                                <li>
+                                                    <a href="@url" class="dropdown-item"><i class="@(actionIcon + " me-1 text-primary")"></i> @actionName</a>
+                                                </li>
+                                              }
+                                            }
+                                          </ul>
+                                        </div>
+                                      </div>
+							        </td>
+                                    @* neu cot khong co parent code cung khong phai is parent thi xu ly rieng *@
+					                @foreach (var display in displayList.Where(p=> p.IsDisplay == true && p.Code != "stt" && p.IsParent == false && string.IsNullOrEmpty(p.ParentCode)).OrderBy(p => p.ColNum ?? 0).ToList())
+                                    {
+                                        var displayType = display.Type as string ?? "link";
+                                        var displayFormat = display.Format as string ?? "";
+                                        @* neu isFreePane bang true thi them class freepanze-col *@
+                                        <td class="@FormatHelper.ParseTextAlignToClass(display.TextAlign) @(display.IsFreePane == true ? "freepanze-col" : "")" data-isexport="@(display.IsExport ?? "True")" data-displaytype="@displayType" data-displayformat="@displayFormat">
+                                            @{
+                                                object value;
+                                                if (dictionary.TryGetValue(display.Code, out value))
+                                                {
+                                                    string valueType = "";
+                                                    // kiem tra kieu du lieu cua value
+                                                    if (@value != null)
+                                                    {
+                                                        valueType = value.GetType().ToString();
+                                                    }
+                                                    // kiem tra kieu du lieu cua display
+                                                    string[] stringVavlidType = ["string", "date", "datetime", "int", "long", "float", "textarea"];
+                                                    // uu tien kiem tra kieu du lieu cua value roi den display
+                                                    // neu kieu du lieu cua value la boolean thi su dung check box
+                                                    @if (valueType == "System.Boolean")
+                                                    {
+									                    <input type="checkbox" @(Convert.ToBoolean(value) ? "checked" : "") disabled />
+                                                
+                                                    }
+                                                    else if (displayType == "icons")
+                                                    {
+                                                        var iconsJson = value?.ToString()?.Trim() ?? "";
+
+                                                        // Nếu rỗng thì bỏ qua
+                                                        if (!string.IsNullOrEmpty(iconsJson))
+                                                        {
+                                                          // Đảm bảo chuỗi JSON luôn là mảng
+                                                          if (iconsJson.TrimStart().StartsWith("{"))
+                                                          {
+                                                              iconsJson = "[" + iconsJson + "]";
+                                                          }
+
+                                                          try
+                                                          {
+                                                              var icons = JsonSerializer.Deserialize<List<JsonElement>>(iconsJson);
+
+                                                              <ul class="list-unstyled m-0 avatar-group d-flex align-items-center">
+                                                              @foreach (var icon in icons)
+                                                              {
+                                                                  var title = icon.GetProperty("title").GetString();
+                                                                  var image = icon.GetProperty("image").GetString();
+                                                                  <li data-bs-toggle="tooltip"
+                                                                      data-popup="tooltip-custom"
+                                                                      data-bs-placement="top"
+                                                                      class="avatar avatar-xs pull-up"
+                                                                      aria-label="@title"
+                                                                      data-bs-original-title="@title">
+                                                                      <img src="@image" alt="Avatar" class="rounded-circle" />
+                                                                  </li>
+                                                              }
+                                                              </ul>
+                                                          }
+                                                          catch (Exception ex)
+                                                          {
+                                                              <span class="text-danger">N/A</span>
+                                                          }
+                                                        }
+                                                    }
+                                                    // neu dang file thi hien thi icon tải nhiều file
+                                                    else if (displayType == "file")
+                                                    {
+                                                        var filesJson = value?.ToString()?.Trim() ?? "";
+
+                                                        // Nếu rỗng thì bỏ qua
+                                                        if (!string.IsNullOrEmpty(filesJson))
+                                                        {
+                                                            // Nếu là object đơn, bao lại thành mảng
+                                                            if (filesJson.StartsWith("{"))
+                                                            {
+                                                                filesJson = "[" + filesJson + "]";
+                                                            }
+
+                                                            try
+                                                            {
+                                                                var fileList = JsonSerializer.Deserialize<List<JsonElement>>(filesJson);
+
+                                                                if (fileList?.Count > 0)
+                                                                {
+                                                                    <div class="d-flex flex-wrap gap-1">
+                                                                        @foreach (var file in fileList)
+                                                                        {
+                                                                            var fileName = file.GetProperty("fileName").GetString();
+                                                                            var url = file.GetProperty("url").GetString();
+                                                                            var displayName = fileName?.Length > 50 ? fileName.Substring(0, 50) + "..." : fileName;
+
+                                                                            <a href="@url" download class="btn btn-sm btn-outline-primary file-download-link" title="@fileName">
+                                                                                <i class="ri-download-2-fill"></i> @displayName
+                                                                            </a>
+                                                                        }
+                                                                    </div>
+                                                                }
+                                                            }
+                                                            catch
+                                                            {
+                                                                <span class="text-danger">Lỗi định dạng file JSON</span>
+                                                            }
+                                                        }
+                                                    }
+                                                    // neu la kieu link thi parse thanh html
+                                                    else if (displayType == "link")
+                                                    {
+                                                        @Html.Raw(value);
+                                                    }
+                                                    // neu la kieu du lieu co the format duoc
+                                                    else if (stringVavlidType.Contains(displayType))
+                                                    {
+                                                        @* kiem tra neu co format thi format lai chuoi *@
+                                                        var displayValue = @FormatHelper.FormatDynamicValue(value, displayFormat);
+                                                        <span style="white-space: pre-wrap">@displayValue</span>
+                                                
+                                                    }
+                                                    else if (displayType == "combobox")
+                                                    {
+                                                        // check selected cho item dung voi gia tri
+                                                        var selectList = editorDynamicServiceSelectOptions[display.Code] as List<SelectListItem> ?? new List<SelectListItem>();
+                                                        // lay du lieu text từ service thông qua value
+                                                        string displayValue = selectList.Where(p => p.Value.ToString() == value.ToString()).Select(p => p.Text).First().ToString() ?? "";
+                                                        <span style="white-space: pre-wrap">@displayValue</span>
+                                                    }
+                                                    else
+                                                    {
+                                                        @Html.Raw(value);
+                                                    }                                              }
+                                                else
+                                                {
+                                                    <span class="text-muted">N/A</span> @* Giá trị mặc định *@
+                                                }
+                                            }
+                                        </td>
+                                    }
+                                    @* neu ton tai cot co isparent thi xu ly tiep cot 2 cap *@
+                                    @if (displayList.Any(p => p.IsParent == true))
+                                    {
+                                      @* hien thi cot cha *@
+						                          @foreach (var display in displayList.Where(p=> p.IsDisplay == true && p.IsParent == true).OrderBy(p => p.ColNum ?? 0).ToList())
+                                      {
+                                        @* dem so cot con de tinh colspan *@
+                                        var countChild = displayList.Count(p => p.ParentCode == display.Code);
+                                        @* neu co cot con thi xu ly tiep *@
+                                        if (countChild > 0)
+                                        {
+                                          @foreach (var displaychild in displayList.Where(p=> p.IsDisplay == true && p.ParentCode == display.Code).OrderBy(p => p.ColNum ?? 0).ToList())
+                                          {
+                                              var displayType = displaychild.Type as string ?? "link";
+                                              var displayFormat = displaychild.Format as string ?? "";
+                                              <td class="@FormatHelper.ParseTextAlignToClass(displaychild.TextAlign)" data-isexport="@(displaychild.IsExport ?? "0")" data-displaytype="@displayType" data-displayformat="@displayFormat">
+                                                  @{
+                                                      object value;
+                                                      if (dictionary.TryGetValue(displaychild.Code, out value))
+                                                      {
+                                                          string valueType = "";
+                                                          // kiem tra kieu du lieu cua value
+                                                          if (@value != null)
+                                                          {
+                                                              valueType = value.GetType().ToString();
+                                                          }
+                                                          // kiem tra kieu du lieu cua display
+                                                          string[] stringVavlidType = ["string", "date", "datetime", "int", "long", "float", "textarea"];
+                                                          // uu tien kiem tra kieu du lieu cua value roi den display
+                                                          // neu kieu du lieu cua value la boolean thi su dung check box
+                                                          @if (valueType == "System.Boolean")
+                                                          {
+									                          <input type="checkbox" @(Convert.ToBoolean(value) ? "checked" : "") disabled />
+                                                
+                                                          }
+                                                          else if (displayType == "icons")
+                                                          {
+                                                              var iconsJson = value?.ToString()?.Trim() ?? "";
+
+                                                              // Nếu rỗng thì bỏ qua
+                                                              if (!string.IsNullOrEmpty(iconsJson))
+                                                              {
+                                                                // Đảm bảo chuỗi JSON luôn là mảng
+                                                                if (iconsJson.TrimStart().StartsWith("{"))
+                                                                {
+                                                                    iconsJson = "[" + iconsJson + "]";
+                                                                }
+
+                                                                try
+                                                                {
+                                                                    var icons = JsonSerializer.Deserialize<List<JsonElement>>(iconsJson);
+
+                                                                    <ul class="list-unstyled m-0 avatar-group d-flex align-items-center">
+                                                                    @foreach (var icon in icons)
+                                                                    {
+                                                                        var title = icon.GetProperty("title").GetString();
+                                                                        var image = icon.GetProperty("image").GetString();
+                                                                        <li data-bs-toggle="tooltip"
+                                                                            data-popup="tooltip-custom"
+                                                                            data-bs-placement="top"
+                                                                            class="avatar avatar-xs pull-up"
+                                                                            aria-label="@title"
+                                                                            data-bs-original-title="@title">
+                                                                            <img src="@image" alt="Avatar" class="rounded-circle" />
+                                                                        </li>
+                                                                    }
+                                                                    </ul>
+                                                                }
+                                                                catch (Exception ex)
+                                                                {
+                                                                    <span class="text-danger">N/A</span>
+                                                                }
+                                                              }
+                                                          }
+                                                          // neu dang file thi hien thi icon tải nhiều file
+                                                          else if (displayType == "file")
+                                                          {
+                                                              var filesJson = value?.ToString()?.Trim() ?? "";
+
+                                                              // Nếu rỗng thì bỏ qua
+                                                              if (!string.IsNullOrEmpty(filesJson))
+                                                              {
+                                                                  // Nếu là object đơn, bao lại thành mảng
+                                                                  if (filesJson.StartsWith("{"))
+                                                                  {
+                                                                      filesJson = "[" + filesJson + "]";
+                                                                  }
+
+                                                                  try
+                                                                  {
+                                                                      var fileList = JsonSerializer.Deserialize<List<JsonElement>>(filesJson);
+
+                                                                      if (fileList?.Count > 0)
+                                                                      {
+                                                                          <div class="d-flex flex-wrap gap-1">
+                                                                              @foreach (var file in fileList)
+                                                                              {
+                                                                                  var fileName = file.GetProperty("fileName").GetString();
+                                                                                  var url = file.GetProperty("url").GetString();
+                                                                                  var displayName = fileName?.Length > 50 ? fileName.Substring(0, 50) + "..." : fileName;
+
+                                                                                  <a href="@url" download class="btn btn-sm btn-outline-primary file-download-link" title="@fileName">
+                                                                                      <i class="ri-download-2-fill"></i> @displayName
+                                                                                  </a>
+                                                                              }
+                                                                          </div>
+                                                                      }
+                                                                  }
+                                                                  catch
+                                                                  {
+                                                                      <span class="text-danger">Lỗi định dạng file JSON</span>
+                                                                  }
+                                                              }
+                                                          }
+                                                          // neu la kieu link thi parse thanh html
+                                                          else if (displayType == "link")
+                                                          {
+                                                              @Html.Raw(value);
+                                                          }
+                                                          // neu la kieu du lieu co the format duoc
+                                                          else if (stringVavlidType.Contains(displayType))
+                                                          {
+                                                              @* kiem tra neu co format thi format lai chuoi *@
+                                                              var displayValue = @FormatHelper.FormatDynamicValue(value, displayFormat);
+                                                              <span style="white-space: pre-wrap">@displayValue</span>
+                                                
+                                                          }
+                                                          else if (displayType == "combobox")
+                                                          {
+                                                              // check selected cho item dung voi gia tri
+                                                              var selectList = editorDynamicServiceSelectOptions[displaychild.Code] as List<SelectListItem> ?? new List<SelectListItem>();
+                                                              // lay du lieu text từ service thông qua value
+                                                              string displayValue = selectList.Where(p => p.Value.ToString() == value.ToString()).Select(p => p.Text).First().ToString() ?? "";
+                                                              <span style="white-space: pre-wrap">@displayValue</span>
+                                                          }
+                                                          else
+                                                          {
+                                                              @Html.Raw(value);
+                                                          }
+                                                      }
+                                                      else
+                                                      {
+                                                          <span class="text-muted">N/A</span> @* Giá trị mặc định *@
+                                                      }
+                                                  }
+                                              </td>
+                                          }
+                                        }
+                              
+                                      }
+                                    }
+                                  </tr>
+
+                                  reportRowIndex ++;
+                                }
+                              }
+                          </tbody>
+                    </table>
+		          </div>
+                  <!--/ Pagination Start -->
+                  <div class="col-12 report-pagination d-flex justify-content-end mt-3">
+                  </div>
+                  <!--/ Pagination End -->
+                </div>
+            </div>
+          </div>
+          @* end table *@
+        </div>
+
+
+<script>
+    // tự động add param từ link vào hidden input
+    window.addEventListener("DOMContentLoaded", () => {
+      const urlParams = new URLSearchParams(window.location.search);
+      const hiddenDiv = document.getElementById("hiddenInputs");
+
+      urlParams.forEach((value, key) => {
+        const input = document.createElement("input");
+        input.type = "hidden";
+        input.name = "q_"+key;
+        input.value = value;
+        hiddenDiv.appendChild(input);
+      });
+    });
+
+
+    // them dong editor moi
+    function addNewRow(tableid = "ReportEditor") {
+        debugger;
+        const table = document.getElementById(tableid).getElementsByTagName('tbody')[0];
+        const templateRow = table.querySelector('tr[data-template="true"]');
+        const newIndex = table.rows.length + 1;
+
+        if (!templateRow) {
+            console.error("Không tìm thấy dòng mẫu!");
+            return;
+        }
+
+        // 1. Destroy select2 trên templateRow trước
+        const $select = $(templateRow).find("select");
+
+        if ($select.hasClass("select2-hidden-accessible")) {
+            $select.select2('destroy');
+        }
+
+        // Optionally clear ID (nếu cần clone nhiều dòng tránh id trùng)
+        $select.removeAttr("id");
+
+                // Clone dòng mẫu
+        const newRow = templateRow.cloneNode(true);
+        newRow.removeAttribute("data-template");
+        newRow.style.display = "";
+        // Gán thuộc tính change tracking nếu cần
+        newRow.setAttribute("data-changed", "true");
+        newRow.setAttribute("data-template", "false");
+        // xóa class ẩn tr
+        newRow.classList.remove("d-none");
+
+        // Replace tất cả {{index}} trong thuộc tính name
+        newRow.innerHTML = newRow.innerHTML.replace(/grid\[\d+\]/g, `grid[${newIndex}]`);
+
+        // Thêm vào đầu bảng hoặc cuối bảng
+        const firstRow = table.querySelector('tr[data-template="false"]');
+        if (firstRow) {
+            table.insertBefore(newRow, firstRow);
+        } else {
+            table.appendChild(newRow);
+        }
+
+        // Áp dụng Select2 nếu có
+        $(newRow).find("select").select2({
+            placeholder: "Chọn",
+            allowClear: true,
+            width: "100%"
+        });
+    }
+
+        // sau khi load, tu dong cap nhat format date
+        $(document).ready(function () {
+            // Lấy tất cả các input có type="date" hoặc "datetime-local"
+            $('input[type="date"], input[type="datetime-local"]').each(function () {
+                let originalValue = $(this).attr('value');
+
+                if (originalValue) {
+                    if ($(this).attr("type") === "date") {
+                        // Kiểm tra xem đã đúng định dạng YYYY-MM-DD chưa
+                        let isoDateRegex = /^\d{4}-\d{2}-\d{2}$/;
+                        if (!isoDateRegex.test(originalValue)) {
+                            let formattedDate = moment(originalValue, ["M/D/YYYY h:mm:ss A", "DD/MM/YYYY", "YYYY-MM-DD"]).format("YYYY-MM-DD");
+                            $(this).val(formattedDate); // Điền trực tiếp vào value
+                            $(this).attr("value", formattedDate); // Cập nhật lại giá trị trong HTML
+                        }
+                    } else if ($(this).attr("type") === "datetime-local") {
+                        // Kiểm tra xem đã đúng định dạng YYYY-MM-DDTHH:mm chưa
+                        let isoDateTimeRegex = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}$/;
+                        if (!isoDateTimeRegex.test(originalValue)) {
+                            let formattedDateTime = moment(originalValue, ["M/D/YYYY h:mm:ss A", "DD/MM/YYYY HH:mm:ss", "YYYY-MM-DDTHH:mm:ss"]).format("YYYY-MM-DDTHH:mm");
+                            $(this).val(formattedDateTime); // Điền trực tiếp vào value
+                            $(this).attr("value", formattedDateTime); // Cập nhật lại giá trị trong HTML
+                        }
+                    }
+                }
+            });
+        });
+
+         // xu ly nút xuat export, phan trang doi voi table cau hinh class table-with-exportexcel
+        $(document).ready(function () {
+            // voi moi class table with export excel se lay id va xu ly
+            $('.table-with-exportexcel').each(function (index, tableElement) {
+                var $table = $(tableElement);
+                debugger;
+                // Chỉ xử lý nếu table chưa init DataTable
+                if ($.fn.DataTable.isDataTable(tableElement)) {
+                    return; // bỏ qua nếu đã có DataTable
+                }
+
+                // Lấy pageTitle từ data-table-displayname
+                var pageTitle = $table.attr('data-table-displayname')?.trim() || "Danh sách";
+
+                // Xoá các ký tự đặc biệt không hợp lệ trong tên file (ví dụ: !, 🎉, ...)
+                var sanitizedFilename = pageTitle.replace(/[^a-zA-Z0-9\u00C0-\u1EF9\s]/g, '').replace(/\s+/g, '_');
+
+                // Xác định selector: nếu có id thì dùng id, không thì dùng class chung
+                var selector = $table.attr('id') ? `#${$table.attr('id')}` : '.table-with-exportexcel';
+
+                // Gọi hàm initExcelExportForTable để tìm table có class hoặc id liên quan để xử lý
+                initExcelExportForTable(selector, {
+                    // Thêm timestamp vào filename
+                    filename: `${sanitizedFilename}_${getFormattedDateTime()}`,
+                    title: pageTitle,
+                    autoFilter: false,
+                    sheetName: "Danh sách"
+                });
+            });
+        });
+
+          // tim kiem trong select box
+        $(document).ready(function () {
+            function initSelect2() {
+              // không áp dụng cho Quiff HTML editor
+                $("select") .not(".ql-toolbar select, .ql-container select, .ql-editor select").not(".select2-hidden-accessible").not(".dataTables_length select").select2({
+                    placeholder: "Chọn",
+                    allowClear: true,
+                    width: "100%"
+                });
+            }
+
+            // Khởi tạo Select2 cho các select đã có sẵn
+            initSelect2();
+
+        });
+
+
+        // kiem tra nếu có nhập liệu trên bất kì dòng nào thì mới enable nút Lưu, và dòng nào nhập liệu thì mới truyền xuống IFormCollection
+            // Theo dõi tất cả form trên trang
+            document.querySelectorAll("form").forEach(form => {
+                const table = form.querySelector("table"); // Tìm bảng trong form
+                const submitButton = form.querySelector("button[type='submit']");
+
+                if (!table || !submitButton) return; // Bỏ qua nếu không có bảng hoặc nút submit
+
+                function checkChanges() {
+                    let hasChanges = false;
+
+                    // Kiểm tra nếu form không có id là "editor-form", trả về false và dừng
+                    if (form.id !== "editor-form") {
+                        submitButton.disabled = false; // Luôn bật nút lưu nếu không phải form editor-form
+                        return;
+                    }
+
+                    // neu khong co tr nào co attr data change thi mac dinh hien thi nut Luu
+                    if (table.querySelectorAll("tr[data-changed]").length == 0)
+                    {
+                      submitButton.disabled = false;
+                      return;
+                    }
+
+                    table.querySelectorAll("tr").forEach(row => {
+                        if (row.getAttribute("data-changed") === "true") {
+                            hasChanges = true;
+                        }
+                    });
+
+                    submitButton.disabled = !hasChanges; // Bật/tắt nút submit
+                }
+
+                // Một hàm duy nhất đánh dấu dòng thay đổi
+                function markRowChanged(target) {
+                    if (target.classList.contains("track-change")) {
+                        const row = target.closest("tr");
+                        if (row) {
+                            row.setAttribute("data-changed", "true");
+                            row.classList.add("row-changed"); // ➡️ Thêm dòng này để highlight
+                            checkChanges();
+                        }
+                    }
+                }
+
+                // Theo dõi input và change chung
+                table.addEventListener("input", event => {
+                    markRowChanged(event.target);
+                });
+
+                table.addEventListener("change", event => {
+                    markRowChanged(event.target);
+                });
+
+                // Nếu dùng jQuery và select2
+                if (window.jQuery && $(table).length) {
+                    $(table).on('select2:select select2:unselect', 'select.track-change', function (event) {
+                        markRowChanged(event.target);
+                    });
+                }
+
+                // Nếu người dùng click vào nút trong bảng
+                table.addEventListener("click", event => {
+                    const target = event.target;
+                    if (target.closest("button")) {
+                        const row = target.closest("tr");
+                        if (row) {
+                            row.setAttribute("data-changed", "true");
+                            row.classList.add("row-changed"); // ➡️ Thêm dòng này để highlight
+                            checkChanges();
+                        }
+                    }
+                });
+
+                    // Chỉ gử i dữ liệu của bảng đã thay đổi
+                form.addEventListener("submit", function (event) {
+                    let rows = table.querySelectorAll("tbody tr");
+
+                    rows.forEach(row => {
+                      // neu khong khai bao data change thi bo qua, neu co khai bao data change thi kiem tra = false thi xoa
+                        if (row.getAttribute('data-changed') !== undefined && row.getAttribute('data-changed') !== null)
+                        {
+                          if (row.getAttribute("data-changed") !== "true") {
+                            row.remove(); // Xóa các dòng chưa thay đổi khỏi form trước khi submit
+                          }
+                        }
+                    });
+
+                    // form.submit();
+                });
+
+                checkChanges(); // Kiểm tra trạng thái ban đầu
+            });
+</script>

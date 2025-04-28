@@ -254,3 +254,18 @@
 .btn-delete i {
   pointer-events: none;
 }
+
+/*báo hiệu dòng report editor có thay đổi*/
+tr.row-changed {
+  background-color: #EFFCEF !important; /* Màu vàng nhạt báo hiệu thay đổi */
+  transition: background-color 0.3s ease;
+}
+/* Thêm một chút animation nhẹ (optional) */
+@keyframes rowHighlight {
+    from { background-color: #DCFFCC; }
+    to { background-color: #EFFCEF; }
+}
+
+tr.row-changed td {
+    animation: rowHighlight 1s ease forwards;
+}

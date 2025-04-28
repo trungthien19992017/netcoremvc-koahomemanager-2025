@@ -143,6 +143,7 @@ namespace KOAHome.ViewComponents
         if (TempData["ErrorMessage"] != null)
         {
           ViewData["ErrorMessage"] = TempData["ErrorMessage"];
+          TempData.Remove("ErrorMessage");
           return View("PopupForm");
         }
         else

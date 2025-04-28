@@ -51,8 +51,8 @@
 
 
         // them dong editor moi
-        function addNewRow() {
-        let table = document.getElementById("ReportEditor").getElementsByTagName('tbody')[0];
+    function addNewRow(tableid = "ReportEditor") {
+        const table = document.getElementById(tableid).getElementsByTagName('tbody')[0];
         let newRow = table.insertRow();
         let index = table.rows.length;
 
@@ -381,9 +381,9 @@
                                 <div class="col-md-12 card-body">
                                     <div class="table-responsive">
                                         <div class="card-header d-flex align-items-center justify-content-between">
-                                            <button type="button" class="btn text-muted p-0" onclick="addNewRow()"><i class="ri-add-line ri-24px"></i></button>
+                                            <button type="button" class="btn text-muted p-0" onclick="addNewRow('table-editor-emptycode')"><i class="ri-add-line ri-24px"></i></button>
                                         </div>
-                                        <table id="ReportEditor" class="table table-sm table-bordered" style="table-layout: fixed;">
+                                        <table id="table-editor-emptycode" class="table table-sm table-bordered" style="table-layout: fixed;">
                                             <colgroup>
                                                 <col span="1" style="visibility: collapse">
                                             </colgroup>

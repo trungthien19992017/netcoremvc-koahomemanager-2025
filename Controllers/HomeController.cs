@@ -45,17 +45,6 @@ public class HomeController : Controller
         return View();
     }
 
-  // kiem tra dieu kien menu top de load menu left
-  public IActionResult LoadVerticalNavbar(string? menu)
-  {
-    ViewBag.MenuCode = menu ?? "";
-    if (menu == "Booking")
-    {
-      return PartialView("Sections/Menu/_VerticalMenu_Booking");
-    }
-    return PartialView("Sections/Menu/_VerticalMenu");
-  }
-
   // POST: Home/Action_Confirmed/5
   [HttpPost]
   public async Task<IActionResult> Action_Confirmed([FromForm] IFormCollection form)

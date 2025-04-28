@@ -2,7 +2,7 @@
 
 <!DOCTYPE html>
 <html lang="en"
-  class='light-style layout-menu-fixed'
+  class='light-style layout-navbar-fixed layout-compact layout-menu-fixed layout-menu-collapsed'
   data-theme="theme-default" data-assets-path='@((httpContextAccessor.HttpContext?.Request.PathBase ?? "") + "/")'
   data-framework="aspnetcore-mvc"
   data-template='vertical-menu-aspnet-core-mvc-template-free'>
@@ -81,11 +81,11 @@
 
           // focus vao field dau tien khong hop le
         $("form").on("submit", function (event) {
-        var firstInvalid = $(this).find(":invalid").first();
-        if (firstInvalid.length) {
-        firstInvalid.focus();
-        event.preventDefault(); // Ngăn không cho form submit
-        }
+          var firstInvalid = $(this).find(":invalid").first();
+          if (firstInvalid.length) {
+          firstInvalid.focus();
+          event.preventDefault(); // Ngăn không cho form submit
+          }
         });
 
         // data fill sau khi on change select box
@@ -132,61 +132,6 @@
         }
         });
         });
-
-  
-        // // xu ly du lieu datetime truyen vao
-        // function formatDateTimeLocal(value) {
-        //     return value ? moment(value, "M/D/YYYY h:mm:ss A").format("YYYY-MM-DDTHH:mm") : "";
-        // }
-
-        // function formatDate(value) {
-        //     // Parse the date using moment.js and format it to 'YYYY-MM-DD'
-        //     return value ? moment(value, ["M/D/YYYY h:mm:ss A", "YYYY-MM-DDTHH:mm:ss", "YYYY-MM-DD"]).format("YYYY-MM-DD") : "";
-        // }
-
-        // function formatTime(value) {
-        //     return value ? moment(value, "h:mm:ss A").format("HH:mm") : "";
-        // }
-
-        // var formData = @Html.Raw(Json.Serialize(ViewBag.FormData));
-        // if (formData != null)
-        // {
-        //   $(document).ready(function () {
-        //       $.each(formData, function (key, value) {
-        //           let inputField = $(`[name='${key}'], [id='${key}']`); // Tìm input theo name hoặc id
-
-        //           if (inputField.length) {
-        //               let inputType = inputField.attr("type"); // Lấy kiểu input
-        //               let isoFormatRegex1 = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}$/; // regex kiem tra dinh dang date YYYY-MM-DDTHH:mm:ss
-        //               let isoFormatRegex2 = /^\d{4}-\d{2}-\d{2}$/; // regex kiem tra dinh dang date YYYY-MM-DD
-        //               let isoFormatRegex3 = /^\d{2}:\d{2}:\d{2}$/; // regex kiem tra dinh dang date HH:mm
-
-        //               if (inputType === "datetime-local") {
-        //                   if (isoFormatRegex1.test(value) == false)
-        //                   {
-        //                     value = formatDateTimeLocal(value);
-        //                     inputField.val(value); // Gán giá trị vào input
-        //                   }
-        //                   else
-        //                   {
-        //                     inputField.val(value); // Gán giá trị vào input
-        //                     console.log("PaymentDate value:", value)
-        //                   }
-        //               } 
-        //               else if (inputType === "date" && isoFormatRegex2.test(value) == false) {
-        //                   value = formatDate(value);
-        //                   inputField.val(value); // Gán giá trị vào input
-        //               } 
-        //               else if (inputType === "time" && isoFormatRegex3.test(value) == false) {
-        //                   value = formatTime(value);
-        //                   inputField.val(value); // Gán giá trị vào input
-        //               }
-
-        //           }
-        //       });
- 
-        //   });
-        // }
 
         // sau khi load, tu dong cap nhat format date
         $(document).ready(function () {
@@ -591,6 +536,12 @@
                 function checkChanges() {
                     let hasChanges = false;
 
+                     // Kiểm tra nếu form không có id là "editor-form", trả về false và dừng
+                     if (form.id !== "editor-form") {
+                         submitButton.disabled = false; // Luôn bật nút lưu nếu không phải form editor-form
+                         return;
+                     }
+
                     // neu khong co tr nào co attr data change thi mac dinh hien thi nut Luu
                     if (table.querySelectorAll("tr[data-changed]").length == 0)
                     {
@@ -607,26 +558,43 @@
                     submitButton.disabled = !hasChanges; // Bật/tắt nút submit
                 }
 
-                // Theo dõi thay đổi trong bảng (chỉ trong phạm vi form chứa nó)
-                table.addEventListener("input", function (event) {
-                    let target = event.target;
+                // Một hàm duy nhất đánh dấu dòng thay đổi
+                function markRowChanged(target) {
                     if (target.classList.contains("track-change")) {
-                        let row = target.closest("tr");
-                        row.setAttribute("data-changed", "true"); // Đánh dấu dòng đã thay đổi
-                        checkChanges();
+                        const row = target.closest("tr");
+                        if (row) {
+                            row.setAttribute("data-changed", "true");
+                            row.classList.add("row-changed"); // ➡️ Thêm dòng này để highlight
+                            checkChanges();
+                        }
                     }
+                }
+
+                // Theo dõi input và change chung
+                table.addEventListener("input", event => {
+                    markRowChanged(event.target);
                 });
 
-                  // Nếu người dùng click vào nút trong bảng, đánh dấu dòng là thay đổi
-                table.addEventListener("click", function (event) {
-                    let target = event.target;
+                table.addEventListener("change", event => {
+                    markRowChanged(event.target);
+                });
 
-                    // Nếu là button trong bảng
+                // Nếu dùng jQuery và select2
+                if (window.jQuery && $(table).length) {
+                    $(table).on('select2:select select2:unselect', 'select.track-change', function (event) {
+                        markRowChanged(event.target);
+                    });
+                }
+
+                // Nếu người dùng click vào nút trong bảng
+                table.addEventListener("click", event => {
+                    const target = event.target;
                     if (target.closest("button")) {
-                        let row = target.closest("tr");
+                        const row = target.closest("tr");
                         if (row) {
-                            row.setAttribute("data-changed", "true"); // Đánh dấu dòng đã thay đổi
-                            checkChanges(); // Cập nhật trạng thái nút submit
+                            row.setAttribute("data-changed", "true");
+                            row.classList.add("row-changed"); // ➡️ Thêm dòng này để highlight
+                            checkChanges();
                         }
                     }
                 });
@@ -645,7 +613,7 @@
                         }
                     });
 
-                    form.submit();
+                    // form.submit();
                 });
 
                 checkChanges(); // Kiểm tra trạng thái ban đầu
@@ -952,50 +920,165 @@
                  // xu ly data table
                  const dt = $table.DataTable({
                      dom: '<"d-flex justify-content-between align-items-center datatable-top-component"<"d-flex gap-2"fl><"d-flex gap-2"B>>irtp',
-                     buttons: [
-                         {
-                             // extend: "excelHtml5",
-                             className: "buttons-excel buttons-html5 btn btn-primary",
-                             text: '<i class="ri-upload-2-line"></i>',
-                              action: function () {
-                                // dt = $table.DataTable();
-                                    dt.page.len(-1).draw(); // -1 = Hiển thị tất cả các dòng
-
-                                    setTimeout(() => {
-                                        exportTableToExcelJS('#DataTables_Table_0', config.filename + '.xlsx');
-    
-                                        // sau khi export xong, trở về số trang cũ
-                                        dt.page.len(20).draw(); // hoặc dt.page.len(oldLen).draw();
-                                    }, 500);
+                      buttons: [{
+                          extend: "collection",
+                          className: "btn btn-primary dropdown-toggle waves-effect waves-light",
+                          text: '<i class="ri-download-line ri-16px me-1"></i> <span class="d-none d-sm-inline-block">Export</span>',
+                          buttons: [{
+                              extend: "print",
+                              text: '<i class="ri-printer-line me-1" ></i>Print',
+                              className: "dropdown-item",
+                              exportOptions: {
+                                  columns: [1, 2, 3, 4, 5],
+                                  format: {
+                                      body: function(e, t, n) {
+                                          var a;
+                                          return e.length <= 0 ? e : (e = $.parseHTML(e), a = "", $.each(e, function(e, t) {
+                                              void 0 !== t.classList && t.classList.contains("customer-name") ? a += t.lastChild.firstChild.textContent : void 0 === t.innerText ? a += t.textContent : a += t.innerText
+                                          }), a)
+                                      }
+                                  }
                               },
-                             filename: config.filename,
-                             customize: config.customize || null,
-                             exportOptions: config.exportOptions || {},
-                             header: config.header,
-                             footer: config.footer,
-                             title: config.title,
-                             messageTop: config.messageTop || null,
-                             messageBottom: config.messageBottom || null,
-                             autoFilter: config.autoFilter,
-                             sheetName: config.sheetName,
-                             exportOptions: {
-                                 columns: ':visible',
-                                 stripHtml: true // Loại bỏ tất cả HTML, chỉ lấy văn bản
-                             },
-                             customize: function (xlsx) {
-                                 var sheet = xlsx.xl.worksheets["sheet1.xml"];
-                                 var rows = $("row", sheet);
-                                 // Mặc định tô màu header
-                                 // rows.eq(0).attr("s", "2");
-                                 // $('row:first c', sheet).attr( 's', '42' );
-                                 rows.eq(1).find("c").attr("s", "42");
+                              customize: function(e) {
+                                  $(e.document.body).css("color", a).css("border-color", t).css("background-color", n), $(e.document.body).find("table").addClass("compact").css("color", "inherit").css("border-color", "inherit").css("background-color", "inherit")
+                              }
+                          }, {
+                              extend: "csv",
+                              text: '<i class="ri-file-text-line me-1" ></i>Csv',
+                              className: "dropdown-item",
+                              exportOptions: {
+                                  columns: [1, 2, 3, 4, 5],
+                                  format: {
+                                      body: function(e, t, n) {
+                                          var a;
+                                          return e.length <= 0 ? e : (e = $.parseHTML(e), a = "", $.each(e, function(e, t) {
+                                              void 0 !== t.classList && t.classList.contains("customer-name") ? a += t.lastChild.firstChild.textContent : void 0 === t.innerText ? a += t.textContent : a += t.innerText
+                                          }), a)
+                                      }
+                                  }
+                              }
+                          }, {
+                              extend: "excel",
+                              text: '<i class="ri-file-excel-line me-1"></i>Excel',
+                               className: "dropdown-item",
+                                action: function (e, dt, button, config) {
+                                  const table = dt.table().node(); // lấy <table> element
+                                  const tableId = $(table).attr('id'); // lấy id từ table đúng context
+                                  // dt = $table.DataTable();
+                                      const oldPageLength = dt.page.len();
+                                      dt.page.len(-1).draw(); // -1 = Hiển thị tất cả các dòng
+
+                                      setTimeout(() => {
+                                          exportTableToExcelJS('#' + tableId, config.filename + '.xlsx');
+    
+                                          // sau khi export xong, trở về số trang cũ
+                                          dt.page.len(oldPageLength).draw(); // hoặc dt.page.len(oldLen).draw();
+                                      }, 500);
+                                },
+                               filename: config.filename,
+                               customize: config.customize || null,
+                               exportOptions: config.exportOptions || {},
+                               header: config.header,
+                               footer: config.footer,
+                               title: config.title,
+                               messageTop: config.messageTop || null,
+                               messageBottom: config.messageBottom || null,
+                               autoFilter: config.autoFilter,
+                               sheetName: config.sheetName,
+                               exportOptions: {
+                                   columns: ':visible',
+                                   stripHtml: true // Loại bỏ tất cả HTML, chỉ lấy văn bản
+                               },
+                               customize: function (xlsx) {
+                                   var sheet = xlsx.xl.worksheets["sheet1.xml"];
+                                   var rows = $("row", sheet);
+                                   // Mặc định tô màu header
+                                   // rows.eq(0).attr("s", "2");
+                                   // $('row:first c', sheet).attr( 's', '42' );
+                                   rows.eq(1).find("c").attr("s", "42");
                                  
-                                // Tô màu cả 2 dòng header nếu có (dòng 0 và dòng 1)
-                                rows.eq(0).find("c").attr("s", "42"); // Style 42 là header
-                                rows.eq(1).find("c").attr("s", "42");
-                             }
-                         }
-                     ],
+                                  // Tô màu cả 2 dòng header nếu có (dòng 0 và dòng 1)
+                                  rows.eq(0).find("c").attr("s", "42"); // Style 42 là header
+                                  rows.eq(1).find("c").attr("s", "42");
+                               }
+                          }, {
+                              extend: "pdf",
+                              text: '<i class="ri-file-pdf-line me-1"></i>Pdf',
+                              className: "dropdown-item",
+                              filename: 'exported-pdf',  // Tên file PDF khi tải về
+                              title: 'My Exported PDF',  // Tiêu đề file PDF
+                              orientation: 'landscape',   // Hướng trang (portrait hoặc landscape)
+                              pageSize: 'A4',            // Kích thước trang
+                              customize: function(doc) {
+                                  doc.styles = {
+                                      tableHeader: {
+                                          bold: true,
+                                          fontSize: 14,
+                                          color: 'black',
+                                          fillColor: '#f2f2f2',
+                                          alignment: 'center',
+                                          padding: 8
+                                      },
+                                      table: {
+                                          fontSize: 10,
+                                          alignment: 'left'
+                                      }
+                                  };
+                                  doc.header = function() {
+                                      return {
+                                          text: 'Custom Header',
+                                          alignment: 'center',
+                                          fontSize: 16,
+                                          bold: true,
+                                          margin: [0, 10]
+                                      };
+                                  };
+
+                                  doc.footer = function(currentPage, pageCount) {
+                                      return {
+                                          text: 'Page ' + currentPage + ' of ' + pageCount,
+                                          alignment: 'center',
+                                          fontSize: 10,
+                                          margin: [0, 10]
+                                      };
+                                  };
+                                  
+                                  // Tự động điều chỉnh độ rộng cột trong PDF
+                                  var columns = doc.content[1].table.body;
+                                  columns.forEach(function(row, index) {
+                                      row.forEach(function(cell, cellIndex) {
+                                          // Điều chỉnh cột cho phù hợp với nội dung
+                                          if (index === 0) {
+                                              cell.styles = { alignment: 'left', fontSize: 10, minWidth: 50 };
+                                          }
+                                          else {
+                                              cell.styles = { alignment: 'left', fontSize: 10, autoSize: true };
+                                          }
+                                      });
+                                  });
+
+                              },
+                              exportOptions: {
+                                         columns: ':visible', // Chỉ xuất các cột đang visible
+                                         stripHtml: true // Loại bỏ tất cả HTML và chỉ lấy văn bản
+                                     }
+                          }, {
+                              extend: "copy",
+                              text: '<i class="ri-file-copy-line me-1"></i>Copy',
+                              className: "dropdown-item",
+                              exportOptions: {
+                                  columns: [1, 2, 3, 4, 5],
+                                  format: {
+                                      body: function(e, t, n) {
+                                          var a;
+                                          return e.length <= 0 ? e : (e = $.parseHTML(e), a = "", $.each(e, function(e, t) {
+                                              void 0 !== t.classList && t.classList.contains("customer-name") ? a += t.lastChild.firstChild.textContent : void 0 === t.innerText ? a += t.textContent : a += t.innerText
+                                          }), a)
+                                      }
+                                  }
+                              }
+                          }]
+                      }],
                      // phan trang
                      lengthMenu: [10, 20, 50, 100], // Các tùy chọn số lượng bản ghi
                      pageLength: 20, // Mặc định hiển thị 25 bản ghi trên mỗi trang
@@ -1045,9 +1128,10 @@
                // Di chuyển phần phân trang ra ngoài bảng
                // doi phan trang va cac nut xuat, tìm kiem ra ngoai (yeu cau class table-pagination va table-top-action table-info)
                dt.on('draw', function () {
-                   $('.dataTables_paginate').appendTo('.report-pagination');
-                   $('.datatable-top-component').appendTo('.report-top-action');
-                   $('.dataTables_info').appendTo('.report-info');
+                   var wrapselector_id = selector + "-wrap";
+                   $(wrapselector_id + '.dataTables_paginate').appendTo(wrapselector_id + '.report-pagination');
+                   $(wrapselector_id + '.datatable-top-component').appendTo(wrapselector_id + '.report-top-action');
+                   $(wrapselector_id + '.dataTables_info').appendTo(wrapselector_id + '.report-info');
 
                   const $tbody = $table.find('tbody');
 
@@ -1058,9 +1142,13 @@
                });
 
                // Gọi lần đầu sau khi DataTable load xong
-               $('.dataTables_paginate').appendTo('.report-pagination');
-               $('.datatable-top-component').appendTo('.report-top-action');
-               $('.dataTables_info').appendTo('.report-info');
+               var wrapselector_id = selector + "-wrap";
+               // Move pagination vào đúng chỗ
+                $(selector + '_paginate').appendTo(wrapselector_id + ' .report-pagination');
+                // Move info vào đúng chỗ nếu bạn cần
+                $(selector + '_info').appendTo(wrapselector_id + ' .report-info');
+                // Move filter + length nếu cần
+                $(selector + '_wrapper .datatable-top-component').appendTo(wrapselector_id + ' .report-top-action');
 
               const $tbody = $table.find('tbody');
 
@@ -1084,23 +1172,35 @@
          }
 
          // xu ly nút xuat export, phan trang doi voi table cau hinh class table-with-exportexcel
-         $(document).ready(function () {
-             // Lấy nội dung title từ thẻ H1
-             var pageTitle = $("#header-title").text().trim();
+        $(document).ready(function () {
+            // voi moi class table with export excel se lay id va xu ly
+            $('.table-with-exportexcel').each(function (index, tableElement) {
+                var $table = $(tableElement);
+                
+                // Chỉ xử lý nếu table chưa init DataTable
+                if ($.fn.DataTable.isDataTable(tableElement)) {
+                    return; // bỏ qua nếu đã có DataTable
+                }
 
-             // Xoá các ký tự đặc biệt không hợp lệ trong tên file (ví dụ: !, 🎉, ...)
-             var sanitizedFilename = pageTitle.replace(/[^a-zA-Z0-9\u00C0-\u1EF9\s]/g, '').replace(/\s+/g, '_');
+                // Lấy pageTitle từ data-table-displayname
+                var pageTitle = $table.attr('data-table-displayname')?.trim() || "Danh sách";
 
-             // tim table co class table-with-exportexcel va xu ly
-             initExcelExportForTable('.table-with-exportexcel', {
-                 // Thêm timestamp vào filename
-                 filename: `${sanitizedFilename}_${getFormattedDateTime()}` ?? "Danh sách",
-                 title: pageTitle ?? "Danh sách",
-                 autoFilter: false,
-                 sheetName: "Danh sách"
-             });
+                // Xoá các ký tự đặc biệt không hợp lệ trong tên file (ví dụ: !, 🎉, ...)
+                var sanitizedFilename = pageTitle.replace(/[^a-zA-Z0-9\u00C0-\u1EF9\s]/g, '').replace(/\s+/g, '_');
 
-         });
+                // Xác định selector: nếu có id thì dùng id, không thì dùng class chung
+                var selector = $table.attr('id') ? `#${$table.attr('id')}` : '.table-with-exportexcel';
+
+                // Gọi hàm initExcelExportForTable để tìm table có class hoặc id liên quan để xử lý
+                initExcelExportForTable(selector, {
+                    // Thêm timestamp vào filename
+                    filename: `${sanitizedFilename}_${getFormattedDateTime()}`,
+                    title: pageTitle,
+                    autoFilter: false,
+                    sheetName: "Danh sách"
+                });
+            });
+        });
 
         // xu ly import file excel de cap nhat va them moi du lieu
          $(document).ready(function () {
@@ -1446,65 +1546,23 @@
       });
     });
 
-
-    // xu ly du lieu ngay trong report editor
-    $(document).ready(function () {
-      var gridData = @Html.Raw(Json.Serialize(ViewBag.reportResultList));
-      if (gridData != null)
-      {
-        $.each(gridData, function (index, rowData) {
-            // Tìm tất cả input/select trong dòng có name động
-            $(`#ReportEditor tbody tr:eq(${index})`).find("input, select, textarea").each(function () {
-                let fieldName = $(this).attr("name"); // Lấy name của input
-                if (!fieldName) return; // Nếu không có name, bỏ qua
-
-                // Regex để lấy tên key từ `grid[index].FieldName`
-                let match = fieldName.match(/\[(\d+)\]\.(\w+)/);
-                if (!match) return; // Nếu không khớp format, bỏ qua
-
-                let fieldKey = match[2]; // Lấy phần FieldName (ví dụ: "ServiceID", "Quantity",...)
-
-                if (rowData.hasOwnProperty(fieldKey)) {
-                    let value = rowData[fieldKey];
-
-                    // Kiểm tra kiểu input và format lại nếu cần
-                    if ($(this).attr("type") === "datetime-local") {
-                        value = formatDateTimeLocal(value);
-                        // Gán giá trị vào input
-                        $(this).val(value);
-                    } else if ($(this).attr("type") === "date") {
-                        value = formatDate(value);
-                        // Gán giá trị vào input
-                        $(this).val(value);
-                    } else if ($(this).attr("type") === "time") {
-                        value = formatTime(value);
-                        // Gán giá trị vào input
-                        $(this).val(value);
-                    }
-                    // Nếu là select2, cần trigger để cập nhật giao diện
-                    if ($(this).is("select")) {
-                        $(this).trigger("change");
-                    }
-                }
-            });
-          });
-      }
-    });
-
-
- // tự động add param từ link vào hidden input
+ // tự động add param từ link vào hidden input trong form
   window.addEventListener("DOMContentLoaded", () => {
     const urlParams = new URLSearchParams(window.location.search);
     const hiddenDiv = document.getElementById("hiddenInputs");
 
-    urlParams.forEach((value, key) => {
-      const input = document.createElement("input");
-      input.type = "hidden";
-      input.name = "q_"+key;
-      input.value = value;
-      hiddenDiv.appendChild(input);
-    });
+    if (hiddenDiv != null)
+    {
+      urlParams.forEach((value, key) => {
+        const input = document.createElement("input");
+        input.type = "hidden";
+        input.name = "q_"+key;
+        input.value = value;
+        hiddenDiv.appendChild(input);
+      });
+    }
   });
+
 
     </script>
 

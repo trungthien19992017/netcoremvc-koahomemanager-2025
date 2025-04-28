@@ -148,6 +148,7 @@ namespace KOAHome.Controllers
         if (TempData["ErrorMessage"] != null)
         {
           ViewData["ErrorMessage"] = TempData["ErrorMessage"];
+          TempData.Remove("ErrorMessage");
           return View();
         }
         else
@@ -285,7 +286,6 @@ namespace KOAHome.Controllers
         // khong tra ve Id, cung khong tra ve error message thi bao loi chua tra ve id
         else
         {
-          ViewData["success"] = "Xử lý thành công"; // Gán vào ViewBag
           return Redirect($"{currentPath}?{queryString}");
         }
       }
