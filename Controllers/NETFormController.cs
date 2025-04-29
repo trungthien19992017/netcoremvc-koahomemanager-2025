@@ -309,9 +309,123 @@ namespace KOAHome.Controllers
 
     // popup form view component
     [HttpGet]
-    public async Task<IActionResult> PopupForm([FromQuery] Dictionary<string, string> parameters, string FormCode, int? id, bool? isReadOnly = false)
+    public async Task<IActionResult> PopupForm(string FormCode, int? id, bool? isReadOnly = false)
     {
-      return ViewComponent("NETForm", new { parameters, id, FormCode, isReadOnly });
+      try
+      { 
+        // mac dinh id = 0
+        id ??= 0;
+
+        ViewData["id"] = id;
+
+        // neu không trả về report code thì chuyển sang link lỗi
+        if (FormCode == null)
+        {
+          return Json(new { success = false, errorMessage = "Không tồn tại mã biểu mẫu" });
+        }
+        ViewData["FormCode"] = FormCode;
+
+        // Lấy dynamic query parameters
+        var parameters = Request.Query;
+
+        // lay thong tin report, va danh sach filter display cua report de xu ly
+        var config_form = await _form.NET_Form_Get(FormCode);
+        // tra ve page loi neu khong tim thay report
+        if (config_form == null)
+        {
+          return Json(new { success = false, errorMessage = "Không tồn tại mã biểu mẫu" });
+          ViewData["ErrorMessage"] = "Không tìm thấy biểu mẫu";
+          return View();
+        }
+        // chuyen cau hinh form len giao dien de xu ly
+        ViewData["config_form"] = config_form;
+
+        string? connectionString = null;
+        //neu datasourceId la null thi lay connectionString mac dinh
+        if (config_form.ContainsKey("DatasourceId"))
+        {
+          if (config_form["DatasourceId"] != null)
+          {
+            //lay connectionstring tu cau hinh form de goi store
+            connectionString = await _datasrc.GetConnectionString(Convert.ToInt32(config_form["DatasourceId"]));
+          }
+        }
+
+        // khai bao cac du lieu cau hinh form can su dung trong controller
+        string? storeDefaultData = config_form.ContainsKey("StoreDefaultData") ? Convert.ToString(config_form["StoreDefaultData"]) : "";
+        string? storeGetData = config_form.ContainsKey("StoreGetData") ? Convert.ToString(config_form["StoreGetData"]) : "";
+        //string? storeSetData = config_form.ContainsKey("StoreSetData") ? Convert.ToString(config_form["StoreSetData"]) : "";
+
+        if (string.IsNullOrWhiteSpace(storeDefaultData) && string.IsNullOrWhiteSpace(storeGetData) == null)
+        {
+          return Json(new { success = false, errorMessage = "Không tồn tại mã biểu mẫu" });
+          ViewData["ErrorMessage"] = "Không tồn tại store lây dữ liệu biểu mẫu";
+          return View();
+        }
+
+        // chuyen parameters cua duong dan thanh Idictionary<string, object>
+        Dictionary<string, object> objParameters = parameters.ToDictionary(kvp => kvp.Key, kvp => (object)kvp.Value.ToString());
+
+        // lay danh sach dynamic field cua form de xu ly
+        var stopwatch = Stopwatch.StartNew();
+        var config_formfield = await _form.NET_Form_VersionField_WithForm_sel(FormCode, null);
+        stopwatch.Stop();
+        _logger.LogInformation($"Query config_formfieldTask executed in {stopwatch.ElapsedMilliseconds} ms");
+
+        // chuyển cấu hình form field lên giao diện để xử lý
+        ViewData["config_formfield"] = config_formfield;
+
+        // doi voi cac fiekd co kieu select (select box, dropdownbox, tagbox,...), day cac bo select vao SelectListItem va đóng gói trong Dictionary để xử lý trên giao diện
+        // Tạo Dictionary chứa SelectList cho từng dropdown (theo DynamicFieldName)
+        var config_formfieldService = new Dictionary<string, List<SelectListItem>>();
+
+        //Chuyển kết quả sang Dictionary<string, List<SelectListItem>>
+        config_formfieldService = await _netService.NET_Service_GetListSelectListByFormField(config_formfield, objParameters);
+        //  Gán danh sach select cho cac filter vào ViewBag
+        ViewData["DynamicServiceSelectOptions"] = config_formfieldService;
+
+        //khai bao phan tu chua data
+        var formData = await _form.Form_sel(objParameters, id, (id == 0 ? storeDefaultData : storeGetData), connectionString);
+        ViewData["formData"] = formData;
+
+        // xu ly file
+        // Kiểm tra xem form có file nào không
+        // lay danh sach object type code tu config form neu co field file uploader
+        string attObjectTypeCodes = config_form.ContainsKey("AttObjectTypeCodes") ? Convert.ToString(config_form["AttObjectTypeCodes"]) : "";
+        ViewData["fileUrls"] = await _att.HandleFiles(attObjectTypeCodes, null, id);
+
+        // danh sach service theo booking 
+        var reportResultList = await _report.ReportDetail_FromParent("BookingID", (id ?? 0).ToString(), "HS_BookingService_search", null);
+        ViewData["reportResultList"] = reportResultList;
+
+        // set readonly form neu co isreadonly = false
+        ViewData["IsReadOnly"] = isReadOnly;
+
+        // dùng tạm để test dynamic report
+        ViewData["ServiceId"] = new SelectList(_db.HsServices.Where(p => p.IsActive == true).OrderBy(p => p.OrderId), "ServiceId", "Name");
+
+        // neu co loi tu action POST tra ve thi bao loi
+        if (TempData["ErrorMessage"] != null)
+        {
+          ViewData["ErrorMessage"] = TempData["ErrorMessage"];
+          TempData.Remove("ErrorMessage");
+          return Json(new { success = false, errorMessage = ViewData["ErrorMessage"] });
+        }
+        else
+        {
+          //khai bao success
+          ViewData["success"] = "Thành công";
+        }
+
+        return PartialView("_PopupForm_Partial");
+      }
+      catch (Exception ex)
+      {
+        // Log the exception
+        _logger.LogError(ex, "An error occurred while fetching form.");
+        // Optionally, return an error view
+        return View("Error");
+      }
     }
 
     [HttpPost]

@@ -77,39 +77,104 @@
     <script src="~/js/form-validation.js"></script>
     <script src="~/js/ui-popover.js"></script>
 
-    @* xử lý hiển thị form popup  *@
     <script>
-         $(document).ready(function () {
-            // Khi modal được mở
- 
-          $(document).on('click', '.popupform-action', function (e) {
-              const $btn = $(this);
-              const actionlink = $btn.data('actionlink') ?? null;
-              const id = $btn.data('id') ?? "";
-              const formCode = $btn.data('formcode') ?? "";
-              const isReadOnly = $btn.data('isreadonly') ?? false;
-              const queryParams = new URLSearchParams(window.location.search).toString(); // lấy full query string
+          // Common function to parse Query String
+          function getQueryParams() {
+              var params = {};
+              var queryString = window.location.search.substring(1); // remove '?'
+              if (queryString.length === 0) return params;
 
-              // có 2 cách lấy, 1 là lấy từ link, 2  là lấy từ form code và id
-              let url = ""
-              if (actionlink != null){
-                url = actionlink;
-                if (queryParams !== "") {
-                    url += (actionlink.includes('?') ? '&' : '?') + queryParams;
+              var pairs = queryString.split("&");
+              for (var i = 0; i < pairs.length; i++) {
+                  var pair = pairs[i].split('=');
+                  if (pair.length === 2) {
+                      params[decodeURIComponent(pair[0])] = decodeURIComponent(pair[1].replace(/\+/g, ' '));
+                  }
+              }
+              return params;
+          }
+        
+        @* xử lý hiển thị form popup  *@
+        $(document).on('click', '.popupform-action', function (e) {
+            const $btn = $(this);
+            const actionlink = $btn.data('actionlink') ?? null;
+            const id = $btn.data('id') ?? "";
+            const formCode = $btn.data('formcode') ?? "";
+            const isReadOnly = $btn.data('isreadonly') ?? false;
+            const queryParams = new URLSearchParams(window.location.search).toString(); // lấy full query string
+
+            // có 2 cách lấy, 1 là lấy từ link, 2  là lấy từ form code và id
+            let url = ""
+            if (actionlink != null){
+              url = actionlink;
+              if (queryParams !== "") {
+                  url += (actionlink.includes('?') ? '&' : '?') + queryParams;
+              }
+            }
+            else{
+              url = `/form/popup-viewer/${formCode}/${id}?${queryParams}&isReadOnly=${isReadOnly}`;
+            }
+
+            $.ajax({
+                url: url,
+                type: 'GET',
+                data: null,
+                success: function (response) {
+                    // Nếu trả về thành công và có HTML, chèn vào container
+                    if (response.success === false) {
+                        // Nếu không thành công, hiển thị thông báo lỗi
+                        rplm({
+                               title: "Lỗi khi hiển thị danh sách!",
+                               text: response.errorMessage || "Có vấn đề xảy ra.",
+                               type: "error",
+                               timer: 2000,
+                               confirmButtonText: 'Xác nhận',
+                               html: true
+                           });
+                    } else {
+                        // Nếu không có lỗi, chèn HTML vào container
+                        let html = response;
+                        $('#modal-PopupForm').html(html);
+                    }
+                },
+                error: function (xhr, status, error) {
+                    console.error('Error loading report editor:', error);
                 }
-              }
-              else{
-                url = `/form/popup-viewer/${formCode}/${id}?${queryParams}&isReadOnly=${isReadOnly}`;
-              }
-
-              $('#modal-PopupForm').html('<div class="text-center">Đang tải...</div>');
-
-              // Gọi tới endpoint ViewComponent
-              $.get(url, function (result) {
-                  $('#modal-PopupForm').html(result);
-              });
-          });
+            });
         });
+
+        @* xử lý hiển thị form popup  *@
+        //  $(document).ready(function () {
+        //     // Khi modal được mở
+ 
+        //   $(document).on('click', '.popupform-action', function (e) {
+        //       const $btn = $(this);
+        //       const actionlink = $btn.data('actionlink') ?? null;
+        //       const id = $btn.data('id') ?? "";
+        //       const formCode = $btn.data('formcode') ?? "";
+        //       const isReadOnly = $btn.data('isreadonly') ?? false;
+        //       const queryParams = new URLSearchParams(window.location.search).toString(); // lấy full query string
+
+        //       // có 2 cách lấy, 1 là lấy từ link, 2  là lấy từ form code và id
+        //       let url = ""
+        //       if (actionlink != null){
+        //         url = actionlink;
+        //         if (queryParams !== "") {
+        //             url += (actionlink.includes('?') ? '&' : '?') + queryParams;
+        //         }
+        //       }
+        //       else{
+        //         url = `/form/popup-viewer/${formCode}/${id}?${queryParams}&isReadOnly=${isReadOnly}`;
+        //       }
+
+        //       $('#modal-PopupForm').html('<div class="text-center">Đang tải...</div>');
+
+        //       // Gọi tới endpoint ViewComponent
+        //       $.get(url, function (result) {
+        //           $('#modal-PopupForm').html(result);
+        //       });
+        //   });
+        // });
 
 
     </script>

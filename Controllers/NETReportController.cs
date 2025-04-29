@@ -542,7 +542,7 @@ namespace KOAHome.Controllers
         {
           ViewData["ErrorMessage"] = TempData["ErrorMessage"];
           TempData.Remove("ErrorMessage");
-          return Json(new { success = false, errorMessage = TempData["ErrorMessage"] });
+          return Json(new { success = false, errorMessage = ViewData["ErrorMessage"] });
         }
         else
         {

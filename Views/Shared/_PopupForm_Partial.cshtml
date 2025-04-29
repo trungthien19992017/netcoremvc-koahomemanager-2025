@@ -32,7 +32,7 @@
     // tao bien dem de dem row num cho report
     var reportRowIndex = 1;
 }
-
+@* 
 <style>
     .modal-PopupForm .select2-container--open,
     /* Áp dụng z-index cao cho dropdown render trong modal */
@@ -43,38 +43,7 @@
     .select2-dropdown {
         z-index: 9999 !important;
     }
-</style>
-
-    @if (ViewData["success"] != null)
-    {
-
-        <!-- Toast with Placements -->
-        <div class="bs-toast toast  top-0 end-0 show toast-placement-ex1 m-2" style="position:absolute;" role="alert" aria-live="assertive" aria-atomic="true" data-bs-delay="2000">
-            <div class="toast-header">
-                <i class="ri-home-4-fill me-2 text-success"></i>
-                <div class="me-auto fw-medium">Thông báo</div><small class="text-muted">1 giây trước</small>
-                <button type="button" class="btn-close" data-bs-dismiss="toast" aria-label="Close"></button>
-            </div>
-            <div class="toast-body text-success">@ViewData["success"].</div>
-        </div>
-        <!-- Toast with Placements -->
-    }
-
-
-
-    @if (ViewData["ErrorMessage"] != null)
-    {
-        <!-- Toast with Placements -->
-        <div class="bs-toast toast  top-0 end-0 show toast-placement-ex1 m-2" style="position:absolute;" role="alert" aria-live="assertive" aria-atomic="true" data-bs-delay="2000">
-            <div class="toast-header">
-                <i class="ri-home-4-fill me-2 text-danger"></i>
-                <div class="me-auto fw-medium">Thông báo</div><small class="text-muted">1 giây trước</small>
-                <button type="button" class="btn-close" data-bs-dismiss="toast" aria-label="Close"></button>
-            </div>
-            <div class="toast-body text-danger">@ViewData["ErrorMessage"].</div>
-        </div>
-        <!-- Toast with Placements -->
-    }
+</style> *@
 
 <form id="create-form" class="needs-validation modal-formpopup" novalidate="" method="post" asp-controller="NETForm" asp-action="PopupForm" asp-route-formCode="@formCode"
       asp-route-id="@id" data-modal-id="modal-PopupForm" enctype="multipart/form-data">
