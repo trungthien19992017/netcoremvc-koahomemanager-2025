@@ -124,7 +124,7 @@
                     if (response.success === false) {
                         // Nếu không thành công, hiển thị thông báo lỗi
                         rplm({
-                               title: "Lỗi khi hiển thị danh sách!",
+                               title: "Lỗi khi hiển thị popup!",
                                text: response.errorMessage || "Có vấn đề xảy ra.",
                                type: "error",
                                timer: 2000,
@@ -138,7 +138,14 @@
                     }
                 },
                 error: function (xhr, status, error) {
-                    console.error('Error loading report editor:', error);
+                    rplm({
+                            title: "Lỗi khi hiển thị popup!",
+                            text: error || "Có vấn đề xảy ra.",
+                            type: "error",
+                            timer: 2000,
+                            confirmButtonText: 'Xác nhận',
+                            html: true
+                        });
                 }
             });
         });

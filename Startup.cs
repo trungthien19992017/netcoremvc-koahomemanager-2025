@@ -44,6 +44,7 @@ namespace KOAHome
       services.AddScoped<IWidgetService, WidgetService>();
       services.AddScoped<IDRDatasourceService, DRDatasourceService>();
       services.AddScoped<INetServiceService, NetServiceService>();
+      services.AddScoped<INetMenuService, NetMenuService>();
     }
 
     // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.

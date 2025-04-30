@@ -132,7 +132,14 @@
                     }
                 },
                 error: function (xhr, status, error) {
-                    console.error('Error loading report editor:', error);
+                  rplm({
+                          title: "Lỗi khi hiển thị danh sách!",
+                          text: error || "Có vấn đề xảy ra.",
+                          type: "error",
+                          timer: 2000,
+                          confirmButtonText: 'Xác nhận',
+                          html: true
+                      });
                 }
             });
         }

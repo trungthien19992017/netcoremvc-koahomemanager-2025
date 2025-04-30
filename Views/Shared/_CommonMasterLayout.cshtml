@@ -1563,6 +1563,132 @@
     }
   });
 
+        // Common function to parse Query String
+        // xử lý param truyền vào
+          function getQueryParams() {
+              var params = {};
+              var queryString = window.location.search.substring(1); // remove '?'
+              if (queryString.length === 0) return params;
+
+              var pairs = queryString.split("&");
+              for (var i = 0; i < pairs.length; i++) {
+                  var pair = pairs[i].split('=');
+                  if (pair.length === 2) {
+                      params[decodeURIComponent(pair[0])] = decodeURIComponent(pair[1].replace(/\+/g, ' '));
+                  }
+              }
+              return params;
+          }
+
+        // Hiển thị danh sách main menu
+        $(document).ready(function () {
+           var queryParams = getQueryParams();
+
+            $.ajax({
+                url: '/NETMenu/MainMenu_List',
+                type: 'GET',
+                data: queryParams,
+                success: function (response) {
+                    // Nếu trả về thành công và có HTML, chèn vào container
+                    if (response.success === false) {
+                        // Nếu không thành công, hiển thị thông báo lỗi
+                        rplm({
+                               title: "Lỗi khi hiển thị main menu!",
+                               text: response.errorMessage || "Có vấn đề xảy ra.",
+                               type: "error",
+                               timer: 2000,
+                               confirmButtonText: 'Xác nhận',
+                               html: true
+                           });
+                    } else {
+                        // Nếu không có lỗi, chèn HTML vào container
+                        let html = response;
+                        $("#net-main-menu").html(html);
+                    }
+                },
+                error: function (xhr, status, error) {
+                    // Nếu không thành công, hiển thị thông báo lỗi
+                    rplm({
+                            title: "Lỗi khi hiển thị main menu!",
+                            text: error || "Có vấn đề xảy ra.",
+                            type: "error",
+                            timer: 2000,
+                            confirmButtonText: 'Xác nhận',
+                            html: true
+                        });
+                }
+            });
+        });
+        
+        // Hiển thị danh sách menu
+        $(document).ready(function () {
+          // mac định gọi function để load menu
+          loadMenu();
+
+          // thay đổi menu mỗi khi click chọn main menu thông qua menu code
+          $(document).on('click', '.main-menu-item', function () {
+              const menuCode = $(this).data('menucode');
+
+              if (menuCode) {
+                  // Gọi AJAX lưu MenuCode vào Session
+                  $.post('/NETMenu/SetMenuCode', { menuCode: menuCode }, function (res) {
+                      if (res.success) {
+                          // Gọi lại hàm load menu (MenuCode sẽ được lấy từ Session trong controller)
+                          $("#net-menu").empty(); // Xóa menu cũ
+                          loadMenu(); // Load lại
+
+                          // ✅ Sau khi load lại, redirect qua link đầu tiên của menu
+                          setTimeout(function () {
+                              // Tìm tất cả các liên kết trong menu và redirect tới cái đầu tiên
+                              const firstLink = $("#net-menu").find("a").first();
+                              if (firstLink.length > 0) {
+                                  window.location.href = firstLink.attr("href"); // Redirect tới href đầu tiên
+                              }
+                          }, 100); // Delay 100ms để đảm bảo menu đã load xong
+                      } else {
+                          alert('Không thể lưu MenuCode!');
+                      }
+                  });
+              }
+          });
+
+          function loadMenu() {
+              var queryParams = getQueryParams();
+              queryParams.currentPage = window.location.pathname;
+
+              $.ajax({
+                  url: '/NETMenu/Menu_List',
+                  type: 'GET',
+                  data: queryParams,
+                  success: function (response) {
+                      if (response.success === false) {
+                          rplm({
+                              title: "Lỗi khi hiển thị menu!",
+                              text: response.errorMessage || "Có vấn đề xảy ra.",
+                              type: "error",
+                              timer: 2000,
+                              confirmButtonText: 'Xác nhận',
+                              html: true
+                          });
+                      } else {
+                          $("#net-menu").append(response);
+                      }
+                  },
+                  error: function (xhr, status, error) {
+                      rplm({
+                          title: "Lỗi khi hiển thị menu!",
+                          text: error || "Có vấn đề xảy ra.",
+                          type: "error",
+                          timer: 2000,
+                          confirmButtonText: 'Xác nhận',
+                          html: true
+                      });
+                  }
+              });
+          }
+
+        });
+
 
     </script>
 

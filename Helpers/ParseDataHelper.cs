@@ -214,6 +214,23 @@ namespace KOAHome.Helpers
 
       return result;
     }
+    public static string GetHtmlStyleFromJson(string? json)
+    {
+      if (string.IsNullOrWhiteSpace(json))
+        return string.Empty;
 
+      try
+      {
+        var styleDict = JsonConvert.DeserializeObject<Dictionary<string, string>>(json);
+        if (styleDict == null || styleDict.Count == 0)
+          return string.Empty;
+
+        return string.Join("; ", styleDict.Select(kv => $"{kv.Key}: {kv.Value}"));
+      }
+      catch
+      {
+        return string.Empty;
+      }
+    }
   }
 }

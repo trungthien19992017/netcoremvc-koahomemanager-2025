@@ -35,9 +35,13 @@
     <!-- Thu chuc mung -->
     <div class="col-md-12 col-lg-4">
         <div class="card">
-            <div class="card-body text-nowrap">
-                <h5 class="card-title mb-0 flex-wrap text-nowrap">Chúc mừng KOA! 🎉</h5>
+            <div class="card-header">
+                <div class="d-flex align-items-center justify-content-between">
+                    <h5 class="card-title mb-0 flex-wrap text-nowrap">Chúc mừng KOA! 🎉</h5>
+                </div>
                 <p class="mb-2">Chiến thần doanh thu của tháng</p>
+            </div>
+            <div class="card-body text-nowrap">
                 <h4 class="text-primary mb-0">@(SimpleCard_ChucMung.ContainsKey("TongDoanhThuThang") ? SimpleCard_ChucMung["TongDoanhThuThang"] : "") VND</h4>
                 <p class="mb-2">@(SimpleCard_ChucMung.ContainsKey("PhanTramMucTieu") ? SimpleCard_ChucMung["PhanTramMucTieu"] : "")% mục tiêu 🚀</p>
                 <a href="javascript:;" class="btn btn-sm btn-primary">Xem chi tiết</a>

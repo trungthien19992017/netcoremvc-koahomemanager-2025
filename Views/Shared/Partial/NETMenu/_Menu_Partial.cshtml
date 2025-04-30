@@ -1,0 +1,67 @@
+@using Newtonsoft.Json
+@using Newtonsoft.Json.Serialization
+@using KOAHome.Helpers
+@{
+    // nhận param để chuyển đến partial nếu có
+    var objParameters = ViewData["objParameters"] as Dictionary<string, object>;
+
+    var mainmenu = ViewData["mainmenu"] as IDictionary<string, object>;
+
+    var menuList = ViewData["menuList"] as List<dynamic>;
+
+    // lấy đường dẫn để kiểm tra
+    string currentPage = (ViewBag.CurrentPage ?? "").ToString();
+}
+
+@* ! Full version menu-items *@
+    @* nếu tồn tại main menu thì xử lý *@
+    @if(mainmenu != null)
+    {
+        <li class="menu-header mt-7"><span class="menu-header-text">@(mainmenu.ContainsKey("Title") ? (mainmenu["Title"]?.ToString() ?? "Tùy chọn") : "Tùy chọn")</span></li>
+        @* nếu tồn tại danh sách menu thì hiển thị *@
+        @if (menuList != null)
+        {
+            @* chỉ lấy trước những menu không có parent hoặc đang là parent *@
+            @foreach (var menu in menuList.Where(p => p.Parent == null).OrderBy(p => (int?)(p?.Index ?? 0)).ToList())
+            {
+                // lấy format cho thành phân
+                var textstyle = @ParseDataHelper.GetHtmlStyleFromJson(menu.textColor.ToString());
+                var iconstyle = @ParseDataHelper.GetHtmlStyleFromJson(menu.CSSIconFormat.ToString());
+
+                @* nếu menu không phải là parent thì hiển thị bình thường *@
+                if (!menuList.Any(p => (int?)(p?.Parent ?? 0) == Convert.ToInt32(menu.Id)))
+                {
+                  <li class='menu-item@(currentPage == (menu.Link ?? "") ? " active" : "")'>
+                      <a href="@(menu.Link ?? "")" class="menu-link">
+                          <div><i class="@menu.Icon" style="@iconstyle"></i> <span style="@textstyle">@(menu.Title ?? menu.Name ?? menu.Code)</span></div>
+                      </a>
+                  </li>
+                }
+                @* nếu là parent thì gọi cả các menu con *@
+                else
+                {
+                  <li class='menu-item active open'>
+                    <a href="javascript:void(0);" class="menu-link menu-toggle">
+                        <i class="menu-icon tf-icons @menu.Icon" style="@iconstyle"></i>
+                        <div><span style="@textstyle">@(menu.Title ?? menu.Name ?? menu.Code)</span></div>
+                    </a>
+                    @* với mỗi menu con thì hiển thị theo menu cha *@
+                    @foreach (var menuchild in menuList.Where(p => (int?)(p?.Parent ?? 0) == menu.Id).OrderBy(p => (int?)(p?.Index ?? 0)).ToList())
+                    {
+                        // lấy format cho thành phân
+                        var child_textstyle = @ParseDataHelper.GetHtmlStyleFromJson(menuchild.textColor.ToString());
+                        var child_iconstyle = @ParseDataHelper.GetHtmlStyleFromJson(menuchild.CSSIconFormat.ToString());
+                        <ul class="menu-sub">
+                            <li class='menu-item@(currentPage == (menuchild.Link ?? "") ? " active" : "")'>
+                                <a href="@(menuchild.Link ?? "")" class="menu-link">
+                                    <div><i class="@menuchild.Icon" style="@child_iconstyle"></i> <span style="@child_textstyle">@(menuchild.Title ?? menuchild.Name ?? menuchild.Code)</span></div>
+                                </a>
+                            </li>
+                        </ul>
+                    }
+                </li>
+                }
+            }
+        }
+    }
+

@@ -1,0 +1,70 @@
+@using Newtonsoft.Json
+@using Newtonsoft.Json.Serialization
+@using KOAHome.Helpers
+@{
+    // nhận param để chuyển đến partial nếu có
+    var objParameters = ViewData["objParameters"] as Dictionary<string, object>;
+
+    var mainMenuList = ViewData["mainMenuList"] as List<dynamic>;
+}
+
+<!-- Quick links  -->
+    <div data-bs-toggle="tooltip" data-bs-offset="0,4" data-bs-placement="top" data-bs-html="true" title="Menu chính">
+          <a class="nav-link btn btn-text-secondary rounded-pill btn-icon dropdown-toggle hide-arrow waves-effect waves-light" href="javascript:void(0);" data-bs-toggle="dropdown" data-bs-auto-close="outside" aria-expanded="false" title="Menu chính">
+              <i class="ri-menu-line ri-22px text-primary"></i>
+          </a>
+      <div class="dropdown-menu dropdown-menu-end py-0">
+          <div class="dropdown-menu-header border-bottom py-50">
+              <div class="dropdown-header d-flex align-items-center py-2">
+                  <h6 class="mb-0 me-auto">Menu chính</h6>
+                  <a href="javascript:void(0)" class="btn btn-text-secondary rounded-pill btn-icon dropdown-shortcuts-add waves-effect waves-light" data-bs-toggle="tooltip" data-bs-placement="top" aria-label="Xem tất cả" data-bs-original-title="Xem tất cả"><i class="ri-eye-line ri-24px text-heading"></i></a>
+              </div>
+          </div>
+          <div class="dropdown-shortcuts-list scrollable-container ps">
+              <div class="row row-bordered overflow-visible g-0">
+                @* nếu tồn tại main menu thì hiển thị *@
+                @if (mainMenuList != null)
+                {
+                    @foreach (var item in mainMenuList)
+                    {
+                        <div class="dropdown-shortcuts-item col-md-6 main-menu-item" data-menucode="@item.Code">
+                            @if (!string.IsNullOrWhiteSpace(item.ImageUrl))
+                            {
+                                <span class="dropdown-shortcuts-icon mb-2">
+                                    <img src="@item.ImageUrl" alt="@item.Title" class="d-block w-100" />
+                                </span>
+                            }
+                            else
+                            {
+                                <span class="dropdown-shortcuts-icon rounded-circle mb-2">
+                                    <i class="@item.Icon"></i>
+                                </span>
+                            }
+                            <a href="" class="stretched-link">@item.Title</a>
+                            <small>@(item.Description ?? "")</small>
+                        </div>
+                    }
+                }
+              </div>
+              <div class="ps__rail-x" style="left: 0px; bottom: 0px;"><div class="ps__thumb-x" tabindex="0" style="left: 0px; width: 0px;"></div></div><div class="ps__rail-y" style="top: 0px; right: 0px;"><div class="ps__thumb-y" tabindex="0" style="top: 0px; height: 0px;"></div></div><div class="ps__rail-x" style="left: 0px; bottom: 0px;"><div class="ps__thumb-x" tabindex="0" style="left: 0px; width: 0px;"></div></div><div class="ps__rail-y" style="top: 0px; right: 0px;"><div class="ps__thumb-y" tabindex="0" style="top: 0px; height: 0px;"></div></div>
+          </div>
+      </div>
+  </div>
+<!-- Quick links -->
+
+  <script>
+        // kích hoạt lại các js khởi tạo
+        $(document).ready(function () {
+            // kích hoat lại tooltip
+            $('[data-bs-toggle="tooltip"]').tooltip(); // khởi động lại tooltip
+
+            // 🧠 Re-init Perfect Scrollbar
+            const scrollEl = document.querySelector('.scrollable-container');
+            if (scrollEl) {
+                // Nếu bạn dùng theme Materio hoặc đã import PerfectScrollbar
+                if (typeof PerfectScrollbar !== 'undefined') {
+                    new PerfectScrollbar(scrollEl);
+                }
+            }
+        });
+  </script>
