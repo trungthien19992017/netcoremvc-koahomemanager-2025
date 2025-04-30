@@ -333,9 +333,7 @@ namespace KOAHome.Controllers
         // tra ve page loi neu khong tim thay report
         if (config_form == null)
         {
-          return Json(new { success = false, errorMessage = "Không tồn tại mã biểu mẫu" });
-          ViewData["ErrorMessage"] = "Không tìm thấy biểu mẫu";
-          return View();
+          return Json(new { success = false, errorMessage = "Không tìm thấy biểu mẫu" });
         }
         // chuyen cau hinh form len giao dien de xu ly
         ViewData["config_form"] = config_form;
@@ -358,13 +356,13 @@ namespace KOAHome.Controllers
 
         if (string.IsNullOrWhiteSpace(storeDefaultData) && string.IsNullOrWhiteSpace(storeGetData) == null)
         {
-          return Json(new { success = false, errorMessage = "Không tồn tại mã biểu mẫu" });
-          ViewData["ErrorMessage"] = "Không tồn tại store lây dữ liệu biểu mẫu";
-          return View();
+          return Json(new { success = false, errorMessage = "Không tồn tại store lây dữ liệu biểu mẫu" });
         }
 
         // chuyen parameters cua duong dan thanh Idictionary<string, object>
         Dictionary<string, object> objParameters = parameters.ToDictionary(kvp => kvp.Key, kvp => (object)kvp.Value.ToString());
+        // đưa popup param qua view để chuyển cho các partial nếu có
+        ViewData["objParameters"] = objParameters;
 
         // lay danh sach dynamic field cua form de xu ly
         var stopwatch = Stopwatch.StartNew();

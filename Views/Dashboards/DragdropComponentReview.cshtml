@@ -1,0 +1,182 @@
+@{
+    ViewData["Title"] = "Dynamic Dashboard";
+}
+
+@section PageScripts {
+    <!-- Sortable.js -->
+    @* <script src="https://cdn.jsdelivr.net/npm/sortablejs@latest/Sortable.min.js"></script> *@
+    <!-- Interact.js -->
+    <script src="https://cdn.jsdelivr.net/npm/interactjs@latest/dist/interact.min.js"></script>
+
+    <script>
+        // Khởi tạo Sortable
+        const sortable = new Sortable(dashboard, {
+            animation: 200,
+            ghostClass: 'sortable-ghost',
+            onEnd: function (evt) {
+                console.log('Vị trí mới:', evt.oldIndex, '->', evt.newIndex);
+                sendLayoutToServer();
+            }
+        });
+
+        // Khởi tạo Interact.js để resize
+        interact('.widget')
+            .resizable({
+                edges: { left: true, right: true, bottom: true, top: true },
+                listeners: {
+                    move(event) {
+                        let target = event.target;
+                        let x = (parseFloat(target.getAttribute('data-x')) || 0);
+                        let y = (parseFloat(target.getAttribute('data-y')) || 0);
+
+                        target.style.width = event.rect.width + 'px';
+                        target.style.height = event.rect.height + 'px';
+
+                        x += event.deltaRect.left;
+                        y += event.deltaRect.top;
+
+                        target.style.transform = `translate(${x}px, ${y}px)`;
+
+                        target.setAttribute('data-x', x);
+                        target.setAttribute('data-y', y);
+                    }
+                },
+                modifiers: [
+                    interact.modifiers.restrictSize({
+                        min: { width: 150, height: 100 }
+                    })
+                ],
+                inertia: true
+            });
+
+        // Thêm widget mới
+        function addWidget() {
+            const dashboard = document.getElementById('dashboard');
+            const widget = document.createElement('div');
+            widget.className = 'widget card';
+            widget.style.width = '300px';
+            widget.style.height = '200px';
+            widget.innerHTML = `
+                <div class="widget-content">
+                    <h4>Widget Mới</h4>
+                    <p>Thông tin widget mới...</p>
+                    <button class="remove-btn" onclick="removeWidget(this)">Xóa</button>
+                </div>
+            `;
+            dashboard.appendChild(widget);
+            interact(widget).resizable({ /* Gắn tương tự như trên */
+                edges: { left: true, right: true, bottom: true, top: true },
+                listeners: {
+                    move(event) {
+                        let target = event.target;
+                        let x = (parseFloat(target.getAttribute('data-x')) || 0);
+                        let y = (parseFloat(target.getAttribute('data-y')) || 0);
+
+                        target.style.width = event.rect.width + 'px';
+                        target.style.height = event.rect.height + 'px';
+
+                        x += event.deltaRect.left;
+                        y += event.deltaRect.top;
+
+                        target.style.transform = `translate(${x}px, ${y}px)`;
+
+                        target.setAttribute('data-x', x);
+                        target.setAttribute('data-y', y);
+                    }
+                },
+                modifiers: [
+                    interact.modifiers.restrictSize({
+                        min: { width: 150, height: 100 }
+                    })
+                ],
+                inertia: true
+            });
+            sendLayoutToServer();
+        }
+
+        // Xóa widget
+        function removeWidget(btn) {
+            btn.closest('.widget').remove();
+            sendLayoutToServer();
+        }
+
+        // Gửi thứ tự và kích thước về server
+        function sendLayoutToServer() {
+            const widgets = document.querySelectorAll('#dashboard .widget');
+            const layout = Array.from(widgets).map((w, index) => ({
+                index: index,
+                width: w.offsetWidth,
+                height: w.offsetHeight,
+                content: w.querySelector('.widget-content h4')?.innerText || 'Widget'
+            }));
+
+            console.log('Layout gửi về server:', layout);
+
+            fetch('/Dashboard/SaveLayout', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'RequestVerificationToken': $('input[name="__RequestVerificationToken"]').val()
+                },
+                body: JSON.stringify(layout)
+            }).then(response => {
+                if (!response.ok) {
+                    console.error('Lỗi khi lưu layout');
+                }
+            });
+        }
+    </script>
+
+}
+
+<h1>Dynamic Dashboard (Drag, Drop, Resize, Add, Remove)</h1>
+
+<div style="margin-bottom: 20px;">
+    <button onclick="addWidget()">Thêm Widget</button>
+</div>
+
+<div id="dashboard" style="display: flex; flex-wrap: wrap; gap: 15px;">
+    <div class="widget card" style="width: 300px; height: 200px;">
+        <div class="widget-content">
+            <h4>Widget 1</h4>
+            <p>Thông tin widget 1...</p>
+            <button class="remove-btn" onclick="removeWidget(this)">Xóa</button>
+        </div>
+    </div>
+
+    <div class="widget card" style="width: 300px; height: 200px;">
+        <div class="widget-content">
+            <h4>Widget 2</h4>
+            <p>Thông tin widget 2...</p>
+            <button class="remove-btn" onclick="removeWidget(this)">Xóa</button>
+        </div>
+    </div>
+</div>
+
+
+<style>
+    .widget {
+        background: #dfe6e9;
+        padding: 15px;
+        border-radius: 8px;
+        position: relative;
+        box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+    }
+
+    .sortable-ghost {
+        opacity: 0.4;
+        background: #b2bec3;
+    }
+
+    .remove-btn {
+        position: absolute;
+        top: 5px;
+        right: 5px;
+        background: red;
+        color: white;
+        border: none;
+        padding: 5px;
+        cursor: pointer;
+    }
+
+</style>

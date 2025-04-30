@@ -1,0 +1,321 @@
+@{
+    ViewData["Title"] = "Dashboard";
+    Layout = "~/Views/Shared/_ContentNavbarLayout.cshtml";
+    // du lleu object
+    var SimpleCard_ChucMung = ViewBag.SimpleCard_ChucMung as IDictionary<string, object>;
+    var SimpleCard_SoLieuTrongThang = ViewBag.SimpleCard_SoLieuTrongThang as IDictionary<string, object>;
+    var LineChart_DoanhThuCacThang = ViewBag.LineChart_DoanhThuCacThang as IDictionary<string, object>;
+    var ColumnChart_ChiPhiCacThang = ViewBag.ColumnChart_ChiPhiCacThang as IDictionary<string, object>;
+    var ColumnChart_DoanhThuTuan = ViewBag.ColumnChart_DoanhThuTuan as IDictionary<string, object>;
+    var PieChart_TyLeCacPhongTrongThang = ViewBag.PieChart_TyLeCacPhongTrongThang as IDictionary<string, object>;
+    // du lieu list
+    var ListItem_TopDichVuThang = ViewBag.ListItem_TopDichVuThang as List<dynamic>;
+    var ListItem_TyLeKinPhongTuan = ViewBag.ListItem_TyLeKinPhongTuan as List<dynamic>;
+    var ListItem_TopKhachHangGanDay = ViewBag.ListItem_TopKhachHangGanDay as List<dynamic>;
+}
+
+@section PageScripts {
+    <!-- Interact.js -->
+    <script src="https://cdn.jsdelivr.net/npm/interactjs@latest/dist/interact.min.js"></script>
+    <script>
+        const dashboardContainer = document.getElementById('dashboard-container');
+
+        const sortable = new Sortable(dashboardContainer, {
+            animation: 150,
+            onEnd: function () {
+                sendLayoutToServer();
+            }
+        });
+
+
+        // Khởi tạo Interact.js để resize
+        interact('.widget')
+            .resizable({
+                edges: { left: true, right: true, bottom: true, top: true },
+                listeners: {
+                    move(event) {
+                        let target = event.target;
+                        let x = (parseFloat(target.getAttribute('data-x')) || 0);
+                        let y = (parseFloat(target.getAttribute('data-y')) || 0);
+
+                        target.style.width = event.rect.width + 'px';
+                        target.style.height = event.rect.height + 'px';
+
+                        x += event.deltaRect.left;
+                        y += event.deltaRect.top;
+
+                        target.style.transform = `translate(${x}px, ${y}px)`;
+
+                        target.setAttribute('data-x', x);
+                        target.setAttribute('data-y', y);
+                    }
+                },
+                modifiers: [
+                    interact.modifiers.restrictSize({
+                        min: { width: 150, height: 100 }
+                    })
+                ],
+                inertia: true
+            });
+
+        function sendLayoutToServer() {
+            const widgets = document.querySelectorAll('#dashboard-container .col-md-4');
+            const layout = Array.from(widgets).map((widget, index) => {
+                return {
+                    id: widget.getAttribute('data-id') || `widget-${index}`,
+                    order: index,
+                    width: widget.offsetWidth,
+                    height: widget.offsetHeight
+                };
+            });
+
+            fetch('/Dashboards/DragdropComponentReview1', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(layout)
+            })
+            .then(response => response.json())
+            .then(data => console.log('Layout saved:', data))
+            .catch(error => console.error('Lỗi khi lưu layout:', error));
+        }
+
+        // add widget
+        document.getElementById('btnAddWidget').addEventListener('click', function () {
+            const widgetId = 'custom-' + Date.now();
+            const newWidget = document.createElement('div');
+            newWidget.className = 'widget col-md-4 mb-3';
+            newWidget.setAttribute('data-id', widgetId);
+            newWidget.innerHTML = `
+                <div class="card">
+                    <div class="card-body">
+                        <h5 class="card-title">Widget mới</h5>
+                        <p class="card-text">Nội dung tùy chỉnh...</p>
+                    </div>
+                </div>
+                <button class="btn btn-danger btn-sm btnRemoveWidget mt-1">Xóa</button>
+            `;
+            dashboardContainer.appendChild(newWidget);
+            interact(widget).resizable({ /* Gắn tương tự như trên */
+                edges: { left: true, right: true, bottom: true, top: true },
+                listeners: {
+                    move(event) {
+                        let target = event.target;
+                        let x = (parseFloat(target.getAttribute('data-x')) || 0);
+                        let y = (parseFloat(target.getAttribute('data-y')) || 0);
+
+                        target.style.width = event.rect.width + 'px';
+                        target.style.height = event.rect.height + 'px';
+
+                        x += event.deltaRect.left;
+                        y += event.deltaRect.top;
+
+                        target.style.transform = `translate(${x}px, ${y}px)`;
+
+                        target.setAttribute('data-x', x);
+                        target.setAttribute('data-y', y);
+                    }
+                },
+                modifiers: [
+                    interact.modifiers.restrictSize({
+                        min: { width: 150, height: 100 }
+                    })
+                ],
+                inertia: true
+            });
+            sendLayoutToServer();
+        });
+
+        document.addEventListener('click', function (e) {
+            if (e.target.classList.contains('btnRemoveWidget')) {
+                e.target.closest('.col-md-4').remove();
+                sendLayoutToServer();
+            }
+        });
+    </script>
+}
+
+<div class="container-fluid">
+    <div class="d-flex justify-content-between mb-3">
+        <h2>Dashboard</h2>
+        <button id="btnAddWidget" class="btn btn-primary">Thêm Widget</button>
+    </div>
+
+    <div id="dashboard-container" class="row">
+        <div class="widget col-md-4 mb-3" data-id="SimpleCard_ChucMung">
+            <!-- Thu chuc mung -->
+              <div class="card">
+                  <div class="card-body text-nowrap">
+                      <h5 class="card-title mb-0 flex-wrap text-nowrap">Chúc mừng KOA! 🎉</h5>
+                      <p class="mb-2">Chiến thần doanh thu của tháng</p>
+                      <h4 class="text-primary mb-0">@(SimpleCard_ChucMung.ContainsKey("TongDoanhThuThang") ? SimpleCard_ChucMung["TongDoanhThuThang"] : "") VND</h4>
+                      <p class="mb-2">@(SimpleCard_ChucMung.ContainsKey("PhanTramMucTieu") ? SimpleCard_ChucMung["PhanTramMucTieu"] : "")% mục tiêu 🚀</p>
+                      <a href="javascript:;" class="btn btn-sm btn-primary">Xem chi tiết</a>
+                  </div>
+                  <img src="~/img/illustrations/trophy.png"
+                        class="position-absolute bottom-0 end-0 me-5 mb-5"
+                        width="83"
+                        alt="view sales" />
+              </div>
+            <!--/ Thu chuc mung -->
+            <button class="btn btn-danger btn-sm btnRemoveWidget mt-1">Xóa</button>
+        </div>
+        <div class="widget col-md-4 mb-3" data-id="SimpleCard_SoLieuTrongThang">
+            <!-- Số liệu trong tháng -->
+                <div class="card h-100">
+                    <div class="card-header">
+                        <div class="d-flex align-items-center justify-content-between">
+                            <h5 class="card-title m-0 me-2">Số liệu trong tháng</h5>
+                            <div class="dropdown">
+                                <button class="btn text-muted p-0"
+                                        type="button"
+                                        id="transactionID"
+                                        data-bs-toggle="dropdown"
+                                        aria-haspopup="true"
+                                        aria-expanded="false">
+                                    <i class="ri-more-2-line ri-24px"></i>
+                                </button>
+                                <div class="dropdown-menu dropdown-menu-end" aria-labelledby="transactionID">
+                                    <a class="dropdown-item" href="javascript:void(0);">Refresh</a>
+                                    <a class="dropdown-item" href="javascript:void(0);">Share</a>
+                                    <a class="dropdown-item" href="javascript:void(0);">Update</a>
+                                </div>
+                            </div>
+                        </div>
+                        <p class="small mb-0"><span class="h6 mb-0">Doanh thu tăng 10% </span> 😎 tháng này</p>
+                    </div>
+                    <div class="card-body pt-lg-10">
+                        <div class="row g-6">
+                            <div class="col-md-3 col-6">
+                                <div class="d-flex align-items-center">
+                                    <div class="avatar">
+                                        <div class="avatar-initial bg-primary rounded shadow-xs">
+                                            <i class="ri-pie-chart-2-line ri-24px"></i>
+                                        </div>
+                                    </div>
+                                    <div class="ms-3">
+                                        <p class="mb-0">Doanh thu</p>
+                                        <h5 class="mb-0">@(SimpleCard_SoLieuTrongThang.ContainsKey("DoanhThu") ? SimpleCard_SoLieuTrongThang["DoanhThu"] : "")</h5>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-3 col-6">
+                                <div class="d-flex align-items-center">
+                                    <div class="avatar">
+                                        <div class="avatar-initial bg-success rounded shadow-xs">
+                                            <i class="ri-group-line ri-24px"></i>
+                                        </div>
+                                    </div>
+                                    <div class="ms-3">
+                                        <p class="mb-0">Lượt book</p>
+                                        <h5 class="mb-0">@(SimpleCard_SoLieuTrongThang.ContainsKey("LuotBook") ? SimpleCard_SoLieuTrongThang["LuotBook"] : "")</h5>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-3 col-6">
+                                <div class="d-flex align-items-center">
+                                    <div class="avatar">
+                                        <div class="avatar-initial bg-warning rounded shadow-xs">
+                                            <i class="ri-macbook-line ri-24px"></i>
+                                        </div>
+                                    </div>
+                                    <div class="ms-3">
+                                        <p class="mb-0">Số giờ</p>
+                                        <h5 class="mb-0">@(SimpleCard_SoLieuTrongThang.ContainsKey("SoGio") ? SimpleCard_SoLieuTrongThang["SoGio"] : "")</h5>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-3 col-6">
+                                <div class="d-flex align-items-center">
+                                    <div class="avatar">
+                                        <div class="avatar-initial bg-info rounded shadow-xs">
+                                            <i class="ri-money-dollar-circle-line ri-24px"></i>
+                                        </div>
+                                    </div>
+                                    <div class="ms-3">
+                                        <p class="mb-0">Chi phí</p>
+                                        <h5 class="mb-0">@(SimpleCard_SoLieuTrongThang.ContainsKey("ChiPhi") ? SimpleCard_SoLieuTrongThang["ChiPhi"] : "")</h5>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            <!--/ Số liệu trong tháng -->
+            <button class="btn btn-danger btn-sm btnRemoveWidget mt-1">Xóa</button>
+        </div>
+        <div class="widget col-md-4 mb-3" data-id="LineChart_DoanhThuCacThang">
+            <!-- Four Cards -->
+                <div class="row gy-6">
+                    <!-- Doanh thu thang line chart -->
+                    <div class="col-sm-6">
+                        <div class="card h-100">
+                            <div class="card-header pb-0">
+                                <h5 class="mb-0">@(LineChart_DoanhThuCacThang.ContainsKey("DoanhThu_CurrentMonth") ? LineChart_DoanhThuCacThang["DoanhThu_CurrentMonth"] : "") VNĐ</h5>
+                            </div>
+                            <div class="card-body">
+                                <div id="dtThangLineChart" class="mb-3" data-values="@(LineChart_DoanhThuCacThang.ContainsKey("DoanhThu_ArrayValue") ? LineChart_DoanhThuCacThang["DoanhThu_ArrayValue"] : "")"></div>
+                                <h6 class="text-center mb-0">Doanh thu tháng gần đây</h6>
+                            </div>
+                        </div>
+                    </div>
+                    <!--/ Doanh thu thang line chart -->
+                    <!-- Chi phi thang column chart -->
+                    <div class="col-sm-6">
+                        <div class="card h-100">
+                            <div class="card-header pb-0">
+                                <h5 class="mb-0">@(ColumnChart_ChiPhiCacThang.ContainsKey("ChiPhi_CurrentMonth") ? ColumnChart_ChiPhiCacThang["ChiPhi_CurrentMonth"] : "") VNĐ</h5>
+                            </div>
+                            <div class="card-body">
+                                <div id="cpThangColumnChart" class="mb-3" data-values="@(ColumnChart_ChiPhiCacThang.ContainsKey("ChiPhi_ArrayValue") ? ColumnChart_ChiPhiCacThang["ChiPhi_ArrayValue"] : "")"></div>
+                                <h6 class="text-center mb-0">Chi phí tháng gần đây</h6>
+                            </div>
+                        </div>
+                    </div>
+                    <!--/ Chi phí tháng column chart -->
+                    <!-- Dich vu thang -->
+                    <div class="col-xl-12">
+                        <div class="card mb-0">
+                            <div class="card-body card-separator">
+                                <div class="d-flex justify-content-between align-items-center flex-wrap mb-4">
+                                    <h5 class="m-0 me-2">Top 5 dịch vụ tháng</h5>
+                                    <a class="fw-medium" href="javascript:void(0);">Xem tất cả</a>
+                                </div>
+                                <div class="deposit-content pt-2">
+                                    <ul class="p-0 m-0">
+                                        @if (ListItem_TopDichVuThang != null)
+                                        {
+                                            @foreach (var row in ListItem_TopDichVuThang.Take(5))
+                                            {
+                                                <li class="d-flex mb-4 align-items-center pb-2">
+                                                    <div class="flex-shrink-0 me-4">
+                                                        <img src="@row.ServiceImage"
+                                                             class="img-fluid"
+                                                             alt="gumroad"
+                                                             height="30"
+                                                             width="30" />
+                                                    </div>
+                                                    <div class="d-flex w-100 flex-wrap align-items-center justify-content-between gap-2">
+                                                        <div class="me-2">
+                                                            <h6 class="mb-0">@row.ServiceName</h6>
+                                                            <p class="mb-0">@row.SoLuotBook lượt</p>
+                                                        </div>
+                                                        <h6 class="text-success mb-0">@row.DoanhThu</h6>
+                                                    </div>
+                                                </li>
+                                            }
+                                        }
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <!-- Dich vu thang -->
+                </div>
+            <!--/ five card -->
+            <button class="btn btn-danger btn-sm btnRemoveWidget mt-1">Xóa</button>
+        </div>
+        <!-- Thêm các widget khác tương tự -->
+    </div>
+</div>
+

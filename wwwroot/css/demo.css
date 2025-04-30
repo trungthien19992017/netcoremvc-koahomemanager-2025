@@ -323,3 +323,14 @@ h2.card-header {
     transform: translateY(0);
   }
 }
+
+/*chỉnh css để tránh select2 lỗi hiển thị trong popup form*/
+.modal-PopupForm .select2-container--open,
+/* Áp dụng z-index cao cho dropdown render trong modal */
+.select2-container--open {
+  z-index: 9999 !important;
+}
+
+.select2-dropdown {
+  z-index: 9999 !important;
+}

@@ -248,7 +248,11 @@ namespace KOAHome.Controllers
         // nếu tồn tại id thì add id vao parameter
         if (id != null)
         {
-          objParameters.Add("Id", id ?? (object)DBNull.Value);
+          // nếu obj param đã có Id thì bỏ qua
+          if (!objParameters.ContainsKey("Id"))
+          {
+            objParameters.Add("Id", id ?? (object)DBNull.Value);
+          }
         }
 
         // chuyen bo loc len giao dien
@@ -481,7 +485,11 @@ namespace KOAHome.Controllers
         // nếu tồn tại id thì add id vao parameter
         if (id != null)
         {
-          objParameters.Add("Id", id ?? (object)DBNull.Value);
+          // nếu obj param đã có Id thì bỏ qua
+          if (!objParameters.ContainsKey("Id"))
+          {
+            objParameters.Add("Id", id ?? (object)DBNull.Value);
+          }
         }
 
         // chuyen bo loc len giao dien
