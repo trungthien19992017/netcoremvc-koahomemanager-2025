@@ -3,6 +3,11 @@
 @{
     var resultList = ViewData["resultList"] as List<dynamic>;
 
+    // giá trị isPage để kiểm tra có phải trang hoàn chỉnh không
+    var isPage = ViewData["isPage"] as bool?;
+
+    var containerId = ViewData["containerId"] as string;
+
     // truyen cau hinh report de xu ly giao dien
     var report = ViewData["report"] as IDictionary<string, object>;
     string ReportCode = ViewData["ReportCode"] as string;
@@ -41,8 +46,231 @@
 }
             <div>
               @* table *@
-              <div class="card mb-6">
+              <div class="card h-100 overflow-hidden">
+              @* nếu tồn tại report thì tiếp tục *@
+              @if (report != null)
+              {
+                  @* nếu isPage = true thì hiển thị title *@
+                  @if (isPage == true)
+                  {
+                    <h2 class="card-header text-center" id="header-title">@(listFilterValue.ContainsKey("title") ? listFilterValue["title"] : report.ContainsKey("Name") ? report["Name"] : "Danh sách")</h2>
+                  }
                   <div class="card-body" id="vertical-example">
+                  @* nếu isPage = true, là trang hoàn chỉnh thì hiển thị thêm bộ lọc và action top *@
+                  @if (isPage == true)
+                  {
+                    <!-- Accordion -->
+                    <!-- phan mo rong de an hien bo loc-->
+                    <div class="row">
+                        <div class="col-md">
+                            <div class="accordion mt-4" id="accordionExample">
+                                <div class="accordion-item active">
+                                    <h2 class="accordion-header" id="headingOne">
+                                        <button type="button" class="accordion-button collapsed" data-bs-toggle="collapse" data-bs-target="#accordionOne" aria-expanded="true" aria-controls="accordionOne">
+                                            Tìm kiếm
+                                        </button>
+                                    </h2>
+                                    <div id="accordionOne" class="accordion-collapse collapse" data-bs-parent="#accordionExample">
+                                        <div class="accordion-body">
+                                            @* filter *@
+                                            <form id="reportfilter" method="get" class="needs-validation" novalidate="" asp-controller="NETReport" asp-action="Form_Report_Viewer" asp-route-ReportCode = "@ReportCode" asp-route-containerId ="@containerId" enctype="multipart/form-data">
+                                                @* report code mac dinh truyen vao bo loc *@
+                                                <div class="row gx-3 gy-2 align-items-center">
+                                                    @* xu ly filter dong *@
+                                                    @foreach (var filter in listFilterConfig.OrderBy(p => p.OrderId).ToList())
+                                                    {
+                                                        @* name: Key cua filter truyen vao, label: Ten filter, type: Loại filter, value: giá trị filter
+                                                    , colspan: độ rộng filter *@
+                                                        string name = filter.Code;
+                                                        string label = filter.Name;
+                                                        string type = filter.DynamicFieldName;
+                                                        var value = listFilterValue.ContainsKey(name) ? listFilterValue[name] : "";
+                                                        int colspan = Convert.ToInt32(filter.ColSpan);
+
+                                                        @* neu colspan = 0 thi mac dinh = 4, neu khong thi lay colspan *@
+                                                            <div class="col-md-@(Convert.ToInt32(filter.ColSpan) == 0 ? "4" : @filter.ColSpan) form-floating form-floating-outline mb-6">
+                                                            @if (type == "TEXT BOX")
+                                                            {
+                                                                <input class="form-control form-control-sm" type="text" id="@name" name="@name" value="@value" @(filter.Required == true ? "required" : "") />
+                                                            }
+                                                            else if (type == "DATE BOX")
+                                                            {
+                                                                <input class="form-control form-control-sm" type="date" id="@name" name="@name" value="@value" @(filter.Required == true ? "required" : "") />
+                                                            }
+                                                            else if (type == "SELECT BOX")
+                                                            {
+                                                                @* check selected cho item dung voi gia tri *@
+                                                                var selectList = dynamicServiceSelectOptions[name] as List<SelectListItem> ?? new List<SelectListItem>();
+                                                                @foreach (var item in selectList)
+                                                                {
+                                                                    if (value != null)
+                                                                    {
+                                                                        item.Selected = (item.Value.ToString() == value.ToString()); // currentValue là giá trị đang được chọn
+                                                                    }
+                                                                }
+                                                                var selectAttributes = new Dictionary<string, object>
+                                                    {
+                                                    { "class", "form-select color-dropdown form-select-sm" },
+                                                    { "id", name },
+                                                    { "name", name }
+                                                    };
+
+                                                                // neu bat buoc thi them truong bat buoc
+                                                                if (filter.Required == true)
+                                                                {
+                                                                    selectAttributes["required"] = "required";
+                                                                }
+
+                                                                @Html.DropDownList(name, selectList, "-- Chọn --", selectAttributes)
+                                                            }
+                                                            else if (type == "TREEVIEW MULTIPLE")
+                                                            {
+                                                                @* check selected cho item dung voi gia tri *@
+                                                                var selectList = dynamicServiceSelectOptions[name] as List<SelectListItem> ?? new List<SelectListItem>();
+                                                                @foreach (var item in selectList)
+                                                                {
+                                                                    if (value != null)
+                                                                    {
+                                                                        // split chuoi value thanh List string để xử lý
+                                                                        var splitvalue = value.ToString().Split(",", StringSplitOptions.RemoveEmptyEntries);
+                                                                        // kiểm tra cac giá trị có khớp không
+                                                                        item.Selected = (splitvalue.Any(s => s.Trim().Equals(item.Value.ToString(), StringComparison.OrdinalIgnoreCase))); // currentValue là giá trị đang được chọn
+                                                                    }
+                                                                }
+                                                                var selectAttributes = new Dictionary<string, object>
+                                                    {
+                                                    { "class", "form-select color-dropdown form-select-sm" },
+                                                    { "id", name },
+                                                    { "name", name },
+                                                    { "multiple", "multiple" }
+                                                    };
+
+                                                                // neu bat buoc thi them truong bat buoc
+                                                                if (filter.Required == true)
+                                                                {
+                                                                    selectAttributes["required"] = "required";
+                                                                }
+
+                                                                @Html.DropDownList(name, selectList, "-- Chọn --", selectAttributes)
+                                                            }
+                                                            <label for="@name">@label</label>
+                                                            <div class="valid-feedback"> Chính xác! </div>
+                                                            <div class="invalid-feedback"> Không được bỏ trống. </div>
+                                                        </div>
+                                                    }
+
+                                                </div>
+                                                @* end filter *@
+                                                @* nut xem *@
+                                                <div class="row gx-3 gy-2 align-items-center">
+                                                    <div class="col-md-12 d-flex justify-content-center">
+                                                        <label class="form-label" for="showToastPlacement">&nbsp;</label>
+                                                        <button type="submit" id="showToastPlacement" class="btn btn-primary d-block">Xem</button>
+                                                    </div>
+                                                </div>
+                                                @* end nut xem *@
+                                            </form>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <!--/ Accordion -->
+                    @* action top *@
+                    <div class="d-flex demo-inline-spacing align-items-center table-action">
+                      @* xu ly action list detail top *@
+                      @foreach (var action in actionlistdetailList_top.OrderBy(p => p.ActionListDetailOrderId).ToList())
+                      {
+                          var actionDict = (IDictionary<string, object>)action;
+                          string actionName = actionDict.ContainsKey("ActionName") ? (actionDict["ActionName"].ToString() ?? "") : "";
+                          string actionCode = actionDict.ContainsKey("ActionCode") ? (actionDict["ActionCode"].ToString() ?? "") : "";
+                          bool actionIsTop = actionDict.ContainsKey("IsTop") ? Convert.ToBoolean(actionDict["IsTop"]) : false;
+                          string actionIcon = actionDict.ContainsKey("ActionIcon") ? (actionDict["ActionIcon"].ToString() ?? "") : "";
+                          string actionType = actionDict["Type"].ToString() ?? "";
+                          string actionValue = actionDict["Value"].ToString() ?? "";
+
+                          if (actionType == "LINK")
+                          {
+                              string url = ParseDataHelper.GetReplaceLinkWithResult(actionValue, null, listFilterValue);
+                              <a href="@url" type="button" class="btn btn-icon btn-primary" data-bs-toggle="tooltip" data-bs-offset="0,4" data-bs-placement="top" data-bs-html="true"
+                                  title="<i class='@(actionIcon)'></i> <span>@actionName</span>">
+                                  <i class="@(actionIcon)"></i>
+                              </a>
+                          }
+                          else if (actionType == "STORE")
+                          {
+                              string actionStore = actionValue;
+                              // cac thong tin xac nhan, neu co thi truyen vao action
+                              bool isPopupConfirm = Convert.ToBoolean(actionDict["IsPopupConfirm"]);
+                              int? dataSourceID = actionDict.TryGetValue("DataSourceID", out var num) && num is int val ? Convert.ToInt32(num) : null;
+                              string confirmButtonText = !string.IsNullOrWhiteSpace(actionDict["ConfirmButtonText"].ToString()) ? actionDict["ConfirmButtonText"].ToString() : null;
+                              string confirmTitle = !string.IsNullOrWhiteSpace(actionDict["ConfirmTitle"].ToString()) ? actionDict["ConfirmTitle"].ToString() : null;
+                              string confirmText = !string.IsNullOrWhiteSpace(actionDict["ConfirmText"].ToString()) ? actionDict["ConfirmText"].ToString() : null;
+                              @if (isPopupConfirm)
+                              {
+                                  <a href="" data-isconfirm="@isPopupConfirm" data-confirmtext="@confirmText" data-confirmtitle="@confirmTitle" data-confirmbutton="@confirmButtonText" data-sqlstore="@actionStore" data-datasourceid="@dataSourceID" type="button" class="btn btn-icon btn-primary confirmAction" data-bs-toggle="tooltip" data-bs-offset="0,4" data-bs-placement="top" data-bs-html="true"
+                                      title="<i class='@(actionIcon)'></i> <span>@actionName</span>">
+                                      <i class="@(actionIcon)"></i>
+                                  </a>
+                              }
+                              else
+                              {
+                                  <a href="" data-sqlstore="@actionStore" data-datasourceid="@dataSourceID" type="button" class="btn btn-icon btn-primary confirmAction" data-bs-toggle="tooltip" data-bs-offset="0,4" data-bs-placement="top" data-bs-html="true"
+                                      title="<i class='@(actionIcon)'></i> <span>@actionName</span>">
+                                      <i class="@(actionIcon)"></i>
+                                  </a>
+                              }
+                              @* thiếu đoạn xử lý store với IsChooseData, sẽ bổ sung sau *@
+                          }
+                          else if (actionType == "POPUPFORM")
+                          {
+                              var popupDictValue = ParseDataHelper.GetReplacePopupLinkWithResult(actionValue, null, listFilterValue);
+                              string actionFormCode = popupDictValue.ContainsKey("FORMCODE") ? popupDictValue["FORMCODE"].ToString() ?? "" : "";
+                              string actionLink = popupDictValue.ContainsKey("LINK") ? popupDictValue["LINK"].ToString() ?? "" : "";
+                              <a href="" data-bs-toggle="modal" data-bs-target="#modal-PopupForm" data-actionlink="@actionLink" type="button" class="btn btn-icon btn-primary popupform-action" data-bs-toggle="tooltip" data-bs-offset="0,4" data-bs-placement="top" data-bs-html="true"
+                                  title="<i class='@(actionIcon)'></i> <span>@actionName</span>">
+                                  <i class="@(actionIcon)"></i>
+                              </a>
+                          }
+                          else if (actionType == "IMPORT_FILEEXCEL")
+                          {
+                              @* Button import file excel *@
+                                <button id="importFileBtn" class="btn btn-icon btn-primary" data-bs-toggle="tooltip" data-bs-offset="0,4" data-bs-placement="top" data-bs-html="true"
+                                      title="<i class='@(actionIcon)'></i> <span>@actionName</span>">
+                                  <i class="@(actionIcon)"></i>
+                              </button>
+
+                              @* Input file ẩn *@
+                                <input type="file" id="importFileInput" data-sqlstore="@actionValue" accept=".xlsx" style="display: none;" />
+                          }
+                          else if (actionType == "DOWNLOADFILETEMPLATE")
+                          {
+                              // lấy thông tin file template để xuất
+                              string fileTemplate = actionDict.ContainsKey("FileTemplate") ? (actionDict["FileTemplate"].ToString() ?? "") : "";
+                              string url = "";
+                              if (!string.IsNullOrWhiteSpace(fileTemplate))
+                              {
+                                  // kiếm tra đường dẫn chưa có dấu / thì thêm vào
+                                  url = (fileTemplate.StartsWith("/") ? fileTemplate : ("/" + fileTemplate));
+                              }
+                              <a href="@url" type="button" class="btn btn-icon btn-primary" data-bs-toggle="tooltip" data-bs-offset="0,4" data-bs-placement="top" data-bs-html="true"
+                                  title="<i class='@(actionIcon)'></i> <span>@actionName</span>">
+                                  <i class="@(actionIcon)"></i>
+                              </a>
+                          }
+                          else
+                          {
+                              string url = ParseDataHelper.GetReplaceLinkWithResult(actionValue, null, listFilterValue);
+                              <a href="@url" type="button" class="btn btn-icon btn-primary" data-bs-toggle="tooltip" data-bs-offset="0,4" data-bs-placement="top" data-bs-html="true"
+                                  title="<i class='@(actionIcon)'></i> <span>@actionName</span>">
+                                  <i class="@(actionIcon)"></i>
+                              </a>
+                          }
+                      }
+                    </div>
+                    @* end action top *@
+                     }
                     @* boc cac thanh phan cua table lai *@
                     <div id="@("table-viewer-" + (ReportCode ?? "emptycode") + "-wrap")">
                     @* action top *@
@@ -541,112 +769,18 @@
                   <!--/ Pagination End -->
                 </div>
             </div>
+            }
           </div>
           @* end table *@
         </div>
 
 
 <script>
-    // tự động add param từ link vào hidden input
-    window.addEventListener("DOMContentLoaded", () => {
-      const urlParams = new URLSearchParams(window.location.search);
-      const hiddenDiv = document.getElementById("hiddenInputs");
-
-      urlParams.forEach((value, key) => {
-        const input = document.createElement("input");
-        input.type = "hidden";
-        input.name = "q_"+key;
-        input.value = value;
-        hiddenDiv.appendChild(input);
-      });
-    });
-
-
-    // them dong editor moi
-    function addNewRow(tableid = "ReportEditor") {
-        debugger;
-        const table = document.getElementById(tableid).getElementsByTagName('tbody')[0];
-        const templateRow = table.querySelector('tr[data-template="true"]');
-        const newIndex = table.rows.length + 1;
-
-        if (!templateRow) {
-            console.error("Không tìm thấy dòng mẫu!");
-            return;
-        }
-
-        // 1. Destroy select2 trên templateRow trước
-        const $select = $(templateRow).find("select");
-
-        if ($select.hasClass("select2-hidden-accessible")) {
-            $select.select2('destroy');
-        }
-
-        // Optionally clear ID (nếu cần clone nhiều dòng tránh id trùng)
-        $select.removeAttr("id");
-
-                // Clone dòng mẫu
-        const newRow = templateRow.cloneNode(true);
-        newRow.removeAttribute("data-template");
-        newRow.style.display = "";
-        // Gán thuộc tính change tracking nếu cần
-        newRow.setAttribute("data-changed", "true");
-        newRow.setAttribute("data-template", "false");
-        // xóa class ẩn tr
-        newRow.classList.remove("d-none");
-
-        // Replace tất cả {{index}} trong thuộc tính name
-        newRow.innerHTML = newRow.innerHTML.replace(/grid\[\d+\]/g, `grid[${newIndex}]`);
-
-        // Thêm vào đầu bảng hoặc cuối bảng
-        const firstRow = table.querySelector('tr[data-template="false"]');
-        if (firstRow) {
-            table.insertBefore(newRow, firstRow);
-        } else {
-            table.appendChild(newRow);
-        }
-
-        // Áp dụng Select2 nếu có
-        $(newRow).find("select").select2({
-            placeholder: "Chọn",
-            allowClear: true,
-            width: "100%"
-        });
-    }
-
-        // sau khi load, tu dong cap nhat format date
-        $(document).ready(function () {
-            // Lấy tất cả các input có type="date" hoặc "datetime-local"
-            $('input[type="date"], input[type="datetime-local"]').each(function () {
-                let originalValue = $(this).attr('value');
-
-                if (originalValue) {
-                    if ($(this).attr("type") === "date") {
-                        // Kiểm tra xem đã đúng định dạng YYYY-MM-DD chưa
-                        let isoDateRegex = /^\d{4}-\d{2}-\d{2}$/;
-                        if (!isoDateRegex.test(originalValue)) {
-                            let formattedDate = moment(originalValue, ["M/D/YYYY h:mm:ss A", "DD/MM/YYYY", "YYYY-MM-DD"]).format("YYYY-MM-DD");
-                            $(this).val(formattedDate); // Điền trực tiếp vào value
-                            $(this).attr("value", formattedDate); // Cập nhật lại giá trị trong HTML
-                        }
-                    } else if ($(this).attr("type") === "datetime-local") {
-                        // Kiểm tra xem đã đúng định dạng YYYY-MM-DDTHH:mm chưa
-                        let isoDateTimeRegex = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}$/;
-                        if (!isoDateTimeRegex.test(originalValue)) {
-                            let formattedDateTime = moment(originalValue, ["M/D/YYYY h:mm:ss A", "DD/MM/YYYY HH:mm:ss", "YYYY-MM-DDTHH:mm:ss"]).format("YYYY-MM-DDTHH:mm");
-                            $(this).val(formattedDateTime); // Điền trực tiếp vào value
-                            $(this).attr("value", formattedDateTime); // Cập nhật lại giá trị trong HTML
-                        }
-                    }
-                }
-            });
-        });
-
          // xu ly nút xuat export, phan trang doi voi table cau hinh class table-with-exportexcel
         $(document).ready(function () {
             // voi moi class table with export excel se lay id va xu ly
             $('.table-with-exportexcel').each(function (index, tableElement) {
                 var $table = $(tableElement);
-                debugger;
                 // Chỉ xử lý nếu table chưa init DataTable
                 if ($.fn.DataTable.isDataTable(tableElement)) {
                     return; // bỏ qua nếu đã có DataTable
@@ -687,99 +821,91 @@
             initSelect2();
 
         });
+            // xử lý bộ lọc
+            $("#reportfilter").on("submit", function (e) {
+              debugger;
+              e.preventDefault();
+              let form = $(this);
+              // lấy dữ liệu lọc
+              let formDataArray = form.serializeArray();
+              let formDataObject = {};
+              formDataArray.forEach(function(item) {
+                  formDataObject[item.name] = item.value;
+              });
 
+                  let actionUrl = form.attr("action");
+              let urlParams = new URLSearchParams(actionUrl.split('?')[1]);
+              let reportCode = urlParams.get("ReportCode");  // Kết quả: "RPT001"
+              let containerId = urlParams.get("containerId");
+              
+              // Xóa cache tab này
+              delete tabContentCache[containerId];
 
-        // kiem tra nếu có nhập liệu trên bất kì dòng nào thì mới enable nút Lưu, và dòng nào nhập liệu thì mới truyền xuống IFormCollection
-            // Theo dõi tất cả form trên trang
-            document.querySelectorAll("form").forEach(form => {
-                const table = form.querySelector("table"); // Tìm bảng trong form
-                const submitButton = form.querySelector("button[type='submit']");
+              // gọi lại function xử lý hiển thị
+              // Gọi AJAX và lưu cache
+              loadFormReportViewer(reportCode, containerId, formDataObject, true, function (html) {
+                  tabContentCache[containerId] = {
+                          html,
+                          lastCode: reportCode,
+                          lastTemplate: "viewer-utility"
+                      };
+                  });
 
-                if (!table || !submitButton) return; // Bỏ qua nếu không có bảng hoặc nút submit
+          });
 
-                function checkChanges() {
-                    let hasChanges = false;
+          @* xử lý hiển thị form popup  *@
+        $(document).on('click', '.popupform-action', function (e) {
+            const $btn = $(this);
+            const actionlink = $btn.data('actionlink') ?? null;
+            const id = $btn.data('id') ?? "";
+            const formCode = $btn.data('formcode') ?? "";
+            const isReadOnly = $btn.data('isreadonly') ?? false;
+            const queryParams = new URLSearchParams(window.location.search).toString(); // lấy full query string
 
-                    // Kiểm tra nếu form không có id là "editor-form", trả về false và dừng
-                    if (form.id !== "editor-form") {
-                        submitButton.disabled = false; // Luôn bật nút lưu nếu không phải form editor-form
-                        return;
+            // có 2 cách lấy, 1 là lấy từ link, 2  là lấy từ form code và id
+            let url = ""
+            if (actionlink != null){
+              url = actionlink;
+              if (queryParams !== "") {
+                  url += (actionlink.includes('?') ? '&' : '?') + queryParams;
+              }
+            }
+            else{
+              url = `/form/popup-viewer/${formCode}/${id}?${queryParams}&isReadOnly=${isReadOnly}`;
+            }
+
+            $.ajax({
+                url: url,
+                type: 'GET',
+                data: null,
+                success: function (response) {
+                    // Nếu trả về thành công và có HTML, chèn vào container
+                    if (response.success === false) {
+                        // Nếu không thành công, hiển thị thông báo lỗi
+                        rplm({
+                               title: "Lỗi khi hiển thị popup!",
+                               text: response.errorMessage || "Có vấn đề xảy ra.",
+                               type: "error",
+                               timer: 2000,
+                               confirmButtonText: 'Xác nhận',
+                               html: true
+                           });
+                    } else {
+                        // Nếu không có lỗi, chèn HTML vào container
+                        let html = response;
+                        $('#modal-PopupForm').html(html);
                     }
-
-                    // neu khong co tr nào co attr data change thi mac dinh hien thi nut Luu
-                    if (table.querySelectorAll("tr[data-changed]").length == 0)
-                    {
-                      submitButton.disabled = false;
-                      return;
-                    }
-
-                    table.querySelectorAll("tr").forEach(row => {
-                        if (row.getAttribute("data-changed") === "true") {
-                            hasChanges = true;
-                        }
-                    });
-
-                    submitButton.disabled = !hasChanges; // Bật/tắt nút submit
+                },
+                error: function (xhr, status, error) {
+                    rplm({
+                            title: "Lỗi khi hiển thị popup!",
+                            text: error || "Có vấn đề xảy ra.",
+                            type: "error",
+                            timer: 2000,
+                            confirmButtonText: 'Xác nhận',
+                            html: true
+                        });
                 }
-
-                // Một hàm duy nhất đánh dấu dòng thay đổi
-                function markRowChanged(target) {
-                    if (target.classList.contains("track-change")) {
-                        const row = target.closest("tr");
-                        if (row) {
-                            row.setAttribute("data-changed", "true");
-                            row.classList.add("row-changed"); // ➡️ Thêm dòng này để highlight
-                            checkChanges();
-                        }
-                    }
-                }
-
-                // Theo dõi input và change chung
-                table.addEventListener("input", event => {
-                    markRowChanged(event.target);
-                });
-
-                table.addEventListener("change", event => {
-                    markRowChanged(event.target);
-                });
-
-                // Nếu dùng jQuery và select2
-                if (window.jQuery && $(table).length) {
-                    $(table).on('select2:select select2:unselect', 'select.track-change', function (event) {
-                        markRowChanged(event.target);
-                    });
-                }
-
-                // Nếu người dùng click vào nút trong bảng
-                table.addEventListener("click", event => {
-                    const target = event.target;
-                    if (target.closest("button")) {
-                        const row = target.closest("tr");
-                        if (row) {
-                            row.setAttribute("data-changed", "true");
-                            row.classList.add("row-changed"); // ➡️ Thêm dòng này để highlight
-                            checkChanges();
-                        }
-                    }
-                });
-
-                    // Chỉ gử i dữ liệu của bảng đã thay đổi
-                form.addEventListener("submit", function (event) {
-                    let rows = table.querySelectorAll("tbody tr");
-
-                    rows.forEach(row => {
-                      // neu khong khai bao data change thi bo qua, neu co khai bao data change thi kiem tra = false thi xoa
-                        if (row.getAttribute('data-changed') !== undefined && row.getAttribute('data-changed') !== null)
-                        {
-                          if (row.getAttribute("data-changed") !== "true") {
-                            row.remove(); // Xóa các dòng chưa thay đổi khỏi form trước khi submit
-                          }
-                        }
-                    });
-
-                    // form.submit();
-                });
-
-                checkChanges(); // Kiểm tra trạng thái ban đầu
             });
+        });
 </script>

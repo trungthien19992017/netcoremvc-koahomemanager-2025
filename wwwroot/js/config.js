@@ -1,5 +1,5 @@
 "use strict";
-window.config = {
+window.config = {	
     colors: {
         primary: "#8c57ff",
         secondary: "#8a8d93",

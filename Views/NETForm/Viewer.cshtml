@@ -55,94 +55,94 @@
     <script src="~/js/form-validation.js"></script>
 
     <script>
-          // Common function to parse Query String
-          function getQueryParams() {
-              var params = {};
-              var queryString = window.location.search.substring(1); // remove '?'
-              if (queryString.length === 0) return params;
+        //   // Common function to parse Query String
+        //   function getQueryParams() {
+        //       var params = {};
+        //       var queryString = window.location.search.substring(1); // remove '?'
+        //       if (queryString.length === 0) return params;
 
-              var pairs = queryString.split("&");
-              for (var i = 0; i < pairs.length; i++) {
-                  var pair = pairs[i].split('=');
-                  if (pair.length === 2) {
-                      params[decodeURIComponent(pair[0])] = decodeURIComponent(pair[1].replace(/\+/g, ' '));
-                  }
-              }
-              return params;
-          }
+        //       var pairs = queryString.split("&");
+        //       for (var i = 0; i < pairs.length; i++) {
+        //           var pair = pairs[i].split('=');
+        //           if (pair.length === 2) {
+        //               params[decodeURIComponent(pair[0])] = decodeURIComponent(pair[1].replace(/\+/g, ' '));
+        //           }
+        //       }
+        //       return params;
+        //   }
 
-        // load report editor động trong form
-        function loadFormReportEditor(reportCode, containerId) {
-            var queryParams = getQueryParams();
-            queryParams.reportCode = reportCode; // Inject thêm reportCode
+        // // load report editor động trong form
+        // function loadFormReportEditor(reportCode, containerId) {
+        //     var queryParams = getQueryParams();
+        //     queryParams.reportCode = reportCode; // Inject thêm reportCode
 
-            $.ajax({
-                url: '/NETReport/Form_Report_Editor',
-                type: 'GET',
-                data: queryParams,
-                success: function (response) {
-                    // Nếu trả về thành công và có HTML, chèn vào container
-                    if (response.success === false) {
-                        // Nếu không thành công, hiển thị thông báo lỗi
-                        rplm({
-                               title: "Lỗi khi hiển thị danh sách!",
-                               text: response.errorMessage || "Có vấn đề xảy ra.",
-                               type: "error",
-                               timer: 2000,
-                               confirmButtonText: 'Xác nhận',
-                               html: true
-                           });
-                    } else {
-                        // Nếu không có lỗi, chèn HTML vào container
-                        let html = response;
-                        $("#" + containerId).html(html);
-                    }
-                },
-                error: function (xhr, status, error) {
-                    console.error('Error loading report editor:', error);
-                }
-            });
-        }
+        //     $.ajax({
+        //         url: '/NETReport/Form_Report_Editor',
+        //         type: 'GET',
+        //         data: queryParams,
+        //         success: function (response) {
+        //             // Nếu trả về thành công và có HTML, chèn vào container
+        //             if (response.success === false) {
+        //                 // Nếu không thành công, hiển thị thông báo lỗi
+        //                 rplm({
+        //                        title: "Lỗi khi hiển thị danh sách!",
+        //                        text: response.errorMessage || "Có vấn đề xảy ra.",
+        //                        type: "error",
+        //                        timer: 2000,
+        //                        confirmButtonText: 'Xác nhận',
+        //                        html: true
+        //                    });
+        //             } else {
+        //                 // Nếu không có lỗi, chèn HTML vào container
+        //                 let html = response;
+        //                 $("#" + containerId).html(html);
+        //             }
+        //         },
+        //         error: function (xhr, status, error) {
+        //             console.error('Error loading report editor:', error);
+        //         }
+        //     });
+        // }
 
-        // load report viewer động trong form
-        function loadFormReportViewer(reportCode, containerId) {
-            var queryParams = getQueryParams();
-            queryParams.reportCode = reportCode; // Inject thêm reportCode
+        // // load report viewer động trong form
+        // function loadFormReportViewer(reportCode, containerId) {
+        //     var queryParams = getQueryParams();
+        //     queryParams.reportCode = reportCode; // Inject thêm reportCode
 
-            $.ajax({
-                url: '/NETReport/Form_Report_Viewer',
-                type: 'GET',
-                data: queryParams,
-                success: function (response) {
-                    // Nếu trả về thành công và có HTML, chèn vào container
-                    if (response.success === false) {
-                        // Nếu không thành công, hiển thị thông báo lỗi
-                        rplm({
-                               title: "Lỗi khi hiển thị danh sách!",
-                               text: response.errorMessage || "Có vấn đề xảy ra.",
-                               type: "error",
-                               timer: 2000,
-                               confirmButtonText: 'Xác nhận',
-                               html: true
-                           });
-                    } else {
-                        // Nếu không có lỗi, chèn HTML vào container
-                        let html = response;
-                        $("#" + containerId).html(html);
-                    }
-                },
-                error: function (xhr, status, error) {
-                  rplm({
-                          title: "Lỗi khi hiển thị danh sách!",
-                          text: error || "Có vấn đề xảy ra.",
-                          type: "error",
-                          timer: 2000,
-                          confirmButtonText: 'Xác nhận',
-                          html: true
-                      });
-                }
-            });
-        }
+        //     $.ajax({
+        //         url: '/NETReport/Form_Report_Viewer',
+        //         type: 'GET',
+        //         data: queryParams,
+        //         success: function (response) {
+        //             // Nếu trả về thành công và có HTML, chèn vào container
+        //             if (response.success === false) {
+        //                 // Nếu không thành công, hiển thị thông báo lỗi
+        //                 rplm({
+        //                        title: "Lỗi khi hiển thị danh sách!",
+        //                        text: response.errorMessage || "Có vấn đề xảy ra.",
+        //                        type: "error",
+        //                        timer: 2000,
+        //                        confirmButtonText: 'Xác nhận',
+        //                        html: true
+        //                    });
+        //             } else {
+        //                 // Nếu không có lỗi, chèn HTML vào container
+        //                 let html = response;
+        //                 $("#" + containerId).html(html);
+        //             }
+        //         },
+        //         error: function (xhr, status, error) {
+        //           rplm({
+        //                   title: "Lỗi khi hiển thị danh sách!",
+        //                   text: error || "Có vấn đề xảy ra.",
+        //                   type: "error",
+        //                   timer: 2000,
+        //                   confirmButtonText: 'Xác nhận',
+        //                   html: true
+        //               });
+        //         }
+        //     });
+        // }
 
         // xử lý hiển thị dynamic report trong form nếu có
         $(document).ready(function () {
@@ -211,16 +211,18 @@
         <!-- Booking form -->
         <div class="row">
             <div class="col-xl">
+              <form id="create-form" class="needs-validation" novalidate="" method="post" asp-controller="NETForm" asp-action="Viewer" asp-route-formCode="@formCode"
+                    asp-route-id="@id" enctype="multipart/form-data">
                 <div class="card mb-6">
-                    <div class="card-header d-flex justify-content-between align-items-center">
-                        <h5 class="mb-0">@formTitle</h5>
-                        <small class="text-body float-end">Cố lên nhé sắp thành công rồi!!!!</small>
+                    <div class="card-header sticky-element bg-label-primary d-flex justify-content-sm-between align-items-sm-center flex-column flex-sm-row">
+                        <h5 class="card-title mb-sm-0 me-2">@formTitle</h5>
+                        <div class="action-btns">
+                            <button type="submit" class="btn btn-primary">Lưu</button>
+                        </div>
                     </div>
                     <div class="card-body">
                         @if (config_form != null)
                         {
-                          <form id="create-form" class="needs-validation" novalidate="" method="post" asp-controller="NETForm" asp-action="Viewer" asp-route-formCode="@formCode"
-                                asp-route-id="@id" enctype="multipart/form-data">
                           @* hidden input để xử lý ẩn truyền dữ liệu từ param link vào bằng js *@
                           <div id="hiddenInputs"></div>
                           @* xu ly form dong *@
@@ -697,7 +699,7 @@
                                           // check selected cho item dung voi gia tri
                                           var selectList = dynamicServiceSelectOptions[name] as List<SelectListItem> ?? new List<SelectListItem>();
                                           string inputName = name; // ví dụ: "ListSelectionInput"
-                                          var selectedValues = (value.ToString() ?? "").Split(',', StringSplitOptions.RemoveEmptyEntries).ToList();
+                                          var selectedValues = (value?.ToString() ?? "").Split(',', StringSplitOptions.RemoveEmptyEntries).ToList();
                                           string hiddenInputId = $"hidden_{inputName}";
 
                                           <div class="selection-container">
@@ -892,11 +894,10 @@
                                 }
                             }
                               </div>
-                          <button type="submit" class="btn btn-primary">Lưu</button>
-                          </form>
-                        }
+                            }
                     </div>
                 </div>
+              </form>
             </div>
         </div>
         <!-- end Booking form -->

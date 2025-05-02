@@ -56,11 +56,6 @@
 
 
 
-  <!-- Main JS-->
-  <script src='~/js/main.js'></script>
-  <script src='~/js/replete-modal.js'></script>
-
-
     <!--  script xu ly chung duoc viet trong master-->
   <script>
           // tim kiem trong select box
@@ -1204,99 +1199,104 @@
 
         // xu ly import file excel de cap nhat va them moi du lieu
          $(document).ready(function () {
-           // Khi bấm nút → kích hoạt chọn file
-           document.getElementById("importFileBtn").addEventListener("click", function () {
-              // reset file truoc khi click
-               document.getElementById("importFileInput").value = "";
-               document.getElementById("importFileInput").click();
-           });
+           const importFileBtn = document.getElementById("importFileBtn");
+           const importFileInput = document.getElementById("importFileInput");
+           if (importFileBtn)
+           {
+             // Khi bấm nút → kích hoạt chọn file
+             importFileBtn.addEventListener("click", function () {
+                // reset file truoc khi click
+                 importFileInput.value = "";
+                 importFileInput.click();
+             });
 
-           // Khi người dùng chọn file → gửi file lên API
-           document.getElementById("importFileInput").addEventListener("change", async function () {
-               const file = this.files[0];
-               if (!file) return;
+             // Khi người dùng chọn file → gửi file lên API
+             importFileInput.addEventListener("change", async function () {
+                 const file = this.files[0];
+                 if (!file) return;
 
-               var sqlstore = $(this).data('sqlstore'); // lay du lieu store tu input import de xu ly (bat buoc)
+                 var sqlstore = $(this).data('sqlstore'); // lay du lieu store tu input import de xu ly (bat buoc)
 
-               const formData = new FormData();
-               formData.append("file", file);
-               formData.append("sqlstore", sqlstore);
+                 const formData = new FormData();
+                 formData.append("file", file);
+                 formData.append("sqlstore", sqlstore);
 
-               // const resultDiv = document.getElementById("result");
-               // resultDiv.innerHTML = "Đang xử lý...";
-               rplm({
-                   title: "Xác nhận",
-                   text: "Nhập file sẽ mất một chút thời gian nhé",
-                   type: "warning",
-                   showCancelButton: true,
-                   confirmButtonText: "Đồng ý!",
-                   cancelButtonText: "Hủy!",
-                   animation: "tada",
-                   modalNOverlay: "backShadow",
-                   closeOnConfirm: false,
-                   closeOnCancel: false,
-                   showLoaderOnConfirm: true,
-                   html: true
-               },
-               function (isConfirm) {
-                   if (isConfirm) {
-                       // Gọi AJAX để gửi yêu cầu xóa
-                       $.ajax({
-                           url: '/Home/ImportExcel', // Controller xử lý xóa
-                           type: 'POST', // Hoặc 'GET' nếu phù hợp
-                           data: formData, // Truyền ID của dòng cần xóa và store xử lý
-                           processData: false, // Không chuyển `FormData` thành query string
-                           contentType: false, // Để trình duyệt tự động đặt `content-type`
-                           success: function (response) {
-                               if (response.success) {
-                                   rplm({
-                                     title: "Xử lý thành công!",
-                                     text: "Hành động của bạn đã được xử lý.",
-                                     type: "success",
-                                     timer: 2000,
-                                     confirmButtonText: 'Xác nhận',
-                                     html: true
-                                   }, function () {
-                                         // Sau khi đóng popup, reload lại trang
-                                         location.reload();
-                                     });
-                               } else {
-                                   rplm({
-                                       title: "Lỗi!",
-                                       text: response.errorMessage || "Có vấn đề xảy ra.",
-                                       type: "error",
-                                       timer: 20000,
+                 // const resultDiv = document.getElementById("result");
+                 // resultDiv.innerHTML = "Đang xử lý...";
+                 rplm({
+                     title: "Xác nhận",
+                     text: "Nhập file sẽ mất một chút thời gian nhé",
+                     type: "warning",
+                     showCancelButton: true,
+                     confirmButtonText: "Đồng ý!",
+                     cancelButtonText: "Hủy!",
+                     animation: "tada",
+                     modalNOverlay: "backShadow",
+                     closeOnConfirm: false,
+                     closeOnCancel: false,
+                     showLoaderOnConfirm: true,
+                     html: true
+                 },
+                 function (isConfirm) {
+                     if (isConfirm) {
+                         // Gọi AJAX để gửi yêu cầu xóa
+                         $.ajax({
+                             url: '/Home/ImportExcel', // Controller xử lý xóa
+                             type: 'POST', // Hoặc 'GET' nếu phù hợp
+                             data: formData, // Truyền ID của dòng cần xóa và store xử lý
+                             processData: false, // Không chuyển `FormData` thành query string
+                             contentType: false, // Để trình duyệt tự động đặt `content-type`
+                             success: function (response) {
+                                 if (response.success) {
+                                     rplm({
+                                       title: "Xử lý thành công!",
+                                       text: "Hành động của bạn đã được xử lý.",
+                                       type: "success",
+                                       timer: 2000,
                                        confirmButtonText: 'Xác nhận',
                                        html: true
-                                   }, function () {
-                                         // Sau khi đóng popup, reload lại trang
-                                         location.reload();
-                                     });
-                               }
-                           },
-                           error: function () {
-                               rplm({
-                                   title: "Lỗi!",
-                                   text: "Lỗi khi kết nối đến máy chủ.",
-                                   type: "error",
-                                   timer: 2000,
-                                   confirmButtonText: 'Done',
-                                   html: true
-                               });
-                           }
-                       });
-                   } else {
-                       rplm({
-                           title: "Đã hủy!",
-                           text: "Hành động của bạn đã được hủy.",
-                           type: "error",
-                           timer: 2000,
-                           confirmButtonText: 'Done',
-                           html: true
-                       });
-                   }
-               });
-           });
+                                     }, function () {
+                                           // Sau khi đóng popup, reload lại trang
+                                           location.reload();
+                                       });
+                                 } else {
+                                     rplm({
+                                         title: "Lỗi!",
+                                         text: response.errorMessage || "Có vấn đề xảy ra.",
+                                         type: "error",
+                                         timer: 20000,
+                                         confirmButtonText: 'Xác nhận',
+                                         html: true
+                                     }, function () {
+                                           // Sau khi đóng popup, reload lại trang
+                                           location.reload();
+                                       });
+                                 }
+                             },
+                             error: function () {
+                                 rplm({
+                                     title: "Lỗi!",
+                                     text: "Lỗi khi kết nối đến máy chủ.",
+                                     type: "error",
+                                     timer: 2000,
+                                     confirmButtonText: 'Done',
+                                     html: true
+                                 });
+                             }
+                         });
+                     } else {
+                         rplm({
+                             title: "Đã hủy!",
+                             text: "Hành động của bạn đã được hủy.",
+                             type: "error",
+                             timer: 2000,
+                             confirmButtonText: 'Done',
+                             html: true
+                         });
+                     }
+                 });
+             });
+           }
          });
 
         // xử lý Quill HTML editor cho field form
@@ -1344,13 +1344,17 @@
             });
 
             // Khi submit: đồng bộ nội dung
-            document.querySelector("form").addEventListener("submit", function () {
-                for (var id in quillEditors) {
-                    var editor = quillEditors[id];
-                    var html = editor.root.innerHTML;
-                    document.getElementById("editor-content-" + id).value = html;
-                }
-            });
+            const form = document.querySelector("form");
+            if (form)
+            {
+              form.addEventListener("submit", function () {
+                  for (var id in quillEditors) {
+                      var editor = quillEditors[id];
+                      var html = editor.root.innerHTML;
+                      document.getElementById("editor-content-" + id).value = html;
+                  }
+              });
+            }
         });
 
         // Hàm xử lý thay đổi cho input file
@@ -1565,20 +1569,26 @@
 
         // Common function to parse Query String
         // xử lý param truyền vào
-          function getQueryParams() {
-              var params = {};
-              var queryString = window.location.search.substring(1); // remove '?'
-              if (queryString.length === 0) return params;
+      function getQueryParams(queryParamOutSite = {}) {
+        // query param outsite áp dụng cho 1 số màn hình popup phải lấy params từ bên ngoài
+        var params = {};
+        var queryString = window.location.search.substring(1); // remove '?'
 
-              var pairs = queryString.split("&");
-              for (var i = 0; i < pairs.length; i++) {
-                  var pair = pairs[i].split('=');
-                  if (pair.length === 2) {
-                      params[decodeURIComponent(pair[0])] = decodeURIComponent(pair[1].replace(/\+/g, ' '));
-                  }
-              }
-              return params;
-          }
+        if (queryString.length > 0) {
+            var pairs = queryString.split("&");
+            for (var i = 0; i < pairs.length; i++) {
+                var pair = pairs[i].split('=');
+                if (pair.length === 2) {
+                    params[decodeURIComponent(pair[0])] = decodeURIComponent(pair[1].replace(/\+/g, ' '));
+                }
+            }
+        }
+
+        // gộp queryParam và outSiteParam
+        let mergedParam = { ...queryParamOutSite, ...params };
+
+        return mergedParam;
+    }
 
         // Hiển thị danh sách main menu
         $(document).ready(function () {
@@ -1628,27 +1638,65 @@
           // thay đổi menu mỗi khi click chọn main menu thông qua menu code
           $(document).on('click', '.main-menu-item', function () {
               const menuCode = $(this).data('menucode');
+              // dua cac du lieu can truyen vao formdata
+              var formData = new FormData();
+              formData.append("menuCode", menuCode); // key cua du lieu
 
               if (menuCode) {
                   // Gọi AJAX lưu MenuCode vào Session
-                  $.post('/NETMenu/SetMenuCode', { menuCode: menuCode }, function (res) {
-                      if (res.success) {
-                          // Gọi lại hàm load menu (MenuCode sẽ được lấy từ Session trong controller)
-                          $("#net-menu").empty(); // Xóa menu cũ
-                          loadMenu(); // Load lại
-
-                          // ✅ Sau khi load lại, redirect qua link đầu tiên của menu
-                          setTimeout(function () {
-                              // Tìm tất cả các liên kết trong menu và redirect tới cái đầu tiên
-                              const firstLink = $("#net-menu").find("a").first();
-                              if (firstLink.length > 0) {
-                                  window.location.href = firstLink.attr("href"); // Redirect tới href đầu tiên
+                         $.ajax({
+                             url: '/NETMenu/ChangeMainMenuCode', // Controller lưu main menu code vào session
+                             type: 'POST', // Hoặc 'GET' nếu phù hợp
+                             data: formData, // Truyền param
+                             processData: false, // Không chuyển `FormData` thành query string
+                             contentType: false, // Để trình duyệt tự động đặt `content-type`
+                             success: function (response) {
+                                if (response.success === false) {
+                                    rplm({
+                                        title: "Lỗi khi xử lý menu!",
+                                        text: response.errorMessage || "Có vấn đề xảy ra.",
+                                        type: "error",
+                                        timer: 2000,
+                                        confirmButtonText: 'Xác nhận',
+                                        html: true
+                                    });
+                                } else {
+                                    console.log("Đã lưu menu vào session");
+                                    // Gọi lại hàm load menu (MenuCode sẽ được lấy từ Session trong controller)
+                                    $("#net-menu").empty(); // Xóa menu cũ
+                                    loadMenu(); // Load lại
+                                }
+                             },
+                              error: function (xhr, status, error) {
+                                  rplm({
+                                      title: "Lỗi khi xử lý menu!",
+                                      text: error || "Có vấn đề xảy ra.",
+                                      type: "error",
+                                      timer: 2000,
+                                      confirmButtonText: 'Xác nhận',
+                                      html: true
+                                  });
                               }
-                          }, 100); // Delay 100ms để đảm bảo menu đã load xong
-                      } else {
-                          alert('Không thể lưu MenuCode!');
-                      }
-                  });
+                         });
+
+                  // $.post('/NETMenu/ChangeMainMenuCode', { menuCode: menuCode }, function (res) {
+                  //     if (res.success) {
+                  //         // Gọi lại hàm load menu (MenuCode sẽ được lấy từ Session trong controller)
+                  //         $("#net-menu").empty(); // Xóa menu cũ
+                  //         loadMenu(); // Load lại
+
+                  //         // ✅ Sau khi load lại, redirect qua link đầu tiên của menu
+                  //         setTimeout(function () {
+                  //             // Tìm tất cả các liên kết trong menu và redirect tới cái đầu tiên
+                  //             const firstLink = $("#net-menu").find("a").first();
+                  //             if (firstLink.length > 0) {
+                  //                 window.location.href = firstLink.attr("href"); // Redirect tới href đầu tiên
+                  //             }
+                  //         }, 100); // Delay 100ms để đảm bảo menu đã load xong
+                  //     } else {
+                  //         alert('Không thể lưu MenuCode!');
+                  //     }
+                  // });
               }
           });
 
@@ -1689,7 +1737,138 @@
 
         });
 
+        // load report editor động trong form
+        function loadFormReportEditor(reportCode, containerId, queryParamOutSite = {}, isPage = false, onSuccess) {
+            var queryParams = getQueryParams(queryParamOutSite);
+            queryParams.reportCode = reportCode; // Inject thêm reportCode
+            queryParams.containerId = containerId; // truyền containerId để tiện xử lý sau đó (bộ lọc,....)
+            queryParams.isPage = isPage; // kiểm tra đây có phải là 1 page không hay chỉ là 1 mẫu
 
+            $.ajax({
+                url: '/NETReport/Form_Report_Editor',
+                type: 'GET',
+                data: queryParams,
+                success: function(response) {
+                    // Nếu trả về thành công và có HTML, chèn vào container
+                    if (response.success === false) {
+                        // Nếu không thành công, hiển thị thông báo lỗi
+                        rplm({
+                            title: "Lỗi khi hiển thị danh sách!",
+                            text: response.errorMessage || "Có vấn đề xảy ra.",
+                            type: "error",
+                            timer: 2000,
+                            confirmButtonText: 'Xác nhận',
+                            html: true
+                        });
+                    } else {
+                        // Nếu không có lỗi, chèn HTML vào container
+                        let html = response;
+                        $("#" + containerId).html(html);
+
+                        // ✅ Gọi callback nếu có
+                        if (typeof onSuccess === 'function') {
+                            onSuccess(html);
+                        }
+                    }
+                },
+                error: function(xhr, status, error) {
+                    console.error('Error loading report editor:', error);
+                }
+            });
+        }
+
+        // load report viewer động trong form
+        function loadFormReportViewer(reportCode, containerId, queryParamOutSite = {}, isPage = false, onSuccess) {
+            var queryParams = getQueryParams(queryParamOutSite);
+            queryParams.reportCode = reportCode; // Inject thêm reportCode
+            queryParams.containerId = containerId; // truyền containerId để tiện xử lý sau đó (bộ lọc,....)
+            queryParams.isPage = isPage;// kiểm tra đây có phải là 1 page không hay chỉ là 1 mẫu
+
+            $.ajax({
+                url: '/NETReport/Form_Report_Viewer',
+                type: 'GET',
+                data: queryParams,
+                success: function(response) {
+                    // Nếu trả về thành công và có HTML, chèn vào container
+                    if (response.success === false) {
+                        // Nếu không thành công, hiển thị thông báo lỗi
+                        rplm({
+                            title: "Lỗi khi hiển thị danh sách!",
+                            text: response.errorMessage || "Có vấn đề xảy ra.",
+                            type: "error",
+                            timer: 2000,
+                            confirmButtonText: 'Xác nhận',
+                            html: true
+                        });
+                    } else {
+                        // Nếu không có lỗi, chèn HTML vào container
+                        let html = response;
+                        $("#" + containerId).html(html);
+
+                        // ✅ Gọi callback nếu có
+                        if (typeof onSuccess === 'function') {
+                            onSuccess(html);
+                        }
+                    }
+                },
+                error: function(xhr, status, error) {
+                    rplm({
+                        title: "Lỗi khi hiển thị danh sách!",
+                        text: error || "Có vấn đề xảy ra.",
+                        type: "error",
+                        timer: 2000,
+                        confirmButtonText: 'Xác nhận',
+                        html: true
+                    });
+                }
+            });
+        }
+        
+        // load report viewer động trong form
+        function loadFormViewer(formCode, containerId, queryParamOutSite = {}, isPage = false, onSuccess) {
+            var queryParams = getQueryParams(queryParamOutSite);
+            queryParams.formCode = formCode; // Inject thêm reportCode
+            queryParams.isPage = isPage;// kiểm tra đây có phải là 1 page không hay chỉ là 1 mẫu
+
+            $.ajax({
+                url: '/NETForm/PopupForm',
+                type: 'GET',
+                data: queryParams,
+                success: function(response) {
+                    // Nếu trả về thành công và có HTML, chèn vào container
+                    if (response.success === false) {
+                        // Nếu không thành công, hiển thị thông báo lỗi
+                        rplm({
+                            title: "Lỗi khi hiển thị biểu mẫu!",
+                            text: response.errorMessage || "Có vấn đề xảy ra.",
+                            type: "error",
+                            timer: 2000,
+                            confirmButtonText: 'Xác nhận',
+                            html: true
+                        });
+                    } else {
+                        // Nếu không có lỗi, chèn HTML vào container
+                        let html = response;
+                        $("#" + containerId).html(html);
+                        
+                        // ✅ Gọi callback nếu có
+                        if (typeof onSuccess === 'function') {
+                            onSuccess(html);
+                        }
+                    }
+                },
+                error: function(xhr, status, error) {
+                    rplm({
+                        title: "Lỗi khi hiển thị biểu mẫu!",
+                        text: error || "Có vấn đề xảy ra.",
+                        type: "error",
+                        timer: 2000,
+                        confirmButtonText: 'Xác nhận',
+                        html: true
+                    });
+                }
+            });
+        }
     </script>
 
     <!-- Page Scripts-->

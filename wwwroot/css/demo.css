@@ -128,7 +128,7 @@
   position: sticky;
   left: 0;
   background: white;
-  z-index: 10; /* Đảm bảo nó hiển thị trên nội dung cuộn */
+  z-index: 14; /* Đảm bảo nó hiển thị trên nội dung cuộn */
   box-shadow: 2px 0px 2px rgba(0, 0, 0, 0.1);
 }
 
@@ -137,7 +137,7 @@
   position: sticky;
   top: 0;
   background-color: white;
-  z-index: 20;
+  z-index: 15;
   box-shadow: 0px 3px 3px -2px rgba(0, 0, 0, 0.2); /* Tạo hiệu ứng border */
 }
 
@@ -333,4 +333,29 @@ h2.card-header {
 
 .select2-dropdown {
   z-index: 9999 !important;
+}
+
+/*Áp dụng max width cho tab panel để tránh tràn viền*/
+.nav-align-left .tab-content {
+  flex-grow: 1;
+  overflow-x: auto;
+  max-width: 100%;
+}
+
+/*css nút reload của tab panel*/
+.tab-reload-wrapper {
+  text-align: right;
+  margin-bottom: 4px;
+}
+
+.btn-reload-tab {
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 14px;
+  color: #007bff;
+}
+
+.btn-reload-tab:hover {
+  color: #0056b3;
 }

@@ -744,7 +744,6 @@
           // tim kiem trong select box
         $(document).ready(function () {
             function initSelect2() {
-              debugger;
               // không áp dụng cho Quiff HTML editor
             $("select") .not(".ql-toolbar select, .ql-container select, .ql-editor select").not(".select2-hidden-accessible").not(".dataTables_length select").select2({
                 placeholder: "Chọn",
@@ -772,7 +771,6 @@
             });
 
            $(".modal-btn-submit").click(function () {
-             debugger;
               let form = $(this).closest("form");
 
               // Custom validate nếu cần ở đây
@@ -786,7 +784,6 @@
 
           $(".modal-formpopup").on("submit", function (e) {
               e.preventDefault();
-              debugger;
               let form = $(this);
               let formData = new FormData(this);
               let modalId = form.data("modal-id");
@@ -878,36 +875,8 @@
           //    return params;
           //}
 
-      // Common function to parse Query String
-      function getQueryParams() {
-        debugger;
-        var params = {};
-        var queryString = window.location.search.substring(1); // remove '?'
 
-        if (queryString.length > 0) {
-            var pairs = queryString.split("&");
-            for (var i = 0; i < pairs.length; i++) {
-                var pair = pairs[i].split('=');
-                if (pair.length === 2) {
-                    params[decodeURIComponent(pair[0])] = decodeURIComponent(pair[1].replace(/\+/g, ' '));
-                }
-            }
-        }
-
-        var viewDataParams = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(ViewData["objParameters"] ?? new Dictionary<string, object>()));
-        // Gộp với viewDataParams nếu có, và ưu tiên viewDataParams
-        if (typeof viewDataParams === 'object' && viewDataParams !== null) {
-            for (var key in viewDataParams) {
-                if (viewDataParams.hasOwnProperty(key)) {
-                    params[key] = viewDataParams[key];
-                }
-            }
-        }
-
-        return params;
-    }
-
-        // load report editor động trong form
+@*         // load report editor động trong form
         function loadFormReportEditor(reportCode, containerId) {
             var queryParams = getQueryParams();
             queryParams.reportCode = reportCode; // Inject thêm reportCode
@@ -971,17 +940,28 @@
                     console.error('Error loading report editor:', error);
                 }
             });
-        }
+        } *@
 
         // xử lý hiển thị dynamic report trong form nếu có
         $(document).ready(function () {
-            debugger;
+            // đối với dạng popup, phải lấy query param từ bên ngoài thông qua viewdata
+            var queryParamOutSite = {};
+            var viewDataParams = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(ViewData["objParameters"] ?? new Dictionary<string, object>()));
+            // Gộp với viewDataParams nếu có, và ưu tiên viewDataParams
+            if (typeof viewDataParams === 'object' && viewDataParams !== null) {
+                for (var key in viewDataParams) {
+                    if (viewDataParams.hasOwnProperty(key)) {
+                        queryParamOutSite[key] = viewDataParams[key];
+                    }
+                }
+            }
+
             // Khi trang load, tìm tất cả div có class "form-report-editor" để load report editor
             $('.form-report-editor').each(function () {
                 var reportCode = $(this).data('reportcode'); // lấy thuộc tính data-reportcode
                 var containerId = $(this).attr('id');         // lấy id của div
                 if (reportCode && containerId) {
-                    loadFormReportEditor(reportCode, containerId);
+                    loadFormReportEditor(reportCode, containerId, queryParamOutSite);
                 }
             });
             // Khi trang load, tìm tất cả div có class "form-report-viewer" để load report viewer
@@ -989,7 +969,7 @@
                 var reportCode = $(this).data('reportcode'); // lấy thuộc tính data-reportcode
                 var containerId = $(this).attr('id');         // lấy id của div
                 if (reportCode && containerId) {
-                    loadFormReportViewer(reportCode, containerId);
+                    loadFormReportViewer(reportCode, containerId, queryParamOutSite);
                 }
             });
         });

@@ -427,10 +427,15 @@ namespace KOAHome.Controllers
 
     // danh sach editor trong form
     [HttpGet]
-    public async Task<IActionResult> Form_Report_Editor(string ReportCode, int? id)
+    public async Task<IActionResult> Form_Report_Editor(string ReportCode, int? id, string? containerId, bool isPage = false)
     {
       try
       {
+        // truyền isPage qua view để kiểm tra hiển thị (nếu các component nhỏ như popup hoặc report trong form thì giới hạn hiển thị)
+        ViewData["isPage"] = isPage;
+        // giữ lại containerId của thao tác trước đó để xử lý bộ lọc
+        ViewData["containerId"] = containerId;
+
         // neu không trả về report code thì chuyển sang link lỗi
         if (ReportCode == null)
         {
@@ -573,10 +578,14 @@ namespace KOAHome.Controllers
 
     // danh sach editor trong form
     [HttpGet]
-    public async Task<IActionResult> Form_Report_Viewer(string ReportCode, int? id)
+    public async Task<IActionResult> Form_Report_Viewer(string ReportCode, int? id, string? containerId, bool isPage = false)
     {
       try
       {
+        // truyền isPage qua view để kiểm tra hiển thị (nếu các component nhỏ như popup hoặc report trong form thì giới hạn hiển thị)
+        ViewData["isPage"] = isPage;
+        // giữ lại containerId của thao tác trước đó để xử lý bộ lọc
+        ViewData["containerId"] = containerId;
         // neu không trả về report code thì chuyển sang link lỗi
         if (ReportCode == null)
         {

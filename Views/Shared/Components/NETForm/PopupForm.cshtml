@@ -874,7 +874,6 @@
           // tim kiem trong select box
         $(document).ready(function () {
             function initSelect2() {
-              debugger;
               // không áp dụng cho Quiff HTML editor
             $("select") .not(".ql-toolbar select, .ql-container select, .ql-editor select").not(".select2-hidden-accessible").not(".dataTables_length select").select2({
                 placeholder: "Chọn",
@@ -902,7 +901,6 @@
             });
 
            $(".modal-btn-submit").click(function () {
-             debugger;
               let form = $(this).closest("form");
 
               // Custom validate nếu cần ở đây
@@ -916,7 +914,6 @@
 
           $(".modal-formpopup").on("submit", function (e) {
               e.preventDefault();
-              debugger;
               let form = $(this);
               let formData = new FormData(this);
               let modalId = form.data("modal-id");

@@ -152,7 +152,7 @@ namespace KOAHome.Controllers
 
     // mục tiêu để gán menucode mặc định vào session
     [HttpPost]
-    public IActionResult SetMenuCode(string menuCode)
+    public async Task<IActionResult> ChangeMainMenuCode(string menuCode)
     {
       if (!string.IsNullOrEmpty(menuCode))
       {

@@ -78,22 +78,6 @@
     <script src="~/js/ui-popover.js"></script>
 
     <script>
-          // Common function to parse Query String
-          function getQueryParams() {
-              var params = {};
-              var queryString = window.location.search.substring(1); // remove '?'
-              if (queryString.length === 0) return params;
-
-              var pairs = queryString.split("&");
-              for (var i = 0; i < pairs.length; i++) {
-                  var pair = pairs[i].split('=');
-                  if (pair.length === 2) {
-                      params[decodeURIComponent(pair[0])] = decodeURIComponent(pair[1].replace(/\+/g, ' '));
-                  }
-              }
-              return params;
-          }
-        
         @* xử lý hiển thị form popup  *@
         $(document).on('click', '.popupform-action', function (e) {
             const $btn = $(this);

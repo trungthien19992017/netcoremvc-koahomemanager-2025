@@ -1,0 +1,236 @@
+@using KOAHome.Helpers
+@using System.Text.Json
+@{
+    Layout = "~/Views/Shared/_ContentNavbarLayout.cshtml";
+
+    // nhận param để chuyển đến partial nếu có
+    var objParameters = ViewData["objParameters"] as Dictionary<string, object>;
+
+    // truyen cau hinh tabpanel de xu ly giao dien
+    var tabpanel = ViewData["tabpanel"] as IDictionary<string, object>;
+    string TabCode = ViewData["TabCode"] as string;
+    int? TabIndex = ViewData["TabIndex"] as int?;
+
+    // truyen danh sach gia tri loc len giao dien
+    var listFilterValue = ViewData["ListFilterValue"] as Dictionary<string, object>;
+    var listFilterConfig = ViewData["ListFilterConfig"] as List<dynamic>;
+
+
+    // neu ton tai tabpanel thi xu ly tiep
+    if (tabpanel != null)
+    {
+        ViewData["Title"] = tabpanel.ContainsKey("Name") ? tabpanel["Name"] : "Tab thông tin";
+    }
+    else{
+        ViewData["Title"] = "Tab thông tin";
+    }
+
+    // truyen chi tiết tab để xử lý giao diện
+    var tabpaneldetail = ViewData["tabpaneldetail"] as List<dynamic>;
+
+}
+
+@section VendorStyles {
+}
+
+@section VendorScripts {
+}
+
+@section PageScripts {
+    <script>
+        // lưu cache khi chọn tab
+        const tabContentCache = {}; // key: tabId, value: { html, lastCode, lastTemplate }
+  
+        @* xử lý hiển thị thông tin tab panel *@
+        $(document).on('click', '.tab-panel-btn', function(e) {
+            const $btn = $(this);
+            const code = $btn.data('code') ?? null;
+            const template = $btn.data('template') ?? "";
+            // tìm mã tab để xử lý
+            const tabcontainerid = $btn.attr('aria-controls');
+            const containerSelector = `#${tabcontainerid}`;
+
+            // truyền isPage để được hiển thị toàn bộ thông tin trang (nếu không phải isPage thì chỉ cần load table, popup hoặc report trong form không isPage)
+            const ispage = true;
+
+            const cacheKey = tabcontainerid;
+            const cached = tabContentCache[cacheKey];
+
+            // Nếu đã có cache và code/template không thay đổi thì dùng lại HTML
+            if (cached && cached.lastCode === code && cached.lastTemplate === template) {
+                return;
+            }
+
+            // Ngược lại thì gọi AJAX
+            let loadFn = null;
+
+            if (template == "viewer-utility") {
+                loadFn = loadFormReportViewer;
+            } else if (template == "editor-utility") {
+                loadFn = loadFormReportEditor;
+            } else if (template == "form") {
+                loadFn = loadFormViewer;
+            } else {
+                $(containerSelector).html("<p>Không tìm thấy thông tin tab</p>")
+            }
+
+            // Gọi AJAX và lưu cache
+            loadFn(code, tabcontainerid, null, ispage, function (html) {
+                tabContentCache[cacheKey] = {
+                    html,
+                    lastCode: code,
+                    lastTemplate: template
+                };
+            });
+        });
+
+        // mặc định khi khởi tạo sẽ hiển thị Tab ứng với tabindex trên đường dẫn
+        $(document).ready(function () {
+            const defaultTabIndex = '@ViewData["TabIndex"]' || 0; // fallback nếu null
+            const $defaultTab = $(`.tab-panel-btn[data-tabindex="${defaultTabIndex}"]`);
+
+            if ($defaultTab.length) {
+                $defaultTab.trigger('click'); // Kích hoạt tab
+            }
+        });
+
+        // end user tự chủ động reload trên tab
+        $(document).on('click', '.btn-reload-tab', function () {
+            // tìm tab đang hoạt động
+            const $btn = $('.tab-panel-btn.active');
+            const containerId = $btn.attr('aria-controls');
+
+            // Xóa cache tab này
+            delete tabContentCache[containerId];
+
+            // Giả lập click lại tab panel
+            $btn.trigger('click');
+        });
+    </script>
+}
+
+@section success
+{
+    @if (ViewData["success"] != null)
+    {
+
+        <!-- Toast with Placements -->
+        <div class="bs-toast toast  top-0 end-0 show toast-placement-ex1 m-2" style="position:absolute;" role="alert" aria-live="assertive" aria-atomic="true" data-bs-delay="2000">
+            <div class="toast-header">
+                <i class="ri-home-4-fill me-2 text-success"></i>
+                <div class="me-auto fw-medium">Thông báo</div><small class="text-muted">1 giây trước</small>
+                <button type="button" class="btn-close" data-bs-dismiss="toast" aria-label="Close"></button>
+            </div>
+            <div class="toast-body text-success">@ViewData["success"].</div>
+        </div>
+        <!-- Toast with Placements -->
+    }
+}
+
+@section ErrorMessage
+{
+    @if (ViewData["ErrorMessage"] != null)
+    {
+        <!-- Toast with Placements -->
+        <div class="bs-toast toast  top-0 end-0 show toast-placement-ex1 m-2" style="position:absolute;" role="alert" aria-live="assertive" aria-atomic="true" data-bs-delay="2000">
+            <div class="toast-header">
+                <i class="ri-home-4-fill me-2 text-danger"></i>
+                <div class="me-auto fw-medium">Thông báo</div><small class="text-muted">1 giây trước</small>
+                <button type="button" class="btn-close" data-bs-dismiss="toast" aria-label="Close"></button>
+            </div>
+            <div class="toast-body text-danger">@ViewData["ErrorMessage"].</div>
+        </div>
+        <!-- Toast with Placements -->
+    }
+}
+
+
+@* ************** Content ************** *@
+<!-- Content wrapper -->
+<div class="content-wrapper">
+    <!-- Content -->
+    <div class="container-xxl flex-grow-1 container-p-y">
+        <div class="row gy-6">
+            @* nếu tab panel tồn tại thì tiếp tục *@
+            @if (tabpanel != null)
+            {
+                @* tabpanel *@
+                <div class="col-xl-12">
+                    <h5 class="text-center text-primary text-uppercase">@(tabpanel.ContainsKey("Name") ? tabpanel["Name"] : "Tab thông tin")</h5>
+                    <div class="nav-align-left">
+                        <div class="tab-content">
+                            @* nút reload để end user chủ động load tab *@
+                            <div class="tab-reload-wrapper">
+                                <button class="btn-reload-tab"><i class="ri-refresh-line"></i></button>
+                            </div>
+                            @if (tabpaneldetail != null)
+                            {
+                                foreach (var tabdetail in tabpaneldetail.OrderBy(p => p.stt).ToList())
+                                {
+
+                                    // lấy các thông tin detail để xử lý
+                                    var tabdetail_id = tabdetail.Id;
+                                    var tabdetail_code = tabdetail.Code ?? "";
+                                    var tabdetail_title = tabdetail.Title ?? "";
+                                    var tabdetail_template = tabdetail.Template;
+                                    var tabdetail_icon = tabdetail.TabIcon ?? "";
+                                    var tabdetail_stt = tabdetail.stt ?? 0;
+                                    var tabdetail_options = ParseDataHelper.ParseOptionsToDictionary(tabdetail.Options ?? "{}");
+                                    int? tabdetail_count = null;
+
+                                    @* active tab nếu stt bằng với TabIndex trên link *@
+                                    <div class="tab-pane fade @(tabdetail_stt == TabIndex ? "active show" : "")" id="@("navs-pills-" + tabdetail_code)" role="tabpanel">
+                                    </div>
+                                }
+                            }
+                        </div>
+                        <ul class="nav nav-pills mb-4" role="tablist">
+                            @if (tabpaneldetail != null)
+                            {
+                                foreach(var tabdetail in tabpaneldetail.OrderBy(p => p.stt).ToList())
+                                {
+
+                                    // lấy các thông tin detail để xử lý
+                                    var tabdetail_id = tabdetail.Id;
+                                    var tabdetail_code = tabdetail.Code ?? "";
+                                    var tabdetail_title = tabdetail.Title ?? "";
+                                    var tabdetail_template = tabdetail.Template;
+                                    var tabdetail_icon = tabdetail.TabIcon ?? "";
+                                    var tabdetail_stt = tabdetail.stt ?? 0;
+                                    var tabdetail_options = ParseDataHelper.ParseOptionsToDictionary(tabdetail.Options ?? "{}");
+                                    string tabdetail_datacode = "";
+                                    @* nếu template là report thì lấy report code, nếu là form thì lấy formcode *@
+                                    @if (tabdetail_template == "viewer-utility" || tabdetail_template == "editor-utility")
+                                    {
+                                        tabdetail_datacode = tabdetail_options.ContainsKey("reportCode") ? (tabdetail_options["reportCode"] ?? "") : "";
+                                    }
+                                    else if (tabdetail_template == "form")
+                                    {
+                                        tabdetail_datacode = tabdetail_options.ContainsKey("formCode") ? (tabdetail_options["formCode"] ?? "") : "";
+                                    }
+
+                                    int? tabdetail_count = null;
+
+                                    @* active tab nếu stt bằng với TabIndex trên link *@
+                                    <li class="nav-item" role="presentation">
+                                        <button type="button" class="tab-panel-btn nav-link waves-effect waves-light @(tabdetail_stt == TabIndex ? "active" : "")" role="tab" data-bs-toggle="tab" data-bs-target="@("#navs-pills-" + tabdetail_code)" aria-controls="@("navs-pills-" + tabdetail_code)" aria-selected="@(tabdetail_stt == TabIndex ? "true" : "false")" data-template="@tabdetail_template" data-code="@tabdetail_datacode" data-tabindex="@tabdetail_stt">
+                                            <span class="d-none d-sm-inline-flex align-items-center">
+                                                <i class="icon-base @tabdetail_icon icon-sm me-1_5"></i>@tabdetail_title
+                                                @* nếu không có count thì không đếm; *@
+                                                @if (tabdetail_count != null)
+                                                {
+                                                  <span class="badge rounded-pill badge-center h-px-20 w-px-20 bg-danger ms-1_5">@tabdetail_count</span>
+                                                }
+                                            </span>
+                                            <i class="icon-base ri @tabdetail_icon icon-sm d-sm-none"></i>
+                                        </button>
+                                    </li>
+                                }
+                             }
+                        </ul>
+                    </div>
+                </div>
+          }
+        </div>
+    </div>
+</div>

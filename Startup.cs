@@ -45,6 +45,7 @@ namespace KOAHome
       services.AddScoped<IDRDatasourceService, DRDatasourceService>();
       services.AddScoped<INetServiceService, NetServiceService>();
       services.AddScoped<INetMenuService, NetMenuService>();
+      services.AddScoped<INetTabPanelService, NetTabPanelService>();
     }
 
     // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
@@ -98,6 +99,12 @@ namespace KOAHome
               name: "form/popup-viewer",
               pattern: "form/popup-viewer/{formCode}/{id?}",
               defaults: new { controller = "NETForm", action = "PopupForm" }
+          );
+        // route cho tab panel
+        endpoints.MapControllerRoute(
+              name: "tab/viewer",
+              pattern: "tab/viewer/{tabCode}/{tabIndex}",
+              defaults: new { controller = "NETTabPanel", action = "Viewer" }
           );
       });
     }
