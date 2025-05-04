@@ -358,7 +358,7 @@
                                   <div class="gx-3 gy-2 align-items-center report-top-action">
                                   </div>
                                   @* end action top *@
-                                  <div class="d-flex justify-content-between align-items-center mt-3">
+                                  <div class="d-flex justify-content-between align-items-center">
                                       @* hien thi so dong duoc hien thi *@
                                       <div class="report-info d-flex gap-2"></div>
                                       @* button xu ly add row và submit *@
@@ -373,6 +373,8 @@
                                       <table id="@("table-editor-" + ReportCode ?? "emptycode")" data-table-displayname = "@(report.ContainsKey("Name") ? (report["Name"].ToString() ?? "Danh sách") : "Danh sách")" border="1" cellpadding="5" cellspacing="0" style="width: 100%; text-align: center; table-layout: auto;" class="table table-sm table-bordered table-hover display table-with-exportexcel">
                                           <thead class="freepanze-head">
                                               <tr>
+                                                  @* Cột này sẽ tự động chứa checkbox "Chọn tất cả" *@
+                                                  <th class="text-center" rowspan="@displayParentLevelNum" data-code="IdCheck" data-index="-1"  data-isexport="False" style="min-width:50px"></th>
                                                   @* neu display khong null thi tiep tuc *@
                                                   @if (displayList != null)
                                                   {
@@ -489,6 +491,9 @@
                                                       var isTemplateRow = dictionary.ContainsKey("IsTemplateRow") && (bool)dictionary["IsTemplateRow"];
 
                                                       <tr class="@bgColorRowClass @(Convert.ToBoolean(isTemplateRow) ? "d-none" : "")" data-changed="false" data-template="@(Convert.ToBoolean(isTemplateRow) ? "true" : "false")">
+                                                          @* cột select box mặc đinh *@
+                                                          <td class="text-center" data-isexport="False" data-value="@Id">
+                                                          </td>
                                                           @* voi moi cot dang co *@
                                                           @* neu cot isdisplay = false thi khong hien thi  *@
                                                           @foreach (var display in displayList.Where(p => p.IsDisplay == false).OrderBy(p => p.ColNum ?? 0).ToList())

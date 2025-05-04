@@ -973,4 +973,22 @@
                 }
             });
         });
+
+        // kiem tra de xet readonly form
+          $(document).ready(function () {
+            var isReadOnly = @Json.Serialize(ViewData["IsReadOnly"]);
+            if (isReadOnly === true || isReadOnly === "1" || isReadOnly === 1) {
+              debugger;
+              // Chỉ đặt readonly cho input, textarea
+              $("form input, form textarea").prop("readonly", true);
+
+              // Chỉ đặt disable cho select
+              $("form select").prop("disabled", true);
+
+              // Chỉ disable nút submit
+              $("form button[type='submit']").prop("disabled", true);
+              // disable cả nút submit của popuo form
+              $(".modal-btn-submit").prop("disabled", true);
+            }
+        });
     </script>

@@ -62,7 +62,7 @@
         $(document).ready(function () {
             function initSelect2() {
               // không áp dụng cho Quiff HTML editor
-                $("select") .not(".ql-toolbar select, .ql-container select, .ql-editor select").not(".select2-hidden-accessible").not(".dataTables_length select").select2({
+                $("select") .not(".ql-toolbar select, .ql-container select, .ql-editor select").not(".select2-hidden-accessible").not(".dt-length select").select2({
                     placeholder: "Chọn",
                     allowClear: true,
                     width: "100%"
@@ -266,26 +266,13 @@
           });
         });
 
-        // xu ly confirm action store de hien thi popup confirm va xu ly ajax
-        $('.confirmAction').on('click', function (e) {
-            e.preventDefault(); // Ngăn chặn điều hướng khi click vào link
-
-            var data = $(this).data();
-            var id = data.id; // Lấy ID từ thuộc tính data-id
-            var sqlstore = data.sqlstore; // lay du lieu store de xu ly (bat buoc)
-            var datasourceid = data.datasourceid; // lay du lieu database de xu ly (neu có)
-            // thông tin xác nhận
-            var isconfirm = data.hasOwnProperty('isconfirm') ? data.isconfirm : false; // mặc định là không xác nhận
-            var confirmtext = data.hasOwnProperty('confirmtext') ? data.confirmtext : "Hãy giúp tôi xác nhận lại lần nữa nhé";
-            var confirmtitle = data.hasOwnProperty('confirmtitle') ? data.confirmtitle : "Xác nhận";
-            var confirmbutton = data.hasOwnProperty('confirmbutton') ? data.confirmbutton : "Đồng ý!";
-
-           function handleAjaxConfirmed() {
+           function handleAjaxConfirmed(id, listid, sqlstore, datasourceid) {
                // dua cac du lieu can truyen vao formdata
                var formData = new FormData();
                 formData.append("Id", id); // key cua du lieu
                 formData.append("sqlstore", sqlstore); // Lấy sqlstore tu button truyen vao
                 formData.append("datasourceid", datasourceid); // Lấy datasource tu button truyen vao
+                formData.append("ListId", listid); // list id xuất hiện khi chọn nhiều dòng table, áp dụng với nút on top
 
                 // Gọi AJAX để gửi yêu cầu xóa
                 $.ajax({
@@ -331,9 +318,23 @@
                });
            }
 
+        // xu ly confirm action store de hien thi popup confirm va xu ly ajax
+        $('.confirmAction').on('click', function (e) {
+            e.preventDefault(); // Ngăn chặn điều hướng khi click vào link
+            
+            var data = $(this).data();
+            var id = data.id; // Lấy ID từ thuộc tính data-id
+            var sqlstore = data.sqlstore; // lay du lieu store de xu ly (bat buoc)
+            var datasourceid = data.datasourceid; // lay du lieu database de xu ly (neu có)
+            // thông tin xác nhận
+            var isconfirm = data.hasOwnProperty('isconfirm') ? data.isconfirm : false; // mặc định là không xác nhận
+            var confirmtext = data.hasOwnProperty('confirmtext') ? data.confirmtext : "Hãy giúp tôi xác nhận lại lần nữa nhé";
+            var confirmtitle = data.hasOwnProperty('confirmtitle') ? data.confirmtitle : "Xác nhận";
+            var confirmbutton = data.hasOwnProperty('confirmbutton') ? data.confirmbutton : "Đồng ý!";
+
            if (isconfirm === false || isconfirm === "false") {
                // Không cần confirm -> xử lý ngay
-               handleAjaxConfirmed();
+               handleAjaxConfirmed(id, null, sqlstore, datasourceid);
            } else {
                // Cần xác nhận
                rplm({
@@ -351,7 +352,7 @@
                   html: true
                }, function (isConfirm) {
                    if (isConfirm) {
-                       handleAjaxConfirmed();
+                       handleAjaxConfirmed(id, null, sqlstore, datasourceid);
                    } else {
                        rplm({
                            title: "Đã hủy!",
@@ -533,14 +534,13 @@
 
                      // Kiểm tra nếu form không có id là "editor-form", trả về false và dừng
                      if (form.id !== "editor-form") {
-                         submitButton.disabled = false; // Luôn bật nút lưu nếu không phải form editor-form
+                         // Luôn bật nút lưu nếu không phải form editor-form
                          return;
                      }
 
                     // neu khong co tr nào co attr data change thi mac dinh hien thi nut Luu
                     if (table.querySelectorAll("tr[data-changed]").length == 0)
                     {
-                      submitButton.disabled = false;
                       return;
                     }
 
@@ -603,6 +603,13 @@
                         if (row.getAttribute('data-changed') !== undefined && row.getAttribute('data-changed') !== null)
                         {
                           if (row.getAttribute("data-changed") !== "true") {
+                            row.remove(); // Xóa các dòng chưa thay đổi khỏi form trước khi submit
+                          }
+                        }
+                      // neu khong khai bao data template thi bo qua, neu co khai bao data template thi kiem tra = true thi xoa 
+                        if (row.getAttribute('data-template') !== undefined && row.getAttribute('data-template') !== null)
+                        {
+                          if (row.getAttribute("data-template") == "true") {
                             row.remove(); // Xóa các dòng chưa thay đổi khỏi form trước khi submit
                           }
                         }
@@ -906,6 +913,8 @@
 
              const config = { ...defaultOptions, ...options };
 
+             let dt; // khai báo table toàn cục
+
              $(selector).each(function () {
                  $table = $(this);
 
@@ -913,11 +922,32 @@
                 let $templateRow = $table.find('tbody tr[data-template="true"]').detach();
 
                  // xu ly data table
-                 const dt = $table.DataTable({
+                 dt = $table.DataTable({
                      dom: '<"d-flex justify-content-between align-items-center datatable-top-component"<"d-flex gap-2"fl><"d-flex gap-2"B>>irtp',
+                      select: {
+                          style: "multi",
+                          selector: "td input.dt-checkboxes" // chỉ khi click vào checkbox mới select
+                      },
+                      columnDefs: [
+                        {
+                          targets: 0,
+                          orderable: !1,
+                          searchable: !1,
+                          title: '<input type="checkbox" class="form-check-input dt-checkboxes-select-all" id="select-all">',
+                          responsivePriority: 3,
+                          checkboxes: !0,
+                          checkboxes: {
+                              selectAllRender: '<input type="checkbox" class="form-check-input">',
+                              selectRow: true  // Cho phép chọn dòng khi checkbox được chọn
+                          },
+                          render: function(data, type, row, meta) {
+                              return '<input type="checkbox" class="dt-checkboxes form-check-input">'
+                          }
+                      }
+                      ],
                       buttons: [{
                           extend: "collection",
-                          className: "btn btn-primary dropdown-toggle waves-effect waves-light",
+                          className: "btn btn-primary dropdown-toggle me-4 waves-effect waves-light",
                           text: '<i class="ri-download-line ri-16px me-1"></i> <span class="d-none d-sm-inline-block">Export</span>',
                           buttons: [{
                               extend: "print",
@@ -1081,6 +1111,7 @@
                      // mac dinh sap xep theo controller
                       ordering: true,        // bật tính năng sắp xếp
                       order: [],             // KHÔNG sắp xếp cột nào mặc định
+                      autoWidth: false,
                      // hien thi
                      language: {
                              lengthMenu: "_MENU_",
@@ -1090,6 +1121,16 @@
                               paginate: {
                                   previous: "<i class='ri-arrow-left-s-line'></i>",  // hoặc "Trước"
                                   next: "<i class='ri-arrow-right-s-line'></i>"       // hoặc "Tiếp"
+                              },
+                              emptyTable: "Không có dữ liệu để hiển thị", // <-- Thay đổi dòng chữ tại đây
+                              zeroRecords: "Không có kết quả phù hợp với tiêu chí tìm kiếm", // 	Khi không có kết quả khớp với từ khóa tìm kiếm
+                              loadingRecords: "Đang tải...",  // Khi loading
+                              processing: "Đang xử lý...",    // Khi server-side processing
+                              select: {
+                                  rows: {
+                                    0: "",
+                                    _: " (<span class='highlight'>%d</span> dòng được chọn</div>)"
+                                  }
                               }
                          },
                     initComplete: function (settings, json) {
@@ -1098,6 +1139,9 @@
                     drawCallback: function (settings) {
                         console.log('Draw callback:', settings);
                     },
+                    // headerCallback: function(thead, data, start, end, display) {
+                    //     $(thead).find('th').eq(0).html('<input type="checkbox" class="form-check-input dt-checkboxes-select-all">');
+                    // },
                     infoCallback: function(settings, start, end, max, total, pre) {
                         // Lấy những hàng được áp dụng bộ lọc từ DataTable (vẫn bao gồm cả hàng có class 'd-none')
                         var nodes = this.api().rows({ filter: 'applied' }).nodes();
@@ -1108,6 +1152,11 @@
 
                         // tính số dòng không hiển thị
                         var dNoneCount = total - visibleCount
+
+                        if (visibleCount == 0)
+                        {
+                          return "Không có kết quả tìm kiếm";
+                        }
 
                         // nếu là trang cuối thì end - số dòng không hiển thị
                         if (end == total)
@@ -1123,10 +1172,28 @@
                // Di chuyển phần phân trang ra ngoài bảng
                // doi phan trang va cac nut xuat, tìm kiem ra ngoai (yeu cau class table-pagination va table-top-action table-info)
                dt.on('draw', function () {
+                   attachSelectAllHandler(dt);
                    var wrapselector_id = selector + "-wrap";
-                   $(wrapselector_id + '.dataTables_paginate').appendTo(wrapselector_id + '.report-pagination');
-                   $(wrapselector_id + '.datatable-top-component').appendTo(wrapselector_id + '.report-top-action');
-                   $(wrapselector_id + '.dataTables_info').appendTo(wrapselector_id + '.report-info');
+
+                    // chuyển toàn bộ class của wrapper tự gen sang cho wrap tự tạo
+                    var wrapper = $(selector + "_wrapper");
+                    var target = $(wrapselector_id);
+
+                    // Lấy danh sách class từ wrapper và gán sang target
+                    var classes = wrapper.attr('class');
+                    if (classes) {
+                      target.addClass(classes);
+                    }
+
+                   // Move pagination vào đúng chỗ
+                    $(wrapselector_id + ' .dt-paging').appendTo(wrapselector_id + ' .report-pagination');
+                    // Move info vào đúng chỗ nếu bạn cần
+                    $(selector + '_info').appendTo(wrapselector_id + ' .report-info');
+                    // Move filter + length nếu cần
+                    $(wrapselector_id + ' .datatable-top-component').appendTo(wrapselector_id + ' .report-top-action');
+
+                    // đính kèm chức năng chọn nhiều
+                    attachSelectAllHandler(dt);
 
                   const $tbody = $table.find('tbody');
 
@@ -1134,16 +1201,32 @@
                   if ($tbody.find('tr[data-template="true"]').length === 0) {
                       $tbody.append($templateRow);
                   }
+
                });
 
                // Gọi lần đầu sau khi DataTable load xong
                var wrapselector_id = selector + "-wrap";
+               
+               // chuyển toàn bộ class của wrapper tự gen sang cho wrap tự tạo
+               var wrapper = $(selector + "_wrapper");
+               var target = $(wrapselector_id);
+
+               // Lấy danh sách class từ wrapper và gán sang target
+               var classes = wrapper.attr('class');
+               if (classes) {
+                 target.addClass(classes);
+               }
+
                // Move pagination vào đúng chỗ
-                $(selector + '_paginate').appendTo(wrapselector_id + ' .report-pagination');
+                $(wrapselector_id + ' .dt-paging').appendTo(wrapselector_id + ' .report-pagination');
                 // Move info vào đúng chỗ nếu bạn cần
                 $(selector + '_info').appendTo(wrapselector_id + ' .report-info');
                 // Move filter + length nếu cần
-                $(selector + '_wrapper .datatable-top-component').appendTo(wrapselector_id + ' .report-top-action');
+                $(wrapselector_id + ' .datatable-top-component').appendTo(wrapselector_id + ' .report-top-action');
+                
+                // Gọi sau khi DataTable đã khởi tạo
+                // đính kèm chức năng chọn nhiều
+                attachSelectAllHandler(dt);
 
               const $tbody = $table.find('tbody');
 
@@ -1152,6 +1235,112 @@
                   $tbody.append($templateRow);
               }
              });
+
+            // Hàm xử lý chọn tất cả và đồng bộ
+            function attachSelectAllHandler(dt) {
+                // Chọn tất cả
+                $('#select-all').on('change', function () {
+                    const isChecked = $(this).prop('checked');
+                    $('#table-viewer-F0_HS_Booking1 tbody input.dt-checkboxes').prop('checked', isChecked).trigger('change');
+                });
+
+                // Khi mỗi checkbox thay đổi
+                $('#table-viewer-F0_HS_Booking1 tbody').on('change', 'input.dt-checkboxes', function () {
+                    const tr = $(this).closest('tr');
+                    const row = dt.row(tr);
+
+                    // Sync checkbox với select của datatable
+                    if (this.checked) {
+                        row.select();
+                    } else {
+                        row.deselect();
+                    }
+
+                    // Nếu tất cả đã chọn => tích vào selectAllCheckbox, ngược lại bỏ
+                    const allCheckboxes = $('#table-viewer-F0_HS_Booking1 tbody input.dt-checkboxes');
+                    const checkedlength = allCheckboxes.filter(':checked').length;
+                    const selectAll = $('#select-all')[0];
+
+                    if (checkedlength === 0) {
+                        selectAll.checked = false;
+                        selectAll.indeterminate = false;
+                    } else if (checkedlength === allCheckboxes.length) {
+                        selectAll.checked = true;
+                        selectAll.indeterminate = false;
+                    } else {
+                        selectAll.checked = false;
+                        selectAll.indeterminate = true;
+                    }
+                });
+            }
+
+     
+               // xu ly confirm action store trên top của table de hien thi popup confirm va xu ly ajax
+              // (Mục tiêu: truyền ListId từ table)
+              $('.confirmActionTop').on('click', function (e) {
+                  e.preventDefault(); // Ngăn chặn điều hướng khi click vào link
+
+                  // lấy danh sách các dòng được chọn, tìm data-value trong cột checkbox
+                  const selectedRows = dt.rows({ selected: true }).nodes(); // DOM nodes
+                  const selectedIds = [];
+
+                  selectedRows.each(function(row) {
+                    // Lấy cột đầu tiên (có checkbox), giả sử là td:nth-child(1)
+                    const td = $('td', row).eq(0); 
+                    const id = td.data('value'); // lấy từ data-value
+                    if (id !== undefined) {
+                      selectedIds.push(id);
+                    }
+                  });
+
+                  const listid = selectedIds.join(',');
+                  console.log("Selected IDs:", listid);
+
+                  var data = $(this).data();
+                  // var id = data.id; // Lấy ID từ thuộc tính data-id
+                  var sqlstore = data.sqlstore; // lay du lieu store de xu ly (bat buoc)
+                  var datasourceid = data.datasourceid; // lay du lieu database de xu ly (neu có)
+                  
+                  // thông tin xác nhận
+                  var isconfirm = data.hasOwnProperty('isconfirm') ? data.isconfirm : false; // mặc định là không xác nhận
+                  var confirmtext = data.hasOwnProperty('confirmtext') ? data.confirmtext : "Hãy giúp tôi xác nhận lại lần nữa nhé";
+                  var confirmtitle = data.hasOwnProperty('confirmtitle') ? data.confirmtitle : "Xác nhận";
+                  var confirmbutton = data.hasOwnProperty('confirmbutton') ? data.confirmbutton : "Đồng ý!";
+
+                  if (isconfirm === false || isconfirm === "false") {
+                      // Không cần confirm -> xử lý ngay
+                      handleAjaxConfirmed(null, listid, sqlstore, datasourceid);
+                  } else {
+                      // Cần xác nhận
+                      rplm({
+                        title: confirmtitle || "Xác nhận",
+                        text: confirmtext || "Hãy giúp tôi xác nhận lại lần nữa nhé",
+                        type: "warning",
+                        showCancelButton: true,
+                        confirmButtonText: confirmbutton || "Đồng ý!",
+                        cancelButtonText: "Hủy!",
+                        animation: "tada",
+                        modalNOverlay: "backShadow",
+                        closeOnConfirm: false,
+                        closeOnCancel: false,
+                        showLoaderOnConfirm: true,
+                        html: true
+                      }, function (isConfirm) {
+                          if (isConfirm) {
+                              handleAjaxConfirmed(null, listid, sqlstore, datasourceid);
+                          } else {
+                              rplm({
+                                  title: "Đã hủy!",
+                                  text: "Hành động của bạn đã được hủy.",
+                                  type: "error",
+                                  timer: 2000,
+                                  confirmButtonText: 'Done',
+                                  html: true
+                              });
+                          }
+                      });
+                  }
+              });
          }
 
          function getFormattedDateTime() {

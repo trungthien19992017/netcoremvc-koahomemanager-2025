@@ -40,7 +40,7 @@
               {
                 <h2 class="card-header text-center" id="header-title">@(listFilterValue.ContainsKey("title") ? listFilterValue["title"] : report.ContainsKey("Name") ? report["Name"] : "Danh sách")</h2>
               }
-              <div class="card-body" id="vertical-example">
+              <div class="card-datatable" id="vertical-example">
                 @* nếu isPage = true, là trang hoàn chỉnh thì hiển thị thêm bộ lọc*@
                 @if (isPage == true)
                 {
@@ -173,7 +173,7 @@
                     <div class="gx-3 gy-2 align-items-center report-top-action">
                     </div>
                     @* end action top *@
-                    <div class="d-flex justify-content-between align-items-center mt-3">
+                    <div class="d-flex justify-content-between align-items-center">
                         @* hien thi so dong duoc hien thi *@
                         <div class="report-info d-flex gap-2"></div>
                         @* button xu ly add row và submit *@
@@ -187,6 +187,8 @@
                         <table id="@("table-editor-" + ReportCode ?? "emptycode")" data-table-displayname = "@(report.ContainsKey("Name") ? (report["Name"].ToString() ?? "Danh sách") : "Danh sách")" border="1" cellpadding="5" cellspacing="0" style="width: 100%; text-align: center; table-layout: auto;" class="table table-sm table-bordered table-hover display table-with-exportexcel">
                             <thead class="freepanze-head">
                                 <tr>
+                                    @* Cột này sẽ tự động chứa checkbox "Chọn tất cả" *@
+                                    <th class="text-center" rowspan="@displayParentLevelNum" data-code="IdCheck" data-index="-1"  data-isexport="False" style="min-width:50px"></th>
                                     @* neu display khong null thi tiep tuc *@
                                     @if (displayList != null)
                                     {
@@ -303,6 +305,9 @@
                                         var isTemplateRow = dictionary.ContainsKey("IsTemplateRow") && (bool)dictionary["IsTemplateRow"];
 
                                         <tr class="@bgColorRowClass @(Convert.ToBoolean(isTemplateRow) ? "d-none" : "")" data-changed="false" data-template="@(Convert.ToBoolean(isTemplateRow) ? "true" : "false")">
+                                            @* cột select box mặc đinh *@
+                                            <td class="text-center" data-isexport="False" data-value="@Id">
+                                            </td>
                                             @* voi moi cot dang co *@
                                             @* neu cot isdisplay = false thi khong hien thi  *@
                                             @foreach (var display in displayList.Where(p => p.IsDisplay == false).OrderBy(p => p.ColNum ?? 0).ToList())
@@ -906,7 +911,7 @@
         $(document).ready(function () {
             function initSelect2() {
               // không áp dụng cho Quiff HTML editor
-                $("select") .not(".ql-toolbar select, .ql-container select, .ql-editor select").not(".select2-hidden-accessible").not(".dataTables_length select").select2({
+                $("select") .not(".ql-toolbar select, .ql-container select, .ql-editor select").not(".select2-hidden-accessible").not(".dt-length select").select2({
                     placeholder: "Chọn",
                     allowClear: true,
                     width: "100%"
@@ -932,14 +937,13 @@
 
                     // Kiểm tra nếu form không có id là "editor-form", trả về false và dừng
                     if (form.id !== "editor-form") {
-                        submitButton.disabled = false; // Luôn bật nút lưu nếu không phải form editor-form
+                        // Luôn bật nút lưu nếu không phải form editor-form
                         return;
                     }
 
                     // neu khong co tr nào co attr data change thi mac dinh hien thi nut Luu
                     if (table.querySelectorAll("tr[data-changed]").length == 0)
                     {
-                      submitButton.disabled = false;
                       return;
                     }
 
@@ -1002,6 +1006,13 @@
                         if (row.getAttribute('data-changed') !== undefined && row.getAttribute('data-changed') !== null)
                         {
                           if (row.getAttribute("data-changed") !== "true") {
+                            row.remove(); // Xóa các dòng chưa thay đổi khỏi form trước khi submit
+                          }
+                        }
+                      // neu khong khai bao data template thi bo qua, neu co khai bao data template thi kiem tra = true thi xoa
+                        if (row.getAttribute('data-template') !== undefined && row.getAttribute('data-template') !== null)
+                        {
+                          if (row.getAttribute("data-template") == "true") {
                             row.remove(); // Xóa các dòng chưa thay đổi khỏi form trước khi submit
                           }
                         }
