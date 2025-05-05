@@ -563,7 +563,7 @@ namespace KOAHome.Controllers
           ViewData["success"] = "Thành công";
         }
 
-        return PartialView("_Form_Report_Editor_Partial");
+        return PartialView("~/Views/Shared/Partial/MainPageLayout/_Form_Report_Editor_Partial.cshtml");
       }
       catch (Exception ex)
       {
@@ -702,7 +702,7 @@ namespace KOAHome.Controllers
         //khai bao success
         ViewData["success"] = "Thành công";
 
-        return PartialView("_Form_Report_Viewer_Partial");
+        return PartialView("~/Views/Shared/Partial/MainPageLayout/_Form_Report_Viewer_Partial.cshtml");
       }
       catch (Exception ex)
       {

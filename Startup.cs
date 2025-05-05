@@ -32,9 +32,6 @@ namespace KOAHome
       });
       services.AddHttpContextAccessor();
       services.AddControllersWithViews();
-      services.AddScoped<IHsCustomerService, HsCustomerService>();
-      services.AddScoped<IHsBookingTableService, HsBookingTableService>();
-      services.AddScoped<IHsBookingServiceService, HsBookingServiceService>();
       services.AddScoped<IReportEditorService, ReportEditorService>();
       services.AddScoped<IAttachmentService, AttachmentService>();
       services.AddScoped<IReportService, ReportService>();

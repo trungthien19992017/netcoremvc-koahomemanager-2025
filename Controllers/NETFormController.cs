@@ -415,7 +415,7 @@ namespace KOAHome.Controllers
           ViewData["success"] = "Thành công";
         }
 
-        return PartialView("_PopupForm_Partial");
+        return PartialView("~/Views/Shared/Partial/MainPageLayout/_PopupForm_Partial.cshtml");
       }
       catch (Exception ex)
       {
