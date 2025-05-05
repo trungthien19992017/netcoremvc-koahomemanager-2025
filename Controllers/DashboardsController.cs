@@ -18,14 +18,12 @@ public class DashboardsController : Controller
 {
   private readonly ILogger<DashboardsController> _logger;
   private readonly QLKCL_NEWContext _db;
-  private readonly IHsCustomerService _cus;
   private readonly IWidgetService _widget; 
 
 
-  public DashboardsController(ILogger<DashboardsController> logger, IHsCustomerService cus, IWidgetService widget)
+  public DashboardsController(ILogger<DashboardsController> logger, IWidgetService widget)
   {
     _logger = logger;
-    _cus = cus;
     _widget = widget;
   }
 

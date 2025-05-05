@@ -24,25 +24,19 @@ namespace KOAHome.Controllers
   {
     private readonly ILogger<NotificationsController> _logger;
     private readonly QLKCL_NEWContext _db;
-    private readonly IHsBookingTableService _book;
-    private readonly IHsBookingServiceService _bookser;
     private readonly IReportEditorService _re;
     private readonly IAttachmentService _att;
-    private readonly IHsCustomerService _cus;
     private readonly IReportService _report;
     private readonly IFormService _form;
     private readonly IActionService _action;
     private readonly IWidgetService _widget;
 
-    public NotificationsController(QLKCL_NEWContext db, ILogger<NotificationsController> logger, IHsBookingTableService book, IHsBookingServiceService bookser, IReportEditorService re, IAttachmentService att, IHsCustomerService cus, IReportService report, IFormService form, IActionService action, IWidgetService widget)
+    public NotificationsController(QLKCL_NEWContext db, ILogger<NotificationsController> logger, IReportEditorService re, IAttachmentService att, IReportService report, IFormService form, IActionService action, IWidgetService widget)
     {
       _db = db;
       _logger = logger;
-      _book = book;
-      _bookser = bookser;
       _re = re;
       _att = att;
-      _cus = cus;
       _report = report;
       _form = form;
       _action = action;
