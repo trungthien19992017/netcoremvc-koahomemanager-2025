@@ -85,6 +85,7 @@ namespace KOAHome.Controllers
     }
 
     // GET: NETReport/Viewer_Utility
+    [HttpGet]
     public async Task<IActionResult> Viewer_Utility([FromQuery] Dictionary<string, string> parameters, string? ReportCode)
     {
       try
@@ -98,10 +99,34 @@ namespace KOAHome.Controllers
 
         // lay thong tin report, va danh sach filter display cua report de xu ly
         var report = await _report.NET_Report_Get(ReportCode);
+        // tra ve page loi neu khong tim thay report
+        if (report == null)
+        {
+          return RedirectToAction("MiscError", "Pages", new { errorMessage = "Không tìm thấy bảng" });
+        }
         var filterList = await _report.NET_Filter_WithReport_Get(ReportCode, null);
         var displayList = await _report.NET_Display_WithReport_Get(ReportCode, null);
 
-        string connectionString = await _datasrc.GetConnectionString(report.DataSourceId);
+        string connectionString = null;
+        //neu datasourceId la null thi lay connectionString mac dinh
+        if (report.ContainsKey("DataSourceId"))
+        {
+          if (report["DataSourceId"] != null)
+          {
+            //lay connectionstring tu report de goi store
+            connectionString = await _datasrc.GetConnectionString(Convert.ToInt32(report["DataSourceId"]));
+          }
+        }
+
+        // khai bao cac du lieu report can su dung trong controller
+        string? sqlContent = report.ContainsKey("SqlContent") ? Convert.ToString(report["SqlContent"]) : "";
+        string? sqlDefaultContent = report.ContainsKey("SqlDefaultContent") ? Convert.ToString(report["SqlDefaultContent"]) : "";
+        string? storeDRDisplay = report.ContainsKey("StoreDRDisplay") ? Convert.ToString(report["StoreDRDisplay"]) : "";
+
+        if (sqlContent == null)
+        {
+          return RedirectToAction("MiscError", "Pages", new { errorMessage = "Không tồn tại store của bảng" });
+        }
 
         // Kiểm tra xem có key "isActive" không, nếu không có thì gán giá trị mặc định (null hoặc giá trị khác)
         string isActive = parameters.ContainsKey("isActive") ? parameters["isActive"] : "";
@@ -113,12 +138,18 @@ namespace KOAHome.Controllers
             new SelectListItem { Value = "2", Text = "Không" , Selected = isActive == "2"}
         };
 
-        // chuyen parameters thanh Idictionary<string, object>
+        // chuyen parameters cua bo loc thanh Idictionary<string, object>
         Dictionary<string, object> objParameters = parameters.ToDictionary(kvp => kvp.Key, kvp => (object)kvp.Value);
 
-        //Phân trang
+        // neu bo loc khong co va co store default filter thi lay du lieu mac dinh tu store
+        if (objParameters.Count() == 0 && sqlDefaultContent != null && sqlDefaultContent != "")
+        {
+          var defaultFilter = await _report.NET_Report_GetDefaultFilter(objParameters, sqlDefaultContent, connectionString);
+          objParameters = defaultFilter != null ? new Dictionary<string, object>(defaultFilter) : new Dictionary<string, object>();
+        }
+
         // search
-        var resultList = await _report.Report_search(objParameters, "HS_Booking1_search", connectionString);
+        var resultList = await _report.Report_search(objParameters, sqlContent, connectionString);
         ViewBag.listbook_store = resultList;
 
         // khai bao service lien quan
@@ -127,7 +158,6 @@ namespace KOAHome.Controllers
 
         //khai bao success
         ViewBag.success = "Thành công";
-
 
         return View();
       }

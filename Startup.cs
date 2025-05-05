@@ -21,6 +21,9 @@ namespace KOAHome
       services.AddDbContext<QLKCL_NEWContext>(options =>
           options.UseSqlServer(
               Configuration.GetConnectionString("DefaultConnection")));
+      services.AddDbContext<TttConfigContext>(options =>
+          options.UseSqlServer(
+              Configuration.GetConnectionString("ConfigConnection")));
       services.AddDistributedMemoryCache();
       services.AddSession(options => {
         options.IdleTimeout = TimeSpan.FromMinutes(20);//You can set Time

@@ -29,19 +29,25 @@ namespace KOAHome.Services
     public Task<string> ExtractImportDataToJson(IFormFile file);
     public Task<string> ExtractImportDataToStoreName(IFormFile file);
     public Task<List<dynamic>> Import_Json_Update(int? Id, string json, string sqlStore, string? connectionString);
-    public Task<dynamic> NET_Report_Get(string reportCode);
+    /////////////////////////////////////// cac chuc nang xu ly cau hinh report ////////////////////////////////////
+    public Task<int?> GetReportIdFromCode(string reportCode);
+    public Task<IDictionary<string, object>?> NET_Report_Get(string reportCode);
     public Task<List<dynamic>> NET_Filter_WithReport_Get(string? reportCode, int? reportId);
     public Task<List<dynamic>> NET_Display_WithReport_Get(string? reportCode, int? reportId);
+    // lay danh sach bo loc mac dinh
+    public Task<IDictionary<string, object>?> NET_Report_GetDefaultFilter(Dictionary<string, object> parameters, string sqlStore, string? connectionString);
   }
   public class ReportService : IReportService
   {
     private readonly QLKCL_NEWContext _db;
+    private readonly TttConfigContext _dbconfig;
     private readonly IHttpContextAccessor _httpContextAccessor;
     private readonly IConfiguration _configuration;
     private readonly IConnectionService _con;
-    public ReportService(QLKCL_NEWContext db, IHttpContextAccessor httpContextAccessor, IConfiguration configuration, IConnectionService con)
+    public ReportService(QLKCL_NEWContext db, TttConfigContext dbconfig, IHttpContextAccessor httpContextAccessor, IConfiguration configuration, IConnectionService con)
     {
       _db = db;
+      _dbconfig = dbconfig;
       _httpContextAccessor = httpContextAccessor;
       _configuration = configuration;
       _con = con;
@@ -246,7 +252,15 @@ namespace KOAHome.Services
       resultList = await _con.Connection_GetDataFromQuery(parameters, sqlStore, connectionString, sqlQuery, sqlParams);
       return resultList;
     }
-    public async Task<dynamic> NET_Report_Get(string reportCode)
+
+    public async Task<int?> GetReportIdFromCode(string reportCode)
+    {
+      int? reportId = null;
+      reportId = await _dbconfig.NetReports.Where(p => p.Code == reportCode).Select(p => (int?)p.Id).FirstOrDefaultAsync();
+
+      return reportId;
+    }
+    public async Task<IDictionary<string, object>?> NET_Report_Get(string reportCode)
     {
       // su dung datasource config de lay du lieu
       string connectionString = _configuration.GetConnectionString("ConfigConnection"); // Thay thế bằng chuỗi kết nối của bạn
@@ -305,6 +319,23 @@ namespace KOAHome.Services
       resultList = await _con.Connection_GetDataFromQuery(parameters, sqlStore, connectionString, sqlQuery, sqlParams);
 
       return resultList;
+    }
+
+    public async Task<IDictionary<string, object>?> NET_Report_GetDefaultFilter(Dictionary<string, object> parameters, string sqlStore, string? connectionString)
+    {
+      // neu khong truyen connect string thi se lay connection string mac dinh
+      if (connectionString == null)
+      {
+        connectionString = _configuration.GetConnectionString("DefaultConnection"); // Thay thế bằng chuỗi kết nối của bạn
+      }
+
+      // chuyen thanh cau query tu store va param truyen vao
+      var (sqlQuery, sqlParams) = await _con.Connection_GetQueryParam(parameters, sqlStore, connectionString);
+
+      // xu ly lay du lieu dua truyen store va param truyen vao
+      var result = await _con.Connection_GetSingleDataFromQuery(parameters, sqlStore, connectionString, sqlQuery, sqlParams);
+
+      return result;
     }
   }
 }
