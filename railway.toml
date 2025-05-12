@@ -1,0 +1,12 @@
+[build]
+builder = "dockerfile"
+dotnet-version = "9.0"
+dockerfilePath = "./KOAHome/Dockerfile"
+
+[deploy]
+startCommand = "dotnet KOAHome.dll"
+restartPolicyType = "railway"
+healthcheckPath = "/health"
+
+[service]
+port = 5000

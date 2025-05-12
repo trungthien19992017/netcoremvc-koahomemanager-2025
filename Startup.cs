@@ -16,6 +16,8 @@ namespace KOAHome
     public IConfiguration Configuration { get; }
 
     // This method gets called by the runtime. Use this method to add services to the container.
+
+
     public void ConfigureServices(IServiceCollection services)
     {
       services.AddDbContext<QLKCL_NEWContext>(options =>
@@ -43,6 +45,10 @@ namespace KOAHome
       services.AddScoped<INetServiceService, NetServiceService>();
       services.AddScoped<INetMenuService, NetMenuService>();
       services.AddScoped<INetTabPanelService, NetTabPanelService>();
+
+      // add health check for deploy
+      services.AddHealthChecks()
+          .AddNpgSql(Configuration.GetConnectionString("DefaultConnection"));
     }
 
     // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
@@ -66,6 +72,8 @@ namespace KOAHome
       app.UseAuthorization();
 
       app.UseSession();
+
+      app.UseHealthChecks("/health");
 
       app.UseEndpoints(endpoints =>
       {
