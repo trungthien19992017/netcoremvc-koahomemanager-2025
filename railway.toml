@@ -5,7 +5,7 @@ dockerfilePath = "./KOAHome/Dockerfile"
 
 [deploy]
 startCommand = "dotnet KOAHome.dll"
-restartPolicyType = "railway"
+restartPolicyType = "Always"
 healthcheckPath = "/health"
 
 [service]
