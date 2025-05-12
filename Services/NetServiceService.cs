@@ -85,8 +85,8 @@ namespace KOAHome.Services
         string connectionString = _configuration.GetConnectionString("ConfigConnection"); // Thay thế bằng chuỗi kết nối của bạn
 
         // lấy các cột service cần xử lý
-        string colValue = _dbconfig.NetServices.FindAsync(serviceId).Result.ColValue.ToString() ?? "Id";
-        string colDisplay = _dbconfig.NetServices.FindAsync(serviceId).Result.ColDisplay.ToString() ?? "Name";
+        string colValue = _dbconfig.NetServices.FindAsync(serviceId).Result.Colvalue.ToString() ?? "Id";
+        string colDisplay = _dbconfig.NetServices.FindAsync(serviceId).Result.Coldisplay.ToString() ?? "Name";
 
       // store get du lieu
       string sqlStore = "NET_Service_DynamicExecute";

@@ -3,9 +3,9 @@ using System.Collections.Generic;
 
 namespace KOAHome.EntityFramework;
 
-public partial class HsDichVuTheoLich
+public partial class HsDichvutheolich
 {
-    public int BookingId { get; set; }
+    public int? Bookingid { get; set; }
 
-    public string? ListDichVu { get; set; }
+    public string? Listdichvu { get; set; }
 }

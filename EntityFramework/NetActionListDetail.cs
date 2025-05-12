@@ -3,17 +3,17 @@ using System.Collections.Generic;
 
 namespace KOAHome.EntityFramework;
 
-public partial class NetActionListDetail
+public partial class NetActionlistdetail
 {
     public int Id { get; set; }
 
-    public string? RoleId { get; set; }
+    public string? Roleid { get; set; }
 
-    public int ActionListId { get; set; }
+    public int? Actionlistid { get; set; }
 
-    public string? ActionListCode { get; set; }
+    public string? Actionlistcode { get; set; }
 
-    public int ActionId { get; set; }
+    public int? Actionid { get; set; }
 
     public string? Value { get; set; }
 
@@ -23,79 +23,79 @@ public partial class NetActionListDetail
 
     public string? Icon { get; set; }
 
-    public string? DisplayName { get; set; }
+    public string? Displayname { get; set; }
 
-    public int? DataSourceId { get; set; }
+    public int? Datasourceid { get; set; }
 
-    public bool? IsTop { get; set; }
+    public bool? Istop { get; set; }
 
     public int? Height { get; set; }
 
     public int? Width { get; set; }
 
-    public bool? IsCheckSamePopup { get; set; }
+    public bool? Ischecksamepopup { get; set; }
 
-    public string? CheckSamePopupText { get; set; }
+    public string? Checksamepopuptext { get; set; }
 
-    public string? CheckSamePopupButton { get; set; }
+    public string? Checksamepopupbutton { get; set; }
 
-    public string? UrlImportFile { get; set; }
+    public string? Urlimportfile { get; set; }
 
-    public string? FileTypeAccept { get; set; }
+    public string? Filetypeaccept { get; set; }
 
-    public string? ConfirmButtonText { get; set; }
+    public string? Confirmbuttontext { get; set; }
 
-    public string? ConfirmTitle { get; set; }
+    public string? Confirmtitle { get; set; }
 
-    public string? ConfirmText { get; set; }
+    public string? Confirmtext { get; set; }
 
-    public bool? IsPopupConfirm { get; set; }
+    public bool? Ispopupconfirm { get; set; }
 
-    public bool? IsChooseData { get; set; }
+    public bool? Ischoosedata { get; set; }
 
-    public bool? IsGroup { get; set; }
+    public bool? Isgroup { get; set; }
 
     public string? Idgroup { get; set; }
 
-    public string? ErrorCol { get; set; }
+    public string? Errorcol { get; set; }
 
-    public string? FileTemplate { get; set; }
+    public string? Filetemplate { get; set; }
 
-    public string? TypeNodeDiagram { get; set; }
+    public string? Typenodediagram { get; set; }
 
-    public int? SiteId { get; set; }
+    public int? Siteid { get; set; }
 
-    public string? SiteCode { get; set; }
+    public string? Sitecode { get; set; }
 
-    public bool? IsActive { get; set; }
+    public bool? Isactive { get; set; }
 
-    public bool? IsDeleted { get; set; }
+    public bool? Isdeleted { get; set; }
 
-    public DateTime? CreationTime { get; set; }
+    public DateTime? Creationtime { get; set; }
 
-    public int? CreatorUserId { get; set; }
+    public int? Creatoruserid { get; set; }
 
-    public DateTime? LastModificationTime { get; set; }
+    public DateTime? Lastmodificationtime { get; set; }
 
-    public int? LastModifierUserId { get; set; }
+    public int? Lastmodifieruserid { get; set; }
 
-    public DateTime? DeletionTime { get; set; }
+    public DateTime? Deletiontime { get; set; }
 
-    public int? DeleteUserId { get; set; }
+    public int? Deleteuserid { get; set; }
 
-    public int? OrderId { get; set; }
+    public int? Orderid { get; set; }
 
-    public bool? IsSendRealTime { get; set; }
+    public bool? Issendrealtime { get; set; }
 
-    public string? CodeSendRealTime { get; set; }
+    public string? Codesendrealtime { get; set; }
 
-    public int? ServiceFileName { get; set; }
+    public int? Servicefilename { get; set; }
 
     public int? Version { get; set; }
 
-    public string? CssButton { get; set; }
+    public string? Cssbutton { get; set; }
 
-    public bool IsZoomPopup { get; set; }
+    public bool? Iszoompopup { get; set; }
 
-    public bool? IsNetActionhowError { get; set; }
+    public bool? IsnetActionhowerror { get; set; }
 }

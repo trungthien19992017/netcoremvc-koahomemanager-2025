@@ -3,7 +3,7 @@ using System.Collections.Generic;
 
 namespace KOAHome.EntityFramework;
 
-public partial class NetWidgetValueConfig
+public partial class NetWidgetvalueconfig
 {
     public int Id { get; set; }
 
@@ -13,11 +13,11 @@ public partial class NetWidgetValueConfig
 
     public string? Value { get; set; }
 
-    public int WidgetItemId { get; set; }
+    public int? Widgetitemid { get; set; }
 
-    public bool IsDelete { get; set; }
+    public bool? Isdelete { get; set; }
 
     public string? Descriptions { get; set; }
 
-    public int Index { get; set; }
+    public int? Index { get; set; }
 }

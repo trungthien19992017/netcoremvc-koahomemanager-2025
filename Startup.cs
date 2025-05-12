@@ -19,10 +19,10 @@ namespace KOAHome
     public void ConfigureServices(IServiceCollection services)
     {
       services.AddDbContext<QLKCL_NEWContext>(options =>
-          options.UseSqlServer(
+          options.UseNpgsql(
               Configuration.GetConnectionString("DefaultConnection")));
       services.AddDbContext<TttConfigContext>(options =>
-          options.UseSqlServer(
+          options.UseNpgsql(
               Configuration.GetConnectionString("ConfigConnection")));
       services.AddDistributedMemoryCache();
       services.AddSession(options => {

@@ -7,141 +7,141 @@ public partial class NetReport
 {
     public int Id { get; set; }
 
-    public DateTime? CreationTime { get; set; }
+    public DateTime? Creationtime { get; set; }
 
-    public long? CreatorUserId { get; set; }
+    public long? Creatoruserid { get; set; }
 
-    public DateTime? LastModificationTime { get; set; }
+    public DateTime? Lastmodificationtime { get; set; }
 
-    public long? LastModifierUserId { get; set; }
+    public long? Lastmodifieruserid { get; set; }
 
-    public bool? IsDeleted { get; set; }
+    public bool? Isdeleted { get; set; }
 
-    public long? DeleterUserId { get; set; }
+    public long? Deleteruserid { get; set; }
 
-    public DateTime? DeletionTime { get; set; }
+    public DateTime? Deletiontime { get; set; }
 
     public string? Code { get; set; }
 
     public string? Name { get; set; }
 
-    public bool? SqlType { get; set; }
+    public bool? Sqltype { get; set; }
 
-    public string? SqlContent { get; set; }
+    public string? Sqlcontent { get; set; }
 
-    public long? GroupLevel { get; set; }
+    public long? Grouplevel { get; set; }
 
     public string? Excel { get; set; }
 
-    public long? DataSourceId { get; set; }
+    public long? Datasourceid { get; set; }
 
-    public string? LayoutpFilter { get; set; }
+    public string? Layoutpfilter { get; set; }
 
-    public int? DisplayType { get; set; }
+    public int? Displaytype { get; set; }
 
-    public bool? IsDynamicColumn { get; set; }
+    public bool? Isdynamiccolumn { get; set; }
 
-    public long? FormId { get; set; }
+    public long? Formid { get; set; }
 
-    public int? TypeGetColumn { get; set; }
+    public int? Typegetcolumn { get; set; }
 
-    public bool? IsExportWord { get; set; }
+    public bool? Isexportword { get; set; }
 
     public string? Word { get; set; }
 
-    public string? SqlEditContent { get; set; }
+    public string? Sqleditcontent { get; set; }
 
-    public string? SqlDefaultContent { get; set; }
+    public string? Sqldefaultcontent { get; set; }
 
-    public string? SqlStoredLabelAction { get; set; }
+    public string? Sqlstoredlabelaction { get; set; }
 
-    public bool? DisableSearch { get; set; }
+    public bool? Disablesearch { get; set; }
 
-    public int? ColSpan { get; set; }
+    public int? Colspan { get; set; }
 
-    public int? ColCount { get; set; }
+    public int? Colcount { get; set; }
 
-    public string? SqlEditTemplateContent { get; set; }
+    public string? Sqledittemplatecontent { get; set; }
 
-    public string? SqlExportData { get; set; }
+    public string? Sqlexportdata { get; set; }
 
-    public string? SqlExportField { get; set; }
+    public string? Sqlexportfield { get; set; }
 
-    public string? AllowedPageSizes { get; set; }
+    public string? Allowedpagesizes { get; set; }
 
-    public bool? DisableHandleCollumn { get; set; }
+    public bool? Disablehandlecollumn { get; set; }
 
-    public string? StoreDrdisplay { get; set; }
+    public string? Storedrdisplay { get; set; }
 
-    public bool? IsAutoCollapse { get; set; }
+    public bool? Isautocollapse { get; set; }
 
-    public bool? SqlTypeM { get; set; }
+    public bool? Sqltypem { get; set; }
 
-    public string? SqlContentM { get; set; }
+    public string? Sqlcontentm { get; set; }
 
-    public bool? IsEditEditor { get; set; }
+    public bool? Isediteditor { get; set; }
 
-    public bool? IsCreateEditor { get; set; }
+    public bool? Iscreateeditor { get; set; }
 
-    public bool? IsBtnHandle { get; set; }
+    public bool? Isbtnhandle { get; set; }
 
-    public bool? IsExportExcel { get; set; }
+    public bool? Isexportexcel { get; set; }
 
-    public string? SelectionType { get; set; }
+    public string? Selectiontype { get; set; }
 
-    public string? StoreCheckUrl { get; set; }
+    public string? Storecheckurl { get; set; }
 
-    public bool? IsBackViewer { get; set; }
+    public bool? Isbackviewer { get; set; }
 
-    public int? SiteId { get; set; }
+    public int? Siteid { get; set; }
 
-    public string? SiteCode { get; set; }
+    public string? Sitecode { get; set; }
 
-    public bool? IsSearchbar { get; set; }
+    public bool? Issearchbar { get; set; }
 
-    public bool? IsFreepane { get; set; }
+    public bool? Isfreepane { get; set; }
 
-    public string? DefaultParam { get; set; }
+    public string? Defaultparam { get; set; }
 
-    public int? PositionButton { get; set; }
+    public int? Positionbutton { get; set; }
 
-    public int? ReportType { get; set; }
+    public int? Reporttype { get; set; }
 
-    public string? StoreDrag { get; set; }
+    public string? Storedrag { get; set; }
 
-    public string? EditingMode { get; set; }
+    public string? Editingmode { get; set; }
 
-    public bool? ShowHeaderFilter { get; set; }
+    public bool? Showheaderfilter { get; set; }
 
-    public string? FunctionCode { get; set; }
+    public string? Functioncode { get; set; }
 
-    public int? FuntionId { get; set; }
+    public int? Funtionid { get; set; }
 
-    public bool? ShowPage { get; set; }
+    public bool? Showpage { get; set; }
 
-    public bool? ShowToolbar { get; set; }
+    public bool? Showtoolbar { get; set; }
 
-    public int? ChartViewDisplay { get; set; }
+    public int? Chartviewdisplay { get; set; }
 
-    public string? ReportCodeRecieveRealTime { get; set; }
+    public string? Reportcoderecieverealtime { get; set; }
 
-    public bool? ShowIconFilter { get; set; }
+    public bool? Showiconfilter { get; set; }
 
-    public bool? IsRecieveRealTime { get; set; }
+    public bool? Isrecieverealtime { get; set; }
 
-    public bool? IsDeleteEditor { get; set; }
+    public bool? Isdeleteeditor { get; set; }
 
-    public int? ServiceHiddenFilter { get; set; }
+    public int? Servicehiddenfilter { get; set; }
 
-    public string? TemplateIds { get; set; }
+    public string? Templateids { get; set; }
 
     public bool? Cache { get; set; }
 
-    public string? AllowedApi { get; set; }
+    public string? Allowedapi { get; set; }
 
     public bool? Pagination { get; set; }
 
-    public bool EnableMasterDetail { get; set; }
+    public bool? Enablemasterdetail { get; set; }
 
-    public string? MasterDetailReportCode { get; set; }
+    public string? Masterdetailreportcode { get; set; }
 }

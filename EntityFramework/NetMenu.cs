@@ -17,51 +17,53 @@ public partial class NetMenu
 
     public string? Link { get; set; }
 
-    public string? MobileLink { get; set; }
+    public string? Mobilelink { get; set; }
 
     public int? Parent { get; set; }
 
-    public int Index { get; set; }
+    public int? Index { get; set; }
 
-    public string? RequiredPermissionName { get; set; }
+    public string? Requiredpermissionname { get; set; }
 
-    public int MenuId { get; set; }
+    public int? Menuid { get; set; }
 
-    public string? SqlString { get; set; }
+    public string? Sqlstring { get; set; }
 
-    public bool? IsCount { get; set; }
+    public bool? Iscount { get; set; }
 
-    public int CountNum { get; set; }
+    public int? Countnum { get; set; }
 
-    public int OrganizationId { get; set; }
+    public int? Organizationid { get; set; }
 
-    public bool? IsRawSql { get; set; }
+    public bool? Israwsql { get; set; }
 
-    public string? SqlCountStore { get; set; }
+    public string? Sqlcountstore { get; set; }
 
-    public int CountOutOfDate { get; set; }
+    public int? Countoutofdate { get; set; }
 
     public string? Cssformat { get; set; }
 
-    public string? CssiconFormat { get; set; }
+    public string? Cssiconformat { get; set; }
 
-    public int? CountType { get; set; }
+    public int? Counttype { get; set; }
 
-    public int ParentOrgId { get; set; }
+    public int? Parentorgid { get; set; }
 
-    public long? UserId { get; set; }
+    public long? Userid { get; set; }
 
     public string? Code { get; set; }
 
     public string? Iframe { get; set; }
 
-    public string? ImageUrl { get; set; }
+    public string? Imageurl { get; set; }
 
-    public string? TextColor { get; set; }
+    public string? Textcolor { get; set; }
 
-    public int? TypeCheck { get; set; }
+    public int? Typecheck { get; set; }
 
-    public int? SiteId { get; set; }
+    public int? Siteid { get; set; }
 
-    public string? SiteCode { get; set; }
+    public string? Sitecode { get; set; }
+
+    public bool? Isdeleted { get; set; }
 }

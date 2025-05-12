@@ -13,21 +13,21 @@ public partial class NetAction
 
     public string? Descriptions { get; set; }
 
-    public bool? IsActive { get; set; }
+    public bool? Isactive { get; set; }
 
-    public bool? IsDelete { get; set; }
+    public bool? Isdelete { get; set; }
 
     public string? Icon { get; set; }
 
-    public bool? IsPopupConfirm { get; set; }
+    public bool? Ispopupconfirm { get; set; }
 
-    public string? ConfirmTitle { get; set; }
+    public string? Confirmtitle { get; set; }
 
-    public string? ConfirmText { get; set; }
+    public string? Confirmtext { get; set; }
 
-    public string? ConfirmButtonText { get; set; }
+    public string? Confirmbuttontext { get; set; }
 
-    public int? SiteId { get; set; }
+    public int? Siteid { get; set; }
 
-    public string? SiteCode { get; set; }
+    public string? Sitecode { get; set; }
 }

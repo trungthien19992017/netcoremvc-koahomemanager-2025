@@ -3,21 +3,21 @@ using System.Collections.Generic;
 
 namespace KOAHome.EntityFramework;
 
-public partial class NetMenuRole
+public partial class NetMenurole
 {
     public int Id { get; set; }
 
-    public int? TenantId { get; set; }
+    public int? Tenantid { get; set; }
 
-    public int RoleId { get; set; }
+    public int? Roleid { get; set; }
 
-    public int LabelId { get; set; }
+    public int? Labelid { get; set; }
 
-    public int MenuId { get; set; }
+    public int? Menuid { get; set; }
 
-    public bool IsActive { get; set; }
+    public bool? Isactive { get; set; }
 
-    public int? RoleMapperGroupId { get; set; }
+    public int? Rolemappergroupid { get; set; }
 
     public int? Order { get; set; }
 }

@@ -7,25 +7,25 @@ public partial class NetWidget
 {
     public int Id { get; set; }
 
-    public string? WidgetCode { get; set; }
+    public string? Widgetcode { get; set; }
 
     public string? Name { get; set; }
 
     public string? Descriptions { get; set; }
 
-    public bool IsDeleted { get; set; }
+    public bool? Isdeleted { get; set; }
 
-    public DateTime CreationTime { get; set; }
+    public DateTime? Creationtime { get; set; }
 
-    public long? CreatorUserId { get; set; }
+    public long? Creatoruserid { get; set; }
 
-    public DateTime? LastModificationTime { get; set; }
+    public DateTime? Lastmodificationtime { get; set; }
 
-    public long? LastModifierUserId { get; set; }
+    public long? Lastmodifieruserid { get; set; }
 
-    public long? DeleterUserId { get; set; }
+    public long? Deleteruserid { get; set; }
 
-    public DateTime? DeletionTime { get; set; }
+    public DateTime? Deletiontime { get; set; }
 
-    public string? DisplayTypeCode { get; set; }
+    public string? Displaytypecode { get; set; }
 }

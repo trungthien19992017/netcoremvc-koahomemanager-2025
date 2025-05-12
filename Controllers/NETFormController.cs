@@ -136,7 +136,7 @@ namespace KOAHome.Controllers
         ViewData["IsReadOnly"] = isReadOnly;
 
         // dùng tạm để test dynamic report
-        ViewData["ServiceId"] = new SelectList(_db.HsServices.Where(p => p.IsActive == true).OrderBy(p => p.OrderId), "ServiceId", "Name");
+        ViewData["ServiceId"] = new SelectList(_db.HsServices.Where(p => p.Isactive == true).OrderBy(p => p.Orderid), "ServiceId", "Name");
 
         // neu co loi tu action POST tra ve thi bao loi
         if (TempData["ErrorMessage"] != null)
@@ -194,7 +194,7 @@ namespace KOAHome.Controllers
       form = ParseDataHelper.RemovePrefix_FromFormKey(form);
 
       // dùng tạm để test dynamic report
-      ViewData["ServiceId"] = new SelectList(_db.HsServices.Where(p => p.IsActive == true).OrderBy(p => p.OrderId), "ServiceId", "Name");
+      ViewData["ServiceId"] = new SelectList(_db.HsServices.Where(p => p.Isactive == true).OrderBy(p => p.Orderid), "ServiceId", "Name");
 
       // lay thong tin report, va danh sach filter display cua report de xu ly
       var config_form = await _form.NET_Form_Get(FormCode);
@@ -394,7 +394,7 @@ namespace KOAHome.Controllers
         ViewData["IsReadOnly"] = isReadOnly;
 
         // dùng tạm để test dynamic report
-        ViewData["ServiceId"] = new SelectList(_db.HsServices.Where(p => p.IsActive == true).OrderBy(p => p.OrderId), "ServiceId", "Name");
+        ViewData["ServiceId"] = new SelectList(_db.HsServices.Where(p => p.Isactive == true).OrderBy(p => p.Orderid), "ServiceId", "Name");
 
         // neu co loi tu action POST tra ve thi bao loi
         if (TempData["ErrorMessage"] != null)
@@ -448,7 +448,7 @@ namespace KOAHome.Controllers
       form = ParseDataHelper.RemovePrefix_FromFormKey(form);
 
       // dùng tạm để test dynamic report
-      ViewData["ServiceId"] = new SelectList(_db.HsServices.Where(p => p.IsActive == true).OrderBy(p => p.OrderId), "ServiceId", "Name");
+      ViewData["ServiceId"] = new SelectList(_db.HsServices.Where(p => p.Isactive == true).OrderBy(p => p.Orderid), "ServiceId", "Name");
 
       // lay thong tin report, va danh sach filter display cua report de xu ly
       var config_form = await _form.NET_Form_Get(FormCode);
