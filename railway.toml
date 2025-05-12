@@ -10,3 +10,6 @@ healthcheckPath = "/health"
 
 [variables]
 ASPNETCORE_ENVIRONMENT = "Production"
+
+[service]
+port = 8080

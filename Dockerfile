@@ -19,7 +19,7 @@ RUN dotnet publish "./KOAHome.csproj" -c $BUILD_CONFIGURATION -o /app/publish /p
 # This stage is used in production or when running from VS in regular mode (Default when not using the Debug configuration)
 FROM base AS final
 WORKDIR /app
-EXPOSE 5000
+EXPOSE 8080
 # Thêm thư mục cho DataProtection keys
 RUN mkdir -p /app/data-protection-keys
 COPY --from=publish /app/publish .

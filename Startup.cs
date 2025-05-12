@@ -2,6 +2,8 @@ using KOAHome.EntityFramework;
 using Microsoft.EntityFrameworkCore;
 using KOAHome.Services;
 using System.Data.Common;
+using Microsoft.AspNetCore.HttpOverrides;
+using Microsoft.AspNetCore.DataProtection;
 //using KOAHome.Services;
 
 namespace KOAHome
@@ -32,6 +34,16 @@ namespace KOAHome
         options.Cookie.HttpOnly = true;
         options.Cookie.IsEssential = true;
       });
+
+      services.AddDataProtection()
+          .PersistKeysToFileSystem(new DirectoryInfo("/app/keys"))
+          .SetApplicationName("KOAHome");
+
+      services.Configure<ForwardedHeadersOptions>(options => {
+        options.ForwardedHeaders =
+            ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto;
+      });
+
       services.AddHttpContextAccessor();
       services.AddControllersWithViews();
       services.AddScoped<IReportEditorService, ReportEditorService>();
@@ -77,6 +89,11 @@ namespace KOAHome
       app.UseSession();
 
       app.UseHealthChecks("/health");
+
+      app.UseForwardedHeaders(new ForwardedHeadersOptions
+      {
+        ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto
+      });
 
       app.UseEndpoints(endpoints =>
       {

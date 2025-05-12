@@ -34,7 +34,7 @@ namespace KOAHome
                     .SetApplicationName("KOAHome");
               });
 
-              webBuilder.UseUrls($"http://0.0.0.0:" + (Environment.GetEnvironmentVariable("PORT") ?? "5000"));
+              webBuilder.UseUrls($"http://0.0.0.0:" + (Environment.GetEnvironmentVariable("PORT") ?? "8080"));
             });
 
   }
