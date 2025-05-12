@@ -8,5 +8,5 @@ startCommand = "dotnet KOAHome.dll"
 restartPolicyType = "Always"
 healthcheckPath = "/health"
 
-[service]
-port = 5000
+[variables]
+ASPNETCORE_ENVIRONMENT = "Production"

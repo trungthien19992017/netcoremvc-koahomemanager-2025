@@ -20,6 +20,8 @@ RUN dotnet publish "./KOAHome.csproj" -c $BUILD_CONFIGURATION -o /app/publish /p
 FROM base AS final
 WORKDIR /app
 EXPOSE 5000
+# Thêm thư mục cho DataProtection keys
+RUN mkdir -p /app/data-protection-keys
 COPY --from=publish /app/publish .
 
 ENTRYPOINT ["dotnet", "KOAHome.dll"]
