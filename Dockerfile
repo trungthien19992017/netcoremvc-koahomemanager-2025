@@ -24,4 +24,5 @@ EXPOSE 8080
 RUN mkdir -p /app/data-protection-keys
 COPY --from=publish /app/publish .
 
+COPY --from=build /src/wwwroot /app/wwwroot
 ENTRYPOINT ["dotnet", "KOAHome.dll"]
