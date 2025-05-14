@@ -19,7 +19,7 @@
     // neu ton tai tabpanel thi xu ly tiep
     if (tabpanel != null)
     {
-        ViewData["Title"] = tabpanel.ContainsKey("Name") ? tabpanel["Name"] : "Tab thông tin";
+        ViewData["Title"] = tabpanel.ContainsKey("name") ? tabpanel["name"] : "Tab thông tin";
     }
     else{
         ViewData["Title"] = "Tab thông tin";
@@ -156,7 +156,7 @@
             {
                 @* tabpanel *@
                 <div class="col-xl-12">
-                    <h5 class="text-center text-primary text-uppercase">@(tabpanel.ContainsKey("Name") ? tabpanel["Name"] : "Tab thông tin")</h5>
+                    <h5 class="text-center text-primary text-uppercase">@(tabpanel.ContainsKey("name") ? tabpanel["name"] : "Tab thông tin")</h5>
                     <div class="nav-align-left">
                         <div class="tab-content">
                             @* nút reload để end user chủ động load tab *@
@@ -169,13 +169,13 @@
                                 {
 
                                     // lấy các thông tin detail để xử lý
-                                    var tabdetail_id = tabdetail.Id;
-                                    var tabdetail_code = tabdetail.Code ?? "";
-                                    var tabdetail_title = tabdetail.Title ?? "";
-                                    var tabdetail_template = tabdetail.Template;
-                                    var tabdetail_icon = tabdetail.TabIcon ?? "";
+                                    var tabdetail_id = tabdetail.id;
+                                    var tabdetail_code = tabdetail.code ?? "";
+                                    var tabdetail_title = tabdetail.title ?? "";
+                                    var tabdetail_template = tabdetail.template;
+                                    var tabdetail_icon = tabdetail.tabicon ?? "";
                                     var tabdetail_stt = tabdetail.stt ?? 0;
-                                    var tabdetail_options = ParseDataHelper.ParseOptionsToDictionary(tabdetail.Options ?? "{}");
+                                    var tabdetail_options = ParseDataHelper.ParseOptionsToDictionary(tabdetail.options ?? "{}");
                                     int? tabdetail_count = null;
 
                                     @* active tab nếu stt bằng với TabIndex trên link *@
@@ -191,13 +191,13 @@
                                 {
 
                                     // lấy các thông tin detail để xử lý
-                                    var tabdetail_id = tabdetail.Id;
-                                    var tabdetail_code = tabdetail.Code ?? "";
-                                    var tabdetail_title = tabdetail.Title ?? "";
-                                    var tabdetail_template = tabdetail.Template;
-                                    var tabdetail_icon = tabdetail.TabIcon ?? "";
+                                    var tabdetail_id = tabdetail.id;
+                                    var tabdetail_code = tabdetail.code ?? "";
+                                    var tabdetail_title = tabdetail.title ?? "";
+                                    var tabdetail_template = tabdetail.template;
+                                    var tabdetail_icon = tabdetail.tabicon ?? "";
                                     var tabdetail_stt = tabdetail.stt ?? 0;
-                                    var tabdetail_options = ParseDataHelper.ParseOptionsToDictionary(tabdetail.Options ?? "{}");
+                                    var tabdetail_options = ParseDataHelper.ParseOptionsToDictionary(tabdetail.options ?? "{}");
                                     string tabdetail_datacode = "";
                                     @* nếu template là report thì lấy report code, nếu là form thì lấy formcode *@
                                     @if (tabdetail_template == "viewer-utility" || tabdetail_template == "editor-utility")
