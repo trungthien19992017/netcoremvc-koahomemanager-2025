@@ -548,6 +548,25 @@ namespace KOAHome.Controllers
           return Json(new { success = false, errorMessage = "Chưa trả về Id" });
         }
       }
+
+    }
+
+    [HttpGet]
+    public async Task<IActionResult> GetDataFillSelection(string value, string key, string datafillstore)
+    {
+      // param truyen vao
+      var parameters = new Dictionary<string, object>
+                {
+                    { key, value }
+                    // Thêm các tham số khác nếu cần
+                };
+
+      //xu ly tra ve data fill tu store
+      var data = await _form.Form_GetDataFill_FromSelection(parameters, datafillstore, null);
+
+      Console.WriteLine($"Type of data: {data?.GetType()}"); // Kiểm tra kiểu dữ liệu
+
+      return Ok(data);
     }
   }
 }

@@ -251,17 +251,33 @@ namespace KOAHome.Services
       var sqlQuery = new StringBuilder("CALL dbo." + sqlStore + "(");
 
       // Lấy danh sách tham số của procedure từ PostgreSQL
+      //string paramQuery = @"
+      //  SELECT
+      //      p.proname,
+      //      unnest(p.proargnames) AS param_name,
+      //      CAST(unnest(p.proargtypes::regtype[]) as varchar) AS param_type
+      //  FROM
+      //      pg_proc p
+      //      JOIN pg_namespace n ON p.pronamespace = n.oid
+      //  WHERE
+      //      p.proname = @procName
+      //      AND n.nspname = 'dbo';";
+
       string paramQuery = @"
-        SELECT
-            p.proname,
-            unnest(p.proargnames) AS param_name,
-            CAST(unnest(p.proargtypes::regtype[]) as varchar) AS param_type
-        FROM
-            pg_proc p
-            JOIN pg_namespace n ON p.pronamespace = n.oid
-        WHERE
-            p.proname = @procName
-            AND n.nspname = 'dbo';";
+        SELECT 
+            specific_name proname,
+            parameter_name param_name,
+            data_type param_type,
+            parameter_mode param_mode
+        FROM 
+            information_schema.parameters
+        WHERE 
+            specific_name in (
+                SELECT specific_name 
+                FROM information_schema.routines 
+                WHERE routine_name = @procName
+                AND routine_schema = 'dbo'
+            );";
 
       var paramList = new List<dynamic>();
       using (var connection = new NpgsqlConnection(connectionString))

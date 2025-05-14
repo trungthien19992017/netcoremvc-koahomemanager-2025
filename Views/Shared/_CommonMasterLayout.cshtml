@@ -92,7 +92,7 @@
 
         if (value && datafillstore && datafillstore != "") {
         $.ajax({
-        url: `/HsBookings/GetDataFillSelection`, // Sử dụng serviceStore để xác định API cần gọi
+        url: `/NETForm/GetDataFillSelection`, // Sử dụng serviceStore để xác định API cần gọi
         type: "GET",
         data: { value: value, key: key, datafillstore : datafillstore },
         success: function (data) {
