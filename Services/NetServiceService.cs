@@ -53,7 +53,7 @@ namespace KOAHome.Services
       {
         var jObj = JObject.Parse(json);
 
-        var serviceToken = jObj["editoroptions"]?["service"];
+        var serviceToken = jObj["editorOptions"]?["service"];
 
         if (serviceToken != null)
         {

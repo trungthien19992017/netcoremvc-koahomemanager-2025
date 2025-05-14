@@ -77,18 +77,18 @@ namespace KOAHome.Controllers
 
         string? connectionString = null;
         //neu datasourceId la null thi lay connectionString mac dinh
-        if (config_form.ContainsKey("DatasourceId"))
+        if (config_form.ContainsKey("datasourceid"))
         {
-          if (config_form["DatasourceId"] != null)
+          if (config_form["datasourceid"] != null)
           {
             //lay connectionstring tu cau hinh form de goi store
-            connectionString = await _datasrc.GetConnectionString(Convert.ToInt32(config_form["DatasourceId"]));
+            connectionString = await _datasrc.GetConnectionString(Convert.ToInt32(config_form["datasourceid"]));
           }
         }
 
         // khai bao cac du lieu cau hinh form can su dung trong controller
-        string? storeDefaultData = config_form.ContainsKey("StoreDefaultData") ? Convert.ToString(config_form["StoreDefaultData"]) : "";
-        string? storeGetData = config_form.ContainsKey("StoreGetData") ? Convert.ToString(config_form["StoreGetData"]) : "";
+        string? storeDefaultData = config_form.ContainsKey("storedefaultdata") ? Convert.ToString(config_form["storedefaultdata"]) : "";
+        string? storeGetData = config_form.ContainsKey("storegetdata") ? Convert.ToString(config_form["storegetdata"]) : "";
         //string? storeSetData = config_form.ContainsKey("StoreSetData") ? Convert.ToString(config_form["StoreSetData"]) : "";
 
         if (string.IsNullOrWhiteSpace(storeDefaultData) && string.IsNullOrWhiteSpace(storeGetData) == null)
