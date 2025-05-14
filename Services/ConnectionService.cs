@@ -7,6 +7,7 @@ using System.Text;
 using System.Data;
 using Microsoft.IdentityModel.Tokens;
 using Npgsql;
+using NpgsqlTypes;
 
 namespace KOAHome.Services
 {
@@ -30,7 +31,102 @@ namespace KOAHome.Services
       _httpContextAccessor = httpContextAccessor;
       _configuration = configuration;
     }
+    private object? ConvertToClrType(string postgresType, object? value)
+    {
+      if (value == null || value == DBNull.Value)
+        return DBNull.Value;
 
+      try
+      {
+        switch (postgresType.ToLower())
+        {
+          case "integer":
+          case "int":
+          case "int4":
+            return Convert.ToInt32(value);
+          case "bigint":
+          case "int8":
+            return Convert.ToInt64(value);
+          case "smallint":
+          case "int2":
+            return Convert.ToInt16(value);
+          case "numeric":
+          case "decimal":
+            return Convert.ToDecimal(value);
+          case "real":
+          case "float4":
+            return Convert.ToSingle(value);
+          case "double precision":
+          case "float8":
+            return Convert.ToDouble(value);
+          case "boolean":
+          case "bool":
+            return Convert.ToBoolean(value);
+          case "text":
+          case "varchar":
+          case "character varying":
+          case "char":
+          case "character":
+            return Convert.ToString(value);
+          case "date":
+            return Convert.ToDateTime(value).Date;
+          case "timestamp":
+          case "timestamp without time zone":
+            return DateTime.SpecifyKind(Convert.ToDateTime(value), DateTimeKind.Unspecified);
+          case "timestamp with time zone":
+            return DateTime.SpecifyKind(Convert.ToDateTime(value), DateTimeKind.Utc);
+          case "json":
+          case "jsonb":
+            return Convert.ToString(value);
+          default:
+            return value;
+        }
+      }
+      catch
+      {
+        // Xử lý lỗi chuyển đổi nếu cần
+        return value;
+      }
+    }
+
+    // Hàm ánh xạ kiểu dữ liệu PostgreSQL sang NpgsqlDbType
+    private NpgsqlDbType GetNpgsqlDbType(string pgType)
+    {
+      return pgType.ToLower() switch
+      {
+        "integer" => NpgsqlDbType.Integer,
+        "int" => NpgsqlDbType.Integer,
+        "bigint" => NpgsqlDbType.Bigint,
+        "smallint" => NpgsqlDbType.Smallint,
+        "text" => NpgsqlDbType.Text,
+        "varchar" => NpgsqlDbType.Varchar,
+        "boolean" => NpgsqlDbType.Boolean,
+        "bool" => NpgsqlDbType.Boolean,
+        "date" => NpgsqlDbType.Date,
+        "timestamp" => NpgsqlDbType.Timestamp,
+        "timestamp without time zone" => NpgsqlDbType.Timestamp,
+        "timestamp with time zone" => NpgsqlDbType.TimestampTz,
+        "numeric" => NpgsqlDbType.Numeric,
+        "real" => NpgsqlDbType.Real,
+        "double precision" => NpgsqlDbType.Double,
+        _ => NpgsqlDbType.Unknown
+      };
+    }
+
+    private string FormatValueForPostgreSql(object value)
+    {
+      if (value == null || value == DBNull.Value)
+        return "NULL";
+
+      if (value is string || value is DateTime)
+        return $"'{value.ToString().Replace("'", "''")}'"; // escape dấu nháy đơn
+
+      if (value is bool b)
+        return b ? "TRUE" : "FALSE";
+
+      // Số nguyên, float, decimal giữ nguyên
+      return value.ToString();
+    }
 
     public async Task<(StringBuilder SqlQuery, List<NpgsqlParameter> SqlParam)> Connection_GetQueryParam_Simple(
        Dictionary<string, object> parameters,
@@ -68,76 +164,166 @@ namespace KOAHome.Services
       return (sqlQuery, sqlParams);
     }
 
+    //public async Task<(StringBuilder SqlQuery, List<NpgsqlParameter> SqlParam)> Connection_GetQueryParam(
+    //       Dictionary<string, object> parameters,
+    //       string sqlStore,
+    //       string? connectionString)
+    //    {
+    //        //lower ten store
+    //        sqlStore = sqlStore.ToLower();
+
+    //        if (connectionString == null)
+    //        {
+    //            connectionString = _configuration.GetConnectionString("DefaultConnection");
+    //        }
+
+    //        var sqlQuery = new StringBuilder("CALL dbo." + sqlStore + "(");
+
+    //        // Lấy danh sách tham số của procedure từ PostgreSQL
+    //        string paramQuery = @"
+    //           SELECT 
+    //               pg_get_function_arguments(p.oid) AS parameters
+    //           FROM 
+    //               pg_proc p
+    //           WHERE 
+    //               p.proname = @procName;
+    //       ";
+
+    //        var paramList = new List<string>();
+    //        using (var connection = new NpgsqlConnection(connectionString))
+    //        {
+    //            await connection.OpenAsync();
+    //            using (var command = new NpgsqlCommand(paramQuery, connection))
+    //            {
+    //                command.Parameters.AddWithValue("@procName", sqlStore);
+    //                using (var reader = await command.ExecuteReaderAsync())
+    //                {
+    //                    if (await reader.ReadAsync())
+    //                    {
+    //                        var paramString = reader.GetString(0);
+    //                        if (paramString != null && paramString != "")
+    //                        {
+    //                          paramList = paramString.Split(',')
+    //                              .Select(p => p.Trim().Split(' ')[1].Replace("_", "")) // Ví dụ: "_reportid integer" -> "_reportid"
+    //                              .ToList();
+    //                        }
+    //                    }
+    //                }
+    //            }
+    //        }
+
+    //        // Xây dựng tham số động
+    //        var sqlParams = new List<NpgsqlParameter>();
+    //        foreach (var paramName in paramList)
+    //        {
+    //            string cleanParamName = paramName.TrimStart('_'); // PostgreSQL dùng "_" cho tham số IN
+    //            if (parameters.ContainsKey(cleanParamName))
+    //            {
+    //                var value = parameters[cleanParamName];
+    //                sqlQuery.Append($"_{cleanParamName} := @{cleanParamName},");
+    //                sqlParams.Add(new NpgsqlParameter($"@{cleanParamName}", value ?? DBNull.Value));
+    //            }
+    //        }
+
+    //        // Xóa dấu phẩy cuối và đóng ngoặc
+    //        if (sqlParams.Count > 0)
+    //        {
+    //            sqlQuery.Length--;
+    //        }
+    //        sqlQuery.Append(");");
+
+    //        return (sqlQuery, sqlParams);
+    //    }
+
     public async Task<(StringBuilder SqlQuery, List<NpgsqlParameter> SqlParam)> Connection_GetQueryParam(
-           Dictionary<string, object> parameters,
-           string sqlStore,
-           string? connectionString)
+            Dictionary<string, object> parameters,
+            string sqlStore,
+            string? connectionString)
+    {
+      //lower ten store
+      sqlStore = sqlStore.ToLower();
+
+      if (connectionString == null)
+      {
+        connectionString = _configuration.GetConnectionString("DefaultConnection");
+      }
+
+      var sqlQuery = new StringBuilder("CALL dbo." + sqlStore + "(");
+
+      // Lấy danh sách tham số của procedure từ PostgreSQL
+      string paramQuery = @"
+        SELECT
+            p.proname,
+            unnest(p.proargnames) AS param_name,
+            CAST(unnest(p.proargtypes::regtype[]) as varchar) AS param_type
+        FROM
+            pg_proc p
+            JOIN pg_namespace n ON p.pronamespace = n.oid
+        WHERE
+            p.proname = @procName
+            AND n.nspname = 'dbo';";
+
+      var paramList = new List<dynamic>();
+      using (var connection = new NpgsqlConnection(connectionString))
+      {
+        await connection.OpenAsync();
+        using (var command = new NpgsqlCommand(paramQuery, connection))
         {
-            //lower ten store
-            sqlStore = sqlStore.ToLower();
-
-            if (connectionString == null)
+          command.Parameters.AddWithValue("@procName", sqlStore);
+          using (var reader = await command.ExecuteReaderAsync())
+          {
+            while (await reader.ReadAsync())
             {
-                connectionString = _configuration.GetConnectionString("DefaultConnection");
+              var paramName = reader.GetString(1);
+              var paramType = reader.GetString(2);
+              if (paramName != null && paramName != "")
+              {
+                dynamic row = new ExpandoObject();
+                var dict = (IDictionary<string, object>)row;
+
+                dict["ParamName"] = paramName;
+                dict["ParamType"] = paramType;
+
+                paramList.Add(row);
+              }
             }
-
-            var sqlQuery = new StringBuilder("CALL dbo." + sqlStore + "(");
-
-            // Lấy danh sách tham số của procedure từ PostgreSQL
-            string paramQuery = @"
-               SELECT 
-                   pg_get_function_arguments(p.oid) AS parameters
-               FROM 
-                   pg_proc p
-               WHERE 
-                   p.proname = @procName;
-           ";
-
-            var paramList = new List<string>();
-            using (var connection = new NpgsqlConnection(connectionString))
-            {
-                await connection.OpenAsync();
-                using (var command = new NpgsqlCommand(paramQuery, connection))
-                {
-                    command.Parameters.AddWithValue("@procName", sqlStore);
-                    using (var reader = await command.ExecuteReaderAsync())
-                    {
-                        if (await reader.ReadAsync())
-                        {
-                            var paramString = reader.GetString(0);
-                            if (paramString != null && paramString != "")
-                            {
-                              paramList = paramString.Split(',')
-                                  .Select(p => p.Trim().Split(' ')[1].Replace("_", "")) // Ví dụ: "_reportid integer" -> "_reportid"
-                                  .ToList();
-                            }
-                        }
-                    }
-                }
-            }
-
-            // Xây dựng tham số động
-            var sqlParams = new List<NpgsqlParameter>();
-            foreach (var paramName in paramList)
-            {
-                string cleanParamName = paramName.TrimStart('_'); // PostgreSQL dùng "_" cho tham số IN
-                if (parameters.ContainsKey(cleanParamName))
-                {
-                    var value = parameters[cleanParamName];
-                    sqlQuery.Append($"_{cleanParamName} := @{cleanParamName},");
-                    sqlParams.Add(new NpgsqlParameter($"@{cleanParamName}", value ?? DBNull.Value));
-                }
-            }
-
-            // Xóa dấu phẩy cuối và đóng ngoặc
-            if (sqlParams.Count > 0)
-            {
-                sqlQuery.Length--;
-            }
-            sqlQuery.Append(");");
-
-            return (sqlQuery, sqlParams);
+          }
         }
+      }
+
+      // Xây dựng tham số động
+      var sqlParams = new List<NpgsqlParameter>();
+      foreach (var param in paramList)
+      {
+        var paramDict = (IDictionary<string, object>)param;
+        string paramName = paramDict.ContainsKey("ParamName") ? paramDict["ParamName"].ToString(): "";
+        string paramType = paramDict.ContainsKey("ParamType") ? paramDict["ParamType"].ToString() : "";
+
+        string cleanParamName = paramName != null ? paramName.TrimStart('_') : ""; // PostgreSQL dùng "_" cho tham số IN
+        if (parameters.ContainsKey(cleanParamName))
+        {
+          var value = parameters[cleanParamName];
+          value = FormatValueForPostgreSql(ConvertToClrType(paramType, value));
+
+          // Xác định kiểu dữ liệu tương ứng
+          var npgsqlParam = new NpgsqlParameter($"@{cleanParamName}", value ?? DBNull.Value);
+          npgsqlParam.NpgsqlDbType = GetNpgsqlDbType(paramType);
+          npgsqlParam.DataTypeName = paramType;
+
+          sqlQuery.Append($"_{cleanParamName} := {value} ::{paramType},");
+          //sqlParams.Add(npgsqlParam);
+        }
+      }
+
+      // Xóa dấu phẩy cuối và đóng ngoặc khi có sql param hoặc kí tự cuối là dấu phẩy
+      if (sqlParams.Count > 0 || sqlQuery[^1] == ',')
+      {
+        sqlQuery.Length--;
+      }
+      sqlQuery.Append(");");
+
+      return (sqlQuery, sqlParams);
+    }
 
     public async Task<List<dynamic>> Connection_GetDataFromQuery(
         Dictionary<string, object> parameters,

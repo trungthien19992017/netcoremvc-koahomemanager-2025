@@ -75,19 +75,19 @@ namespace KOAHome.Controllers
 
         string? connectionString = null;
         //neu datasourceId la null thi lay connectionString mac dinh
-        if (report.ContainsKey("DataSourceId"))
+        if (report.ContainsKey("datasourceid"))
         {
-          if (report["DataSourceId"] != null)
+          if (report["datasourceid"] != null)
           {
             //lay connectionstring tu report de goi store
-            connectionString = await _datasrc.GetConnectionString(Convert.ToInt32(report["DataSourceId"]));
+            connectionString = await _datasrc.GetConnectionString(Convert.ToInt32(report["datasourceid"]));
           }
         }
 
         // khai bao cac du lieu report can su dung trong controller
-        string? sqlContent = report.ContainsKey("SqlContent") ? Convert.ToString(report["SqlContent"]) : "";
-        string? sqlDefaultContent = report.ContainsKey("SqlDefaultContent") ? Convert.ToString(report["SqlDefaultContent"]) : "";
-        string? storeDRDisplay = report.ContainsKey("StoreDRDisplay") ? Convert.ToString(report["StoreDRDisplay"]) : "";
+        string? sqlContent = report.ContainsKey("sqlcontent") ? Convert.ToString(report["sqlcontent"]) : "";
+        string? sqlDefaultContent = report.ContainsKey("sqldefaultcontent") ? Convert.ToString(report["sqldefaultcontent"]) : "";
+        string? storeDRDisplay = report.ContainsKey("storedrdisplay") ? Convert.ToString(report["storedrdisplay"]) : "";
 
         if (string.IsNullOrWhiteSpace(sqlContent))
         {
@@ -209,19 +209,19 @@ namespace KOAHome.Controllers
 
         string? connectionString = null;
         //neu datasourceId la null thi lay connectionString mac dinh
-        if (report.ContainsKey("DataSourceId"))
+        if (report.ContainsKey("datasourceid"))
         {
-          if (report["DataSourceId"] != null)
+          if (report["datasourceid"] != null)
           {
             //lay connectionstring tu report de goi store
-            connectionString = await _datasrc.GetConnectionString(Convert.ToInt32(report["DataSourceId"]));
+            connectionString = await _datasrc.GetConnectionString(Convert.ToInt32(report["datasourceid"]));
           }
         }
 
         // khai bao cac du lieu report can su dung trong controller
-        string? sqlContent = report.ContainsKey("SqlContent") ? Convert.ToString(report["SqlContent"]) : "";
-        string? sqlDefaultContent = report.ContainsKey("SqlDefaultContent") ? Convert.ToString(report["SqlDefaultContent"]) : "";
-        string? storeDRDisplay = report.ContainsKey("StoreDRDisplay") ? Convert.ToString(report["StoreDRDisplay"]) : "";
+        string? sqlContent = report.ContainsKey("sqlcontent") ? Convert.ToString(report["sqlcontent"]) : "";
+        string? sqlDefaultContent = report.ContainsKey("sqldefaultcontent") ? Convert.ToString(report["sqldefaultcontent"]) : "";
+        string? storeDRDisplay = report.ContainsKey("storedrdisplay") ? Convert.ToString(report["storedrdisplay"]) : "";
 
         if (string.IsNullOrWhiteSpace(sqlContent))
         {
@@ -242,9 +242,9 @@ namespace KOAHome.Controllers
         if (id != null)
         {
           // nếu obj param đã có Id thì bỏ qua
-          if (!objParameters.ContainsKey("Id"))
+          if (!objParameters.ContainsKey("id"))
           {
-            objParameters.Add("Id", id ?? (object)DBNull.Value);
+            objParameters.Add("id", id ?? (object)DBNull.Value);
           }
         }
 
@@ -365,17 +365,17 @@ namespace KOAHome.Controllers
 
         string? connectionString = null;
         //neu datasourceId la null thi lay connectionString mac dinh
-        if (report.ContainsKey("DataSourceId"))
+        if (report.ContainsKey("datasourceid"))
         {
-          if (report["DataSourceId"] != null)
+          if (report["datasourceid"] != null)
           {
             //lay connectionstring tu report de goi store
-            connectionString = await _datasrc.GetConnectionString(Convert.ToInt32(report["DataSourceId"]));
+            connectionString = await _datasrc.GetConnectionString(Convert.ToInt32(report["datasourceid"]));
           }
         }
 
         // khai bao cac du lieu report can su dung trong controller
-        string? sqlEditContent = report.ContainsKey("SqlEditContent") ? Convert.ToString(report["SqlEditContent"]) : "";
+        string? sqlEditContent = report.ContainsKey("sqleditcontent") ? Convert.ToString(report["sqleditcontent"]) : "";
 
         if (string.IsNullOrWhiteSpace(sqlEditContent))
         {
@@ -451,19 +451,19 @@ namespace KOAHome.Controllers
 
         string? connectionString = null;
         //neu datasourceId la null thi lay connectionString mac dinh
-        if (report.ContainsKey("DataSourceId"))
+        if (report.ContainsKey("datasourceid"))
         {
-          if (report["DataSourceId"] != null)
+          if (report["datasourceid"] != null)
           {
             //lay connectionstring tu report de goi store
-            connectionString = await _datasrc.GetConnectionString(Convert.ToInt32(report["DataSourceId"]));
+            connectionString = await _datasrc.GetConnectionString(Convert.ToInt32(report["datasourceid"]));
           }
         }
 
         // khai bao cac du lieu report can su dung trong controller
-        string? sqlContent = report.ContainsKey("SqlContent") ? Convert.ToString(report["SqlContent"]) : "";
-        string? sqlDefaultContent = report.ContainsKey("SqlDefaultContent") ? Convert.ToString(report["SqlDefaultContent"]) : "";
-        string? storeDRDisplay = report.ContainsKey("StoreDRDisplay") ? Convert.ToString(report["StoreDRDisplay"]) : "";
+        string? sqlContent = report.ContainsKey("sqlcontent") ? Convert.ToString(report["sqlcontent"]) : "";
+        string? sqlDefaultContent = report.ContainsKey("sqldefaultcontent") ? Convert.ToString(report["sqldefaultcontent"]) : "";
+        string? storeDRDisplay = report.ContainsKey("storedrdisplay") ? Convert.ToString(report["storedrdisplay"]) : "";
 
         if (string.IsNullOrWhiteSpace(sqlContent))
         {
@@ -484,9 +484,9 @@ namespace KOAHome.Controllers
         if (id != null)
         {
           // nếu obj param đã có Id thì bỏ qua
-          if (!objParameters.ContainsKey("Id"))
+          if (!objParameters.ContainsKey("id"))
           {
-            objParameters.Add("Id", id ?? (object)DBNull.Value);
+            objParameters.Add("id", id ?? (object)DBNull.Value);
           }
         }
 
@@ -601,19 +601,19 @@ namespace KOAHome.Controllers
 
         string? connectionString = null;
         //neu datasourceId la null thi lay connectionString mac dinh
-        if (report.ContainsKey("DataSourceId"))
+        if (report.ContainsKey("datasourceid"))
         {
-          if (report["DataSourceId"] != null)
+          if (report["datasourceid"] != null)
           {
             //lay connectionstring tu report de goi store
-            connectionString = await _datasrc.GetConnectionString(Convert.ToInt32(report["DataSourceId"]));
+            connectionString = await _datasrc.GetConnectionString(Convert.ToInt32(report["datasourceid"]));
           }
         }
 
         // khai bao cac du lieu report can su dung trong controller
-        string? sqlContent = report.ContainsKey("SqlContent") ? Convert.ToString(report["SqlContent"]) : "";
-        string? sqlDefaultContent = report.ContainsKey("SqlDefaultContent") ? Convert.ToString(report["SqlDefaultContent"]) : "";
-        string? storeDRDisplay = report.ContainsKey("StoreDRDisplay") ? Convert.ToString(report["StoreDRDisplay"]) : "";
+        string? sqlContent = report.ContainsKey("sqlcontent") ? Convert.ToString(report["sqlcontent"]) : "";
+        string? sqlDefaultContent = report.ContainsKey("sqldefaultcontent") ? Convert.ToString(report["sqldefaultcontent"]) : "";
+        string? storeDRDisplay = report.ContainsKey("storedrdisplay") ? Convert.ToString(report["storedrdisplay"]) : "";
 
         if (string.IsNullOrWhiteSpace(sqlContent))
         {

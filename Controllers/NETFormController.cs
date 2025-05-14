@@ -125,18 +125,18 @@ namespace KOAHome.Controllers
         // xu ly file
         // Kiểm tra xem form có file nào không
         // lay danh sach object type code tu config form neu co field file uploader
-        string attObjectTypeCodes = config_form.ContainsKey("AttObjectTypeCodes") ? Convert.ToString(config_form["AttObjectTypeCodes"]) : "";
+        string attObjectTypeCodes = config_form.ContainsKey("attobjecttypecodes") ? Convert.ToString(config_form["attobjecttypecodes"]) : "";
         ViewData["fileUrls"] = await _att.HandleFiles(attObjectTypeCodes, null, id);
 
         // danh sach service theo booking 
-        var reportResultList = await _report.ReportDetail_FromParent("BookingID", (id ?? 0).ToString(), "HS_BookingService_search", null);
+        var reportResultList = await _report.ReportDetail_FromParent("bookingid", (id ?? 0).ToString(), "HS_BookingService_search", null);
         ViewData["reportResultList"] = reportResultList;
 
         // set readonly form neu co isreadonly = false
         ViewData["IsReadOnly"] = isReadOnly;
 
         // dùng tạm để test dynamic report
-        ViewData["ServiceId"] = new SelectList(_db.HsServices.Where(p => p.Isactive == true).OrderBy(p => p.Orderid), "ServiceId", "Name");
+        ViewData["ServiceId"] = new SelectList(_db.HsServices.Where(p => p.Isactive == true).OrderBy(p => p.Orderid), "serviceid", "name");
 
         // neu co loi tu action POST tra ve thi bao loi
         if (TempData["ErrorMessage"] != null)
@@ -194,7 +194,7 @@ namespace KOAHome.Controllers
       form = ParseDataHelper.RemovePrefix_FromFormKey(form);
 
       // dùng tạm để test dynamic report
-      ViewData["ServiceId"] = new SelectList(_db.HsServices.Where(p => p.Isactive == true).OrderBy(p => p.Orderid), "ServiceId", "Name");
+      ViewData["ServiceId"] = new SelectList(_db.HsServices.Where(p => p.Isactive == true).OrderBy(p => p.Orderid), "serviceid", "name");
 
       // lay thong tin report, va danh sach filter display cua report de xu ly
       var config_form = await _form.NET_Form_Get(FormCode);
@@ -207,18 +207,17 @@ namespace KOAHome.Controllers
 
       string? connectionString = null;
       //neu datasourceId la null thi lay connectionString mac dinh
-      if (config_form.ContainsKey("DatasourceId"))
+      if (config_form.ContainsKey("datasourceid"))
       {
-        if (config_form["DatasourceId"] != null)
+        if (config_form["datasourceid"] != null)
         {
           //lay connectionstring tu cau hinh form de goi store
-          connectionString = await _datasrc.GetConnectionString(Convert.ToInt32(config_form["DatasourceId"]));
+          connectionString = await _datasrc.GetConnectionString(Convert.ToInt32(config_form["datasourceid"]));
         }
       }
 
       // khai bao cac du lieu cau hinh form can su dung trong controller
-      string? storeSetData = config_form.ContainsKey("StoreSetData") ? Convert.ToString(config_form["StoreSetData"]) : "";
-      //string? storeSetData = config_form.ContainsKey("StoreSetData") ? Convert.ToString(config_form["StoreSetData"]) : "";
+      string? storeSetData = config_form.ContainsKey("storesetdata") ? Convert.ToString(config_form["storesetdata"]) : "";
 
       if (string.IsNullOrWhiteSpace(storeSetData))
       {
@@ -229,7 +228,7 @@ namespace KOAHome.Controllers
       // xu ly file
       // Kiểm tra xem form có file nào không
       // lay danh sach object type code tu config form neu co field file uploader
-      string attObjectTypeCodes = config_form.ContainsKey("AttObjectTypeCodes") ? Convert.ToString(config_form["AttObjectTypeCodes"]) : "";
+      string attObjectTypeCodes = config_form.ContainsKey("attobjecttypecodes") ? Convert.ToString(config_form["attobjecttypecodes"]) : "";
 
       await _att.HandleFiles(attObjectTypeCodes, form, id);
 
@@ -246,8 +245,8 @@ namespace KOAHome.Controllers
       var resultList = await _form.Form_ups(formData, id, storeSetData, connectionString);
       //kiem tra du lieu id tra ve
       var id_return = resultList
-      .Where(item => ((IDictionary<string, object>)item).ContainsKey("Id"))
-      .Select(item => ((IDictionary<string, object>)item)["Id"])
+      .Where(item => ((IDictionary<string, object>)item).ContainsKey("id"))
+      .Select(item => ((IDictionary<string, object>)item)["id"])
       .FirstOrDefault(); // Lọc ra những phần tử có Id
 
       // neu co gia tri tra ve thi bao thanh cong
@@ -334,18 +333,18 @@ namespace KOAHome.Controllers
 
         string? connectionString = null;
         //neu datasourceId la null thi lay connectionString mac dinh
-        if (config_form.ContainsKey("DatasourceId"))
+        if (config_form.ContainsKey("datasourceid"))
         {
-          if (config_form["DatasourceId"] != null)
+          if (config_form["datasourceid"] != null)
           {
             //lay connectionstring tu cau hinh form de goi store
-            connectionString = await _datasrc.GetConnectionString(Convert.ToInt32(config_form["DatasourceId"]));
+            connectionString = await _datasrc.GetConnectionString(Convert.ToInt32(config_form["datasourceid"]));
           }
         }
 
         // khai bao cac du lieu cau hinh form can su dung trong controller
-        string? storeDefaultData = config_form.ContainsKey("StoreDefaultData") ? Convert.ToString(config_form["StoreDefaultData"]) : "";
-        string? storeGetData = config_form.ContainsKey("StoreGetData") ? Convert.ToString(config_form["StoreGetData"]) : "";
+        string? storeDefaultData = config_form.ContainsKey("storedefaultdata") ? Convert.ToString(config_form["storedefaultdata"]) : "";
+        string? storeGetData = config_form.ContainsKey("storegetdata") ? Convert.ToString(config_form["storegetdata"]) : "";
         //string? storeSetData = config_form.ContainsKey("StoreSetData") ? Convert.ToString(config_form["StoreSetData"]) : "";
 
         if (string.IsNullOrWhiteSpace(storeDefaultData) && string.IsNullOrWhiteSpace(storeGetData) == null)
@@ -383,18 +382,18 @@ namespace KOAHome.Controllers
         // xu ly file
         // Kiểm tra xem form có file nào không
         // lay danh sach object type code tu config form neu co field file uploader
-        string attObjectTypeCodes = config_form.ContainsKey("AttObjectTypeCodes") ? Convert.ToString(config_form["AttObjectTypeCodes"]) : "";
+        string attObjectTypeCodes = config_form.ContainsKey("attobjecttypecodes") ? Convert.ToString(config_form["attobjecttypecodes"]) : "";
         ViewData["fileUrls"] = await _att.HandleFiles(attObjectTypeCodes, null, id);
 
         // danh sach service theo booking 
-        var reportResultList = await _report.ReportDetail_FromParent("BookingID", (id ?? 0).ToString(), "HS_BookingService_search", null);
+        var reportResultList = await _report.ReportDetail_FromParent("bookingid", (id ?? 0).ToString(), "HS_BookingService_search", null);
         ViewData["reportResultList"] = reportResultList;
 
         // set readonly form neu co isreadonly = false
         ViewData["IsReadOnly"] = isReadOnly;
 
         // dùng tạm để test dynamic report
-        ViewData["ServiceId"] = new SelectList(_db.HsServices.Where(p => p.Isactive == true).OrderBy(p => p.Orderid), "ServiceId", "Name");
+        ViewData["ServiceId"] = new SelectList(_db.HsServices.Where(p => p.Isactive == true).OrderBy(p => p.Orderid), "serviceid", "name");
 
         // neu co loi tu action POST tra ve thi bao loi
         if (TempData["ErrorMessage"] != null)
@@ -448,7 +447,7 @@ namespace KOAHome.Controllers
       form = ParseDataHelper.RemovePrefix_FromFormKey(form);
 
       // dùng tạm để test dynamic report
-      ViewData["ServiceId"] = new SelectList(_db.HsServices.Where(p => p.Isactive == true).OrderBy(p => p.Orderid), "ServiceId", "Name");
+      ViewData["ServiceId"] = new SelectList(_db.HsServices.Where(p => p.Isactive == true).OrderBy(p => p.Orderid), "serviceid", "name");
 
       // lay thong tin report, va danh sach filter display cua report de xu ly
       var config_form = await _form.NET_Form_Get(FormCode);
@@ -460,18 +459,17 @@ namespace KOAHome.Controllers
 
       string? connectionString = null;
       //neu datasourceId la null thi lay connectionString mac dinh
-      if (config_form.ContainsKey("DatasourceId"))
+      if (config_form.ContainsKey("datasourceid"))
       {
-        if (config_form["DatasourceId"] != null)
+        if (config_form["datasourceid"] != null)
         {
           //lay connectionstring tu cau hinh form de goi store
-          connectionString = await _datasrc.GetConnectionString(Convert.ToInt32(config_form["DatasourceId"]));
+          connectionString = await _datasrc.GetConnectionString(Convert.ToInt32(config_form["datasourceid"]));
         }
       }
 
       // khai bao cac du lieu cau hinh form can su dung trong controller
-      string? storeSetData = config_form.ContainsKey("StoreSetData") ? Convert.ToString(config_form["StoreSetData"]) : "";
-      //string? storeSetData = config_form.ContainsKey("StoreSetData") ? Convert.ToString(config_form["StoreSetData"]) : "";
+      string? storeSetData = config_form.ContainsKey("storesetdata") ? Convert.ToString(config_form["storesetdata"]) : "";
 
       if (string.IsNullOrWhiteSpace(storeSetData))
       {
@@ -481,7 +479,7 @@ namespace KOAHome.Controllers
       // xu ly file
       // Kiểm tra xem form có file nào không
       // lay danh sach object type code tu config form neu co field file uploader
-      string attObjectTypeCodes = config_form.ContainsKey("AttObjectTypeCodes") ? Convert.ToString(config_form["AttObjectTypeCodes"]) : "";
+      string attObjectTypeCodes = config_form.ContainsKey("attobjecttypecodes") ? Convert.ToString(config_form["attobjecttypecodes"]) : "";
 
       // Convert the IFormCollection to a dictionary of strings
       var formData = form.ToDictionary(
@@ -496,8 +494,8 @@ namespace KOAHome.Controllers
       var resultList = await _form.Form_ups(formData, id, storeSetData, connectionString);
       //kiem tra du lieu id tra ve
       var id_return = resultList
-      .Where(item => ((IDictionary<string, object>)item).ContainsKey("Id"))
-      .Select(item => ((IDictionary<string, object>)item)["Id"])
+      .Where(item => ((IDictionary<string, object>)item).ContainsKey("id"))
+      .Select(item => ((IDictionary<string, object>)item)["id"])
       .FirstOrDefault(); // Lọc ra những phần tử có Id
 
       // neu co gia tri tra ve thi bao thanh cong
@@ -511,7 +509,7 @@ namespace KOAHome.Controllers
         // xu ly file
         // Kiểm tra xem form có file nào không
         // lay danh sach object type code tu config form neu co field file uploader
-        attObjectTypeCodes = config_form.ContainsKey("AttObjectTypeCodes") ? Convert.ToString(config_form["AttObjectTypeCodes"]) : "";
+        attObjectTypeCodes = config_form.ContainsKey("attobjecttypecodes") ? Convert.ToString(config_form["attobjecttypecodes"]) : "";
 
         if (!isSaveAttachment)
         {

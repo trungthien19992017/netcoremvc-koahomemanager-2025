@@ -32,7 +32,7 @@ namespace KOAHome.Helpers
       try
       {
         var jObj = JObject.Parse(json);
-        var editorOptions = jObj["editorOptions"] as JObject;
+        var editorOptions = jObj["editoroptions"] as JObject;
 
         if (editorOptions == null) return new Dictionary<string, object>();
 

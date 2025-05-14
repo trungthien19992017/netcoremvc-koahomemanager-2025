@@ -103,14 +103,14 @@ namespace KOAHome.Services
         // Dictionary chứa các tham số
         var parameters = new Dictionary<string, object>
       {
-          { "Id", Id},
-          { "FileInfosJson", fileInfosJson ?? (object)DBNull.Value }
+          { "id", Id},
+          { "fileinfosjson", fileInfosJson ?? (object)DBNull.Value }
       };
 
 
         var connectionString = _configuration.GetConnectionString("ConfigConnection"); // Thay thế bằng chuỗi kết nối của bạn
         //var sqlQuery = "EXEC dbo.HS_Customer_Search @Param1";
-        string sqlStore = "NET_Attachment_SaveFile";
+        string sqlStore = "net_attachment_savefile";
 
         // chuyen thanh cau query tu store va param truyen vao
         var (sqlQuery, sqlParams) = await _con.Connection_GetQueryParam(parameters, sqlStore, connectionString);
@@ -122,8 +122,8 @@ namespace KOAHome.Services
 
         //kiem tra du lieu id tra ve
         var id_return = resultList
-        .Where(item => ((IDictionary<string, object>)item).ContainsKey("Id"))
-        .Select(item => ((IDictionary<string, object>)item)["Id"])
+        .Where(item => ((IDictionary<string, object>)item).ContainsKey("id"))
+        .Select(item => ((IDictionary<string, object>)item)["id"])
         .FirstOrDefault(); // Lọc ra những phần tử có Id
 
         // neu co gia tri tra ve thi bao thanh cong
@@ -139,7 +139,7 @@ namespace KOAHome.Services
     public async Task<Dictionary<string, List<string>>> GetFiles(int? Id, List<string> ListObjectTypeCode)
     {
       var connectionString = _configuration.GetConnectionString("ConfigConnection"); // Thay thế bằng chuỗi kết nối của bạn
-      string sqlStore = "NET_Attachment_GetFile";
+      string sqlStore = "net_attachment_getfile";
 
       var fileUrls = new Dictionary<string, List<string>>();
 
@@ -153,8 +153,8 @@ namespace KOAHome.Services
               // gán giá trị vào param
               var parameters = new Dictionary<string, object>
               {
-                  { "ObjectId", Id},
-                  { "ObjectTypeCode", syntaxCode}
+                  { "objectid", Id},
+                  { "objecttypecode", syntaxCode}
               };
               // chuyen thanh cau query tu store va param truyen vao
               var (sqlQuery, sqlParams) = await _con.Connection_GetQueryParam(parameters, sqlStore, connectionString);
@@ -163,7 +163,7 @@ namespace KOAHome.Services
               // xu ly lay du lieu dua truyen store va param truyen vao
               resultList = await _con.Connection_GetDataFromQuery(parameters, sqlStore, connectionString, sqlQuery, sqlParams);
 
-              List<string> listfilename = resultList.Select(item => ((IDictionary<string, object>)item)["FileName"].ToString()).ToList();
+              List<string> listfilename = resultList.Select(item => ((IDictionary<string, object>)item)["filename"].ToString()).ToList();
               return (SyntaxCode: syntaxCode, Listfilename: listfilename); // 👈 đây là fix
             })
             .ToList();

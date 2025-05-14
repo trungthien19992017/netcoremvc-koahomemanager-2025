@@ -71,12 +71,12 @@ namespace KOAHome.Controllers
 
         string? connectionString = null;
         //neu datasourceId la null thi lay connectionString mac dinh
-        if (tabpanel.ContainsKey("DatasourceId"))
+        if (tabpanel.ContainsKey("datasourceid"))
         {
-          if (tabpanel["DatasourceId"] != null)
+          if (tabpanel["datasourceid"] != null)
           {
             //lay connectionstring tu report de goi store
-            connectionString = await _datasrc.GetConnectionString(Convert.ToInt32(tabpanel["DatasourceId"]));
+            connectionString = await _datasrc.GetConnectionString(Convert.ToInt32(tabpanel["datasourceid"]));
           }
         }
 

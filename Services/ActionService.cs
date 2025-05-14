@@ -54,12 +54,12 @@ namespace KOAHome.Services
       // su dung datasource config de lay du lieu
       string connectionString = _configuration.GetConnectionString("ConfigConnection"); // Thay thế bằng chuỗi kết nối của bạn
       // store get du lieu
-      string sqlStore = "NET_ActionListDetail_WithObject_sel";
+      string sqlStore = "net_actionlistdetail_withobject_sel";
       // khai bao param lien quan
       var parameters = new Dictionary<string, object>();
-      parameters.Add("ObjectCode", objectCode);
-      parameters.Add("ObjectId", objectId);
-      parameters.Add("ActionListTypeCode", actionListTypeCode);
+      parameters.Add("objectcode", objectCode);
+      parameters.Add("objectid", objectId);
+      parameters.Add("actionlisttypecode", actionListTypeCode);
 
       // chuyen thanh cau query tu store va param truyen vao
       var (sqlQuery, sqlParams) = await _con.Connection_GetQueryParam(parameters, sqlStore, connectionString);
