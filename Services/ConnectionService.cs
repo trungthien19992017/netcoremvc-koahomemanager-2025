@@ -264,20 +264,21 @@ namespace KOAHome.Services
       //      AND n.nspname = 'dbo';";
 
       string paramQuery = @"
-        SELECT 
-            specific_name proname,
-            parameter_name param_name,
-            data_type param_type,
-            parameter_mode param_mode
-        FROM 
-            information_schema.parameters
-        WHERE 
-            specific_name in (
-                SELECT specific_name 
-                FROM information_schema.routines 
-                WHERE routine_name = @procName
-                AND routine_schema = 'dbo'
-            );";
+         SELECT 
+ 	          specific_name proname,
+	          parameter_name param_name,
+	          data_type param_type,
+	          parameter_mode param_mode
+           FROM 
+               information_schema.parameters
+           WHERE 
+               specific_name in (
+                   SELECT specific_name 
+                   FROM information_schema.routines 
+                   WHERE routine_name = @procName
+                   AND routine_schema = 'dbo'
+               )
+          ORDER BY dtd_identifier;";
 
       var paramList = new List<dynamic>();
       using (var connection = new NpgsqlConnection(connectionString))
@@ -292,6 +293,8 @@ namespace KOAHome.Services
             {
               var paramName = reader.GetString(1);
               var paramType = reader.GetString(2);
+              // mode IN OUT INOUT
+              var paramMode = reader.GetString(3);
               if (paramName != null && paramName != "")
               {
                 dynamic row = new ExpandoObject();
@@ -299,6 +302,7 @@ namespace KOAHome.Services
 
                 dict["ParamName"] = paramName;
                 dict["ParamType"] = paramType;
+                dict["ParamMode"] = paramMode;
 
                 paramList.Add(row);
               }
@@ -314,20 +318,33 @@ namespace KOAHome.Services
         var paramDict = (IDictionary<string, object>)param;
         string paramName = paramDict.ContainsKey("ParamName") ? paramDict["ParamName"].ToString(): "";
         string paramType = paramDict.ContainsKey("ParamType") ? paramDict["ParamType"].ToString() : "";
+        string paramMode = paramDict.ContainsKey("ParamMode") ? paramDict["ParamMode"].ToString() : "";
 
         string cleanParamName = paramName != null ? paramName.TrimStart('_') : ""; // PostgreSQL dùng "_" cho tham số IN
+        // nếu paramMode là OUT thì mặc định đưa vào procedure với giá trị NULL
+        if (paramMode == "OUT")
+        {
+          var value = "NULL";
+          sqlQuery.Append($"_{cleanParamName} := {value} ::{paramType},");
+        }
         if (parameters.ContainsKey(cleanParamName))
         {
           var value = parameters[cleanParamName];
+          // nếu value là rỗng thì mặc định null
+          value = string.IsNullOrWhiteSpace(Convert.ToString(value ?? "")) ? DBNull.Value : value;
           value = FormatValueForPostgreSql(ConvertToClrType(paramType, value));
 
-          // Xác định kiểu dữ liệu tương ứng
-          var npgsqlParam = new NpgsqlParameter($"@{cleanParamName}", value ?? DBNull.Value);
-          npgsqlParam.NpgsqlDbType = GetNpgsqlDbType(paramType);
-          npgsqlParam.DataTypeName = paramType;
+          // nếu null thì không truyền vào
+          if (value != null)
+          {
+            // Xác định kiểu dữ liệu tương ứng
+            //var npgsqlParam = new NpgsqlParameter($"@{cleanParamName}", value ?? DBNull.Value);
+            //npgsqlParam.NpgsqlDbType = GetNpgsqlDbType(paramType);
+            //npgsqlParam.DataTypeName = paramType;
 
-          sqlQuery.Append($"_{cleanParamName} := {value} ::{paramType},");
-          //sqlParams.Add(npgsqlParam);
+            sqlQuery.Append($"_{cleanParamName} := {value} ::{paramType},");
+            //sqlParams.Add(npgsqlParam);
+          }
         }
       }
 
@@ -365,8 +382,32 @@ namespace KOAHome.Services
           await command.ExecuteNonQueryAsync();
         }
 
+        bool tmpResultExists;
+        string getDataQuery;
+        // 1. Kiểm tra bảng tạm có tồn tại không
+        using (var checkCmd = new NpgsqlCommand(@"
+            SELECT EXISTS (
+                SELECT 1
+                FROM pg_class c
+                JOIN pg_namespace n ON n.oid = c.relnamespace
+                WHERE c.relname = 'tmp_result'
+                  AND n.oid = pg_my_temp_schema()
+            );", connection))
+        {
+          tmpResultExists = (bool)checkCmd.ExecuteScalar();
+        }
+
+        if (tmpResultExists){
+          getDataQuery = "SELECT * FROM tmp_result;";
+        }
+        else{
+          getDataQuery = "SELECT true AS success;";
+        }
+
+
+
         // Đọc dữ liệu từ bảng tạm tmp_result
-        using (var selectCommand = new NpgsqlCommand("SELECT * FROM tmp_result;", connection))
+        using (var selectCommand = new NpgsqlCommand(getDataQuery, connection))
         {
           using (var reader = await selectCommand.ExecuteReaderAsync())
           {
@@ -666,8 +707,8 @@ namespace KOAHome.Services
     public bool CheckForErrors(List<dynamic> resultList, out string errorMessage)
     {
       var errorMessages = resultList
-          .Where(item => ((IDictionary<string, object>)item).ContainsKey("ErrorMessage"))
-          .Select(item => item.ErrorMessage.ToString().Replace("\\n", "<br/>"))
+          .Where(item => ((IDictionary<string, object>)item).ContainsKey("errormessage"))
+          .Select(item => item.errormessage.ToString().Replace("\\n", "<br/>"))
           .ToList();
 
       if (errorMessages.Any())
