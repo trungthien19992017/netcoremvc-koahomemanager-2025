@@ -359,3 +359,19 @@ h2.card-header {
 .btn-reload-tab:hover {
   color: #0056b3;
 }
+
+.tab-panel-btn {
+  min-width: 220px;
+  white-space: normal !important;
+  word-wrap: break-word;
+}
+
+/* Khi màn hình nhỏ hơn 576px (mobile dọc) thì thu nhỏ lại */
+@media (max-width: 575.98px) {
+  .tab-panel-btn {
+    width: auto;
+    min-width: 48px; /* đủ để hiện icon */
+    padding-left: 0.5rem;
+    padding-right: 0.5rem;
+  }
+}

@@ -69,12 +69,12 @@ namespace KOAHome.Services
           case "character":
             return Convert.ToString(value);
           case "date":
-            return Convert.ToDateTime(value).Date;
+            return value == "" ? DBNull.Value : Convert.ToDateTime(value).Date;
           case "timestamp":
           case "timestamp without time zone":
-            return DateTime.SpecifyKind(Convert.ToDateTime(value), DateTimeKind.Unspecified);
+            return value == "" ? DBNull.Value : DateTime.SpecifyKind(Convert.ToDateTime(value), DateTimeKind.Unspecified);
           case "timestamp with time zone":
-            return DateTime.SpecifyKind(Convert.ToDateTime(value), DateTimeKind.Utc);
+            return value == "" ? DBNull.Value : DateTime.SpecifyKind(Convert.ToDateTime(value), DateTimeKind.Utc);
           case "json":
           case "jsonb":
             return Convert.ToString(value);

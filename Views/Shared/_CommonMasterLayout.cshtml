@@ -269,10 +269,10 @@
            function handleAjaxConfirmed(id, listid, sqlstore, datasourceid) {
                // dua cac du lieu can truyen vao formdata
                var formData = new FormData();
-                formData.append("Id", id); // key cua du lieu
+                formData.append("id", id); // key cua du lieu
                 formData.append("sqlstore", sqlstore); // Lấy sqlstore tu button truyen vao
                 formData.append("datasourceid", datasourceid); // Lấy datasource tu button truyen vao
-                formData.append("ListId", listid); // list id xuất hiện khi chọn nhiều dòng table, áp dụng với nút on top
+                formData.append("listid", listid); // list id xuất hiện khi chọn nhiều dòng table, áp dụng với nút on top
 
                 // Gọi AJAX để gửi yêu cầu xóa
                 $.ajax({
