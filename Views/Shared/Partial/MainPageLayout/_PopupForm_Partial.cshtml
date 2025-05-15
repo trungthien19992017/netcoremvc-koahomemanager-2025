@@ -13,8 +13,8 @@
     string formTitle = "";
     if (config_form != null)
     {
-        formTitle = config_form.ContainsKey("FormTitle") ? config_form["FormTitle"].ToString() : "Thông tin";
-        config_formOptions = ParseDataHelper.ParseOptionsToDictionary(config_form.ContainsKey("Options") ? config_form["Options"].ToString() : "{}");
+        formTitle = config_form.ContainsKey("formtitle") ? config_form["formtitle"].ToString() : "Thông tin";
+        config_formOptions = ParseDataHelper.ParseOptionsToDictionary(config_form.ContainsKey("options") ? config_form["options"].ToString() : "{}");
         // mac dinh col count cua form = 3
         form_colCount = config_formOptions.ContainsKey("colCount") ? Convert.ToInt32(config_formOptions["colCount"]) : 3;
     }
@@ -59,15 +59,15 @@
               @* xu ly form dong *@
               @* xu ly voi moi field *@
               <div class="row gx-5">
-                @* chi lay cac field group hoac field không có parentId *@
-                @foreach (var field in config_formfield.Where(p => p.ParentId == 0).OrderBy(p => p.TabIndex).ToList())
+                @* chi lay cac field group hoac field không có parentid *@
+                @foreach (var field in config_formfield.Where(p => p.parentid == 0).OrderBy(p => p.tabindex).ToList())
                 {
                     @* name: Key cua field truyen vao, label: Ten field, type: Loại field, value: giá trị field
                     , field width: độ rộng field *@
-                    string name = field.Code;
-                    string label = field.Name;
-                    string type = field.FormFieldTypeCode;
-                    string field_options = field.Options;
+                    string name = field.code;
+                    string label = field.name;
+                    string type = field.formfieldtypecode;
+                    string field_options = field.options;
                     // chuyen thong tin options thanh Dictionary cho dễ xử lý
                     var field_optionsDict = ParseDataHelper.ParseOptionsToDictionary(field_options);
                     // chuyen thong tin editor options thanh Dictionary cho dễ xử lý
@@ -80,7 +80,7 @@
                     int field_width = (12 / form_colCount * field_colspan);
 
                     // lay thong tin validation
-                    string field_validates = field.Validates;
+                    string field_validates = field.validates;
                     // parse validation thanh List<Dictionary<string, object>>
                     var field_validatesListDict = ParseDataHelper.ParseJsonToListDict(field_validates);
 
@@ -107,14 +107,14 @@
                         <div class="row gx-5">
                             <div class="col-md-12 card-header"><strong class="mb-0 text-primary">@label</strong></div>
                             @* goi vong lap de lay cac field con *@
-                            @foreach (var fieldchild in config_formfield.Where(p => p.ParentId == field.Id).OrderBy(p => p.TabIndex).ToList())
+                            @foreach (var fieldchild in config_formfield.Where(p => p.parentid == field.id).OrderBy(p => p.tabindex).ToList())
                             {
                                 @* name: Key cua field truyen vao, label: Ten field, type: Loại field, value: giá trị field
                                 , field width: độ rộng field *@
-                                string child_name = fieldchild.Code;
-                                string child_label = fieldchild.Name;
-                                string child_type = fieldchild.FormFieldTypeCode;
-                                string child_field_options = fieldchild.Options;
+                                string child_name = fieldchild.code;
+                                string child_label = fieldchild.name;
+                                string child_type = fieldchild.formfieldtypecode;
+                                string child_field_options = fieldchild.options;
                                 // chuyen thong tin options thanh Dictionary cho dễ xử lý
                                 var child_field_optionsDict = ParseDataHelper.ParseOptionsToDictionary(child_field_options);
                                 // chuyen thong tin editor options thanh Dictionary cho dễ xử lý
@@ -127,7 +127,7 @@
                                 int child_field_width = (12 / field_colcount * child_field_colspan);
 
                                 // lay thong tin validation
-                                string child_field_validates = fieldchild.Validates;
+                                string child_field_validates = fieldchild.validates;
                                 // parse validation thanh List<Dictionary<string, object>>
                                 var child_field_validatesListDict = ParseDataHelper.ParseJsonToListDict(child_field_validates);
 
@@ -429,7 +429,7 @@
                     }
                     else
                     {
-                      // nếu không phải là group item và không có parentId thì xử lý bình thường
+                      // nếu không phải là group item và không có parentid thì xử lý bình thường
                       string[] noclasslabel_fieldtypes = ["RadioGroup","FileUploader","HTMLEditor"];
                       <div class="col-md-@(Convert.ToInt32(field_width) == 0 ? "4" : field_width)">
                         <div class="@(

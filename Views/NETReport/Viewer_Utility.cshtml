@@ -411,7 +411,7 @@
                                       else if (actionType == "DOWNLOADFILETEMPLATE")
                                       {
                                           // lấy thông tin file template để xuất
-                                          string fileTemplate = actionDict.ContainsKey("FileTemplate") ? (actionDict["FileTemplate"].ToString() ?? "") : "";
+                                          string fileTemplate = actionDict.ContainsKey("filetemplate") ? (actionDict["filetemplate"].ToString() ?? "") : "";
                                           string url = "";
                                           if (!string.IsNullOrWhiteSpace(fileTemplate))
                                           {
