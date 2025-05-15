@@ -171,7 +171,9 @@
                 @if (isPage == true)
                 {
                     @* form xu ly luu editor *@
-                    @Html.Raw("<form id='editor-form' class='needs-validation' novalidate='' method='post' asp-controller='NETReport' asp-action='Editor_Utility' asp-route-reportCode='@ReportCode' enctype='multipart/form-data'>");
+                    @* @Html.Raw("<form id='editor-form' class='needs-validation' novalidate='' method='post' asp-controller='NETReport' asp-action='Editor_Utility' asp-route-reportCode='@ReportCode' enctype='multipart/form-data'>"); *@
+                    string formHandleText = "<form id='editor-form' class='needs-validation' novalidate='' method='post' action='/NETReport/Form_Report_Editor?ReportCode=" + (string.IsNullOrEmpty(ReportCode) ? "" : ReportCode) + "&containerId=" + (string.IsNullOrEmpty(containerId) ? "" : containerId) + "' enctype='multipart/form-data'>";
+                    @Html.Raw(formHandleText);
                 }
                 @* boc cac thanh phan cua table lai *@
                 <div id="@("table-editor-" + (ReportCode ?? "emptycode") + "-wrap")">
@@ -1015,6 +1017,7 @@
 
                     // Chỉ gử i dữ liệu của bảng đã thay đổi
                 form.addEventListener("submit", function (event) {
+                    event.preventDefault();
                     let rows = table.querySelectorAll("tbody tr");
 
                     rows.forEach(row => {
@@ -1034,7 +1037,64 @@
                         }
                     });
 
-                    // form.submit();
+                    debugger;
+                    // gọi ajax xử lý lưu thông tin\
+                    const formData = new FormData(form);
+
+                    let actionUrl = $(form).attr("action");
+                    let formmethod = $(form).attr("method");
+                    let urlParams = new URLSearchParams(actionUrl.split('?')[1]);
+                    let containerId = urlParams.get("containerId");
+
+                    // Có thể gọi thêm các validate custom ở đây nếu cần
+
+                    $.ajax({
+                        type: formmethod,
+                        url: actionUrl,
+                        data: formData,
+                        processData: false,
+                        contentType: false,
+                        success: function (data) {
+                            if (data.success) {
+                                rplm({
+                                    title: "Xử lý thành công!",
+                                    text: "Hành động của bạn đã được xử lý.",
+                                    type: "success",
+                                    timer: 2000,
+                                    confirmButtonText: 'Xác nhận',
+                                }, function () {
+                                    // tìm tab đang hoạt động
+                                    const $btn = $('.tab-panel-btn.active');
+
+                                    // Xóa cache tab này
+                                    delete tabContentCache[containerId];
+
+                                    // Giả lập click lại tab panel
+                                    $btn.trigger('click');
+                                });
+                            } else {
+                                rplm({
+                                    title: "Lỗi!",
+                                    text: data.errorMessage || "Có vấn đề xảy ra.",
+                                    type: "error",
+                                    timer: 2000,
+                                    confirmButtonText: 'Xác nhận',
+                                });
+                            }
+                        },
+                        error: function (xhr, status, error) {
+                            console.error("XHR:", xhr);
+                            console.error("Status:", status);
+                            console.error("Error Thrown:", error);
+                            rplm({
+                                title: "Lỗi!",
+                                text: "Lỗi: " + xhr.status + "\n" + xhr.statusText + "\n" + xhr.responseText || "Có vấn đề xảy ra.",
+                                type: "error",
+                                timer: 2000,
+                                confirmButtonText: 'Xác nhận',
+                            });
+                        }
+                    });
                 });
 
                 checkChanges(); // Kiểm tra trạng thái ban đầu
