@@ -5,7 +5,7 @@
     ViewData["Title"] = "Error - Pages";
 
     var err = new ErrorViewModel { RequestId = Activity.Current?.Id };
-    var ex = Model?.Exception;
+    var ex = Model?.exception;
 }
 
 @section PageStyles {
@@ -57,6 +57,11 @@
                         <p><strong>Message:</strong> @ex.Message</p>
                         <p><strong>Type:</strong> @ex.GetType().FullName</p>
                         <p><strong>Source:</strong> @(ex.Source ?? "")</p>
+                        <p><strong>Where:</strong> @(ex.Where ?? "")</p>
+                        <p><strong>Line:</strong> @(ex.Line ?? "")</p
+                        <p><strong>Routine:</strong> @(ex.Routine ?? "")</p>
+                        <p><strong>Hint:</strong> @(ex.Hint ?? "")</p>
+                        <p><strong>InternalQuery:</strong> @(ex.InternalQuery ?? "")</p>
                         @if (ex.InnerException != null)
                         {
                           <p>

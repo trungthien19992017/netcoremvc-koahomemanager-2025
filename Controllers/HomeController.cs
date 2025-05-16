@@ -4,6 +4,7 @@ using AspnetCoreMvcFull.Models;
 using KOAHome.EntityFramework;
 using KOAHome.Services;
 using System.Security.Cryptography;
+using Npgsql;
 
 namespace AspnetCoreMvcFull.Controllers;
 
@@ -116,7 +117,7 @@ public class HomeController : Controller
         return Json(new { success = false, errorMessage = "Store chưa trả về giá trị success." });
       }
     }
-    catch (Exception ex)
+    catch (PostgresException ex)
     {
       return Json(new { success = false, errorMessage = ex.Message });
     }

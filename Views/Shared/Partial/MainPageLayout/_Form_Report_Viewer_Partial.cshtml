@@ -1,5 +1,6 @@
 @using KOAHome.Helpers
 @using System.Text.Json
+@using Npgsql
 @{
     var resultList = ViewData["resultList"] as List<dynamic>;
 
@@ -531,7 +532,7 @@
                                                               }
                                                               </ul>
                                                           }
-                                                          catch (Exception ex)
+                                                          catch (PostgresException ex)
                                                           {
                                                               <span class="text-danger">N/A</span>
                                                           }
@@ -677,7 +678,7 @@
                                                                     }
                                                                     </ul>
                                                                 }
-                                                                catch (Exception ex)
+                                                                catch (PostgresException ex)
                                                                 {
                                                                     <span class="text-danger">N/A</span>
                                                                 }
@@ -812,6 +813,7 @@
 
           // tim kiem trong select box
         $(document).ready(function () {
+            debugger;
             function initSelect2() {
               // không áp dụng cho Quiff HTML editor
                 $("select") .not(".ql-toolbar select, .ql-container select, .ql-editor select").not(".select2-hidden-accessible").not(".dt-length select").select2({

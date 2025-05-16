@@ -7,6 +7,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.AspNetCore.WebUtilities;
+using Npgsql;
 using System.Diagnostics;
 using static NuGet.Packaging.PackagingConstants;
 
@@ -172,12 +173,12 @@ namespace KOAHome.Controllers
 
         return View();
       }
-      catch (Exception ex)
+      catch (PostgresException ex)
       {
         // Log the exception
         _logger.LogError(ex, "An error occurred while fetching booking service info.");
         // Optionally, return an error view
-        return View("~/Views/Pages/MiscError.cshtml", new ErrorViewModel { RequestId = Activity.Current?.Id ?? HttpContext.TraceIdentifier, Exception = ex });
+        return View("~/Views/Pages/MiscError.cshtml", new ErrorViewModel { RequestId = Activity.Current?.Id ?? HttpContext.TraceIdentifier, exception = ex });
       }
     }
 
@@ -316,12 +317,12 @@ namespace KOAHome.Controllers
 
         return View();
       }
-      catch (Exception ex)
+      catch (PostgresException ex)
       {
         // Log the exception
         _logger.LogError(ex, "An error occurred while fetching booking service info.");
         // Optionally, return an error view
-        return View("~/Views/Pages/MiscError.cshtml", new ErrorViewModel { RequestId = Activity.Current?.Id ?? HttpContext.TraceIdentifier, Exception = ex });
+        return View("~/Views/Pages/MiscError.cshtml", new ErrorViewModel { RequestId = Activity.Current?.Id ?? HttpContext.TraceIdentifier, exception = ex });
       }
     }
 
@@ -410,12 +411,12 @@ namespace KOAHome.Controllers
           return Redirect($"{currentPath}?{queryString}");
         }
       }
-      catch (Exception ex)
+      catch (PostgresException ex)
       {
         // Log the exception
         _logger.LogError(ex, "An error occurred while fetching booking service info.");
         // Optionally, return an error view
-        return View("~/Views/Pages/MiscError.cshtml", new ErrorViewModel { RequestId = Activity.Current?.Id ?? HttpContext.TraceIdentifier, Exception = ex });
+        return View("~/Views/Pages/MiscError.cshtml", new ErrorViewModel { RequestId = Activity.Current?.Id ?? HttpContext.TraceIdentifier, exception = ex });
       }
     }
 
@@ -559,12 +560,12 @@ namespace KOAHome.Controllers
 
         return PartialView("~/Views/Shared/Partial/MainPageLayout/_Form_Report_Editor_Partial.cshtml");
       }
-      catch (Exception ex)
+      catch (PostgresException ex)
       {
         // Log the exception
         _logger.LogError(ex, "An error occurred while fetching booking service info.");
         // Optionally, return an error view
-        return View("~/Views/Pages/MiscError.cshtml", new ErrorViewModel { RequestId = Activity.Current?.Id ?? HttpContext.TraceIdentifier, Exception = ex });
+        return View("~/Views/Pages/MiscError.cshtml", new ErrorViewModel { RequestId = Activity.Current?.Id ?? HttpContext.TraceIdentifier, exception = ex });
       }
       
     }
@@ -648,7 +649,7 @@ namespace KOAHome.Controllers
           return Json(new { success = true });
         }
       }
-      catch (Exception ex)
+      catch (PostgresException ex)
       {
         return Json(new { success = false, errorMessage = ex.Message });
       }
@@ -782,12 +783,12 @@ namespace KOAHome.Controllers
 
         return PartialView("~/Views/Shared/Partial/MainPageLayout/_Form_Report_Viewer_Partial.cshtml");
       }
-      catch (Exception ex)
+      catch (PostgresException ex)
       {
         // Log the exception
         _logger.LogError(ex, "An error occurred while fetching booking service info.");
         // Optionally, return an error view
-        return View("~/Views/Pages/MiscError.cshtml", new ErrorViewModel { RequestId = Activity.Current?.Id ?? HttpContext.TraceIdentifier, Exception = ex });
+        return View("~/Views/Pages/MiscError.cshtml", new ErrorViewModel { RequestId = Activity.Current?.Id ?? HttpContext.TraceIdentifier, exception = ex });
       }
 
     }

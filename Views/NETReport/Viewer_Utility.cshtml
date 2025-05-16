@@ -1,5 +1,6 @@
 @using KOAHome.Helpers
 @using System.Text.Json
+@using Npgsql
 @{
     Layout = "~/Views/Shared/_ContentNavbarLayout.cshtml";
     var resultList = ViewData["resultList"] as List<dynamic>;
@@ -694,7 +695,7 @@
                                                                             }
                                                                             </ul>
                                                                         }
-                                                                        catch (Exception ex)
+                                                                        catch (PostgresException ex)
                                                                         {
                                                                             <span class="text-danger">N/A</span>
                                                                         }
@@ -840,7 +841,7 @@
                                                                                   }
                                                                                   </ul>
                                                                               }
-                                                                              catch (Exception ex)
+                                                                              catch (PostgresException ex)
                                                                               {
                                                                                   <span class="text-danger">N/A</span>
                                                                               }
