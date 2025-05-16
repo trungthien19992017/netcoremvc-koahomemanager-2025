@@ -212,7 +212,7 @@
                                     int? tabdetail_count = null;
 
                                     @* active tab nếu stt bằng với TabIndex trên link *@
-                                    <li class="nav-item" role="presentation">
+                                    <li class="nav-item" role="presentation" data-bs-toggle="tooltip" data-bs-offset="0,4" data-bs-placement="top" data-bs-html="true" title="@tabdetail_title">
                                         <button type="button" class="tab-panel-btn nav-link waves-effect waves-light @(tabdetail_stt == TabIndex ? "active" : "")" role="tab" data-bs-toggle="tab" data-bs-target="@("#navs-pills-" + tabdetail_code)" aria-controls="@("navs-pills-" + tabdetail_code)" aria-selected="@(tabdetail_stt == TabIndex ? "true" : "false")" data-template="@tabdetail_template" data-code="@tabdetail_datacode" data-tabindex="@tabdetail_stt">
                                             <span class="d-none d-sm-inline-flex align-items-center">
                                                 <i class="icon-base @tabdetail_icon icon-sm me-1_5"></i>@tabdetail_title
