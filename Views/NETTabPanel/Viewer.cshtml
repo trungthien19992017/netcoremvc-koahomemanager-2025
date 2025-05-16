@@ -157,7 +157,7 @@
                 @* tabpanel *@
                 <div class="col-xl-12">
                     <h5 class="text-center text-primary text-uppercase">@(tabpanel.ContainsKey("name") ? tabpanel["name"] : "Tab thông tin")</h5>
-                    <div class="nav-align-left">
+                    <div id="nav-tabpanel" class="nav-align-left">
                         <div class="tab-content">
                             @* nút reload để end user chủ động load tab *@
                             <div class="tab-reload-wrapper">

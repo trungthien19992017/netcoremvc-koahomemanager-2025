@@ -1,3 +1,4 @@
+using AspnetCoreMvcFull.Models;
 using KOAHome.EntityFramework;
 using KOAHome.Helpers;
 using KOAHome.Services;
@@ -158,7 +159,8 @@ namespace KOAHome.Controllers
         // Log the exception
         _logger.LogError(ex, "An error occurred while fetching form.");
         // Optionally, return an error view
-        return View("Error");
+        //return View("Error");
+        return View("~/Views/Pages/MiscError.cshtml", new ErrorViewModel { RequestId = Activity.Current?.Id ?? HttpContext.TraceIdentifier, Exception = ex });
       }
 
     }

@@ -11,7 +11,7 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0" />
 
-    <script src="https://code.jquery.com/jquery-3.4.1.min.js"></script>
+    @* <script src="https://code.jquery.com/jquery-3.4.1.min.js"></script> *@
 
 
   @{
@@ -923,7 +923,7 @@
 
                  // xu ly data table
                  dt = $table.DataTable({
-                     dom: '<"d-flex justify-content-between align-items-center datatable-top-component"<"d-flex gap-2"fl><"d-flex gap-2"B>>irtp',
+                     dom: '<"d-flex flex-wrap justify-content-between align-items-center datatable-top-component"<"d-flex flex-wrap"fl><"d-flex flex-wrap"B>>irtp',
                       select: {
                           style: "multi",
                           selector: "td input.dt-checkboxes" // chỉ khi click vào checkbox mới select
@@ -1172,25 +1172,25 @@
                // Di chuyển phần phân trang ra ngoài bảng
                // doi phan trang va cac nut xuat, tìm kiem ra ngoai (yeu cau class table-pagination va table-top-action table-info)
                dt.on('draw', function () {
-                   attachSelectAllHandler(dt);
-                   var wrapselector_id = selector + "-wrap";
+                   // attachSelectAllHandler(dt);
+                   // var wrapselector_id = selector + "-wrap";
 
-                    // chuyển toàn bộ class của wrapper tự gen sang cho wrap tự tạo
-                    var wrapper = $(selector + "_wrapper");
-                    var target = $(wrapselector_id);
+                   //  // chuyển toàn bộ class của wrapper tự gen sang cho wrap tự tạo
+                   //  var wrapper = $(selector + "_wrapper");
+                   //  var target = $(wrapselector_id);
 
-                    // Lấy danh sách class từ wrapper và gán sang target
-                    var classes = wrapper.attr('class');
-                    if (classes) {
-                      target.addClass(classes);
-                    }
+                   //  // Lấy danh sách class từ wrapper và gán sang target
+                   //  var classes = wrapper.attr('class');
+                   //  if (classes) {
+                   //    target.addClass(classes);
+                   //  }
 
-                   // Move pagination vào đúng chỗ
-                    $(wrapselector_id + ' .dt-paging').appendTo(wrapselector_id + ' .report-pagination');
-                    // Move info vào đúng chỗ nếu bạn cần
-                    $(selector + '_info').appendTo(wrapselector_id + ' .report-info');
-                    // Move filter + length nếu cần
-                    $(wrapselector_id + ' .datatable-top-component').appendTo(wrapselector_id + ' .report-top-action');
+                   // // Move pagination vào đúng chỗ
+                   //  $(wrapselector_id + ' .dt-paging').appendTo(wrapselector_id + ' .report-pagination');
+                   //  // Move info vào đúng chỗ nếu bạn cần
+                   //  $(selector + '_info').appendTo(wrapselector_id + ' .report-info');
+                   //  // Move filter + length nếu cần
+                   //  $(wrapselector_id + ' .datatable-top-component').appendTo(wrapselector_id + ' .report-top-action');
 
                     // đính kèm chức năng chọn nhiều
                     attachSelectAllHandler(dt);
@@ -1854,6 +1854,7 @@
                                     // Gọi lại hàm load menu (MenuCode sẽ được lấy từ Session trong controller)
                                     $("#net-menu").empty(); // Xóa menu cũ
                                     loadMenu(); // Load lại
+                                    $('.layout-menu-collapsed').toggleClass('layout-menu-expanded');
                                 }
                              },
                               error: function (xhr, status, error) {
@@ -2058,6 +2059,34 @@
                 }
             });
         }
+
+        // response chuyển đổi tab&pill từ right sang top khi resize// Khai báo biến timer ngoài scope resize
+        let resizeTimer;
+
+        function updateNavAlignment() {
+          const isMobile = window.innerWidth < 768;
+
+          $('#nav-tabpanel').each(function () {
+            const $nav = $(this);
+            if (isMobile) {
+              if ($nav.hasClass('nav-align-left')) {
+                $nav.removeClass('nav-align-left').addClass('nav-align-bottom');
+              }
+            } else {
+              if ($nav.hasClass('nav-align-bottom')) {
+                $nav.removeClass('nav-align-bottom').addClass('nav-align-left');
+              }
+            }
+          });
+        }
+
+        $(document).ready(function () {
+          updateNavAlignment(); // Khi trang vừa load
+          $(window).on('resize', function () {
+              clearTimeout(resizeTimer);
+              resizeTimer = setTimeout(updateNavAlignment, 200); // đợi 200ms sau khi dừng resize // Khi người dùng resize cửa sổ
+          });
+        });
     </script>
 
     <!-- Page Scripts-->
