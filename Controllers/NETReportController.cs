@@ -1,3 +1,4 @@
+using AspnetCoreMvcFull.Models;
 using KOAHome.EntityFramework;
 using KOAHome.Helpers;
 using KOAHome.Models;
@@ -176,7 +177,7 @@ namespace KOAHome.Controllers
         // Log the exception
         _logger.LogError(ex, "An error occurred while fetching booking service info.");
         // Optionally, return an error view
-        return View("Error");
+        return View("~/Views/Pages/MiscError.cshtml", new ErrorViewModel { RequestId = Activity.Current?.Id ?? HttpContext.TraceIdentifier, Exception = ex });
       }
     }
 
@@ -320,7 +321,7 @@ namespace KOAHome.Controllers
         // Log the exception
         _logger.LogError(ex, "An error occurred while fetching booking service info.");
         // Optionally, return an error view
-        return View("Error");
+        return View("~/Views/Pages/MiscError.cshtml", new ErrorViewModel { RequestId = Activity.Current?.Id ?? HttpContext.TraceIdentifier, Exception = ex });
       }
     }
 
@@ -414,7 +415,7 @@ namespace KOAHome.Controllers
         // Log the exception
         _logger.LogError(ex, "An error occurred while fetching booking service info.");
         // Optionally, return an error view
-        return View("Error");
+        return View("~/Views/Pages/MiscError.cshtml", new ErrorViewModel { RequestId = Activity.Current?.Id ?? HttpContext.TraceIdentifier, Exception = ex });
       }
     }
 
@@ -563,7 +564,7 @@ namespace KOAHome.Controllers
         // Log the exception
         _logger.LogError(ex, "An error occurred while fetching booking service info.");
         // Optionally, return an error view
-        return View("Error");
+        return View("~/Views/Pages/MiscError.cshtml", new ErrorViewModel { RequestId = Activity.Current?.Id ?? HttpContext.TraceIdentifier, Exception = ex });
       }
       
     }
@@ -786,7 +787,7 @@ namespace KOAHome.Controllers
         // Log the exception
         _logger.LogError(ex, "An error occurred while fetching booking service info.");
         // Optionally, return an error view
-        return View("Error");
+        return View("~/Views/Pages/MiscError.cshtml", new ErrorViewModel { RequestId = Activity.Current?.Id ?? HttpContext.TraceIdentifier, Exception = ex });
       }
 
     }

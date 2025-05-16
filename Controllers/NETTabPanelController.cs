@@ -1,7 +1,9 @@
+using AspnetCoreMvcFull.Models;
 using KOAHome.EntityFramework;
 using KOAHome.Services;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using System.Diagnostics;
 
 namespace KOAHome.Controllers
 {
@@ -100,7 +102,7 @@ namespace KOAHome.Controllers
         // Log the exception
         _logger.LogError(ex, "An error occurred while fetching booking service info.");
         // Optionally, return an error view
-        return View("Error");
+        return View("~/Views/Pages/MiscError.cshtml", new ErrorViewModel { RequestId = Activity.Current?.Id ?? HttpContext.TraceIdentifier, Exception = ex });
       }
     }
 
