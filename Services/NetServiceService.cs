@@ -102,7 +102,15 @@ namespace KOAHome.Services
         {
             parameters.Add("param", JsonConvert.SerializeObject(parameters));
         }
-        parameters.Add("serviceid", serviceId);
+
+        if (!parameters.ContainsKey("serviceid"))
+        {
+          parameters.Add("serviceid", serviceId);
+        }
+        else
+        {
+          parameters["serviceid"] = serviceId;
+        }
 
         // chuyen thanh cau query tu store va param truyen vao
         var (sqlQuery, sqlParams) = await _con.Connection_GetQueryParam(parameters, sqlStore, connectionString);

@@ -414,3 +414,21 @@ h2.card-header {
 .contant_box_404 {
   margin-top: -50px;
 }
+
+
+/*notify css*/
+
+.notify-card {
+  transition: all 0.2s ease-in-out;
+  cursor: pointer;
+}
+
+  .notify-card:hover {
+    background-color: #f1f9ff !important;
+    box-shadow: 0 4px 12px rgba(0, 123, 255, 0.15);
+    border-color: #cce5ff;
+  }
+
+.avatar img {
+  object-fit: cover;
+}
