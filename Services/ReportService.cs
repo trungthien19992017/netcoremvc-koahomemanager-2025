@@ -19,6 +19,8 @@ using System.Security.Cryptography;
 using System.Text.RegularExpressions;
 using OfficeOpenXml;
 using System.Reflection.Metadata;
+using System.ComponentModel;
+using LicenseContext = OfficeOpenXml.LicenseContext;
 
 namespace KOAHome.Services
 {
@@ -219,22 +221,33 @@ namespace KOAHome.Services
     {
       string sqlstore = "";
 
-      // Đọc file Excel
-      using (var stream = new MemoryStream())
+      if (file == null || file.Length == 0 || !file.FileName.EndsWith(".xlsx"))
+        throw new InvalidOperationException("File không hợp lệ hoặc không đúng định dạng .xlsx.");
+
+      try
       {
-        await file.CopyToAsync(stream);
-        using (var package = new ExcelPackage(stream))
+        ExcelPackage.LicenseContext = LicenseContext.NonCommercial;
+
+        using (var stream = new MemoryStream())
         {
-          // Sheet "Import" để lấy tên Store Procedure
-          var importSheet = package.Workbook.Worksheets.FirstOrDefault(ws => ws.Name == "Import");
-          if (importSheet != null)
+          await file.CopyToAsync(stream);
+          stream.Position = 0;
+
+          using (var package = new ExcelPackage(stream))
           {
-            sqlstore = importSheet.Cells[1, 1].Text?.Trim() ?? ""; // Lấy A1
+            var importSheet = package.Workbook.Worksheets.FirstOrDefault(ws => ws.Name == "Import");
+            if (importSheet != null)
+            {
+              sqlstore = importSheet.Cells[1, 1].Text?.Trim() ?? "";
+            }
           }
         }
       }
+      catch (Exception ex)
+      {
+        throw new InvalidOperationException($"Lỗi xử lý file: {ex.Message}", ex);
+      }
 
-      // Chuyển đổi dữ liệu sang JSON
       return sqlstore;
     }
 
