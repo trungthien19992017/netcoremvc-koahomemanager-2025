@@ -240,129 +240,122 @@ namespace KOAHome.Services
             string sqlStore,
             string? connectionString)
     {
-      try
+      //lower ten store
+      sqlStore = sqlStore.ToLower();
+
+      if (connectionString == null)
       {
-        //lower ten store
-        sqlStore = sqlStore.ToLower();
+        connectionString = _configuration.GetConnectionString("DefaultConnection");
+      }
 
-        if (connectionString == null)
+      var sqlQuery = new StringBuilder("CALL dbo." + sqlStore + "(");
+
+      // Lấy danh sách tham số của procedure từ PostgreSQL
+      //string paramQuery = @"
+      //  SELECT
+      //      p.proname,
+      //      unnest(p.proargnames) AS param_name,
+      //      CAST(unnest(p.proargtypes::regtype[]) as varchar) AS param_type
+      //  FROM
+      //      pg_proc p
+      //      JOIN pg_namespace n ON p.pronamespace = n.oid
+      //  WHERE
+      //      p.proname = @procName
+      //      AND n.nspname = 'dbo';";
+
+      string paramQuery = @"
+          SELECT 
+ 	          specific_name proname,
+	          parameter_name param_name,
+	          data_type param_type,
+	          parameter_mode param_mode
+            FROM 
+                information_schema.parameters
+            WHERE 
+                specific_name in (
+                    SELECT specific_name 
+                    FROM information_schema.routines 
+                    WHERE routine_name = @procName
+                    AND routine_schema = 'dbo'
+                )
+          ORDER BY dtd_identifier;";
+
+      var paramList = new List<dynamic>();
+      using (var connection = new NpgsqlConnection(connectionString))
+      {
+        await connection.OpenAsync();
+        using (var command = new NpgsqlCommand(paramQuery, connection))
         {
-          connectionString = _configuration.GetConnectionString("DefaultConnection");
-        }
-
-        var sqlQuery = new StringBuilder("CALL dbo." + sqlStore + "(");
-
-        // Lấy danh sách tham số của procedure từ PostgreSQL
-        //string paramQuery = @"
-        //  SELECT
-        //      p.proname,
-        //      unnest(p.proargnames) AS param_name,
-        //      CAST(unnest(p.proargtypes::regtype[]) as varchar) AS param_type
-        //  FROM
-        //      pg_proc p
-        //      JOIN pg_namespace n ON p.pronamespace = n.oid
-        //  WHERE
-        //      p.proname = @procName
-        //      AND n.nspname = 'dbo';";
-
-        string paramQuery = @"
-           SELECT 
- 	            specific_name proname,
-	            parameter_name param_name,
-	            data_type param_type,
-	            parameter_mode param_mode
-             FROM 
-                 information_schema.parameters
-             WHERE 
-                 specific_name in (
-                     SELECT specific_name 
-                     FROM information_schema.routines 
-                     WHERE routine_name = @procName
-                     AND routine_schema = 'dbo'
-                 )
-            ORDER BY dtd_identifier;";
-
-        var paramList = new List<dynamic>();
-        using (var connection = new NpgsqlConnection(connectionString))
-        {
-          await connection.OpenAsync();
-          using (var command = new NpgsqlCommand(paramQuery, connection))
+          command.Parameters.AddWithValue("@procName", sqlStore);
+          using (var reader = await command.ExecuteReaderAsync())
           {
-            command.Parameters.AddWithValue("@procName", sqlStore);
-            using (var reader = await command.ExecuteReaderAsync())
+            while (await reader.ReadAsync())
             {
-              while (await reader.ReadAsync())
+              var paramName = reader.GetString(1);
+              var paramType = reader.GetString(2);
+              // mode IN OUT INOUT
+              var paramMode = reader.GetString(3);
+              if (paramName != null && paramName != "")
               {
-                var paramName = reader.GetString(1);
-                var paramType = reader.GetString(2);
-                // mode IN OUT INOUT
-                var paramMode = reader.GetString(3);
-                if (paramName != null && paramName != "")
-                {
-                  dynamic row = new ExpandoObject();
-                  var dict = (IDictionary<string, object>)row;
+                dynamic row = new ExpandoObject();
+                var dict = (IDictionary<string, object>)row;
 
-                  dict["ParamName"] = paramName;
-                  dict["ParamType"] = paramType;
-                  dict["ParamMode"] = paramMode;
+                dict["ParamName"] = paramName;
+                dict["ParamType"] = paramType;
+                dict["ParamMode"] = paramMode;
 
-                  paramList.Add(row);
-                }
+                paramList.Add(row);
               }
             }
           }
         }
-
-        // Xây dựng tham số động
-        var sqlParams = new List<NpgsqlParameter>();
-        foreach (var param in paramList)
-        {
-          var paramDict = (IDictionary<string, object>)param;
-          string paramName = paramDict.ContainsKey("ParamName") ? paramDict["ParamName"].ToString(): "";
-          string paramType = paramDict.ContainsKey("ParamType") ? paramDict["ParamType"].ToString() : "";
-          string paramMode = paramDict.ContainsKey("ParamMode") ? paramDict["ParamMode"].ToString() : "";
-
-          string cleanParamName = paramName != null ? paramName.TrimStart('_') : ""; // PostgreSQL dùng "_" cho tham số IN
-          // nếu paramMode là OUT thì mặc định đưa vào procedure với giá trị NULL
-          if (paramMode == "OUT")
-          {
-            var value = "NULL";
-            sqlQuery.Append($"_{cleanParamName} := {value} ::{paramType},");
-          }
-          if (parameters.ContainsKey(cleanParamName))
-          {
-            var value = parameters[cleanParamName];
-            // nếu value là rỗng thì mặc định null
-            value = string.IsNullOrWhiteSpace(Convert.ToString(value ?? "")) ? DBNull.Value : value;
-            value = FormatValueForPostgreSql(ConvertToClrType(paramType, value));
-
-            // nếu null thì không truyền vào
-            if (value != null)
-            {
-              // Xác định kiểu dữ liệu tương ứng
-              //var npgsqlParam = new NpgsqlParameter($"@{cleanParamName}", value ?? DBNull.Value);
-              //npgsqlParam.NpgsqlDbType = GetNpgsqlDbType(paramType);
-              //npgsqlParam.DataTypeName = paramType;
-
-              sqlQuery.Append($"_{cleanParamName} := {value} ::{paramType},");
-              //sqlParams.Add(npgsqlParam);
-            }
-          }
-        }
-
-        // Xóa dấu phẩy cuối và đóng ngoặc khi có sql param hoặc kí tự cuối là dấu phẩy
-        if (sqlParams.Count > 0 || sqlQuery[^1] == ',')
-        {
-          sqlQuery.Length--;
-        }
-        sqlQuery.Append(");");
-
-        return (sqlQuery, sqlParams);
       }
-      catch (Exception ex)
+
+      // Xây dựng tham số động
+      var sqlParams = new List<NpgsqlParameter>();
+      foreach (var param in paramList)
       {
-        throw new InvalidOperationException($"Lỗi xử lý file: {ex.Message}", ex);
+        var paramDict = (IDictionary<string, object>)param;
+        string paramName = paramDict.ContainsKey("ParamName") ? paramDict["ParamName"].ToString(): "";
+        string paramType = paramDict.ContainsKey("ParamType") ? paramDict["ParamType"].ToString() : "";
+        string paramMode = paramDict.ContainsKey("ParamMode") ? paramDict["ParamMode"].ToString() : "";
+
+        string cleanParamName = paramName != null ? paramName.TrimStart('_') : ""; // PostgreSQL dùng "_" cho tham số IN
+        // nếu paramMode là OUT thì mặc định đưa vào procedure với giá trị NULL
+        if (paramMode == "OUT")
+        {
+          var value = "NULL";
+          sqlQuery.Append($"_{cleanParamName} := {value} ::{paramType},");
+        }
+        if (parameters.ContainsKey(cleanParamName))
+        {
+          var value = parameters[cleanParamName];
+          // nếu value là rỗng thì mặc định null
+          value = string.IsNullOrWhiteSpace(Convert.ToString(value ?? "")) ? DBNull.Value : value;
+          value = FormatValueForPostgreSql(ConvertToClrType(paramType, value));
+
+          // nếu null thì không truyền vào
+          if (value != null)
+          {
+            // Xác định kiểu dữ liệu tương ứng
+            //var npgsqlParam = new NpgsqlParameter($"@{cleanParamName}", value ?? DBNull.Value);
+            //npgsqlParam.NpgsqlDbType = GetNpgsqlDbType(paramType);
+            //npgsqlParam.DataTypeName = paramType;
+
+            sqlQuery.Append($"_{cleanParamName} := {value} ::{paramType},");
+            //sqlParams.Add(npgsqlParam);
+          }
+        }
       }
+
+      // Xóa dấu phẩy cuối và đóng ngoặc khi có sql param hoặc kí tự cuối là dấu phẩy
+      if (sqlParams.Count > 0 || sqlQuery[^1] == ',')
+      {
+        sqlQuery.Length--;
+      }
+      sqlQuery.Append(");");
+
+      return (sqlQuery, sqlParams);
     }
 
     public async Task<List<dynamic>> Connection_GetDataFromQuery(
@@ -372,87 +365,80 @@ namespace KOAHome.Services
         StringBuilder sqlQuery,
         List<NpgsqlParameter> SqlParams)
     {
-      try
+      if (connectionString == null)
       {
-        if (connectionString == null)
+        connectionString = _configuration.GetConnectionString("DefaultConnection");
+      }
+
+      var resultList = new List<dynamic>();
+      using (var connection = new NpgsqlConnection(connectionString))
+      {
+        await connection.OpenAsync();
+
+        // Gọi procedure để tạo bảng tạm
+        using (var command = new NpgsqlCommand(sqlQuery.ToString(), connection))
         {
-          connectionString = _configuration.GetConnectionString("DefaultConnection");
+          command.Parameters.AddRange(SqlParams.ToArray());
+          await command.ExecuteNonQueryAsync();
         }
 
-        var resultList = new List<dynamic>();
-        using (var connection = new NpgsqlConnection(connectionString))
+        bool tmpResultExists;
+        string getDataQuery;
+        // 1. Kiểm tra bảng tạm có tồn tại không
+        using (var checkCmd = new NpgsqlCommand(@"
+            SELECT EXISTS (
+                SELECT 1
+                FROM pg_class c
+                JOIN pg_namespace n ON n.oid = c.relnamespace
+                WHERE c.relname = 'tmp_result'
+                  AND n.oid = pg_my_temp_schema()
+            );", connection))
         {
-          await connection.OpenAsync();
+          tmpResultExists = (bool)checkCmd.ExecuteScalar();
+        }
 
-          // Gọi procedure để tạo bảng tạm
-          using (var command = new NpgsqlCommand(sqlQuery.ToString(), connection))
+        if (tmpResultExists)
+        {
+          getDataQuery = "SELECT * FROM tmp_result;";
+        }
+        else
+        {
+          getDataQuery = "SELECT true AS success;";
+        }
+
+
+
+        // Đọc dữ liệu từ bảng tạm tmp_result
+        using (var selectCommand = new NpgsqlCommand(getDataQuery, connection))
+        {
+          using (var reader = await selectCommand.ExecuteReaderAsync())
           {
-            command.Parameters.AddRange(SqlParams.ToArray());
-            await command.ExecuteNonQueryAsync();
-          }
-
-          bool tmpResultExists;
-          string getDataQuery;
-          // 1. Kiểm tra bảng tạm có tồn tại không
-          using (var checkCmd = new NpgsqlCommand(@"
-              SELECT EXISTS (
-                  SELECT 1
-                  FROM pg_class c
-                  JOIN pg_namespace n ON n.oid = c.relnamespace
-                  WHERE c.relname = 'tmp_result'
-                    AND n.oid = pg_my_temp_schema()
-              );", connection))
-          {
-            tmpResultExists = (bool)checkCmd.ExecuteScalar();
-          }
-
-          if (tmpResultExists)
-          {
-            getDataQuery = "SELECT * FROM tmp_result;";
-          }
-          else
-          {
-            getDataQuery = "SELECT true AS success;";
-          }
-
-
-
-          // Đọc dữ liệu từ bảng tạm tmp_result
-          using (var selectCommand = new NpgsqlCommand(getDataQuery, connection))
-          {
-            using (var reader = await selectCommand.ExecuteReaderAsync())
+            while (await reader.ReadAsync())
             {
-              while (await reader.ReadAsync())
+              var row = new ExpandoObject() as IDictionary<string, object>;
+              for (int i = 0; i < reader.FieldCount; i++)
               {
-                var row = new ExpandoObject() as IDictionary<string, object>;
-                for (int i = 0; i < reader.FieldCount; i++)
+                object? value = null;
+                // xu ly gia tri null hoac {} truyen vao gay loi
+                if (reader.IsDBNull(i))
                 {
-                  object? value = null;
-                  // xu ly gia tri null hoac {} truyen vao gay loi
-                  if (reader.IsDBNull(i))
-                  {
-                    value = null;
-                  }
-                  else
-                  {
-                    value = (object)reader.GetValue(i);
-                  }
-                  string key = reader.GetName(i).ToString();
-
-                  row.Add(key, value);
+                  value = null;
                 }
-                resultList.Add(row);
+                else
+                {
+                  value = (object)reader.GetValue(i);
+                }
+                string key = reader.GetName(i).ToString();
+
+                row.Add(key, value);
               }
+              resultList.Add(row);
             }
           }
-          await connection.CloseAsync();
         }
-        return resultList;
+        await connection.CloseAsync();
       }
-    catch (Exception ex)
-    {
-        throw new InvalidOperationException($"Lỗi xử lý dữ liệu: {ex.Message}", ex);
-    }
+      return resultList;
 }
 
     public async Task<IDictionary<string, object>?> Connection_GetSingleDataFromQuery(
@@ -462,53 +448,46 @@ namespace KOAHome.Services
         StringBuilder sqlQuery,
         List<NpgsqlParameter> SqlParams)
     {
-      try
+      if (connectionString == null)
       {
-        if (connectionString == null)
+        connectionString = _configuration.GetConnectionString("DefaultConnection");
+      }
+
+      var resultList = new List<dynamic>();
+      using (var connection = new NpgsqlConnection(connectionString))
+      {
+        await connection.OpenAsync();
+
+        // Gọi procedure để tạo bảng tạm
+        using (var command = new NpgsqlCommand(sqlQuery.ToString(), connection))
         {
-          connectionString = _configuration.GetConnectionString("DefaultConnection");
+          command.Parameters.AddRange(SqlParams.ToArray());
+          await command.ExecuteNonQueryAsync();
         }
 
-        var resultList = new List<dynamic>();
-        using (var connection = new NpgsqlConnection(connectionString))
+        // Đọc dữ liệu từ bảng tạm tmp_result
+        using (var selectCommand = new NpgsqlCommand("SELECT * FROM tmp_result;", connection))
         {
-          await connection.OpenAsync();
-
-          // Gọi procedure để tạo bảng tạm
-          using (var command = new NpgsqlCommand(sqlQuery.ToString(), connection))
+          using (var reader = await selectCommand.ExecuteReaderAsync())
           {
-            command.Parameters.AddRange(SqlParams.ToArray());
-            await command.ExecuteNonQueryAsync();
-          }
-
-          // Đọc dữ liệu từ bảng tạm tmp_result
-          using (var selectCommand = new NpgsqlCommand("SELECT * FROM tmp_result;", connection))
-          {
-            using (var reader = await selectCommand.ExecuteReaderAsync())
+            while (await reader.ReadAsync())
             {
-              while (await reader.ReadAsync())
+              var row = new ExpandoObject() as IDictionary<string, object>;
+              for (int i = 0; i < reader.FieldCount; i++)
               {
-                var row = new ExpandoObject() as IDictionary<string, object>;
-                for (int i = 0; i < reader.FieldCount; i++)
-                {
-                  object? value = reader.IsDBNull(i) ? null : reader.GetValue(i);
-                  string key = reader.GetName(i);
-                  row[key] = value;
-                }
-
-                return row; // ✅ chỉ trả về dòng đầu tiên
+                object? value = reader.IsDBNull(i) ? null : reader.GetValue(i);
+                string key = reader.GetName(i);
+                row[key] = value;
               }
+
+              return row; // ✅ chỉ trả về dòng đầu tiên
             }
           }
-          await connection.CloseAsync();
         }
+        await connection.CloseAsync();
+      }
 
-        return null;
-      }
-      catch (Exception ex)
-      {
-        throw new InvalidOperationException($"Lỗi xử lý file: {ex.Message}", ex);
-      }
+      return null;
     }
 
     //public async Task<(StringBuilder SqlQuery, List<SqlParameter> SqlParam)> Connection_GetQueryParam_Simple(Dictionary<string, object> parameters, string sqlStore, string? connectionString)

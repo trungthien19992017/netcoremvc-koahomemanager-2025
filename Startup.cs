@@ -29,6 +29,7 @@ namespace KOAHome
           options.UseNpgsql(
               Configuration.GetConnectionString("ConfigConnection")));
       services.AddDistributedMemoryCache();
+      services.AddResponseCaching();
       services.AddSession(options => {
         options.IdleTimeout = TimeSpan.FromMinutes(20);//You can set Time
         options.Cookie.HttpOnly = true;
@@ -83,6 +84,8 @@ namespace KOAHome
       app.UseStaticFiles();
 
       app.UseRouting();
+
+      app.UseResponseCaching();
 
       app.UseAuthorization();
 
