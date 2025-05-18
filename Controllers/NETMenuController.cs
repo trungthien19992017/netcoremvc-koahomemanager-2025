@@ -132,6 +132,10 @@ namespace KOAHome.Controllers
         // chuyen cau hinh menu len giao dien de xu ly
         ViewData["menuList"] = menuList;
 
+        // nếu tồn tại menulist thì tiếp tục kiểm tra currentpage có tồn tại không
+        var currentMenu = menuList.FirstOrDefault(p => (currentPage == "/" && currentPage.StartsWith(p.link)) || (currentPage != "/" && p.link != "/" && currentPage.StartsWith(p.link))) as IDictionary<string, object>;
+        ViewData["currentMenu"] = currentMenu;
+
         ViewData["sucess"] = "Thành công";
 
         return PartialView("~/Views/Shared/Partial/NETMenu/_Menu_Partial.cshtml");

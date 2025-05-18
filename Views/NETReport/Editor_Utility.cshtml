@@ -248,7 +248,7 @@
                                                         @* xu ly filter dong *@
                                                         @if(listFilterConfig != null)
                                                         {
-                                                            foreach (var filter in listFilterConfig.OrderBy(p => p.OrderId).ToList())
+                                                            foreach (var filter in listFilterConfig.OrderBy(p => p.orderid).ToList())
                                                             {
                                                                 @* name: Key cua filter truyen vao, label: Ten filter, type: Loại filter, value: giá trị filter
                                                         , colspan: độ rộng filter *@
@@ -651,7 +651,7 @@
                                                                           // kiểu textarea
                                                                           else if (displayType == "textarea")
                                                                           {
-                                                                              <textarea row="2" class="form-control track-change @FormatHelper.ParseTextAlignToClass(display.textalign)" name="@("grid["+@reportRowIndex+"]."+display.code)" aria-label="@display.name" value="@value" @(Convert.ToBoolean(display.isreadonly ?? false) ? "readonly" : "") @(display.validationrule != "[]" ? "required" : "")></textarea>
+                                                                              <textarea row="2" class="form-control track-change @FormatHelper.ParseTextAlignToClass(display.textalign)" name="@("grid["+@reportRowIndex+"]."+display.code)" aria-label="@display.name" @(Convert.ToBoolean(display.isreadonly ?? false) ? "readonly" : "") @(display.validationrule != "[]" ? "required" : "")>@value</textarea>
                                                                           }
                                                                           // neu la kieu number thi hien thi input number
                                                                           else if (numberTypeArray.Contains(displayType))
@@ -861,7 +861,7 @@
                                                                                       // kiểu textarea
                                                                                       else if (displayType == "textarea")
                                                                                       {
-                                                                                          <textarea row="2" class="form-control track-change @FormatHelper.ParseTextAlignToClass(displaychild.textalign)" name="@("grid["+@reportRowIndex+"]."+displaychild.code)" aria-label="@displaychild.name" value="@value" @(Convert.ToBoolean(displaychild.isreadonly ?? false) ? "readonly" : "") @(displaychild.validationrule != "[]" ? "required" : "")></textarea>
+                                                                                          <textarea row="2" class="form-control track-change @FormatHelper.ParseTextAlignToClass(displaychild.textalign)" name="@("grid["+@reportRowIndex+"]."+displaychild.code)" aria-label="@displaychild.name" @(Convert.ToBoolean(displaychild.isreadonly ?? false) ? "readonly" : "") @(displaychild.validationrule != "[]" ? "required" : "")>@value</textarea>
                                                                                       }
                                                                                       // neu la kieu number thi hien thi input number
                                                                                       else if (numberTypeArray.Contains(displayType))
