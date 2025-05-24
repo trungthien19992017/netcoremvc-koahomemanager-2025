@@ -128,29 +128,66 @@
         });
         });
 
+        // // sau khi load, tu dong cap nhat format date
+        // $(document).ready(function () {
+        //     // Lấy tất cả các input có type="date" hoặc "datetime-local"
+        //     $('input[type="date"], input[type="datetime-local"]').each(function () {
+        //         let originalValue = $(this).attr('value');
+
+        //         if (originalValue) {
+        //             if ($(this).attr("type") === "date") {
+        //                 // Kiểm tra xem đã đúng định dạng YYYY-MM-DD chưa
+        //                 let isoDateRegex = /^\d{4}-\d{2}-\d{2}$/;
+        //                 if (!isoDateRegex.test(originalValue)) {
+        //                     let formattedDate = moment(originalValue, ["M/D/YYYY h:mm:ss A", "DD/MM/YYYY", "YYYY-MM-DD"]).format("YYYY-MM-DD");
+        //                     $(this).val(formattedDate); // Điền trực tiếp vào value
+        //                     $(this).attr("value", formattedDate); // Cập nhật lại giá trị trong HTML
+        //                 }
+        //             } else if ($(this).attr("type") === "datetime-local") {
+        //                 // Kiểm tra xem đã đúng định dạng YYYY-MM-DDTHH:mm chưa
+        //                 let isoDateTimeRegex = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}$/;
+        //                 if (!isoDateTimeRegex.test(originalValue)) {
+        //                     let formattedDateTime = moment(originalValue, ["M/D/YYYY h:mm:ss A", "DD/MM/YYYY HH:mm:ss", "YYYY-MM-DDTHH:mm:ss"]).format("YYYY-MM-DDTHH:mm");
+        //                     $(this).val(formattedDateTime); // Điền trực tiếp vào value
+        //                     $(this).attr("value", formattedDateTime); // Cập nhật lại giá trị trong HTML
+        //                 }
+        //             }
+        //         }
+        //     });
+        // });
+
         // sau khi load, tu dong cap nhat format date
         $(document).ready(function () {
-            // Lấy tất cả các input có type="date" hoặc "datetime-local"
             $('input[type="date"], input[type="datetime-local"]').each(function () {
                 let originalValue = $(this).attr('value');
 
                 if (originalValue) {
-                    if ($(this).attr("type") === "date") {
-                        // Kiểm tra xem đã đúng định dạng YYYY-MM-DD chưa
-                        let isoDateRegex = /^\d{4}-\d{2}-\d{2}$/;
-                        if (!isoDateRegex.test(originalValue)) {
-                            let formattedDate = moment(originalValue, ["M/D/YYYY h:mm:ss A", "DD/MM/YYYY", "YYYY-MM-DD"]).format("YYYY-MM-DD");
-                            $(this).val(formattedDate); // Điền trực tiếp vào value
-                            $(this).attr("value", formattedDate); // Cập nhật lại giá trị trong HTML
+                    // Tạo moment từ nhiều format có thể gặp
+                    let parsedDate = moment(originalValue, [
+                        moment.ISO_8601,              // ISO format: 2025-05-24T10:30
+                        "YYYY-MM-DD",                 // Chuẩn HTML date
+                        "YYYY-MM-DDTHH:mm",           // Chuẩn HTML datetime-local
+                        "M/D/YYYY h:mm:ss A",
+                        "MM/DD/YYYY h:mm:ss A",
+                        "D/M/YYYY H:mm:ss",
+                        "DD/MM/YYYY H:mm:ss",
+                        "DD-MM-YYYY HH:mm:ss"
+                    ], true); // 'true' = strict parsing
+
+                    if (parsedDate.isValid()) {
+                        if ($(this).attr("type") === "date") {
+                            let formattedDate = parsedDate.format("YYYY-MM-DD");
+                            $(this).val(formattedDate);
+                            $(this).attr("value", formattedDate);
+                            console.log("Date field:", $(this).attr('name'), "value:", originalValue);
+                        } else if ($(this).attr("type") === "datetime-local") {
+                            let formattedDateTime = parsedDate.format("YYYY-MM-DDTHH:mm");
+                            $(this).val(formattedDateTime);
+                            $(this).attr("value", formattedDateTime);
+                            console.log("Date field:", $(this).attr('name'), "value:", originalValue);
                         }
-                    } else if ($(this).attr("type") === "datetime-local") {
-                        // Kiểm tra xem đã đúng định dạng YYYY-MM-DDTHH:mm chưa
-                        let isoDateTimeRegex = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}$/;
-                        if (!isoDateTimeRegex.test(originalValue)) {
-                            let formattedDateTime = moment(originalValue, ["M/D/YYYY h:mm:ss A", "DD/MM/YYYY HH:mm:ss", "YYYY-MM-DDTHH:mm:ss"]).format("YYYY-MM-DDTHH:mm");
-                            $(this).val(formattedDateTime); // Điền trực tiếp vào value
-                            $(this).attr("value", formattedDateTime); // Cập nhật lại giá trị trong HTML
-                        }
+                    } else {
+                        console.warn("⚠️ ",$(this).attr('name')," Không parse được giá trị ngày: ", originalValue);
                     }
                 }
             });
