@@ -349,7 +349,7 @@
                                       {
                                         @foreach (var displaychild in displayList.Where(p=> p.IsDisplay == true && p.ParentCode == display.Code).OrderBy(p => p.ColNum ?? 0).ToList())
                                         {
-                                            <th class="text-center" data-code="@display.Code" data-index="@(displaychild.ColNum ?? "0")" data-isexport="@(displaychild.IsExport ?? "True")" style="min-width:@(displaychild.Width ?? "200")px;@(displaychild.CssHeader ?? "")">@Html.Raw(displaychild.Name)</th>
+                                            <th class="text-center" data-code="@displaychild.Code" data-index="@(displaychild.ColNum ?? "0")" data-isexport="@(displaychild.IsExport ?? "True")" style="min-width:@(displaychild.Width ?? "200")px;@(displaychild.CssHeader ?? "")">@Html.Raw(displaychild.Name)</th>
                                         }
                                       }
                               
@@ -372,13 +372,13 @@
 
                                     <tr class="@bgColorRowClass">
                                     @* cột select box mặc đinh *@
-                                    <td class="text-center" data-isexport="False" data-value="@Id">
+                                    <td class="text-center" data-isexport="False" data-value="@Id" data-code="IdCheck">
                                     </td>
                                     @* voi moi cot dang co *@
                                     @* neu cot isdisplay = false thi khong hien thi  *@
                                     @foreach (var display in displayList.Where(p=> p.IsDisplay == false).OrderBy(p => p.ColNum ?? 0).ToList())
                                     {
-                                        <td class="@FormatHelper.ParseTextAlignToClass(display.TextAlign) d-none" data-isexport="@(display.IsExport ?? "True")">
+                                        <td class="@FormatHelper.ParseTextAlignToClass(display.TextAlign) d-none" data-isexport="@(display.IsExport ?? "True")" data-code="@display.Code">
                                             @{
                                                 object value;
                                                 if (dictionary.TryGetValue(display.Code, out value))
@@ -396,7 +396,7 @@
 					                @foreach (var display in displayList.Where(p=> p.IsDisplay == true && p.Code == "stt" && p.IsParent == false && string.IsNullOrEmpty(p.ParentCode)).OrderBy(p => p.ColNum ?? 0).ToList())
                                     {
                                         @* neu isFreePane bang true thi them class freepanze-col *@
-                                        <td class="text-center @(display.IsFreePane == true ? "freepanze-col" : "")" data-isexport="@(display.IsExport ?? "True")">
+                                        <td class="text-center @(display.IsFreePane == true ? "freepanze-col" : "")" data-isexport="@(display.IsExport ?? "True")" data-code="@display.Code">
                                             @{
                                                 object value;
                                                 if (dictionary.TryGetValue(display.Code, out value))
@@ -411,7 +411,7 @@
                                         </td>
                                     }
                                     @* them cot xu ly *@
-							          <td class="text-center" data-isexport="False"> 
+							          <td class="text-center" data-isexport="False" data-code="HandleColumn"> 
                                       <div class="demo-inline-spacing">
                                         <div class="btn-group" id="dropdown-icon-demo">
                                           <button type="button" class="btn btn-primary btn-xs dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false"><i class="ri-align-justify me-1"></i></button>
@@ -478,7 +478,7 @@
                                         var displayType = display.Type as string ?? "link";
                                         var displayFormat = display.Format as string ?? "";
                                         @* neu isFreePane bang true thi them class freepanze-col *@
-                                        <td class="@FormatHelper.ParseTextAlignToClass(display.TextAlign) @(display.IsFreePane == true ? "freepanze-col" : "")" data-isexport="@(display.IsExport ?? "True")" data-displaytype="@displayType" data-displayformat="@displayFormat">
+                                        <td class="@FormatHelper.ParseTextAlignToClass(display.TextAlign) @(display.IsFreePane == true ? "freepanze-col" : "")" data-isexport="@(display.IsExport ?? "True")" data-displaytype="@displayType" data-displayformat="@displayFormat" data-code="@display.Code">
                                             @{
                                                 object value;
                                                 if (dictionary.TryGetValue(display.Code, out value))
@@ -624,7 +624,7 @@
                                           {
                                               var displayType = displaychild.Type as string ?? "link";
                                               var displayFormat = displaychild.Format as string ?? "";
-                                              <td class="@FormatHelper.ParseTextAlignToClass(displaychild.TextAlign)" data-isexport="@(displaychild.IsExport ?? "0")" data-displaytype="@displayType" data-displayformat="@displayFormat">
+                                              <td class="@FormatHelper.ParseTextAlignToClass(displaychild.TextAlign)" data-isexport="@(displaychild.IsExport ?? "0")" data-displaytype="@displayType" data-displayformat="@displayFormat" data-code="@displaychild.Code">
                                                   @{
                                                       object value;
                                                       if (dictionary.TryGetValue(displaychild.Code, out value))

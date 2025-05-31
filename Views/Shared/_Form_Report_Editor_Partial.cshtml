@@ -183,7 +183,7 @@
                     </div>
                     @* hidden input để xử lý ẩn truyền dữ liệu từ param link vào bằng js *@
                     <div id="hiddenInputs"></div>
-                    <div class="table-responsive" style="max-height: 300px">
+                    <div class="table-responsive" style="max-height: 400px">
                         <table id="@("table-editor-" + ReportCode ?? "emptycode")" data-table-displayname = "@(report.ContainsKey("Name") ? (report["Name"].ToString() ?? "Danh sách") : "Danh sách")" border="1" cellpadding="5" cellspacing="0" style="width: 100%; text-align: center; table-layout: auto;" class="table table-sm table-bordered table-hover display table-with-exportexcel">
                             <thead class="freepanze-head">
                                 <tr>
@@ -463,7 +463,7 @@
                                                             // kiểu textarea
                                                             else if (displayType == "textarea")
                                                             {
-                                                                <textarea row="2" class="form-control track-change @FormatHelper.ParseTextAlignToClass(display.TextAlign)" name="@("grid["+@reportRowIndex+"]."+display.Code)" aria-label="@display.Name" value="@value" @(Convert.ToBoolean(display.IsReadOnly ?? false) ? "readonly" : "") @(display.ValidationRule != "[]" ? "required" : "")></textarea>
+                                                                <textarea row="2" class="form-control track-change @FormatHelper.ParseTextAlignToClass(display.TextAlign)" name="@("grid["+@reportRowIndex+"]."+display.Code)" aria-label="@display.Name" @(Convert.ToBoolean(display.IsReadOnly ?? false) ? "readonly" : "") @(display.ValidationRule != "[]" ? "required" : "")>@value</textarea>
                                                             }
                                                             // neu la kieu number thi hien thi input number 
                                                             else if (numberTypeArray.Contains(displayType))
@@ -670,7 +670,7 @@
                                                                         // kiểu textarea
                                                                         else if (displayType == "textarea")
                                                                         {
-                                                                            <textarea row="2" class="form-control track-change @FormatHelper.ParseTextAlignToClass(displaychild.TextAlign)" name="@("grid["+@reportRowIndex+"]."+displaychild.Code)" aria-label="@displaychild.Name" value="@value" @(Convert.ToBoolean(displaychild.IsReadOnly ?? false) ? "readonly" : "") @(displaychild.ValidationRule != "[]" ? "required" : "")></textarea>
+                                                                            <textarea row="2" class="form-control track-change @FormatHelper.ParseTextAlignToClass(displaychild.TextAlign)" name="@("grid["+@reportRowIndex+"]."+displaychild.Code)" aria-label="@displaychild.Name" @(Convert.ToBoolean(displaychild.IsReadOnly ?? false) ? "readonly" : "") @(displaychild.ValidationRule != "[]" ? "required" : "")>@value</textarea>
                                                                         }
                                                                         // neu la kieu number thi hien thi input number 
                                                                         else if (numberTypeArray.Contains(displayType))

@@ -8,6 +8,13 @@
     var mainmenu = ViewData["mainmenu"] as IDictionary<string, object>;
 
     var menuList = ViewData["menuList"] as List<dynamic>;
+    var currentMenu = ViewData["currentMenu"] as IDictionary<string, object>;
+    int currentMenuParentId = 0;
+    if (currentMenu != null)
+    {
+        // lấy parent của current menu
+        currentMenuParentId = currentMenu.ContainsKey("Parent") ? Convert.ToInt32(currentMenu["Parent"] ?? 0) : 0;
+    }
 
     // lấy đường dẫn để kiểm tra
     string currentPage = (ViewBag.CurrentPage ?? "").ToString();
@@ -40,7 +47,7 @@
                 @* nếu là parent thì gọi cả các menu con *@
                 else
                 {
-                  <li class='menu-item active open'>
+                  <li class='menu-item@(menu.Id == currentMenuParentId ? " active open" : "")'>
                     <a href="javascript:void(0);" class="menu-link menu-toggle">
                         <i class="menu-icon tf-icons @menu.Icon" style="@iconstyle"></i>
                         <div><span style="@textstyle">@(menu.Title ?? menu.Name ?? menu.Code)</span></div>

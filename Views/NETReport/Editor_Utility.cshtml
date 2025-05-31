@@ -650,7 +650,7 @@
                                                                           // kiểu textarea
                                                                           else if (displayType == "textarea")
                                                                           {
-                                                                              <textarea row="2" class="form-control track-change @FormatHelper.ParseTextAlignToClass(display.TextAlign)" name="@("grid["+@reportRowIndex+"]."+display.Code)" aria-label="@display.Name" value="@value" @(Convert.ToBoolean(display.IsReadOnly ?? false) ? "readonly" : "") @(display.ValidationRule != "[]" ? "required" : "")></textarea>
+                                                                              <textarea row="2" class="form-control track-change @FormatHelper.ParseTextAlignToClass(display.TextAlign)" name="@("grid["+@reportRowIndex+"]."+display.Code)" aria-label="@display.Name" @(Convert.ToBoolean(display.IsReadOnly ?? false) ? "readonly" : "") @(display.ValidationRule != "[]" ? "required" : "")>@value</textarea>
                                                                           }
                                                                           // neu la kieu number thi hien thi input number
                                                                           else if (numberTypeArray.Contains(displayType))
@@ -860,7 +860,7 @@
                                                                                       // kiểu textarea
                                                                                       else if (displayType == "textarea")
                                                                                       {
-                                                                                          <textarea row="2" class="form-control track-change @FormatHelper.ParseTextAlignToClass(displaychild.TextAlign)" name="@("grid["+@reportRowIndex+"]."+displaychild.Code)" aria-label="@displaychild.Name" value="@value" @(Convert.ToBoolean(displaychild.IsReadOnly ?? false) ? "readonly" : "") @(displaychild.ValidationRule != "[]" ? "required" : "")></textarea>
+                                                                                          <textarea row="2" class="form-control track-change @FormatHelper.ParseTextAlignToClass(displaychild.TextAlign)" name="@("grid["+@reportRowIndex+"]."+displaychild.Code)" aria-label="@displaychild.Name" @(Convert.ToBoolean(displaychild.IsReadOnly ?? false) ? "readonly" : "") @(displaychild.ValidationRule != "[]" ? "required" : "")>@value</textarea>
                                                                                       }
                                                                                       // neu la kieu number thi hien thi input number
                                                                                       else if (numberTypeArray.Contains(displayType))
