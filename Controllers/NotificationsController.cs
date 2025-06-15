@@ -62,7 +62,7 @@ namespace KOAHome.Controllers
       var notification = _db.HsServiceHistories.FirstOrDefault(n => n.Id == id);
       if (notification != null)
       {
-        notification.Isread = true;
+        notification.IsRead = true;
       }
       await _db.SaveChangesAsync();
       return Json(new { success = true });

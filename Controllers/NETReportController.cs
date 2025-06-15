@@ -7,6 +7,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.AspNetCore.WebUtilities;
+using Microsoft.Data.SqlClient;
 using Npgsql;
 using System.Diagnostics;
 using static NuGet.Packaging.PackagingConstants;
@@ -173,7 +174,7 @@ namespace KOAHome.Controllers
 
         return View();
       }
-      catch (PostgresException ex)
+      catch (SqlException ex)
       {
         // Log the exception
         _logger.LogError(ex, "An error occurred while fetching booking service info.");
@@ -296,6 +297,11 @@ namespace KOAHome.Controllers
         //  Gán danh sach select cho cac display vào ViewBag
         ViewData["EditorDynamicServiceSelectOptions"] = listDisplayService;
 
+        // Nhận chuỗi json validate cho validation editor
+        var getValidationFromStore = await _report.NET_Report_GetValidation(ReportCode);
+        var validationJson = getValidationFromStore.ContainsKey("value") ? Convert.ToString(getValidationFromStore["value"]) ?? "" : "";
+        ViewData["editorcolumnvalidation"] = validationJson;
+
         // search
         stopwatch.Restart();
         var resultList = await _report.Report_search(objParameters, sqlContent, connectionString);
@@ -317,7 +323,7 @@ namespace KOAHome.Controllers
 
         return View();
       }
-      catch (PostgresException ex)
+      catch (SqlException ex)
       {
         // Log the exception
         _logger.LogError(ex, "An error occurred while fetching booking service info.");
@@ -411,7 +417,7 @@ namespace KOAHome.Controllers
           return Redirect($"{currentPath}?{queryString}");
         }
       }
-      catch (PostgresException ex)
+      catch (SqlException ex)
       {
         // Log the exception
         _logger.LogError(ex, "An error occurred while fetching booking service info.");
@@ -560,7 +566,7 @@ namespace KOAHome.Controllers
 
         return PartialView("~/Views/Shared/Partial/MainPageLayout/_Form_Report_Editor_Partial.cshtml");
       }
-      catch (PostgresException ex)
+      catch (SqlException ex)
       {
         // Log the exception
         _logger.LogError(ex, "An error occurred while fetching booking service info.");
@@ -649,7 +655,7 @@ namespace KOAHome.Controllers
           return Json(new { success = true });
         }
       }
-      catch (PostgresException ex)
+      catch (SqlException ex)
       {
         return Json(new { success = false, errorMessage = ex.Message });
       }
@@ -783,7 +789,7 @@ namespace KOAHome.Controllers
 
         return PartialView("~/Views/Shared/Partial/MainPageLayout/_Form_Report_Viewer_Partial.cshtml");
       }
-      catch (PostgresException ex)
+      catch (SqlException ex)
       {
         // Log the exception
         _logger.LogError(ex, "An error occurred while fetching booking service info.");

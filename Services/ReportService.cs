@@ -42,6 +42,7 @@ namespace KOAHome.Services
     // Hàm này sẽ tính độ sâu tối đa của cây phân cấp
     // dung de tính số cấp cha con của cột hiển thị
     public int Display_GetReportMaxParentLevel(List<dynamic> displayList);
+    public Task<IDictionary<string, object>?> NET_Report_GetValidation(string reportCode);
   }
   public class ReportService : IReportService
   {
@@ -431,6 +432,25 @@ namespace KOAHome.Services
       }
 
       return maxDepth;
+    }
+
+    public async Task<IDictionary<string, object>?> NET_Report_GetValidation(string reportCode)
+    {
+      // su dung datasource config de lay du lieu
+      string connectionString = _configuration.GetConnectionString("ConfigConnection"); // Thay thế bằng chuỗi kết nối của bạn
+      // store get du lieu
+      string sqlStore = "net_report_getvalidation";
+      // khai bao param lien quan
+      var parameters = new Dictionary<string, object>();
+      parameters.Add("reportcode", reportCode);
+
+      // chuyen thanh cau query tu store va param truyen vao
+      var (sqlQuery, sqlParams) = await _con.Connection_GetQueryParam(parameters, sqlStore, connectionString);
+
+      // xu ly lay du lieu dua truyen store va param truyen vao
+      var result = await _con.Connection_GetSingleDataFromQuery(parameters, sqlStore, connectionString, sqlQuery, sqlParams);
+
+      return result;
     }
   }
 }

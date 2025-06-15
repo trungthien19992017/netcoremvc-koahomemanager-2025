@@ -57,11 +57,14 @@
                         <p><strong>Message:</strong> @ex.Message</p>
                         <p><strong>Type:</strong> @ex.GetType().FullName</p>
                         <p><strong>Source:</strong> @(ex.Source ?? "")</p>
-                        <p><strong>Where:</strong> @(ex.Where ?? "")</p>
+                        <p><strong>Server:</strong> @(ex.Server ?? "")</p>
+                        <p><strong>Procedure:</strong> @(ex.Procedure ?? "")</p>
+                        <p><strong>LineNumber:</strong> @(ex.LineNumber.ToString() ?? "")</p>
+                        @* <p><strong>Where:</strong> @(ex.Where ?? "")</p>
                         <p><strong>Line:</strong> @(ex.Line ?? "")</p
                         <p><strong>Routine:</strong> @(ex.Routine ?? "")</p>
                         <p><strong>Hint:</strong> @(ex.Hint ?? "")</p>
-                        <p><strong>InternalQuery:</strong> @(ex.InternalQuery ?? "")</p>
+                        <p><strong>InternalQuery:</strong> @(ex.InternalQuery ?? "")</p> *@
                         @if (ex.InnerException != null)
                         {
                           <p>

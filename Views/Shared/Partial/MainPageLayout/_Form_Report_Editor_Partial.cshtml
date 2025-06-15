@@ -1,5 +1,6 @@
 @using KOAHome.Helpers
 @using System.Text.Json
+@using Microsoft.Data.SqlClient
 @using Npgsql
 @{
     var resultList = ViewData["resultList"] as List<dynamic>;
@@ -84,6 +85,10 @@
                                                                 else if (type == "DATE BOX")
                                                                 {
                                                                     <input class="form-control form-control-sm" type="date" id="@name" name="@name" value="@value" @(filter.Required == true ? "required" : "") />
+                                                                }
+                                                                else if (type == "DATERANGEPICKER")
+                                                                {
+                                                                    <input class="form-control form-control-sm bs-rangepicker-filter" type="text" id="@name" name="@name" value="@value" @(filter.required == true ? "required" : "") />
                                                                 }
                                                                 else if (type == "SELECT BOX")
                                                                 {
@@ -202,6 +207,8 @@
                                 <tr>
                                     @* Cột này sẽ tự động chứa checkbox "Chọn tất cả" *@
                                     <th class="text-center" rowspan="@displayParentLevelNum" data-code="IdCheck" data-index="-1"  data-isexport="False" style="min-width:50px"></th>
+                                    @* Cột chi tiết mặc định*@
+                                    <th class="text-center" rowspan="@displayParentLevelNum" data-code="IdDetail" data-index="0"  data-isexport="False" style="min-width:10px"></th>
                                     @* neu display khong null thi tiep tuc *@
                                     @if (displayList != null)
                                     {
@@ -321,11 +328,13 @@
                                             @* cột select box mặc đinh *@
                                             <td class="text-center" data-isexport="False" data-value="@Id">
                                             </td>
+                                            @* cột chi tiết mặc đinh *@
+                                            <td class="text-center" data-isexport="False">
                                             @* voi moi cot dang co *@
                                             @* neu cot isdisplay = false thi khong hien thi  *@
                                             @foreach (var display in displayList.Where(p => p.isdisplay == false).OrderBy(p => p.colnum ?? 0).ToList())
                                             {
-                                                <td class="@FormatHelper.ParseTextAlignToClass(display.textalign) d-none" data-isexport="@(display.isexport ?? "True")">
+                                                <td class="@FormatHelper.ParseTextAlignToClass(display.textalign) d-none form-control-validation fv-plugins-icon-container" data-isexport="@(display.isexport ?? "True")">
                                                     @{
                                                         object value;
                                                         if (dictionary.TryGetValue(display.code, out value))
@@ -343,7 +352,7 @@
                                             @foreach (var display in displayList.Where(p => p.isdisplay == true && p.code == "stt" && p.isparent == false && string.IsNullOrEmpty(p.parentcode)).OrderBy(p => p.colnum ?? 0).ToList())
                                             {
                                                 @* neu isFreePane bang true thi them class freepanze-col *@
-                                                <td class="text-center @(display.isfreepane == true ? "freepanze-col" : "")" data-isexport="@(display.isexport ?? "True")">
+                                                <td class="text-center @(display.isfreepane == true ? "freepanze-col" : "") form-control-validation fv-plugins-icon-container" data-isexport="@(display.isexport ?? "True")">
                                                     @{
                                                         object value;
                                                         if (dictionary.TryGetValue(display.code, out value))
@@ -366,7 +375,7 @@
                                                 string[] numberTypeArray = ["int", "float", "long"];
                                                 string[] dateTypeArray = ["date", "datetime"];
                                                 @* neu isFreePane bang true thi them class freepanze-col *@
-                                                <td class="@FormatHelper.ParseTextAlignToClass(display.textalign) @(display.isfreepane == true ? "freepanze-col" : "")" data-isexport="@(display.isexport ?? "True")" data-displaytype="@displayType" data-displayformat="@displayFormat">
+                                                <td class="@FormatHelper.ParseTextAlignToClass(display.textalign) @(display.isfreepane == true ? "freepanze-col" : "") form-control-validation fv-plugins-icon-container" data-isexport="@(display.isexport ?? "True")" data-displaytype="@displayType" data-displayformat="@displayFormat">
                                                     @{
                                                         object value;
                                                         if (dictionary.TryGetValue(display.code, out value))
@@ -417,7 +426,7 @@
                                                                             }
                                                                         </ul>
                                                                     }
-                                                                    catch (PostgresException ex)
+                                                                    catch (SqlException ex)
                                                                     {
                                                                         <span class="text-danger">N/A</span>
                                                                     }
@@ -472,6 +481,14 @@
                                                             else if (displayType == "string")
                                                             {
                                                                 <input class="form-control track-change @FormatHelper.ParseTextAlignToClass(display.textalign)" type="text" name="@("grid["+@reportRowIndex+"]."+display.code)" value="@value" @(Convert.ToBoolean(display.isreadonly ?? false) ? "readonly" : "") @(display.validationrule != "[]" ? "required" : "") />
+                                                            }
+                                                            // kiểu color
+                                                            else if (displayType == "color")
+                                                            {
+                                                                <div class="pickr">
+                                                                    <button type="button" id="@("color-"+("grid-"+@reportRowIndex+"-"+display.code))" class="pcr-button form-color-picker" role="button" @(Convert.ToBoolean(display.isreadonly ?? false) ? "disabled" : "")></button>
+                                                                    <input type="hidden" class="track-change" id="@("grid-"+@reportRowIndex+"-"+display.code)" name="@("grid["+@reportRowIndex+"]."+display.code)" value="@value" @(display.validationrule != "[]" ? "required" : "") />
+                                                                </div>
                                                             }
                                                             // kiểu textarea
                                                             else if (displayType == "textarea")
@@ -572,7 +589,7 @@
                                                             var displayFormat = displaychild.format as string ?? "";
                                                             string[] numberTypeArray = ["int", "float", "long"];
                                                             string[] dateTypeArray = ["date", "datetime"];
-                                                            <td class="@FormatHelper.ParseTextAlignToClass(displaychild.textalign)" data-isexport="@(displaychild.isexport ?? "0")" data-displaytype="@displayType" data-displayformat="@displayFormat">
+                                                            <td class="@FormatHelper.ParseTextAlignToClass(displaychild.textalign)" data-isexport="@(displaychild.isexport ?? "0") form-control-validation fv-plugins-icon-container" data-displaytype="@displayType" data-displayformat="@displayFormat">
                                                                 @{
                                                                     object value;
                                                                     if (dictionary.TryGetValue(displaychild.code, out value))
@@ -624,7 +641,7 @@
                                                                                         }
                                                                                     </ul>
                                                                                 }
-                                                                                catch (PostgresException ex)
+                                                                                catch (SqlException ex)
                                                                                 {
                                                                                     <span class="text-danger">N/A</span>
                                                                                 }
@@ -679,6 +696,14 @@
                                                                         else if (displayType == "string")
                                                                         {
                                                                             <input class="form-control track-change @FormatHelper.ParseTextAlignToClass(displaychild.textalign)" type="text" name="@("grid["+@reportRowIndex+"]."+displaychild.code)" value="@value" @(Convert.ToBoolean(displaychild.isreadonly ?? false) ? "readonly" : "") @(displaychild.validationrule != "[]" ? "required" : "") />
+                                                                        }
+                                                                        // kiểu color
+                                                                        else if (displayType == "color")
+                                                                        {
+                                                                            <div class="pickr">
+                                                                                <button type="button" id="@("color-"+("grid-"+@reportRowIndex+"-"+displaychild.code))" class="pcr-button form-color-picker" role="button" @(Convert.ToBoolean(displaychild.isreadonly ?? false) ? "disabled" : "")></button>
+                                                                                <input type="hidden" class="track-change" id="@("grid-"+@reportRowIndex+"-"+displaychild.code)" name="@("grid["+@reportRowIndex+"]."+displaychild.code)" value="@value" @(displaychild.validationrule != "[]" ? "required" : "") />
+                                                                            </div>
                                                                         }
                                                                         // kiểu textarea
                                                                         else if (displayType == "textarea")
@@ -771,7 +796,7 @@
                                             }
                                             @* them nut xoa cuoi dong *@
                                               <td class="text-center">
-                                                  <input type="hidden" name="grid[@reportRowIndex].isDeleted" value="false" class="isDeleted track-change">
+                                                  <input type="hidden" name="grid[@reportRowIndex].isdeleted" value="false" class="isDeleted track-change">
                                                   <button type="button" class="btn-delete btn btn-sm text-danger" onclick="toggleDelete(this)">
                                                       <i class="ri-delete-bin-line ri-24px"></i>
                                                   </button>
@@ -867,35 +892,6 @@
         });
     }
 
-@*         // sau khi load, tu dong cap nhat format date
-        $(document).ready(function () {
-            debugger;
-            // Lấy tất cả các input có type="date" hoặc "datetime-local"
-            $('input[type="date"], input[type="datetime-local"]').each(function () {
-                let originalValue = $(this).attr('value');
-
-                if (originalValue) {
-                    if ($(this).attr("type") === "date") {
-                        // Kiểm tra xem đã đúng định dạng YYYY-MM-DD chưa
-                        let isoDateRegex = /^\d{4}-\d{2}-\d{2}$/;
-                        if (!isoDateRegex.test(originalValue)) {
-                            let formattedDate = moment(originalValue, ["M/D/YYYY h:mm:ss A", "DD/MM/YYYY", "YYYY-MM-DD"]).format("YYYY-MM-DD");
-                            $(this).val(formattedDate); // Điền trực tiếp vào value
-                            $(this).attr("value", formattedDate); // Cập nhật lại giá trị trong HTML
-                        }
-                    } else if ($(this).attr("type") === "datetime-local") {
-                        // Kiểm tra xem đã đúng định dạng YYYY-MM-DDTHH:mm chưa
-                        let isoDateTimeRegex = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}$/;
-                        if (!isoDateTimeRegex.test(originalValue)) {
-                            let formattedDateTime = moment(originalValue, ["M/D/YYYY h:mm:ss A", "DD/MM/YYYY HH:mm:ss", "YYYY-MM-DDTHH:mm:ss"]).format("YYYY-MM-DDTHH:mm");
-                            $(this).val(formattedDateTime); // Điền trực tiếp vào value
-                            $(this).attr("value", formattedDateTime); // Cập nhật lại giá trị trong HTML
-                        }
-                    }
-                }
-            });
-        }); *@
-
           // sau khi load, tu dong cap nhat format date
         $(document).ready(function () {
             $('input[type="date"], input[type="datetime-local"]').each(function () {
@@ -967,20 +963,33 @@
 
           // tim kiem trong select box
         $(document).ready(function () {
-            function initSelect2() {
-              // không áp dụng cho Quiff HTML editor
-                $("select") .not(".ql-toolbar select, .ql-container select, .ql-editor select").not(".select2-hidden-accessible").not(".dt-length select").select2({
-                    placeholder: "Chọn",
-                    allowClear: true,
-                    width: "100%"
-                });
-            }
-
             // Khởi tạo Select2 cho các select đã có sẵn
             initSelect2();
 
         });
 
+        // function loại các row unchange cho editor utility
+        function cleanUnChangeRow(table)
+        {
+          let rows = table.querySelectorAll("tbody tr");
+
+          rows.forEach(row => {
+            // neu khong khai bao data change thi bo qua, neu co khai bao data change thi kiem tra = false thi xoa 
+              if (row.getAttribute('data-changed') !== undefined && row.getAttribute('data-changed') !== null)
+              {
+                if (row.getAttribute("data-changed") !== "true") {
+                  row.remove(); // Xóa các dòng chưa thay đổi khỏi form trước khi submit
+                }
+              }
+            // neu khong khai bao data template thi bo qua, neu co khai bao data template thi kiem tra = true thi xoa
+              if (row.getAttribute('data-template') !== undefined && row.getAttribute('data-template') !== null)
+              {
+                if (row.getAttribute("data-template") == "true") {
+                  row.remove(); // Xóa các dòng chưa thay đổi khỏi form trước khi submit
+                }
+              }
+          });
+        }
 
         // kiem tra nếu có nhập liệu trên bất kì dòng nào thì mới enable nút Lưu, và dòng nào nhập liệu thì mới truyền xuống IFormCollection
             // Theo dõi tất cả form trên trang
@@ -988,6 +997,7 @@
                 const table = form.querySelector("table"); // Tìm bảng trong form
                 const submitButton = form.querySelector("button[type='submit']");
 
+                if (!table) return; // Bỏ qua nếu không có bảng
                 if (!table || !submitButton) return; // Bỏ qua nếu không có bảng hoặc nút submit
 
                 function checkChanges() {
@@ -1057,26 +1067,9 @@
 
                     // Chỉ gử i dữ liệu của bảng đã thay đổi
                 form.addEventListener("submit", function (event) {
-                    let rows = table.querySelectorAll("tbody tr");
 
-                    rows.forEach(row => {
-                      // neu khong khai bao data change thi bo qua, neu co khai bao data change thi kiem tra = false thi xoa 
-                        if (row.getAttribute('data-changed') !== undefined && row.getAttribute('data-changed') !== null)
-                        {
-                          if (row.getAttribute("data-changed") !== "true") {
-                            row.remove(); // Xóa các dòng chưa thay đổi khỏi form trước khi submit
-                          }
-                        }
-                      // neu khong khai bao data template thi bo qua, neu co khai bao data template thi kiem tra = true thi xoa
-                        if (row.getAttribute('data-template') !== undefined && row.getAttribute('data-template') !== null)
-                        {
-                          if (row.getAttribute("data-template") == "true") {
-                            row.remove(); // Xóa các dòng chưa thay đổi khỏi form trước khi submit
-                          }
-                        }
-                    });
+                    cleanUnchangeRows(table);
 
-                    debugger;
                     // gọi ajax xử lý lưu thông tin\
                     const formData = new FormData(form);
 
@@ -1159,7 +1152,6 @@
   
             // xử lý bộ lọc
             $("#reportfilter").on("submit", function (e) {
-              debugger;
               e.preventDefault();
               let form = $(this);
               // lấy dữ liệu lọc

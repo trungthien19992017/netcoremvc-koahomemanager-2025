@@ -432,3 +432,36 @@ h2.card-header {
 .avatar img {
   object-fit: cover;
 }
+
+/*css cho date picker filter*/
+@media (max-width: 768px) {
+  .daterangepicker .ranges {
+    flex-direction: column;
+    display: flex;
+  }
+
+    .daterangepicker .ranges ul {
+      padding: 0;
+      margin: 0;
+      list-style: none;
+      width: 100%;
+    }
+
+    .daterangepicker .ranges li {
+      width: 100%;
+      text-align: center;
+      padding: 8px 0;
+      font-size: 14px;
+    }
+}
+
+/*cập nhật một chút cho sticky element*/
+.layout-navbar-fixed .sticky-element {
+  margin-bottom:15px;
+}
+
+
+/* Đảm bảo không có cột nào bị ẩn */
+.dtr-hidden:not(.d-none) {
+  display: table-cell !important;
+}

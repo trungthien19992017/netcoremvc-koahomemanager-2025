@@ -11,11 +11,6 @@
     string TabCode = ViewData["TabCode"] as string;
     int? TabIndex = ViewData["TabIndex"] as int?;
 
-    // truyen danh sach gia tri loc len giao dien
-    var listFilterValue = ViewData["ListFilterValue"] as Dictionary<string, object>;
-    var listFilterConfig = ViewData["ListFilterConfig"] as List<dynamic>;
-
-
     // neu ton tai tabpanel thi xu ly tiep
     if (tabpanel != null)
     {
@@ -156,6 +151,10 @@
             {
                 @* tabpanel *@
                 <div class="col-xl-12">
+                    <a type="button" href="javascript:history.back()" class="btn btn-outline-secondary btn-prev waves-effect" style="display: inline-block;">
+                        <i class="icon-base ri ri-arrow-left-line icon-sm me-sm-1 me-0"></i>
+                        <span class="align-middle d-sm-inline-block d-none">Quay lại</span>
+                    </a>
                     <h5 class="text-center text-primary text-uppercase">@(tabpanel.ContainsKey("name") ? tabpanel["name"] : "Tab thông tin")</h5>
                     <div id="nav-tabpanel" class="nav-align-left">
                         <div class="tab-content">
@@ -174,6 +173,7 @@
                                     var tabdetail_title = tabdetail.title ?? "";
                                     var tabdetail_template = tabdetail.template;
                                     var tabdetail_icon = tabdetail.tabicon ?? "";
+                                    var tabdetail_iconcolor = tabdetail.tabiconcolor ?? "";
                                     var tabdetail_stt = tabdetail.stt ?? 0;
                                     var tabdetail_options = ParseDataHelper.ParseOptionsToDictionary(tabdetail.options ?? "{}");
                                     int? tabdetail_count = null;
@@ -196,6 +196,7 @@
                                     var tabdetail_title = tabdetail.title ?? "";
                                     var tabdetail_template = tabdetail.template;
                                     var tabdetail_icon = tabdetail.tabicon ?? "";
+                                    var tabdetail_iconcolor = tabdetail.tabiconcolor ?? "";
                                     var tabdetail_stt = tabdetail.stt ?? 0;
                                     var tabdetail_options = ParseDataHelper.ParseOptionsToDictionary(tabdetail.options ?? "{}");
                                     string tabdetail_datacode = "";
@@ -215,14 +216,14 @@
                                     <li class="nav-item" role="presentation" data-bs-toggle="tooltip" data-bs-offset="0,4" data-bs-placement="top" data-bs-html="true" title="@tabdetail_title">
                                         <button type="button" class="tab-panel-btn nav-link waves-effect waves-light @(tabdetail_stt == TabIndex ? "active" : "")" role="tab" data-bs-toggle="tab" data-bs-target="@("#navs-pills-" + tabdetail_code)" aria-controls="@("navs-pills-" + tabdetail_code)" aria-selected="@(tabdetail_stt == TabIndex ? "true" : "false")" data-template="@tabdetail_template" data-code="@tabdetail_datacode" data-tabindex="@tabdetail_stt">
                                             <span class="d-none d-sm-inline-flex align-items-center">
-                                                <i class="icon-base @tabdetail_icon icon-sm me-1_5"></i>@tabdetail_title
+                                                <i class="icon-base @tabdetail_icon icon-sm me-1_5" style="@("color:"+tabdetail_iconcolor)"></i>@tabdetail_title
                                                 @* nếu không có count thì không đếm; *@
                                                 @if (tabdetail_count != null)
                                                 {
                                                   <span class="badge rounded-pill badge-center h-px-20 w-px-20 bg-danger ms-1_5">@tabdetail_count</span>
                                                 }
                                             </span>
-                                            <i class="icon-base ri @tabdetail_icon icon-sm d-sm-none"></i>
+                                            <i class="icon-base ri @tabdetail_icon icon-sm d-sm-none" style="@("color:"+tabdetail_iconcolor)"></i>
                                         </button>
                                     </li>
                                 }

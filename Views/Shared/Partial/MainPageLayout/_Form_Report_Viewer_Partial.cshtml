@@ -1,5 +1,6 @@
 @using KOAHome.Helpers
 @using System.Text.Json
+@using Microsoft.Data.SqlClient
 @using Npgsql
 @{
     var resultList = ViewData["resultList"] as List<dynamic>;
@@ -97,6 +98,10 @@
                                                             else if (type == "DATE BOX")
                                                             {
                                                                 <input class="form-control form-control-sm" type="date" id="@name" name="@name" value="@value" @(filter.Required == true ? "required" : "") />
+                                                            }
+                                                            else if (type == "DATERANGEPICKER")
+                                                            {
+                                                                <input class="form-control form-control-sm bs-rangepicker-filter" type="text" id="@name" name="@name" value="@value" @(filter.required == true ? "required" : "") />
                                                             }
                                                             else if (type == "SELECT BOX")
                                                             {
@@ -288,6 +293,8 @@
                             <tr>
                               @* Cột này sẽ tự động chứa checkbox "Chọn tất cả" *@
                               <th class="text-center" rowspan="@displayParentLevelNum" data-code="IdCheck" data-index="-1"  data-isexport="False" style="min-width:50px"></th>
+                              @* Cột chi tiết mặc định*@
+                              <th class="text-center" rowspan="@displayParentLevelNum" data-code="IdDetail" data-index="0"  data-isexport="False" style="min-width:10px"></th>
                               @* neu display khong null thi tiep tuc *@
                               @if (displayList != null)
 					          {
@@ -375,6 +382,8 @@
                                     @* cột select box mặc đinh *@
                                     <td class="text-center" data-isexport="False" data-value="@id">
                                     </td>
+                                    @* cột chi tiết mặc đinh *@
+                                    <td class="text-center" data-isexport="False">
                                     @* voi moi cot dang co *@
                                     @* neu cot isdisplay = false thi khong hien thi  *@
                                     @foreach (var display in displayList.Where(p=> p.isdisplay == false).OrderBy(p => p.colnum ?? 0).ToList())
@@ -532,7 +541,7 @@
                                                               }
                                                               </ul>
                                                           }
-                                                          catch (PostgresException ex)
+                                                          catch (SqlException ex)
                                                           {
                                                               <span class="text-danger">N/A</span>
                                                           }
@@ -678,7 +687,7 @@
                                                                     }
                                                                     </ul>
                                                                 }
-                                                                catch (PostgresException ex)
+                                                                catch (SqlException ex)
                                                                 {
                                                                     <span class="text-danger">N/A</span>
                                                                 }
@@ -813,16 +822,7 @@
 
           // tim kiem trong select box
         $(document).ready(function () {
-            debugger;
             function initSelect2() {
-              // không áp dụng cho Quiff HTML editor
-                $("select") .not(".ql-toolbar select, .ql-container select, .ql-editor select").not(".select2-hidden-accessible").not(".dt-length select").select2({
-                    placeholder: "Chọn",
-                    allowClear: true,
-                    width: "100%"
-                });
-            }
-
             // Khởi tạo Select2 cho các select đã có sẵn
             initSelect2();
 

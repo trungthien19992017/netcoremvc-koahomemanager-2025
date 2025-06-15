@@ -430,72 +430,17 @@
                                                 }
                                                 else if (child_type == "DynamicReport")
                                                 {
-                                                    <div class="row gx-5 mb-5">
-                                                        <div class="col-md-12 card-header"><strong class="mb-0 text-primary">THÔNG TIN CHI TIẾT</strong></div>                        
+                                                    @* lấy các thông tin cấu hình riêng *@
+                                                    string reportCode = field_editoroptionsDict.ContainsKey("reportCode") ? (field_editoroptionsDict["reportCode"].ToString() ?? "") : "";
+                                                    bool isViewerUtility = field_editoroptionsDict.ContainsKey("isViewerUtility") ? Convert.ToBoolean(field_editoroptionsDict["isViewerUtility"]) : false;
+                                                    bool isEditor = field_editoroptionsDict.ContainsKey("isEditor") ? Convert.ToBoolean(field_editoroptionsDict["isEditor"]) : false;
+
+                                                    <div class="row gx-5">
+                                                        <div class="col-md-12 card-header"><strong class="mb-0 text-primary">@child_label</strong></div>                        
                                                         <div class="col-md-12 card-body">
-                                                            <div class="table-responsive">
-                                                                <div class="card-header d-flex align-items-center justify-content-between">
-                                                                    <button type="button" class="btn text-muted p-0" onclick="addNewRow()"><i class="ri-add-line ri-24px"></i></button>
-                                                                </div>
-                                                                <table id="ReportEditor" class="table table-sm table-bordered" style="table-layout: fixed;">
-                                                                    <colgroup>
-                                                                        <col span="1" style="visibility: collapse">
-                                                                    </colgroup>
-                                                                    <thead>
-                                                                        <tr>
-                                                                            <th class="text-center" style="width:70px;">Id</th>
-                                                                            <th class="text-center" style="width:100px;">STT</th>
-                                                                            <th class="text-center" style="width:300px;">Dịch vụ</th>
-                                                                            <th class="text-center" style="width:150px;">Số lượng</th>
-                                                                            <th class="text-center" style="width:150px;">Tổng số tiền</th>
-                                                                            <th class="text-center" style="width:250px;">Ghi chú</th>
-                                                                            <th class="text-center" style="width:260px;">Thời gian phát sinh từ (nếu có)</th>
-                                                                            <th class="text-center" style="width:260px;">Thời gian phát sinh đến (nếu có)</th>
-                                                                            <th class="text-center" style="width:100px;">Hành động</th>
-                                                                        </tr>
-                                                                    </thead>
-                                                                    <tbody>
-                                                                        @if (reportResultList != null)
-                                                                        {
-                                                                            @foreach (var ser in reportResultList)
-                                                                            { 
+                                                            @* Khu vực chứa Report Editor *@
+                                                            <div id="@("ReportEditor-" + child_name)" class="form-report-editor" data-reportcode = "@reportCode">
 
-                                                                                <tr class="">
-                                                                                    <td class="text-center"><input class="form-control" type="text" name="grid[@reportRowIndex].Id" value="@ser.Id" readonly /></td>
-                                                                                    <td class="text-center"><input class="form-control" type="text" name="grid[@reportRowIndex].stt" value="@ser.stt" readonly /></td>
-                                                                                    <td class="text-center">
-                                                                                        <select name="grid[@reportRowIndex].ServiceID" class="form-select" data-placeholder="Dịch vụ">
-                                                                                            <option value="" selected="@(ser.ServiceID.ToString() == "" ? "selected" : null)">Chọn dịch vụ</option>
-                                                                                            @foreach (var item in (SelectList)ViewData["ServiceId"])
-                                                                                            {
-                                                                                                <option value="@item.Value" selected="@(item.Value == ser.ServiceID.ToString() ? "selected" : null)">
-                                                                                                    @item.Text
-                                                                                                </option>
-                                                                                            }
-                                                                                        </select>
-                                                                                    </td>
-                                                                                    <td>
-                                                                                        <input type="number" class="form-control" placeholder="" name="grid[@reportRowIndex].Quantity" aria-label="Số lượng" value="@ser.Quantity">
-                                                                                    </td>
-                                                                                    <td class="text-truncate">
-                                                                                        <input type="number" readonly class="form-control" placeholder="" name="grid[@reportRowIndex].TotalPrice" aria-label="Tổng số tiền" value="@ser.TotalPrice">
-                                                                                    </td>
-                                                                                    <td class="text-truncate text-left"><textarea row="2" class="form-control" placeholder="" name="grid[@reportRowIndex].Description" aria-label="Ghi chú" value="@ser.Description"></textarea></td>
-                                                                                    <td class="text-truncate"><input type="datetime-local" class="form-control" placeholder="" name="grid[@reportRowIndex].AdditionFromDate" aria-label="Thời gian phát sinh từ" value="@ser.AdditionFromDate"></td>
-                                                                                    <td class="text-truncate"><input type="datetime-local" class="form-control" placeholder="" name="grid[@reportRowIndex].AdditionToDate" aria-label="Thời gian phát sinh đến" value="@ser.AdditionToDate"></td>
-                                                                                    <td class="text-center">
-                                                                                        <input type="hidden" name="grid[@reportRowIndex].isDeleted" value="false" class="isDeleted">
-                                                                                        <button type="button" class="btn-delete btn btn-sm text-danger" onclick="toggleDelete(this)">
-                                                                                            <i class="ri-delete-bin-line ri-24px"></i>
-                                                                                        </button>
-                                                                                    </td>
-                                                                                </tr>
-
-                                                                                reportRowIndex++;
-                                                                            }
-                                                                        }  
-                                                                    </tbody>
-                                                                </table>
                                                             </div>
                                                         </div>
                                                     </div>
@@ -768,73 +713,35 @@
                                       }
                                       else if (type == "DynamicReport")
                                       {
-                                          <div class="row gx-5 mb-5">
-                                              <div class="col-md-12 card-header"><strong class="mb-0 text-primary">THÔNG TIN CHI TIẾT</strong></div>                        
+                                          @* lấy các thông tin cấu hình riêng *@
+                                          string form_reportCode = field_editoroptionsDict.ContainsKey("reportCode") ? (field_editoroptionsDict["reportCode"].ToString() ?? "") : "";
+                                          bool form_isViewerUtility = field_editoroptionsDict.ContainsKey("isViewerUtility") ? Convert.ToBoolean(field_editoroptionsDict["isViewerUtility"]) : false;
+                                          bool form_isEditor = field_editoroptionsDict.ContainsKey("isEditor") ? Convert.ToBoolean(field_editoroptionsDict["isEditor"]) : false;
+
+                                          <div class="row gx-5">
+                                              <div class="col-md-12 card-header"><strong class="mb-0 text-primary">@label</strong></div>                        
                                               <div class="col-md-12 card-body">
-                                                  <div class="table-responsive">
-                                                      <div class="card-header d-flex align-items-center justify-content-between">
-                                                          <button type="button" class="btn text-muted p-0" onclick="addNewRow()"><i class="ri-add-line ri-24px"></i></button>
-                                                      </div>
-                                                      <table id="ReportEditor" class="table table-sm table-bordered" style="table-layout: fixed;">
-                                                          <colgroup>
-                                                              <col span="1" style="visibility: collapse">
-                                                          </colgroup>
-                                                          <thead>
-                                                              <tr>
-                                                                  <th class="text-center" style="width:70px;">Id</th>
-                                                                  <th class="text-center" style="width:100px;">STT</th>
-                                                                  <th class="text-center" style="width:300px;">Dịch vụ</th>
-                                                                  <th class="text-center" style="width:150px;">Số lượng</th>
-                                                                  <th class="text-center" style="width:150px;">Tổng số tiền</th>
-                                                                  <th class="text-center" style="width:250px;">Ghi chú</th>
-                                                                  <th class="text-center" style="width:260px;">Thời gian phát sinh từ (nếu có)</th>
-                                                                  <th class="text-center" style="width:260px;">Thời gian phát sinh đến (nếu có)</th>
-                                                                  <th class="text-center" style="width:100px;">Hành động</th>
-                                                              </tr>
-                                                          </thead>
-                                                          <tbody>
-                                                              @if (reportResultList != null)
-                                                              {
-                                                                  @foreach (var ser in reportResultList)
-                                                                  { 
+                                                @* neu report dang editor thi load report editor, neu report dang viewer thi load report viewer *@
+                                                @if (form_isEditor)
+                                                {
+                                                  @* Khu vực chứa Report Editor *@
+                                                  <div id="@("ReportEditor-" + name)" class="form-report-editor" data-reportcode = "@form_reportCode">
 
-                                                                      <tr class="">
-                                                                          <td class="text-center"><input class="form-control" type="text" name="grid[@reportRowIndex].Id" value="@ser.Id" readonly /></td>
-                                                                          <td class="text-center"><input class="form-control" type="text" name="grid[@reportRowIndex].stt" value="@ser.stt" readonly /></td>
-                                                                          <td class="text-center">
-                                                                              <select name="grid[@reportRowIndex].ServiceID" class="form-select" data-placeholder="Dịch vụ">
-                                                                                  <option value="" selected="@(ser.ServiceID.ToString() == "" ? "selected" : null)">Chọn dịch vụ</option>
-                                                                                  @foreach (var item in (SelectList)ViewData["ServiceId"])
-                                                                                  {
-                                                                                      <option value="@item.Value" selected="@(item.Value == ser.ServiceID.ToString() ? "selected" : null)">
-                                                                                          @item.Text
-                                                                                      </option>
-                                                                                  }
-                                                                              </select>
-                                                                          </td>
-                                                                          <td>
-                                                                              <input type="number" class="form-control" placeholder="" name="grid[@reportRowIndex].Quantity" aria-label="Số lượng" value="@ser.Quantity">
-                                                                          </td>
-                                                                          <td class="text-truncate">
-                                                                              <input type="number" readonly class="form-control" placeholder="" name="grid[@reportRowIndex].TotalPrice" aria-label="Tổng số tiền" value="@ser.TotalPrice">
-                                                                          </td>
-                                                                          <td class="text-truncate text-left"><textarea row="2" class="form-control" placeholder="" name="grid[@reportRowIndex].Description" aria-label="Ghi chú" value="@ser.Description"></textarea></td>
-                                                                          <td class="text-truncate"><input type="datetime-local" class="form-control" placeholder="" name="grid[@reportRowIndex].AdditionFromDate" aria-label="Thời gian phát sinh từ" value="@ser.AdditionFromDate"></td>
-                                                                          <td class="text-truncate"><input type="datetime-local" class="form-control" placeholder="" name="grid[@reportRowIndex].AdditionToDate" aria-label="Thời gian phát sinh đến" value="@ser.AdditionToDate"></td>
-                                                                          <td class="text-center">
-                                                                              <input type="hidden" name="grid[@reportRowIndex].isDeleted" value="false" class="isDeleted">
-                                                                              <button type="button" class="btn-delete btn btn-sm text-danger" onclick="toggleDelete(this)">
-                                                                                  <i class="ri-delete-bin-line ri-24px"></i>
-                                                                              </button>
-                                                                          </td>
-                                                                      </tr>
-
-                                                                      reportRowIndex++;
-                                                                  }
-                                                              }  
-                                                          </tbody>
-                                                      </table>
                                                   </div>
+                                                }
+                                                else if (form_isViewerUtility)
+                                                {
+                                                  @* Khu vực chứa Report Viewer *@
+                                                  <div id="@("ReportViewer-" + name)" class="form-report-viewer" data-reportcode = "@form_reportCode">
+
+                                                  </div>
+                                                }
+                                                else{
+                                                  @* Khu vực chứa Report Viewer *@
+                                                  <div id="@("ReportViewer-" + name)" class="form-report-viewer" data-reportcode = "@form_reportCode">
+
+                                                  </div>
+                                                }
                                               </div>
                                           </div>
                                       }

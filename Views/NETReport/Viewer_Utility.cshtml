@@ -1,5 +1,6 @@
 @using KOAHome.Helpers
 @using System.Text.Json
+@using Microsoft.Data.SqlClient
 @using Npgsql
 @{
     Layout = "~/Views/Shared/_ContentNavbarLayout.cshtml";
@@ -69,13 +70,11 @@
 }
 
 @section PageScripts {
-    <script src="~/js/dashboards-analytics.js"></script>
     @* thong bao day *@
     <script src="~/js/ui-toasts.js"></script>
     @* validate, kem cac file js ho tro *@
     <script src="~/js/helper.js"></script>
     <script src="~/js/flatpickr.js"></script>
-    <script src="~/js/form-validation.js"></script>
     <script src="~/js/ui-popover.js"></script>
 
     <script>
@@ -262,6 +261,10 @@
                                                                         {
                                                                             <input class="form-control form-control-sm" type="date" id="@name" name="@name" value="@value" @(filter.required == true ? "required" : "") />
                                                                         }
+                                                                        else if (type == "DATERANGEPICKER")
+                                                                        {
+                                                                            <input class="form-control form-control-sm bs-rangepicker-filter" type="text" id="@name" name="@name" value="@value" @(filter.required == true ? "required" : "") />
+                                                                        }
                                                                         else if (type == "SELECT BOX")
                                                                         {
                                                                             @* check selected cho item dung voi gia tri *@
@@ -274,11 +277,11 @@
                                                                                 }
                                                                             }
                                                                             var selectAttributes = new Dictionary<string, object>
-                                                                {
-                                                                { "class", "form-select color-dropdown form-select-sm" },
-                                                                { "id", name },
-                                                                { "name", name }
-                                                                };
+                                                                            {
+                                                                              { "class", "form-select color-dropdown form-select-sm" },
+                                                                              { "id", name },
+                                                                              { "name", name }
+                                                                            };
 
                                                                             // neu bat buoc thi them truong bat buoc
                                                                             if (filter.required == true)
@@ -451,6 +454,8 @@
                                           <tr>
                                             @* Cột này sẽ tự động chứa checkbox "Chọn tất cả" *@
                                             <th class="text-center" rowspan="@displayParentLevelNum" data-code="IdCheck" data-index="-1"  data-isexport="False" style="min-width:50px"></th>
+                                            @* Cột chi tiết mặc định*@
+                                            <th class="text-center" rowspan="@displayParentLevelNum" data-code="IdDetail" data-index="0"  data-isexport="False" style="min-width:10px"></th>
                                             @* neu display khong null thi tiep tuc *@
                                             @if (displayList != null)
 					                        {
@@ -537,6 +542,9 @@
                                                   <tr class="@bgColorRowClass">
                                                   @* cột select box mặc đinh *@
                                                   <td class="text-center" data-isexport="False" data-value="@Id">
+                                                  </td>
+                                                  @* cột chi tiết mặc đinh *@
+                                                  <td class="text-center" data-isexport="False">
                                                   </td>
                                                   @* voi moi cot dang co *@
                                                   @* neu cot isdisplay = false thi khong hien thi  *@
@@ -695,7 +703,7 @@
                                                                             }
                                                                             </ul>
                                                                         }
-                                                                        catch (PostgresException ex)
+                                                                        catch (SqlException ex)
                                                                         {
                                                                             <span class="text-danger">N/A</span>
                                                                         }
@@ -841,7 +849,7 @@
                                                                                   }
                                                                                   </ul>
                                                                               }
-                                                                              catch (PostgresException ex)
+                                                                              catch (SqlException ex)
                                                                               {
                                                                                   <span class="text-danger">N/A</span>
                                                                               }

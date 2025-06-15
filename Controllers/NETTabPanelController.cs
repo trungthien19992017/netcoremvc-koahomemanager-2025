@@ -3,6 +3,7 @@ using KOAHome.EntityFramework;
 using KOAHome.Services;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Data.SqlClient;
 using Npgsql;
 using System.Diagnostics;
 
@@ -98,7 +99,7 @@ namespace KOAHome.Controllers
 
         return View();
       }
-      catch (PostgresException ex)
+      catch (SqlException ex)
       {
         // Log the exception
         _logger.LogError(ex, "An error occurred while fetching booking service info.");

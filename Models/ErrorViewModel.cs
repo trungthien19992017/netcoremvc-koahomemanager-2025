@@ -1,3 +1,4 @@
+using Microsoft.Data.SqlClient;
 using Npgsql;
 
 namespace AspnetCoreMvcFull.Models;
@@ -8,5 +9,5 @@ public class ErrorViewModel
 
     public bool ShowRequestId => !string.IsNullOrEmpty(RequestId);
     // Thêm exception
-    public PostgresException? exception { get; set; }
+    public SqlException? exception { get; set; }
 }

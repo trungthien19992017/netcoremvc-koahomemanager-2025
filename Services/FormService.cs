@@ -18,6 +18,8 @@ namespace KOAHome.Services
     public Task<IDictionary<string, object>?> NET_Form_Get(string formCode);
     // lay thong tin form version field
     public Task<List<dynamic>> NET_Form_VersionField_WithForm_sel(string? formCode, int? formId);
+    public Task<string> NET_Form_GetValidation(string formCode);
+    public Task<string> NET_Form_GetListReportCode(string formCode);
 
   }
   public class FormService : IFormService
@@ -166,5 +168,46 @@ namespace KOAHome.Services
       return resultList;
     }
 
+    public async Task<string> NET_Form_GetValidation(string formCode)
+    {
+      // su dung datasource config de lay du lieu
+      string connectionString = _configuration.GetConnectionString("ConfigConnection"); // Thay thế bằng chuỗi kết nối của bạn
+      // store get du lieu
+      string sqlStore = "net_form_getvalidation";
+      // khai bao param lien quan
+      var parameters = new Dictionary<string, object>();
+      parameters.Add("formcode", formCode);
+
+      // chuyen thanh cau query tu store va param truyen vao
+      var (sqlQuery, sqlParams) = await _con.Connection_GetQueryParam(parameters, sqlStore, connectionString);
+
+      // xu ly lay du lieu dua truyen store va param truyen vao
+      var result = await _con.Connection_GetSingleDataFromQuery(parameters, sqlStore, connectionString, sqlQuery, sqlParams);
+
+      var validationJson = result.ContainsKey("value") ? Convert.ToString(result["value"]) ?? "[]" : "[]";
+
+      return validationJson;
+    }
+
+    public async Task<string> NET_Form_GetListReportCode(string formCode)
+    {
+      // su dung datasource config de lay du lieu
+      string connectionString = _configuration.GetConnectionString("ConfigConnection"); // Thay thế bằng chuỗi kết nối của bạn
+      // store get du lieu
+      string sqlStore = "net_form_getlist_reportcode";
+      // khai bao param lien quan
+      var parameters = new Dictionary<string, object>();
+      parameters.Add("formcode", formCode);
+
+      // chuyen thanh cau query tu store va param truyen vao
+      var (sqlQuery, sqlParams) = await _con.Connection_GetQueryParam(parameters, sqlStore, connectionString);
+
+      // xu ly lay du lieu dua truyen store va param truyen vao
+      var result = await _con.Connection_GetSingleDataFromQuery(parameters, sqlStore, connectionString, sqlQuery, sqlParams);
+
+      var stringaggreportcodes = result.ContainsKey("value") ? Convert.ToString(result["value"]) ?? "[]" : "[]";
+
+      return stringaggreportcodes;
+    }
   }
 }

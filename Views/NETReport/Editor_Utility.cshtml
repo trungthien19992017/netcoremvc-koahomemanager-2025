@@ -1,5 +1,6 @@
 @using KOAHome.Helpers
 @using System.Text.Json
+@using Microsoft.Data.SqlClient
 @using Npgsql
 @{
     Layout = "~/Views/Shared/_ContentNavbarLayout.cshtml";
@@ -57,16 +58,18 @@
 }
 
 @section PageScripts {
-    <script src="~/js/dashboards-analytics.js"></script>
     @* thong bao day *@
     <script src="~/js/ui-toasts.js"></script>
     @* validate, kem cac file js ho tro *@
     <script src="~/js/helper.js"></script>
     <script src="~/js/flatpickr.js"></script>
-    <script src="~/js/form-validation.js"></script>
     <script src="~/js/ui-popover.js"></script>
 
     <script>
+        // Global scope
+        var fv;
+        let fieldValidationsArray = @Html.Raw((string.IsNullOrWhiteSpace(ViewData["editorcolumnvalidation"]?.ToString()) ? "[]" : ViewData["editorcolumnvalidation"]));
+
         // tự động add param từ link vào hidden input
         window.addEventListener("DOMContentLoaded", () => {
         const urlParams = new URLSearchParams(window.location.search);
@@ -82,53 +85,196 @@
         });
 
 
+        // editor form validation
+        $(document).ready(function () {
+            let form = document.querySelector("#editor-form");
+            if (form) {
+
+              fv = FormValidation.formValidation(form, {
+                  fields: {},
+                  plugins: {
+                    trigger: new FormValidation.plugins.Trigger,
+                    bootstrap5: new FormValidation.plugins.Bootstrap5({
+                      rowSelector: ".form-control-validation", // hoặc class row phù hợp
+                      eleInvalidClass: 'is-invalid',
+                      eleValidClass: 'is-valid'
+                    }),
+                    autoFocus: new FormValidation.plugins.AutoFocus,
+                    submitButton: new FormValidation.plugins.SubmitButton,
+                  },
+                  init: instance => {
+                    instance.on("plugins.message.placed", function (ev) {
+                        if (ev.element.parentElement.classList.contains("input-group")) {
+                            ev.element.parentElement.insertAdjacentElement("afterend", ev.messageElement);
+                        }
+                    });
+                    instance.on('core.form.valid', function() {
+                        // ✅ KHÔNG submit, KHÔNG làm gì ở đây cả
+                        // Để form tiếp tục chạy các hàm khác (onsubmit...)
+                        console.log("✅ Form đã được kiểm tra hợp lệ, tiếp tục xử lý ở nơi khác...");
+                        const event = new Event("submit", { bubbles: true, cancelable: true });
+                        form.dispatchEvent(event); // ✅ Gọi lại sự kiện submit gốc
+                        form.submit();
+                    });
+                  }
+              });
+
+              // Lấy toàn bộ input trong form có name
+              // Lấy toàn bộ input/select/textarea có name, trong #editor-form,
+              // và KHÔNG nằm trong <tr class="d-none">
+              $('#editor-form')
+                .find('input[name], select[name], textarea[name]')
+                .filter(function () {
+                    const $input = $(this);
+                    const $tr = $input.closest('tr');
+
+                    // ✅ Chỉ giữ input có name và <tr> không có class d-none
+                    return $input.attr('name') && !$tr.hasClass('d-none');
+                })
+                .each(function () {
+                    const input = $(this);
+                    const nameAttr = input.attr('name');
+
+                    fieldValidationsArray.forEach(fieldObj => {
+                        const key = Object.keys(fieldObj)[0];
+                        if (nameAttr.includes(key)) {
+                            fv.addField(nameAttr, fieldObj[key]);
+                        }
+                    });
+                });
+                console.log("🧪 Editor Form validation instance:", fv);
+
+                // gọi datatable để kiểm tra và xử lý
+                const $table = $('#editor-form table');
+                if ($.fn.dataTable.isDataTable($table)) {
+                    dt = $table.DataTable();
+                } else {
+                    dt = $table.DataTable({
+                        // cấu hình nếu cần
+                    });
+                }
+
+                  // 👇 Hàm để add lại fields chỉ cho dòng hiện tại sau khi phân trang
+                function rebindFormValidationFields() {
+                    // 🧹 Xóa các field cũ
+                    Object.keys(fv.getFields()).forEach(field => fv.removeField(field));
+
+                    // 🔄 Lấy input/select trong các dòng hiện tại
+                    dt
+                        .rows({ page: 'current' })
+                        .nodes()
+                        .to$()
+                        .find('input[name], select[name], textarea[name]')
+                        .filter(function () {
+                            const $input = $(this);
+                            const $tr = $input.closest('tr');
+                            return !$tr.hasClass('d-none');
+                        })
+                        .each(function () {
+                            const input = $(this);
+                            const nameAttr = input.attr('name');
+
+                            fieldValidationsArray.forEach(fieldObj => {
+                                const key = Object.keys(fieldObj)[0];
+                                if (nameAttr.includes(key)) {
+                                    fv.addField(nameAttr, fieldObj[key]);
+                                }
+                            });
+                        });
+                }
+
+                // 🪄 Gọi lại khi DataTable phân trang, lọc, sort...
+                // Rebind khi phân trang, lọc, sort
+                $table.on('draw.dt', function () {
+                    rebindFormValidationFields();
+                });
+            }
+        });
+
         // them dong editor moi
-    function addNewRow(tableid = "ReportEditor") {
-        const table = document.getElementById(tableid).getElementsByTagName('tbody')[0];
-        const templateRow = table.querySelector('tr[data-template="true"]');
-        const newIndex = table.rows.length + 1;
+      function addNewRow(tableid = "ReportEditor") {
+          const table = document.getElementById(tableid).getElementsByTagName('tbody')[0];
+          const templateRow = table.querySelector('tr[data-template="true"]');
+          const newIndex = table.rows.length + 1;
 
-        if (!templateRow) {
-        console.error("Không tìm thấy dòng mẫu!");
-        return;
-        }
+          if (!templateRow) {
+          console.error("Không tìm thấy dòng mẫu!");
+          return;
+          }
 
-        // 1. Destroy select2 trên templateRow trước
-        const $select = $(templateRow).find("select");
+          // 1. Destroy select2 trên templateRow trước
+          const $select = $(templateRow).find("select");
 
-        if ($select.hasClass("select2-hidden-accessible")) {
-        $select.select2('destroy');
-        }
+          if ($select.hasClass("select2-hidden-accessible")) {
+          $select.select2('destroy');
+          }
 
-        // Optionally clear ID (nếu cần clone nhiều dòng tránh id trùng)
-        $select.removeAttr("id");
+          // Optionally clear ID (nếu cần clone nhiều dòng tránh id trùng)
+          $select.removeAttr("id");
 
-        // Clone dòng mẫu
-        const newRow = templateRow.cloneNode(true);
-        newRow.removeAttribute("data-template");
-        newRow.style.display = "";
-        // Gán thuộc tính change tracking nếu cần
-        newRow.setAttribute("data-changed", "true");
-        newRow.setAttribute("data-template", "false");
-        // xóa class ẩn tr
-        newRow.classList.remove("d-none");
+          // Clone dòng mẫu
+          const newRow = templateRow.cloneNode(true);
+          newRow.removeAttribute("data-template");
+          newRow.style.display = "";
+          // Gán thuộc tính change tracking nếu cần
+          newRow.setAttribute("data-changed", "true");
+          newRow.setAttribute("data-template", "false");
+          // xóa class ẩn tr
+          newRow.classList.remove("d-none");
 
-        // Replace tất cả {{index}} trong thuộc tính name
-        newRow.innerHTML = newRow.innerHTML.replace(/grid\[\d+\]/g, `grid[${newIndex}]`);
+          // Replace tất cả {{index}} trong thuộc tính name
+          newRow.innerHTML = newRow.innerHTML.replace(/grid\[\d+\]/g, `grid[${newIndex}]`);
 
-        // Thêm vào đầu bảng hoặc cuối bảng
-        const firstRow = table.querySelector('tr[data-template="false"]');
-        if (firstRow) {
-        table.insertBefore(newRow, firstRow);
-        } else {
-        table.appendChild(newRow);
-        }
+          // Sau khi clone xong, làm sạch HTML các class hoặc message container
+          newRow.querySelectorAll('.fv-plugins-icon-container').forEach(td => {
+              const msg = td.querySelector('.fv-plugins-message-container');
+              if (msg) msg.remove();
 
-        // Áp dụng Select2 nếu có
-        $(newRow).find("select").select2({
-        placeholder: "Chọn",
-        allowClear: true,
-        width: "100%"
+              td.classList.remove('fv-plugins-bootstrap5-row-invalid');
+
+              const input = td.querySelector('input, select, textarea');
+              if (input) input.classList.remove('is-invalid');
+          });
+
+          // Thêm vào đầu bảng hoặc cuối bảng
+          const firstRow = table.querySelector('tr[data-template="false"]');
+          if (firstRow) {
+          table.insertBefore(newRow, firstRow);
+          } else {
+          table.appendChild(newRow);
+          }
+
+          // Áp dụng Select2 nếu có
+          $(newRow).find("select").select2({
+          placeholder: "Chọn",
+          allowClear: true,
+          width: "100%"
+          });
+
+
+          // // áp dụng color picker (nếu có)
+          // Init_getColorPicker();
+
+        // ✅ Thêm field mới vào FormValidation nếu có định nghĩa sẵn
+        $(newRow).find('input[name], select[name], textarea[name]').each(function () {
+            const input = $(this);
+            const nameAttr = input.attr('name');
+
+            // Kiểm tra nếu name trùng với key rule có sẵn thì thêm vào
+            fieldValidationsArray.forEach(fieldObj => {
+                const key = Object.keys(fieldObj)[0];
+
+                if (nameAttr.includes(key)) {
+                    console.log("➕ Add dynamic field:", nameAttr, "with rule:", fieldObj[key]);
+
+                    if (Array.isArray(fieldObj[key]) && fieldObj[key].length === 0) {
+                        console.warn("⚠️ Không có rule nào cho:", nameAttr);
+                        return;
+                    }
+
+                    fv.addField(nameAttr, fieldObj[key]);
+                }
+            });
         });
         }
 
@@ -176,6 +322,7 @@
         });
         });
         }
+
     </script>
 }
 @section success
@@ -242,7 +389,7 @@
                                         <div id="accordionOne" class="accordion-collapse collapse" data-bs-parent="#accordionExample">
                                             <div class="accordion-body">
                                                 @* filter *@
-                                                <form method="get" class="needs-validation" novalidate="" action="/report/editor-utility/@ReportCode" enctype="multipart/form-data">
+                                                <form id = "reportfilter" method="get"class="needs-validation" novalidate="" action="/report/editor-utility/@ReportCode" enctype="multipart/form-data">
                                                     @* report code mac dinh truyen vao bo loc *@
                                                     <div class="row gx-3 gy-2 align-items-center">
                                                         @* xu ly filter dong *@
@@ -267,6 +414,10 @@
                                                                     else if (type == "DATE BOX")
                                                                     {
                                                                         <input class="form-control form-control-sm" type="date" id="@name" name="@name" value="@value" @(filter.required == true ? "required" : "") />
+                                                                    }
+                                                                    else if (type == "DATERANGEPICKER")
+                                                                    {
+                                                                        <input class="form-control form-control-sm bs-rangepicker-filter" type="text" id="@name" name="@name" value="@value" @(filter.required == true ? "required" : "") />
                                                                     }
                                                                     else if (type == "SELECT BOX")
                                                                     {
@@ -371,11 +522,13 @@
                                   @* hidden input để xử lý ẩn truyền dữ liệu từ param link vào bằng js *@
                                   <div id="hiddenInputs"></div>
                                   <div class="table-responsive" style="max-height: 800px">
-                                      <table id="@("table-editor-" + ReportCode ?? "emptycode")" data-table-displayname = "@(report.ContainsKey("name") ? (report["name"].ToString() ?? "Danh sách") : "Danh sách")" border="1" cellpadding="5" cellspacing="0" style="width: 100%; text-align: center; table-layout: auto;" class="table table-sm table-bordered table-hover display table-with-exportexcel">
+                                      <table id="@("table-editor-" + ReportCode ?? "emptycode")" data-table-displayname = "@(report.ContainsKey("name") ? (report["name"].ToString() ?? "Danh sách") : "Danh sách")" border="1" cellpadding="5" cellspacing="0" style="width: 100%; text-align: center; table-layout: auto;" class="table table-sm table-bordered display table-with-exportexcel">
                                           <thead class="freepanze-head">
                                               <tr>
                                                   @* Cột này sẽ tự động chứa checkbox "Chọn tất cả" *@
                                                   <th class="text-center" rowspan="@displayParentLevelNum" data-code="IdCheck" data-index="-1"  data-isexport="False" style="min-width:50px"></th>
+                                                  @* Cột chi tiết mặc định*@
+                                                  <th class="text-center" rowspan="@displayParentLevelNum" data-code="IdDetail" data-index="0"  data-isexport="False" style="min-width:10px"></th>
                                                   @* neu display khong null thi tiep tuc *@
                                                   @if (displayList != null)
                                                   {
@@ -495,11 +648,14 @@
                                                           @* cột select box mặc đinh *@
                                                           <td class="text-center" data-isexport="False" data-value="@Id">
                                                           </td>
+                                                          @* cột chi tiết mặc đinh *@
+                                                          <td class="text-center" data-isexport="False">
+                                                          </td>
                                                           @* voi moi cot dang co *@
                                                           @* neu cot isdisplay = false thi khong hien thi  *@
                                                           @foreach (var display in displayList.Where(p => p.isdisplay == false).OrderBy(p => p.colnum ?? 0).ToList())
                                                           {
-                                                              <td class="@FormatHelper.ParseTextAlignToClass(display.textalign) d-none" data-isexport="@(display.isexport ?? "True")">
+                                                              <td class="@FormatHelper.ParseTextAlignToClass(display.textalign) d-none form-control-validation fv-plugins-icon-container" data-isexport="@(display.isexport ?? "True")">
                                                                   @{
                                                                       object value;
                                                                       if (dictionary.TryGetValue(display.code, out value))
@@ -517,7 +673,7 @@
                                                           @foreach (var display in displayList.Where(p => p.isdisplay == true && p.code == "stt" && p.isparent == false && string.IsNullOrEmpty(p.parentcode)).OrderBy(p => p.colnum ?? 0).ToList())
                                                           {
                                                               @* neu isFreePane bang true thi them class freepanze-col *@
-                                                              <td class="text-center @(display.isfreepane == true ? "freepanze-col" : "")" data-isexport="@(display.isexport ?? "True")">
+                                                              <td class="text-center @(display.isfreepane == true ? "freepanze-col" : "") form-control-validation fv-plugins-icon-container" data-isexport="@(display.isexport ?? "True")">
                                                                   @{
                                                                       object value;
                                                                       if (dictionary.TryGetValue(display.code, out value))
@@ -540,7 +696,7 @@
                                                               string[] numberTypeArray = ["int", "float", "long"];
                                                               string[] dateTypeArray = ["date", "datetime"];
                                                               @* neu isFreePane bang true thi them class freepanze-col *@
-                                                              <td class="@FormatHelper.ParseTextAlignToClass(display.textalign) @(display.isfreepane == true ? "freepanze-col" : "")" data-isexport="@(display.isexport ?? "True")" data-displaytype="@displayType" data-displayformat="@displayFormat">
+                                                              <td class="@FormatHelper.ParseTextAlignToClass(display.textalign) @(display.isfreepane == true ? "freepanze-col" : "") form-control-validation fv-plugins-icon-container" data-isexport="@(display.isexport ?? "True")" data-displaytype="@displayType" data-displayformat="@displayFormat">
                                                                   @{
                                                                       object value;
                                                                       if (dictionary.TryGetValue(display.code, out value))
@@ -591,7 +747,7 @@
                                                                                           }
                                                                                       </ul>
                                                                                   }
-                                                                                  catch (PostgresException ex)
+                                                                                  catch (SqlException ex)
                                                                                   {
                                                                                       <span class="text-danger">N/A</span>
                                                                                   }
@@ -647,6 +803,14 @@
                                                                           else if (displayType == "string")
                                                                           {
                                                                               <input class="form-control track-change @FormatHelper.ParseTextAlignToClass(display.textalign)" type="text" name="@("grid["+@reportRowIndex+"]."+display.code)" value="@value" @(Convert.ToBoolean(display.isreadonly ?? false) ? "readonly" : "") @(display.validationrule != "[]" ? "required" : "") />
+                                                                          }
+                                                                          // kiểu color
+                                                                          else if (displayType == "color")
+                                                                          {
+                                                                            <div class="pickr">
+                                                                              <button type="button" id="@("color-"+("grid-"+@reportRowIndex+"-"+display.code))" class="pcr-button form-color-picker" role="button" @(Convert.ToBoolean(display.isreadonly ?? false) ? "disabled" : "")></button>
+                                                                              <input type="hidden" class="track-change" id="@("grid-"+@reportRowIndex+"-"+display.code)" name="@("grid["+@reportRowIndex+"]."+display.code)" value="@value"  @(display.validationrule != "[]" ? "required" : "") />
+                                                                            </div>
                                                                           }
                                                                           // kiểu textarea
                                                                           else if (displayType == "textarea")
@@ -749,7 +913,7 @@
                                                                           var displayFormat = displaychild.format as string ?? "";
                                                                           string[] numberTypeArray = ["int", "float", "long"];
                                                                           string[] dateTypeArray = ["date", "datetime"];
-                                                                          <td class="@FormatHelper.ParseTextAlignToClass(displaychild.textalign)" data-isexport="@(displaychild.isexport ?? "0")" data-displaytype="@displayType" data-displayformat="@displayFormat">
+                                                                          <td class="@FormatHelper.ParseTextAlignToClass(displaychild.textalign)" data-isexport="@(displaychild.isexport ?? "0") form-control-validation fv-plugins-icon-container" data-displaytype="@displayType" data-displayformat="@displayFormat">
                                                                               @{
                                                                                   object value;
                                                                                   if (dictionary.TryGetValue(displaychild.code, out value))
@@ -801,7 +965,7 @@
                                                                                                       }
                                                                                                   </ul>
                                                                                               }
-                                                                                              catch (PostgresException ex)
+                                                                                              catch (SqlException ex)
                                                                                               {
                                                                                                   <span class="text-danger">N/A</span>
                                                                                               }
@@ -857,6 +1021,14 @@
                                                                                       else if (displayType == "string")
                                                                                       {
                                                                                           <input class="form-control track-change @FormatHelper.ParseTextAlignToClass(displaychild.textalign)" type="text" name="@("grid["+@reportRowIndex+"]."+displaychild.code)" value="@value" @(Convert.ToBoolean(displaychild.isreadonly ?? false) ? "readonly" : "") @(displaychild.validationrule != "[]" ? "required" : "") />
+                                                                                      }
+                                                                                      // kiểu color
+                                                                                      else if (displayType == "color")
+                                                                                      {
+                                                                                        <div class="pickr">
+                                                                                          <button type="button" id="@("color-"+("grid-"+@reportRowIndex+"-"+displaychild.code))" class="pcr-button form-color-picker" role="button" @(Convert.ToBoolean(displaychild.isreadonly ?? false) ? "disabled" : "")></button>
+                                                                                          <input type="hidden" class="track-change" id="@("grid-"+@reportRowIndex+"-"+displaychild.code)" name="@("grid["+@reportRowIndex+"]."+displaychild.code)" value="@value"  @(displaychild.validationrule != "[]" ? "required" : "") />
+                                                                                        </div>
                                                                                       }
                                                                                       // kiểu textarea
                                                                                       else if (displayType == "textarea")
@@ -951,7 +1123,7 @@
                                                           }
                                                           @* them nut xoa cuoi dong *@
                                                           <td class="text-center">
-                                                              <input type="hidden" name="grid[@reportRowIndex].isDeleted" value="false" class="isDeleted track-change">
+                                                              <input type="hidden" name="grid[@reportRowIndex].isdeleted" value="false" class="isDeleted track-change">
                                                               <button type="button" class="btn-delete btn btn-sm text-danger" onclick="toggleDelete(this)">
                                                                   <i class="ri-delete-bin-line ri-24px"></i>
                                                               </button>
