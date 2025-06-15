@@ -50,9 +50,9 @@ namespace KOAHome.Services
       }
 
       // neu chua ton tai Id them them vao
-      if (!parameters.ContainsKey("Id"))
+      if (!parameters.ContainsKey("id"))
       {
-        parameters.Add("Id", Id);
+        parameters.Add("id", Id);
       }
 
       // chuyen thanh cau query tu store va param truyen vao
@@ -76,9 +76,9 @@ namespace KOAHome.Services
     public async Task<List<dynamic>> Form_ups(Dictionary<string, object> parameters, int? id, string sqlStore, string? connectionString)
     {
       // add Id vao paramerter neu co
-      if (id != null && !parameters.ContainsKey("Id"))
+      if (id != null && !parameters.ContainsKey("id"))
       {
-        parameters.Add("Id", id);
+        parameters.Add("id", id);
       }
       // neu khong truyen connect string thi se lay connection string mac dinh
       if (connectionString == null)
@@ -131,10 +131,10 @@ namespace KOAHome.Services
       // su dung datasource config de lay du lieu
       string connectionString = _configuration.GetConnectionString("ConfigConnection"); // Thay thế bằng chuỗi kết nối của bạn
       // store get du lieu
-      string sqlStore = "NET_Form_sel";
+      string sqlStore = "net_form_sel";
       // khai bao param lien quan
       var parameters = new Dictionary<string, object>();
-      parameters.Add("FormCode", formCode);
+      parameters.Add("formcode", formCode);
 
       // chuyen thanh cau query tu store va param truyen vao
       var (sqlQuery, sqlParams) = await _con.Connection_GetQueryParam(parameters, sqlStore, connectionString);
@@ -149,11 +149,11 @@ namespace KOAHome.Services
       // su dung datasource config de lay du lieu
       string connectionString = _configuration.GetConnectionString("ConfigConnection"); // Thay thế bằng chuỗi kết nối của bạn
       // store get du lieu
-      string sqlStore = "NET_Form_VersionField_WithForm_sel";
+      string sqlStore = "net_form_versionfield_withform_sel";
       // khai bao param lien quan
       var parameters = new Dictionary<string, object>();
-      parameters.Add("FormCode", formCode);
-      parameters.Add("FormId", formId);
+      parameters.Add("formcode", formCode);
+      parameters.Add("formid", formId);
 
       // chuyen thanh cau query tu store va param truyen vao
       var (sqlQuery, sqlParams) = await _con.Connection_GetQueryParam(parameters, sqlStore, connectionString);

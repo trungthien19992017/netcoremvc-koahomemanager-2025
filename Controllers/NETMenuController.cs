@@ -1,8 +1,10 @@
+using AspnetCoreMvcFull.Models;
 using KOAHome.EntityFramework;
 using KOAHome.Services;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
+using Npgsql;
 using System.Diagnostics;
 
 namespace KOAHome.Controllers
@@ -11,11 +13,8 @@ namespace KOAHome.Controllers
   {
     private readonly ILogger<NETFormController> _logger;
     private readonly QLKCL_NEWContext _db;
-    private readonly IHsBookingTableService _book;
-    private readonly IHsBookingServiceService _bookser;
     private readonly IReportEditorService _re;
     private readonly IAttachmentService _att;
-    private readonly IHsCustomerService _cus;
     private readonly IReportService _report;
     private readonly IFormService _form;
     private readonly IActionService _action;
@@ -26,15 +25,12 @@ namespace KOAHome.Controllers
     private readonly IConnectionService _con;
 
 
-    public NETMenuController(QLKCL_NEWContext db, ILogger<NETFormController> logger, IHsBookingTableService book, IHsBookingServiceService bookser, IReportEditorService re, IAttachmentService att, IHsCustomerService cus, IReportService report, IFormService form, IActionService action, IWidgetService widget, IDRDatasourceService datasrc, INetServiceService netService, IConnectionService con, INetMenuService menu)
+    public NETMenuController(QLKCL_NEWContext db, ILogger<NETFormController> logger, IReportEditorService re, IAttachmentService att, IReportService report, IFormService form, IActionService action, IWidgetService widget, IDRDatasourceService datasrc, INetServiceService netService, IConnectionService con, INetMenuService menu)
     {
       _db = db;
       _logger = logger;
-      _book = book;
-      _bookser = bookser;
       _re = re;
       _att = att;
-      _cus = cus;
       _report = report;
       _form = form;
       _action = action;
@@ -73,12 +69,12 @@ namespace KOAHome.Controllers
 
         return PartialView("~/Views/Shared/Partial/NETMenu/_MainMenu_Partial.cshtml");
       }
-      catch (Exception ex)
+      catch (PostgresException ex)
       {
         // Log the exception
         _logger.LogError(ex, "An error occurred while fetching form.");
         // Optionally, return an error view
-        return View("Error");
+        return View("~/Views/Pages/MiscError.cshtml", new ErrorViewModel { RequestId = Activity.Current?.Id ?? HttpContext.TraceIdentifier, exception = ex });
       }
     }
 
@@ -137,19 +133,19 @@ namespace KOAHome.Controllers
         ViewData["menuList"] = menuList;
 
         // nếu tồn tại menulist thì tiếp tục kiểm tra currentpage có tồn tại không
-        var currentMenu = menuList.FirstOrDefault(p => (currentPage == "/" && currentPage.StartsWith(p.Link)) || (currentPage != "/" && p.Link != "/" && currentPage.StartsWith(p.Link))) as IDictionary<string, object>;
+        var currentMenu = menuList.FirstOrDefault(p => (currentPage == "/" && currentPage.StartsWith(p.link)) || (currentPage != "/" && p.link != "/" && currentPage.StartsWith(p.link))) as IDictionary<string, object>;
         ViewData["currentMenu"] = currentMenu;
 
         ViewData["sucess"] = "Thành công";
 
         return PartialView("~/Views/Shared/Partial/NETMenu/_Menu_Partial.cshtml");
       }
-      catch (Exception ex)
+      catch (PostgresException ex)
       {
         // Log the exception
         _logger.LogError(ex, "An error occurred while fetching booking service info.");
         // Optionally, return an error view
-        return View("Error");
+        return View("~/Views/Pages/MiscError.cshtml", new ErrorViewModel { RequestId = Activity.Current?.Id ?? HttpContext.TraceIdentifier, exception = ex });
       }
 
     }

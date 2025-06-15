@@ -4,6 +4,7 @@ using AspnetCoreMvcFull.Models;
 using KOAHome.EntityFramework;
 using KOAHome.Services;
 using System.Security.Cryptography;
+using Npgsql;
 
 namespace AspnetCoreMvcFull.Controllers;
 
@@ -11,11 +12,8 @@ public class HomeController : Controller
 {
   private readonly ILogger<HomeController> _logger;
   private readonly QLKCL_NEWContext _db;
-  private readonly IHsBookingTableService _book;
-  private readonly IHsBookingServiceService _bookser;
   private readonly IReportEditorService _re;
   private readonly IAttachmentService _att;
-  private readonly IHsCustomerService _cus;
   private readonly IReportService _report;
   private readonly IFormService _form;
   private readonly IActionService _action;
@@ -23,15 +21,12 @@ public class HomeController : Controller
   private readonly IDRDatasourceService _datasrc;
   private readonly IConnectionService _con;
 
-  public HomeController(QLKCL_NEWContext db, ILogger<HomeController> logger, IHsBookingTableService book, IHsBookingServiceService bookser, IReportEditorService re, IAttachmentService att, IHsCustomerService cus, IReportService report, IFormService form, IActionService action, IWidgetService widget, IDRDatasourceService datasrc, IConnectionService con)
+  public HomeController(QLKCL_NEWContext db, ILogger<HomeController> logger, IReportEditorService re, IAttachmentService att, IReportService report, IFormService form, IActionService action, IWidgetService widget, IDRDatasourceService datasrc, IConnectionService con)
   {
     _db = db;
     _logger = logger;
-    _book = book;
-    _bookser = bookser;
     _re = re;
     _att = att;
-    _cus = cus;
     _report = report;
     _form = form;
     _action = action;
@@ -86,14 +81,14 @@ public class HomeController : Controller
       var resultList = await _action.Action_store(formData, sqlstore, connectionString);
       //kiem tra du lieu success tra ve
       var success_return = resultList
-      .Where(item => ((IDictionary<string, object>)item).ContainsKey("Success"))
-      .Select(item => ((IDictionary<string, object>)item)["Success"])
+      .Where(item => ((IDictionary<string, object>)item).ContainsKey("success"))
+      .Select(item => ((IDictionary<string, object>)item)["success"])
       .FirstOrDefault(); // Lọc ra những phần tử có Success
 
       //kiem tra du lieu error message tra ve
       var errormessage_return = resultList
-      .Where(item => ((IDictionary<string, object>)item).ContainsKey("ErrorMessage"))
-      .Select(item => ((IDictionary<string, object>)item)["ErrorMessage"])
+      .Where(item => ((IDictionary<string, object>)item).ContainsKey("errormessage"))
+      .Select(item => ((IDictionary<string, object>)item)["errormessage"])
       .FirstOrDefault(); // Lọc ra những phần tử có ErrorMessage
 
       bool success = false;
@@ -122,7 +117,7 @@ public class HomeController : Controller
         return Json(new { success = false, errorMessage = "Store chưa trả về giá trị success." });
       }
     }
-    catch (Exception ex)
+    catch (PostgresException ex)
     {
       return Json(new { success = false, errorMessage = ex.Message });
     }

@@ -76,7 +76,7 @@ namespace KOAHome.Services
       string sqlStore = "NET_MainMenu_sel";
       // khai bao param lien quan
       var parameters = new Dictionary<string, object>();
-      parameters.Add("MenuCode", menuCode);
+      parameters.Add("menucode", menuCode);
 
       // chuyen thanh cau query tu store va param truyen vao
       var (sqlQuery, sqlParams) = await _con.Connection_GetQueryParam(parameters, sqlStore, connectionString);
@@ -94,8 +94,8 @@ namespace KOAHome.Services
       string sqlStore = "NET_Menu_WithMainMenu_sel";
       // khai bao param lien quan
       var parameters = new Dictionary<string, object>();
-      parameters.Add("MenuCode", menuCode);
-      parameters.Add("MenuId", menuId);
+      parameters.Add("menucode", menuCode);
+      parameters.Add("menuid", menuId);
 
       // chuyen thanh cau query tu store va param truyen vao
       var (sqlQuery, sqlParams) = await _con.Connection_GetQueryParam(parameters, sqlStore, connectionString);

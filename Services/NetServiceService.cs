@@ -85,8 +85,8 @@ namespace KOAHome.Services
         string connectionString = _configuration.GetConnectionString("ConfigConnection"); // Thay thế bằng chuỗi kết nối của bạn
 
         // lấy các cột service cần xử lý
-        string colValue = _dbconfig.NetServices.FindAsync(serviceId).Result.ColValue.ToString() ?? "Id";
-        string colDisplay = _dbconfig.NetServices.FindAsync(serviceId).Result.ColDisplay.ToString() ?? "Name";
+        string colValue = _dbconfig.NetServices.FindAsync(serviceId).Result.Colvalue.ToString().ToLower() ?? "id";
+        string colDisplay = _dbconfig.NetServices.FindAsync(serviceId).Result.Coldisplay.ToString().ToLower() ?? "name";
 
       // store get du lieu
       string sqlStore = "NET_Service_DynamicExecute";
@@ -98,11 +98,19 @@ namespace KOAHome.Services
 
         // chuyen tat ca param dang co thanh 1 chuoi json va truyen vao bien Param
         var displayParameter = new Dictionary<string, object>();
-        if (!parameters.ContainsKey("Param"))
+        if (!parameters.ContainsKey("param"))
         {
-            parameters.Add("Param", JsonConvert.SerializeObject(parameters));
+            parameters.Add("param", JsonConvert.SerializeObject(parameters));
         }
-        parameters.Add("ServiceId", serviceId);
+
+        if (!parameters.ContainsKey("serviceid"))
+        {
+          parameters.Add("serviceid", serviceId);
+        }
+        else
+        {
+          parameters["serviceid"] = serviceId;
+        }
 
         // chuyen thanh cau query tu store va param truyen vao
         var (sqlQuery, sqlParams) = await _con.Connection_GetQueryParam(parameters, sqlStore, connectionString);
@@ -113,9 +121,9 @@ namespace KOAHome.Services
         resultList = await _con.Connection_GetDataFromQuery(parameters, sqlStore, connectionString, sqlQuery, sqlParams);
 
         // xoa param serviceid ngay de tranh loi phat sinh
-        if (parameters.ContainsKey("ServiceId"))
+        if (parameters.ContainsKey("serviceid"))
         {
-          parameters.Remove("ServiceId");
+          parameters.Remove("serviceid");
         }
 
       List<SelectListItem> listItems = resultList
@@ -145,11 +153,11 @@ namespace KOAHome.Services
       {
         // 1. Khởi tạo danh sách Task chính xác
         var serviceTasks = filterList
-            .Where(f => f.SeviceId != null)
+            .Where(f => f.seviceid != null)
             .Select(async filter =>
             {
-              var serviceId = (int)filter.SeviceId!;
-              var code = filter.Code!;
+              var serviceId = (int)filter.seviceid!;
+              var code = filter.code!;
 
               // Serialize param để tạo cache key
               string paramKey = string.Join(";", objParameters
@@ -206,11 +214,11 @@ namespace KOAHome.Services
       {
         // 1. Khởi tạo danh sách Task chính xác
         var serviceTasks = displayList
-            .Where(f => f.ServiceId != null)
+            .Where(f => f.serviceid != null)
             .Select(async display =>
             {
-              var serviceId = (int)display.ServiceId!;
-              var code = display.Code!;
+              var serviceId = (int)display.serviceid!;
+              var code = display.code!;
 
               // Serialize param để tạo cache key
               string paramKey = string.Join(";", objParameters
@@ -268,11 +276,11 @@ namespace KOAHome.Services
       {
         // 1. Khởi tạo danh sách Task chính xác
         var serviceTasks = config_formfield
-            .Where(f => GetServiceId_FromFormFieldOptions(f.Options) != 0)
+            .Where(f => GetServiceId_FromFormFieldOptions(f.options) != 0)
             .Select(async field =>
             {
-              var serviceId = GetServiceId_FromFormFieldOptions(field.Options)!;
-              var code = field.Code!;
+              var serviceId = GetServiceId_FromFormFieldOptions(field.options)!;
+              var code = field.code!;
 
               // Serialize param để tạo cache key
               string paramKey = string.Join(";", objParameters

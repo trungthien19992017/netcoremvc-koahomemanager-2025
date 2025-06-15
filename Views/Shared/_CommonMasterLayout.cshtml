@@ -11,7 +11,7 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0" />
 
-    <script src="https://code.jquery.com/jquery-3.4.1.min.js"></script>
+    @* <script src="https://code.jquery.com/jquery-3.4.1.min.js"></script> *@
 
 
   @{
@@ -92,7 +92,7 @@
 
         if (value && datafillstore && datafillstore != "") {
         $.ajax({
-        url: `/HsBookings/GetDataFillSelection`, // Sử dụng serviceStore để xác định API cần gọi
+        url: `/NETForm/GetDataFillSelection`, // Sử dụng serviceStore để xác định API cần gọi
         type: "GET",
         data: { value: value, key: key, datafillstore : datafillstore },
         success: function (data) {
@@ -128,29 +128,67 @@
         });
         });
 
+        // // sau khi load, tu dong cap nhat format date
+        // $(document).ready(function () {
+        //     // Lấy tất cả các input có type="date" hoặc "datetime-local"
+        //     $('input[type="date"], input[type="datetime-local"]').each(function () {
+        //         let originalValue = $(this).attr('value');
+
+        //         if (originalValue) {
+        //             if ($(this).attr("type") === "date") {
+        //                 // Kiểm tra xem đã đúng định dạng YYYY-MM-DD chưa
+        //                 let isoDateRegex = /^\d{4}-\d{2}-\d{2}$/;
+        //                 if (!isoDateRegex.test(originalValue)) {
+        //                     let formattedDate = moment(originalValue, ["M/D/YYYY h:mm:ss A", "DD/MM/YYYY", "YYYY-MM-DD"]).format("YYYY-MM-DD");
+        //                     $(this).val(formattedDate); // Điền trực tiếp vào value
+        //                     $(this).attr("value", formattedDate); // Cập nhật lại giá trị trong HTML
+        //                 }
+        //             } else if ($(this).attr("type") === "datetime-local") {
+        //                 // Kiểm tra xem đã đúng định dạng YYYY-MM-DDTHH:mm chưa
+        //                 let isoDateTimeRegex = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}$/;
+        //                 if (!isoDateTimeRegex.test(originalValue)) {
+        //                     let formattedDateTime = moment(originalValue, ["M/D/YYYY h:mm:ss A", "DD/MM/YYYY HH:mm:ss", "YYYY-MM-DDTHH:mm:ss"]).format("YYYY-MM-DDTHH:mm");
+        //                     $(this).val(formattedDateTime); // Điền trực tiếp vào value
+        //                     $(this).attr("value", formattedDateTime); // Cập nhật lại giá trị trong HTML
+        //                 }
+        //             }
+        //         }
+        //     });
+        // });
+
         // sau khi load, tu dong cap nhat format date
         $(document).ready(function () {
-            // Lấy tất cả các input có type="date" hoặc "datetime-local"
             $('input[type="date"], input[type="datetime-local"]').each(function () {
                 let originalValue = $(this).attr('value');
 
                 if (originalValue) {
-                    if ($(this).attr("type") === "date") {
-                        // Kiểm tra xem đã đúng định dạng YYYY-MM-DD chưa
-                        let isoDateRegex = /^\d{4}-\d{2}-\d{2}$/;
-                        if (!isoDateRegex.test(originalValue)) {
-                            let formattedDate = moment(originalValue, ["M/D/YYYY h:mm:ss A", "DD/MM/YYYY", "YYYY-MM-DD"]).format("YYYY-MM-DD");
-                            $(this).val(formattedDate); // Điền trực tiếp vào value
-                            $(this).attr("value", formattedDate); // Cập nhật lại giá trị trong HTML
+                    // Tạo moment từ nhiều format có thể gặp
+                    let parsedDate = moment(originalValue, [
+                        moment.ISO_8601,              // ISO format: 2025-05-24T10:30
+                        "YYYY-MM-DD",                 // Chuẩn HTML date
+                        "YYYY-MM-DDTHH:mm",           // Chuẩn HTML datetime-local
+                        "M/D/YYYY h:mm:ss A",
+                        "MM/DD/YYYY h:mm:ss A",
+                        "MM/DD/YYYY HH:mm:ss",
+                        "D/M/YYYY H:mm:ss",
+                        "DD/MM/YYYY H:mm:ss",
+                        "DD-MM-YYYY HH:mm:ss"
+                    ], true); // 'true' = strict parsing
+
+                    if (parsedDate.isValid()) {
+                        if ($(this).attr("type") === "date") {
+                            let formattedDate = parsedDate.format("YYYY-MM-DD");
+                            $(this).val(formattedDate);
+                            $(this).attr("value", formattedDate);
+                            console.log("Date field:", $(this).attr('name'), "value:", originalValue);
+                        } else if ($(this).attr("type") === "datetime-local") {
+                            let formattedDateTime = parsedDate.format("YYYY-MM-DDTHH:mm");
+                            $(this).val(formattedDateTime);
+                            $(this).attr("value", formattedDateTime);
+                            console.log("Date field:", $(this).attr('name'), "value:", originalValue);
                         }
-                    } else if ($(this).attr("type") === "datetime-local") {
-                        // Kiểm tra xem đã đúng định dạng YYYY-MM-DDTHH:mm chưa
-                        let isoDateTimeRegex = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}$/;
-                        if (!isoDateTimeRegex.test(originalValue)) {
-                            let formattedDateTime = moment(originalValue, ["M/D/YYYY h:mm:ss A", "DD/MM/YYYY HH:mm:ss", "YYYY-MM-DDTHH:mm:ss"]).format("YYYY-MM-DDTHH:mm");
-                            $(this).val(formattedDateTime); // Điền trực tiếp vào value
-                            $(this).attr("value", formattedDateTime); // Cập nhật lại giá trị trong HTML
-                        }
+                    } else {
+                        console.warn("⚠️ ",$(this).attr('name')," Không parse được giá trị ngày: ", originalValue);
                     }
                 }
             });
@@ -269,10 +307,10 @@
            function handleAjaxConfirmed(id, listid, sqlstore, datasourceid) {
                // dua cac du lieu can truyen vao formdata
                var formData = new FormData();
-                formData.append("Id", id); // key cua du lieu
+                formData.append("id", id); // key cua du lieu
                 formData.append("sqlstore", sqlstore); // Lấy sqlstore tu button truyen vao
                 formData.append("datasourceid", datasourceid); // Lấy datasource tu button truyen vao
-                formData.append("ListId", listid); // list id xuất hiện khi chọn nhiều dòng table, áp dụng với nút on top
+                formData.append("listid", listid); // list id xuất hiện khi chọn nhiều dòng table, áp dụng với nút on top
 
                 // Gọi AJAX để gửi yêu cầu xóa
                 $.ajax({
@@ -373,7 +411,7 @@
                 var id = $(this).data("id"); // Lấy ID của booking
                 var sqlStore = $(this).data('sqlstore'); // Lấy SQL Store nếu cần
                 // neu khong truyen action va controller thi se goi action mac dinh
-                var controller = $(this).data("controller") || "HsBookings";
+                var controller = $(this).data("controller") || "NETForm";
                 var action = $(this).data("action") || "GetDataFillSelection";
 
                 // Kiểm tra nếu không có ID thì không làm gì
@@ -635,24 +673,30 @@
 
                     data.forEach(notification => {
                         let item = `
-                            <li class="list-group-item list-group-item-action dropdown-notifications-item waves-effect ${notification.IsRead ? 'marked-as-read' : ''}">
-                                   <div class="d-flex">
-                                       <div class="flex-shrink-0 me-3">
-                                           <div class="avatar">
-                                               ${notification.Images ? `<img src="${notification.Images}" class="w-px-40 h-auto rounded-circle">` : '<span class="avatar-initial rounded-circle bg-label-danger">N/A</span>'}
-                                           </div>
-                                       </div>
-                                       <div class="flex-grow-1">
-                                           <h6 class="small mb-1">${notification.Title}</h6>
-                                           <small class="mb-1 d-block text-body">${notification.Content}</small>
-                                           <small class="text-muted">${notification.ThoiGian}</small>
-                                       </div>
+                            <li class="list-group-item list-group-item-action dropdown-notifications-item waves-effect ${notification.IsRead ? 'marked-as-read' : ''} align-items-start p-3 shadow-sm mb-2 border border-light-subtle  position-relative notify-card hover-shadow">
+                                <div class="d-flex">
+                                    <div class="flex-shrink-0 me-3">
+                                        <div class="avatar bg-white p-1 rounded-circle">
+                                            ${notification.images ? `<img src="${notification.images}" class="w-px-40 h-auto rounded-circle">` : '<span class="avatar-initial rounded-circle bg-label-danger">N/A</span>'}
+                                        </div>
+                                    </div>
+                                    <div class="flex-grow-1">
+                                        <h6 class="mb-1 text-primary fw-semibold">
+                                            <i class="ri-calendar-check-line me-1 text-success"></i> ${notification.title}
+                                        </h6>
+                                        <div class="text-body small mb-1">
+                                            <i class="ri-edit-2-line text-info me-1"></i> ${notification.content}
+                                            <br>
+                                            <span class="text-muted">→ Lý do phát sinh: </span>
+                                        </div>
+                                        <small class="text-muted"><i class="ri-time-line me-1"></i> ${notification.thoigian}</small>
+                                    </div>
                                     <div class="flex-shrink-0 dropdown-notifications-actions">
-                                        <a href="javascript:void(0)" class="dropdown-notifications-read" onclick="markAsRead(${notification.Id})"><span class="badge badge-dot"></span></a>
+                                        <a href="javascript:void(0)" class="dropdown-notifications-read" onclick="markAsRead(${notification.id})"><span class="badge badge-dot"></span></a>
                                         <a href="javascript:void(0)" class="dropdown-notifications-archive"><span class="ri-close-line"></span></a>
                                     </div>
-                                   </div>
-                               </li>`;
+                                </div>
+                            </li>`;
 
                         notificationList.append(item);
                         if (!notification.IsRead) unreadCount++;
@@ -923,7 +967,7 @@
 
                  // xu ly data table
                  dt = $table.DataTable({
-                     dom: '<"d-flex justify-content-between align-items-center datatable-top-component"<"d-flex gap-2"fl><"d-flex gap-2"B>>irtp',
+                     dom: '<"d-flex flex-wrap justify-content-between align-items-center datatable-top-component"<"d-flex flex-wrap"fl><"d-flex flex-wrap"B>>irtp',
                       select: {
                           style: "multi",
                           selector: "td input.dt-checkboxes" // chỉ khi click vào checkbox mới select
@@ -1172,25 +1216,25 @@
                // Di chuyển phần phân trang ra ngoài bảng
                // doi phan trang va cac nut xuat, tìm kiem ra ngoai (yeu cau class table-pagination va table-top-action table-info)
                dt.on('draw', function () {
-                   attachSelectAllHandler(dt);
-                   var wrapselector_id = selector + "-wrap";
+                   // attachSelectAllHandler(dt);
+                   // var wrapselector_id = selector + "-wrap";
 
-                    // chuyển toàn bộ class của wrapper tự gen sang cho wrap tự tạo
-                    var wrapper = $(selector + "_wrapper");
-                    var target = $(wrapselector_id);
+                   //  // chuyển toàn bộ class của wrapper tự gen sang cho wrap tự tạo
+                   //  var wrapper = $(selector + "_wrapper");
+                   //  var target = $(wrapselector_id);
 
-                    // Lấy danh sách class từ wrapper và gán sang target
-                    var classes = wrapper.attr('class');
-                    if (classes) {
-                      target.addClass(classes);
-                    }
+                   //  // Lấy danh sách class từ wrapper và gán sang target
+                   //  var classes = wrapper.attr('class');
+                   //  if (classes) {
+                   //    target.addClass(classes);
+                   //  }
 
-                   // Move pagination vào đúng chỗ
-                    $(wrapselector_id + ' .dt-paging').appendTo(wrapselector_id + ' .report-pagination');
-                    // Move info vào đúng chỗ nếu bạn cần
-                    $(selector + '_info').appendTo(wrapselector_id + ' .report-info');
-                    // Move filter + length nếu cần
-                    $(wrapselector_id + ' .datatable-top-component').appendTo(wrapselector_id + ' .report-top-action');
+                   // // Move pagination vào đúng chỗ
+                   //  $(wrapselector_id + ' .dt-paging').appendTo(wrapselector_id + ' .report-pagination');
+                   //  // Move info vào đúng chỗ nếu bạn cần
+                   //  $(selector + '_info').appendTo(wrapselector_id + ' .report-info');
+                   //  // Move filter + length nếu cần
+                   //  $(wrapselector_id + ' .datatable-top-component').appendTo(wrapselector_id + ' .report-top-action');
 
                     // đính kèm chức năng chọn nhiều
                     attachSelectAllHandler(dt);
@@ -1854,6 +1898,7 @@
                                     // Gọi lại hàm load menu (MenuCode sẽ được lấy từ Session trong controller)
                                     $("#net-menu").empty(); // Xóa menu cũ
                                     loadMenu(); // Load lại
+                                    $('.layout-menu-collapsed').toggleClass('layout-menu-expanded');
                                 }
                              },
                               error: function (xhr, status, error) {
@@ -2058,6 +2103,34 @@
                 }
             });
         }
+
+        // response chuyển đổi tab&pill từ right sang top khi resize// Khai báo biến timer ngoài scope resize
+        let resizeTimer;
+
+        function updateNavAlignment() {
+          const isMobile = window.innerWidth < 768;
+
+          $('#nav-tabpanel').each(function () {
+            const $nav = $(this);
+            if (isMobile) {
+              if ($nav.hasClass('nav-align-left')) {
+                $nav.removeClass('nav-align-left').addClass('nav-align-bottom');
+              }
+            } else {
+              if ($nav.hasClass('nav-align-bottom')) {
+                $nav.removeClass('nav-align-bottom').addClass('nav-align-left');
+              }
+            }
+          });
+        }
+
+        $(document).ready(function () {
+          updateNavAlignment(); // Khi trang vừa load
+          $(window).on('resize', function () {
+              clearTimeout(resizeTimer);
+              resizeTimer = setTimeout(updateNavAlignment, 200); // đợi 200ms sau khi dừng resize // Khi người dùng resize cửa sổ
+          });
+        });
     </script>
 
     <!-- Page Scripts-->
