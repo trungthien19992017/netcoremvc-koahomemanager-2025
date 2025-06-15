@@ -1,0 +1,629 @@
+@using KOAHome.Models
+@{
+    ViewData["Title"] = "Form Wizard";
+    Layout = "~/Views/Shared/_ContentNavbarLayout.cshtml";
+    // var steps = (List<StepModel>)ViewData["Steps"];
+
+
+    // nhận param để chuyển đến partial nếu có
+    var objParameters = ViewData["objParameters"] as Dictionary<string, object>;
+
+    // truyen cau hinh tabpanel de xu ly giao dien
+    var stepper = ViewData["stepper"] as IDictionary<string, object>;
+    string StepperCode = ViewData["StepperCode"] as string;
+
+    // neu ton tai tabpanel thi xu ly tiep
+    if (stepper != null)
+    {
+        ViewData["Title"] = stepper.ContainsKey("name") ? stepper["name"] : "Quy trình";
+    }
+    else
+    {
+        ViewData["Title"] = "Quy trình";
+    }
+
+    // truyen chi tiết tab để xử lý giao diện
+    var stepperdetail = ViewData["stepperdetail"] as List<dynamic>;
+}
+
+@section VendorStyles {
+}
+
+@section VendorScripts {
+}
+
+@section PageScripts {
+    @* form wizard *@
+    @* <script src="~/js/form-wizard-numbered.js"></script> *@
+
+    <script>
+        document.addEventListener("DOMContentLoaded", function() {
+            const stepperEl = document.querySelector("#wizard-validation");
+            const stepper = new Stepper(stepperEl, {
+                linear: false
+            });
+
+            const form = document.querySelector("#wizard-validation-form");
+            const nextBtns = form.querySelector(".btn-next");
+            const prevBtns = form.querySelector(".btn-prev");
+            const submitBtn = form.querySelector('.btn-submit');
+            // const stepsFromServer = JSON.parse('Html.Raw(Json.Serialize(ViewData["Steps"]))');
+
+            // let validationInstances = [];
+
+            // stepsFromServer.forEach((step, index) => {
+            //     let stepEl = form.querySelector(`#step-${step.stepId}`);
+            //     let fields = {};
+
+            //     step.fields.forEach(field => {
+            //         fields[`${field}`] = {
+            //             validators: {
+            //                 notEmpty: {
+            //                     message: `${field} is required`
+            //                 }
+            //             }
+            //         };
+            //     });
+
+            //     let validation = FormValidation.formValidation(stepEl, {
+            //         fields: fields,
+            //         plugins: {
+            //             trigger: new FormValidation.plugins.Trigger(),
+            //             bootstrap5: new FormValidation.plugins.Bootstrap5({
+            //                 eleValidClass: '',
+            //                 rowSelector: '.form-control-validation'
+            //             }),
+            //             autoFocus: new FormValidation.plugins.AutoFocus(),
+            //             submitButton: new FormValidation.plugins.SubmitButton()
+            //         }
+            //     }).on('core.form.valid', function() {
+            //         if (index < stepsFromServer.length - 1) {
+            //             stepper.next();
+            // //             currentStepIndex++;
+            // //             updateButtonVisibility();
+            //         } else {
+            //             alert('Submitted!');
+            //             const event = new Event("submit", {
+            //                 bubbles: true,
+            //                 cancelable: true
+            //             });
+            //             form.dispatchEvent(event); // ✅ Gọi lại sự kiện submit gốc
+            //             form.submit();
+            //         }
+            //     });
+
+            //     validationInstances.push(validation);
+            // });
+
+
+            // cập nhật nút hiển thị liên quan lần đầu mở stepper
+            updateButtonVisibility(0);
+            // Lần đầu load step đầu tiên
+            loadActiveStepForm();
+
+
+            // Bắt sự kiện khi step được hiển thị (kể cả click header hoặc dùng .next/.previous)
+            stepperEl.addEventListener('shown.bs-stepper', function (event) {
+                const allSteps = form.querySelectorAll('.content.dstepper-block');
+                // Tìm phần tử đang active (sau khi step đã được shown)
+                const activeStep = form.querySelector('.content.dstepper-block.active');
+                // truyền id trả về của step trước sang step hiện tại để xử lý (nếu có), được lấy từ form cha của stepper
+                let previousStepId = form?._previousStepId;
+                let queryParamOutSite = {};
+                if (previousStepId){
+                  queryParamOutSite = { id : previousStepId };
+                }
+
+                // Lấy chỉ số của step hiện tại
+                let currentStepIndex = Array.from(allSteps).indexOf(activeStep);
+
+                // cập nhật nút hiển thị liên quan
+                updateButtonVisibility(currentStepIndex);
+                loadActiveStepForm(queryParamOutSite); // Gọi lại load form mỗi khi đổi step
+            });
+
+            document.querySelectorAll('.btn-next').forEach((btn, idx) => {
+                btn.addEventListener('click', () => {
+                    // Tìm step đang active
+                    let activeContainer = document.querySelector('.dstepper-block.active');
+                    let activeForm = activeContainer ? activeContainer.querySelector('form') : null;
+                    let fvInstance = activeForm?._fvInstance;
+
+                    if (fvInstance) {
+                        fvInstance.validate().then(function (status) {
+                            if (status === 'Valid') {
+                                // gán isstepper vào form để phân biệt khi submit
+                                activeForm.dataset.isstepper = "true";
+                                // gán stepper vào form để xử lý chuyển step ở bước submit
+                                activeForm._stepperInstance = stepper;
+                                activeForm.requestSubmit();
+                            } else {
+                                console.warn("Form không hợp lệ, không chuyển bước.");
+                            }
+                        });
+                    } else {
+                        console.warn("Không tìm thấy FormValidation instance từ form.");
+                    }
+                });
+            });
+
+            document.querySelectorAll('.btn-prev').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    stepper.previous();
+                });
+            });
+
+            submitBtn.addEventListener('click', function(e) {
+                e.preventDefault();
+                // Tìm step đang active
+                let activeContainer = document.querySelector('.dstepper-block.active');
+                let activeForm = activeContainer ? activeContainer.querySelector('form') : null;
+                let fvInstance = activeForm?._fvInstance;
+
+                if (fvInstance) {
+                    fvInstance.validate().then(function (status) {
+                        if (status === 'Valid') {
+                            // gán isstepper vào form để phân biệt khi submit
+                            activeForm.dataset.isstepper = "true";
+                            // gán stepper vào form để xử lý chuyển step ở bước submit
+                            activeForm._stepperInstance = stepper;
+                            activeForm.requestSubmit();
+                        } else {
+                            console.warn("Form không hợp lệ, không chuyển bước.");
+                        }
+                    });
+                } else {
+                    console.warn("Không tìm thấy FormValidation instance từ form.");
+                }
+            });
+
+            function updateButtonVisibility(currentStepIndex) {
+                const steps = form.querySelectorAll('.content.dstepper-block');
+                const isLast = currentStepIndex === steps.length - 1;
+                const isFirst = currentStepIndex === 0;
+
+                nextBtns.style.display = isLast ? 'none' : 'inline-block';
+                submitBtn.style.display = isLast ? 'inline-block' : 'none';
+                prevBtns.style.display = isFirst ? 'none' : 'inline-block';
+            }
+
+            // function load form của step đang active
+            function loadActiveStepForm(queryParamOutSite = {}, isPage = false, onSuccess, isStepper = true) {
+                // Tìm step đang active
+                const activeStep = document.querySelector('.dstepper-block.active');
+
+                if (!activeStep) {
+                    console.warn('Không tìm thấy step đang active');
+                    return;
+                }
+
+                // Lấy id của step hiện tại làm formCode và containerId
+                const formCode = activeStep.dataset.formcode;
+                const containerId = activeStep.id;
+
+                if (!formCode) {
+                    console.warn('Thiếu data-formcode ở step:', containerId);
+                    return;
+                }
+                // Gọi hàm loadFormViewer đã có
+                loadFormViewer(formCode, containerId, queryParamOutSite, isPage, onSuccess, isStepper);
+            }
+
+        });
+    </script>
+}
+
+@section success
+{
+    @if (ViewData["success"] != null)
+    {
+
+        <!-- Toast with Placements -->
+        <div class="bs-toast toast  top-0 end-0 show toast-placement-ex1 m-2" style="position:absolute;" role="alert" aria-live="assertive" aria-atomic="true" data-bs-delay="2000">
+            <div class="toast-header">
+                <i class="ri-home-4-fill me-2 text-success"></i>
+                <div class="me-auto fw-medium">Thông báo</div><small class="text-muted">1 giây trước</small>
+                <button type="button" class="btn-close" data-bs-dismiss="toast" aria-label="Close"></button>
+            </div>
+            <div class="toast-body text-success">@ViewData["success"].</div>
+        </div>
+        <!-- Toast with Placements -->
+    }
+}
+
+@section ErrorMessage
+{
+    @if (ViewData["ErrorMessage"] != null)
+    {
+        <!-- Toast with Placements -->
+        <div class="bs-toast toast  top-0 end-0 show toast-placement-ex1 m-2" style="position:absolute;" role="alert" aria-live="assertive" aria-atomic="true" data-bs-delay="2000">
+            <div class="toast-header">
+                <i class="ri-home-4-fill me-2 text-danger"></i>
+                <div class="me-auto fw-medium">Thông báo</div><small class="text-muted">1 giây trước</small>
+                <button type="button" class="btn-close" data-bs-dismiss="toast" aria-label="Close"></button>
+            </div>
+            <div class="toast-body text-danger">@ViewData["ErrorMessage"].</div>
+        </div>
+        <!-- Toast with Placements -->
+    }
+}
+
+
+@* ************** Content ************** *@
+<!-- Content wrapper -->
+<div class="content-wrapper">
+    <div class="container-xxl flex-grow-1 container-p-y">
+        @* form wizard start *@
+        <div class="row" data-select2-id="59">
+            <div class="col-12">
+                <a type="button" href="javascript:history.back()" class="btn btn-outline-secondary btn-prev waves-effect" style="display: inline-block;">
+                    <i class="icon-base ri ri-arrow-left-line icon-sm me-sm-1 me-0"></i>
+                    <span class="align-middle d-sm-inline-block d-none">Quay lại</span>
+                </a>
+                @if (stepper != null)
+                {
+                    <h5 class="text-center text-primary text-uppercase">@(stepper.ContainsKey("name") ? stepper["name"] : "Quy trình xử lý")</h5>
+                    <div id="wizard-validation" class="bs-stepper vertical wizard-modern wizard-modern-vertical mt-2" role="tablist">
+                        <div class="bs-stepper-header gap-lg-2">
+                            @for (int i = 0; i < stepperdetail.Count; i++)
+                            {
+                                var step = stepperdetail[i];
+                                <div class="step@(i == 0 ? " active" : "")" data-target="#step-@step.code">
+                                    <button type="button" class="step-trigger" aria-selected="true" role="tab" id="steppertrigger@(i)">
+                                        <span class="bs-stepper-circle"><i class="icon-base ri ri-check-line"></i></span>
+                                        <span class="bs-stepper-label">
+                                            <span class="bs-stepper-number">@step.stt</span>
+                                            <span class="d-flex flex-column gap-1 ms-2">
+                                                <span class="bs-stepper-title">@step.formtitle</span>
+                                                <span class="bs-stepper-subtitle">@step.formdescription</span>
+                                            </span>
+                                        </span>
+                                    </button>
+                                </div>
+                                @if (i < stepperdetail.Count - 1)
+                                {
+                                    <div class="line"></div>
+                                }
+                            }
+                        </div>
+                        <div class="bs-stepper-content">
+                            <form id="wizard-validation-form">
+                                @{
+                                    int stepindex = 0;
+                                }
+                                @foreach (var step in stepperdetail)
+                                {
+                                    <div id="step-@step.code" data-formcode="@step.formcode" class="content @(stepindex == 0 ? "active" : "") dstepper-block" role="tabpanel" aria-labelledby="steppertrigger@(step.stt - 1)">
+                                        
+                                    </div>
+
+                                    stepindex++;
+                                }
+                                <div class="d-flex justify-content-between mt-4">
+                                    <button type="button" class="btn btn-outline-secondary btn-prev waves-effect">
+                                        <i class="icon-base ri ri-arrow-left-line icon-sm me-sm-1 me-0"></i>
+                                        <span class="align-middle d-sm-inline-block d-none">Về</span>
+                                    </button>
+                                    <button type="button" class="btn btn-primary btn-next waves-effect waves-light">
+                                        <span class="align-middle d-sm-inline-block me-sm-1 d-none">Tiếp</span>
+                                        <i class="icon-base ri ri-arrow-right-line icon-sm"></i>
+                                    </button>
+                                    <button type="submit" class="btn btn-success btn-submit waves-effect waves-light" style="display: none;">
+                                        <span class="align-middle d-sm-inline-block me-sm-1">Lưu</span>
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                }
+            </div>
+            @*            <div class="col-12">
+                <small class="fw-medium">Vertical</small>
+                <div id="wizard-validation" class="bs-stepper vertical wizard-modern wizard-modern-vertical mt-2" role="tablist">
+                    <div class="bs-stepper-header gap-lg-2">
+                        @for (int i = 0; i < steps.Count; i++)
+                        {
+                            var step = steps[i];
+                            <div class="step@(i == 0 ? " active" : "")" data-target="#step-@step.StepId">
+                                <button type="button" class="step-trigger" aria-selected="true" role="tab" id="steppertrigger@(i)">
+                                    <span class="bs-stepper-circle"><i class="icon-base ri ri-check-line"></i></span>
+                                    <span class="bs-stepper-label">
+                                        <span class="bs-stepper-number">@i</span>
+                                        <span class="d-flex flex-column gap-1 ms-2">
+                                            <span class="bs-stepper-title">@step.Title</span>
+                                            <span class="bs-stepper-subtitle">Setup Account Details</span>
+                                        </span>
+                                    </span>
+                                </button>
+                            </div>
+                            @if (i < steps.Count - 1)
+                            {
+                                <div class="line"></div>
+                            }
+                        }
+                    </div>
+                    <div class="bs-stepper-content">
+                        <form id="wizard-validation-form">
+                            @{
+                                int stepindex = 0;
+                            }
+                            @foreach (var step in steps)
+                            {
+                                <div id="step-@step.StepId" class="content @(stepindex == 0 ? "active" : "") dstepper-block" role="tabpanel" aria-labelledby="steppertrigger@(step.StepId - 1)">
+                                    <div class="content-header mb-4">
+                                        <h6 class="mb-0">@step.Title</h6>
+                                        <small>Enter Your Account Details.</small>
+                                    </div>
+                                    <div class="row g-6">
+                                        @foreach (var field in step.Fields)
+                                        {
+                                            <div class="col-sm-6 form-control-validation fv-plugins-icon-container">
+                                                <div class="form-floating form-floating-outline">
+                                                    <input type="text" id="@field" name="@field" class="form-control form-control-sm" placeholder="@field">
+                                                    <label for="@field">@field</label>
+                                                </div>
+                                            </div>
+                                        }
+                                    </div>
+                                </div>
+
+                                stepindex++;
+                            }
+                            <div class="d-flex justify-content-between mt-4">
+                                 <button type="button" class="btn btn-outline-secondary btn-prev waves-effect" >
+                                    <i class="icon-base ri ri-arrow-left-line icon-sm me-sm-1 me-0"></i>
+                                    <span class="align-middle d-sm-inline-block d-none">Về</span>
+                                </button>
+                                <button type="button" class="btn btn-primary btn-next waves-effect waves-light">
+                                    <span class="align-middle d-sm-inline-block me-sm-1 d-none">Tiếp</span>
+                                    <i class="icon-base ri ri-arrow-right-line icon-sm"></i>
+                                </button>
+                                <button type="submit" class="btn btn-success btn-submit waves-effect waves-light" style="display: none;">
+                                    <span class="align-middle d-sm-inline-block me-sm-1">Lưu</span>
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div> *@
+@*             <div class="col-12">
+                <small class="fw-medium">Vertical</small>
+                <div class="bs-stepper vertical wizard-modern wizard-modern-vertical1 mt-2">
+                    <div class="bs-stepper-header gap-lg-2">
+                        <div class="step active" data-target="#account-details-modern-vertical">
+                            <button type="button" class="step-trigger" aria-selected="true" fdprocessedid="1wuqwq">
+                                <span class="bs-stepper-circle"><i class="icon-base ri ri-check-line"></i></span>
+                                <span class="bs-stepper-label">
+                                    <span class="bs-stepper-number">01</span>
+                                    <span class="d-flex flex-column gap-1 ms-2">
+                                        <span class="bs-stepper-title">Account Details</span>
+                                        <span class="bs-stepper-subtitle">Setup Account Details</span>
+                                    </span>
+                                </span>
+                            </button>
+                        </div>
+                        <div class="line"></div>
+                        <div class="step" data-target="#personal-info-modern-vertical">
+                            <button type="button" class="step-trigger" aria-selected="false" fdprocessedid="5lau2f">
+                                <span class="bs-stepper-circle"><i class="icon-base ri ri-check-line"></i></span>
+                                <span class="bs-stepper-label">
+                                    <span class="bs-stepper-number">02</span>
+                                    <span class="d-flex flex-column gap-1 ms-2">
+                                        <span class="bs-stepper-title">Personal Info</span>
+                                        <span class="bs-stepper-subtitle">Add personal info</span>
+                                    </span>
+                                </span>
+                            </button>
+                        </div>
+                        <div class="line"></div>
+                        <div class="step" data-target="#social-links-modern-vertical">
+                            <button type="button" class="step-trigger" aria-selected="false" fdprocessedid="cr7m2">
+                                <span class="bs-stepper-circle"><i class="icon-base ri ri-check-line"></i></span>
+                                <span class="bs-stepper-label">
+                                    <span class="bs-stepper-number">03</span>
+                                    <span class="d-flex flex-column gap-1 ms-2">
+                                        <span class="bs-stepper-title">Social Links</span>
+                                        <span class="bs-stepper-subtitle">Add social links</span>
+                                    </span>
+                                </span>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="bs-stepper-content">
+                        <form onsubmit="return false">
+                            <!-- Account Details -->
+                            <div id="account-details-modern-vertical" class="content active dstepper-block">
+                                <div class="content-header mb-4">
+                                    <h6 class="mb-0">Account Details</h6>
+                                    <small>Enter Your Account Details.</small>
+                                </div>
+                                <div class="row g-6">
+                                    <div class="col-sm-6">
+                                        <div class="form-floating form-floating-outline">
+                                            <input type="text" id="username-modern-vertical" class="form-control" placeholder="johndoe" fdprocessedid="8mjxxs">
+                                            <label for="username-modern-vertical">Username</label>
+                                        </div>
+                                    </div>
+                                    <div class="col-sm-6">
+                                        <div class="form-floating form-floating-outline">
+                                            <input type="email" id="email-modern-vertical" class="form-control" placeholder="john.doe@email.com" aria-label="john.doe" fdprocessedid="pc859">
+                                            <label for="email-modern-vertical">Email</label>
+                                        </div>
+                                    </div>
+                                    <div class="col-sm-6 form-password-toggle">
+                                        <div class="input-group input-group-merge">
+                                            <div class="form-floating form-floating-outline">
+                                                <input type="password" id="password-modern-vertical" class="form-control" placeholder="············" aria-describedby="password2-modern-vertical" fdprocessedid="gddax">
+                                                <label for="password-modern-vertical">Password</label>
+                                            </div>
+                                            <span class="input-group-text cursor-pointer" id="password2-modern-vertical"><i class="icon-base ri ri-eye-off-line icon-20px"></i></span>
+                                        </div>
+                                    </div>
+                                    <div class="col-sm-6 form-password-toggle">
+                                        <div class="input-group input-group-merge">
+                                            <div class="form-floating form-floating-outline">
+                                                <input type="password" id="confirm-password-modern-vertical" class="form-control" placeholder="············" aria-describedby="confirm-password-modern-vertical2" fdprocessedid="af217e">
+                                                <label for="confirm-password-modern-vertical">Confirm Password</label>
+                                            </div>
+                                            <span class="input-group-text cursor-pointer" id="confirm-password-modern-vertical2"><i class="icon-base ri ri-eye-off-line icon-20px"></i></span>
+                                        </div>
+                                    </div>
+                                    <div class="col-12 d-flex justify-content-between">
+                                        <button class="btn btn-outline-secondary btn-prev waves-effect" disabled="">
+                                            <i class="icon-base ri ri-arrow-left-line icon-sm me-sm-1 me-0"></i>
+                                            <span class="align-middle d-sm-inline-block d-none">Previous</span>
+                                        </button>
+                                        <button class="btn btn-primary btn-next waves-effect waves-light" fdprocessedid="hpjvgm"><span class="align-middle d-sm-inline-block d-none me-sm-1">Next</span> <i class="icon-base ri ri-arrow-right-line icon-sm"></i></button>
+                                    </div>
+                                </div>
+                            </div>
+                            <!-- Personal Info -->
+                            <div id="personal-info-modern-vertical" class="content">
+                                <div class="content-header mb-4">
+                                    <h6 class="mb-0">Personal Info</h6>
+                                    <small>Enter Your Personal Info.</small>
+                                </div>
+                                <div class="row g-6">
+                                    <div class="col-sm-6">
+                                        <div class="form-floating form-floating-outline">
+                                            <input type="text" id="first-name-modern-vertical" class="form-control" placeholder="John">
+                                            <label for="first-name-modern-vertical">First Name</label>
+                                        </div>
+                                    </div>
+                                    <div class="col-sm-6">
+                                        <div class="form-floating form-floating-outline">
+                                            <input type="text" id="last-name-modern-vertical" class="form-control" placeholder="Doe">
+                                            <label for="last-name-modern-vertical">Last Name</label>
+                                        </div>
+                                    </div>
+                                    <div class="col-sm-6">
+                                        <div class="form-floating form-floating-outline form-floating-select2">
+                                            <select class="select2 form-select select2-hidden-accessible" id="country-modern-vertical" tabindex="-1" aria-hidden="true" data-select2-id="country-modern-vertical">
+                                                <option label=" " data-select2-id="54"></option>
+                                                <option>UK</option>
+                                                <option>USA</option>
+                                                <option>Spain</option>
+                                                <option>France</option>
+                                                <option>Italy</option>
+                                                <option>Australia</option>
+                                            </select><span class="select2 select2-container select2-container--default" dir="ltr" data-select2-id="53" style="width: auto;"><span class="selection"><span class="select2-selection select2-selection--single" role="combobox" aria-haspopup="true" aria-expanded="false" tabindex="0" aria-disabled="false" aria-labelledby="select2-country-modern-vertical-container"><span class="select2-selection__rendered" id="select2-country-modern-vertical-container" role="textbox" aria-readonly="true"><span class="select2-selection__placeholder">Select value</span></span><span class="select2-selection__arrow" role="presentation"><b role="presentation"></b></span></span></span><span class="dropdown-wrapper" aria-hidden="true"></span></span>
+                                            <label for="country-modern-vertical">Country</label>
+                                        </div>
+                                    </div>
+                                    <div class="col-sm-6">
+                                        <div class="form-floating form-floating-outline form-floating-bootstrap-select">
+                                            <div class="dropdown bootstrap-select show-tick w-auto">
+                                                <select class="selectpicker w-auto" id="language-modern-vertical" data-style="btn-transparent" data-tick-icon="icon-base ri ri-check-line text-white" multiple="">
+                                                    <option>English</option>
+                                                    <option>French</option>
+                                                    <option>Spanish</option>
+                                                </select><button type="button" tabindex="-1" class="btn dropdown-toggle bs-placeholder btn-transparent" data-bs-toggle="dropdown" role="combobox" aria-owns="bs-select-5" aria-haspopup="listbox" aria-expanded="false" title="Nothing selected" data-id="language-modern-vertical"><div class="filter-option"><div class="filter-option-inner"><div class="filter-option-inner-inner">Nothing selected</div></div> </div></button><div class="dropdown-menu "><div class="inner show" role="listbox" id="bs-select-5" tabindex="-1" aria-multiselectable="true"><ul class="dropdown-menu inner show" role="presentation"></ul></div></div>
+                                            </div>
+                                            <label for="language-modern-vertical">Language</label>
+                                        </div>
+                                    </div>
+                                    <div class="col-12 d-flex justify-content-between">
+                                        <button class="btn btn-outline-secondary btn-prev waves-effect">
+                                            <i class="icon-base ri ri-arrow-left-line icon-sm me-sm-1 me-0"></i>
+                                            <span class="align-middle d-sm-inline-block d-none">Previous</span>
+                                        </button>
+                                        <button class="btn btn-primary btn-next waves-effect waves-light"><span class="align-middle d-sm-inline-block d-none me-sm-1">Next</span> <i class="icon-base ri ri-arrow-right-line icon-sm"></i></button>
+                                    </div>
+                                </div>
+                            </div>
+                            <!-- Social Links -->
+                            <div id="social-links-modern-vertical" class="content">
+                                <div class="content-header mb-4">
+                                    <h6 class="mb-0">Social Links</h6>
+                                    <small>Enter Your Social Links.</small>
+                                </div>
+                                <div class="row g-6">
+                                    <div class="col-sm-6">
+                                        <div class="form-floating form-floating-outline">
+                                            <input type="text" id="twitter-modern-vertical" class="form-control" placeholder="https://twitter.com/abc">
+                                            <label for="twitter-modern-vertical">Twitter</label>
+                                        </div>
+                                    </div>
+                                    <div class="col-sm-6">
+                                        <div class="form-floating form-floating-outline">
+                                            <input type="text" id="facebook-modern-vertical" class="form-control" placeholder="https://facebook.com/abc">
+                                            <label for="facebook-modern-vertical">Facebook</label>
+                                        </div>
+                                    </div>
+                                    <div class="col-sm-6">
+                                        <div class="form-floating form-floating-outline">
+                                            <input type="text" id="google-modern-vertical" class="form-control" placeholder="https://plus.google.com/abc">
+                                            <label for="google-modern-vertical">Google+</label>
+                                        </div>
+                                    </div>
+                                    <div class="col-sm-6">
+                                        <div class="form-floating form-floating-outline">
+                                            <input type="text" id="linkedin-modern-vertical" class="form-control" placeholder="https://linkedin.com/abc">
+                                            <label for="linkedin-modern-vertical">LinkedIn</label>
+                                        </div>
+                                    </div>
+                                    <div class="col-12 d-flex justify-content-between">
+                                        <button class="btn btn-outline-secondary btn-prev waves-effect">
+                                            <i class="icon-base ri ri-arrow-left-line icon-sm me-sm-1 me-0"></i>
+                                            <span class="align-middle d-sm-inline-block d-none">Previous</span>
+                                        </button>
+                                        <button class="btn btn-primary btn-submit waves-effect waves-light">Submit</button>
+                                    </div>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div> *@
+ @*            <div class="col-12 mb-6">
+                <div id="wizard-validation" class="bs-stepper">
+                    <div class="bs-stepper-header" role="tablist">
+                        @for (int i = 0; i < steps.Count; i++)
+                        {
+                            var step = steps[i];
+                            <div class="step" data-target="#step-@step.StepId">
+                                <button type="button" class="step-trigger" role="tab" id="steppertrigger@i">
+                                    <span class="bs-stepper-circle">@step.StepId</span>
+                                    <span class="bs-stepper-label">@step.Title</span>
+                                </button>
+                            </div>
+                            @if (i < steps.Count - 1)
+                            {
+                                <div class="line"></div>
+                            }
+                        }
+                    </div>
+
+                    <div class="bs-stepper-content">
+                        <form id="wizard-validation-form">
+                            @foreach (var step in steps)
+                            {
+                                <div id="step-@step.StepId" class="content" role="tabpanel" aria-labelledby="steppertrigger@(step.StepId - 1)">
+                                  <div class="row gx-5">
+                                    @foreach (var field in step.Fields)
+                                    {
+                                        <div class="col-md-4 form-control-validation fv-plugins-icon-container">
+                                            <div class="form-floating form-floating-outline">
+                                                <input class="form-control form-control-sm" name="@field" id="@field" />
+                                                <label for="@field">@field</label>
+                                            </div>
+                                        </div>
+                                    }
+                                  </div>
+                                </div>
+                            }
+
+                            <div class="d-flex justify-content-between mt-4">
+                                <button type="button" class="btn btn-secondary btn-prev">Previous</button>
+                                <button type="button" class="btn btn-primary btn-next">Next</button>
+                                <button type="submit" class="btn btn-success btn-submit" style="display: none;">Submit</button>
+                            </div>
+                        </form>
+                    </div>
+                </div> 
+            </div> *@
+        </div>
+     @* form wizard end *@
+    </div>
+    <!-- Content wrapper -->
+</div>
