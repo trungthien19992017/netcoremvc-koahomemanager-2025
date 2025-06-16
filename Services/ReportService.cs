@@ -19,6 +19,8 @@ using System.Security.Cryptography;
 using System.Text.RegularExpressions;
 using OfficeOpenXml;
 using System.Reflection.Metadata;
+using System.ComponentModel;
+using LicenseContext = OfficeOpenXml.LicenseContext;
 
 namespace KOAHome.Services
 {
@@ -40,6 +42,7 @@ namespace KOAHome.Services
     // Hàm này sẽ tính độ sâu tối đa của cây phân cấp
     // dung de tính số cấp cha con của cột hiển thị
     public int Display_GetReportMaxParentLevel(List<dynamic> displayList);
+    public Task<IDictionary<string, object>?> NET_Report_GetValidation(string reportCode);
   }
   public class ReportService : IReportService
   {
@@ -57,7 +60,7 @@ namespace KOAHome.Services
       _con = con;
     }
     public async Task<List<dynamic>> Report_search(Dictionary<string, object> parameters, string sqlStore, string? connectionString)
-    {
+      {
       // neu khong truyen connect string thi se lay connection string mac dinh
       if (connectionString == null)
       {
@@ -219,22 +222,33 @@ namespace KOAHome.Services
     {
       string sqlstore = "";
 
-      // Đọc file Excel
-      using (var stream = new MemoryStream())
+      if (file == null || file.Length == 0 || !file.FileName.EndsWith(".xlsx"))
+        throw new InvalidOperationException("File không hợp lệ hoặc không đúng định dạng .xlsx.");
+
+      try
       {
-        await file.CopyToAsync(stream);
-        using (var package = new ExcelPackage(stream))
+        ExcelPackage.LicenseContext = LicenseContext.NonCommercial;
+
+        using (var stream = new MemoryStream())
         {
-          // Sheet "Import" để lấy tên Store Procedure
-          var importSheet = package.Workbook.Worksheets.FirstOrDefault(ws => ws.Name == "Import");
-          if (importSheet != null)
+          await file.CopyToAsync(stream);
+          stream.Position = 0;
+
+          using (var package = new ExcelPackage(stream))
           {
-            sqlstore = importSheet.Cells[1, 1].Text?.Trim() ?? ""; // Lấy A1
+            var importSheet = package.Workbook.Worksheets.FirstOrDefault(ws => ws.Name == "Import");
+            if (importSheet != null)
+            {
+              sqlstore = importSheet.Cells[1, 1].Text?.Trim() ?? "";
+            }
           }
         }
       }
+      catch (Exception ex)
+      {
+        throw new InvalidOperationException($"Lỗi xử lý file: {ex.Message}", ex);
+      }
 
-      // Chuyển đổi dữ liệu sang JSON
       return sqlstore;
     }
 
@@ -250,7 +264,7 @@ namespace KOAHome.Services
       // Dictionary chứa các tham số
       var parameters = new Dictionary<string, object>
       {
-          { "Id", Id ?? (object)DBNull.Value },
+          { "id", Id ?? (object)DBNull.Value },
           { "json", string.IsNullOrEmpty(json) ? (object)DBNull.Value : json }
       };
 
@@ -281,7 +295,7 @@ namespace KOAHome.Services
       string sqlStore = "NET_Report_sel";
       // khai bao param lien quan
       var parameters = new Dictionary<string, object>();
-      parameters.Add("ReportCode", reportCode);
+      parameters.Add("reportcode", reportCode);
 
       // chuyen thanh cau query tu store va param truyen vao
       var (sqlQuery, sqlParams) = await _con.Connection_GetQueryParam(parameters, sqlStore, connectionString);
@@ -299,8 +313,8 @@ namespace KOAHome.Services
       string sqlStore = "NET_Filter_WithReport_sel";
       // khai bao param lien quan
       var parameters = new Dictionary<string, object>();
-      parameters.Add("ReportCode", reportCode);
-      parameters.Add("ReportId", reportId);
+      parameters.Add("reportcode", reportCode);
+      parameters.Add("reportid", reportId);
 
       // chuyen thanh cau query tu store va param truyen vao
       var (sqlQuery, sqlParams) = await _con.Connection_GetQueryParam(parameters, sqlStore, connectionString);
@@ -331,13 +345,13 @@ namespace KOAHome.Services
 
             // chuyen tat ca param dang co thanh 1 chuoi json va truyen vao bien Param
             var displayParameter = new Dictionary<string, object>();
-            if (!parameters.ContainsKey("Param"))
+            if (!parameters.ContainsKey("param"))
             {
                 // cac du lieu parameter se add vao store display duoi dang bien param cach nhau bang dau ;
                 string displayParamString = string.Join(";", parameters.Select(kvp => $"{kvp.Key}={kvp.Value ?? ""}"));
-                parameters.Add("Param", displayParamString);
+                parameters.Add("param", displayParamString);
             }
-            parameters.Add("ReportID", reportId);
+            parameters.Add("reportid", reportId);
 
             // chuyen thanh cau query tu store va param truyen vao
             var (sqlQuery, sqlParams) = await _con.Connection_GetQueryParam(parameters, sqlStore, connectionString);
@@ -378,7 +392,7 @@ namespace KOAHome.Services
     public int Display_GetReportMaxParentLevel(List<dynamic> displayList)
     {
       // B1: Tạo lookup table cho tra cứu nhanh theo Code
-      var lookup = displayList.ToDictionary(x => (string)x.Code, x => x);
+      var lookup = displayList.ToDictionary(x => (string)x.code, x => x);
 
       // B2: Hàm tính độ sâu của từng item (truy ngược lên parent)
       Dictionary<string, int> depthCache = new(); // Để tránh tính lại
@@ -392,7 +406,7 @@ namespace KOAHome.Services
           return 1; // Nếu không tìm thấy code -> root
 
         var item = lookup[code];
-        string parentCode = item.ParentCode as string;
+        string parentCode = item.parentcode as string;
 
         int depth = 1;
         if (!string.IsNullOrEmpty(parentCode) && lookup.ContainsKey(parentCode))
@@ -408,7 +422,7 @@ namespace KOAHome.Services
       int maxDepth = 0;
       foreach (var item in displayList)
       {
-        string code = item.Code as string;
+        string code = item.code as string;
         if (!string.IsNullOrEmpty(code))
         {
           int depth = GetDepth(code);
@@ -418,6 +432,25 @@ namespace KOAHome.Services
       }
 
       return maxDepth;
+    }
+
+    public async Task<IDictionary<string, object>?> NET_Report_GetValidation(string reportCode)
+    {
+      // su dung datasource config de lay du lieu
+      string connectionString = _configuration.GetConnectionString("ConfigConnection"); // Thay thế bằng chuỗi kết nối của bạn
+      // store get du lieu
+      string sqlStore = "net_report_getvalidation";
+      // khai bao param lien quan
+      var parameters = new Dictionary<string, object>();
+      parameters.Add("reportcode", reportCode);
+
+      // chuyen thanh cau query tu store va param truyen vao
+      var (sqlQuery, sqlParams) = await _con.Connection_GetQueryParam(parameters, sqlStore, connectionString);
+
+      // xu ly lay du lieu dua truyen store va param truyen vao
+      var result = await _con.Connection_GetSingleDataFromQuery(parameters, sqlStore, connectionString, sqlQuery, sqlParams);
+
+      return result;
     }
   }
 }

@@ -1,3 +1,4 @@
+using AspnetCoreMvcFull.Models;
 using KOAHome.EntityFramework;
 using KOAHome.Helpers;
 using KOAHome.Models;
@@ -6,6 +7,8 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.AspNetCore.WebUtilities;
+using Microsoft.Data.SqlClient;
+using Npgsql;
 using System.Diagnostics;
 using static NuGet.Packaging.PackagingConstants;
 
@@ -75,19 +78,19 @@ namespace KOAHome.Controllers
 
         string? connectionString = null;
         //neu datasourceId la null thi lay connectionString mac dinh
-        if (report.ContainsKey("DataSourceId"))
+        if (report.ContainsKey("datasourceid"))
         {
-          if (report["DataSourceId"] != null)
+          if (report["datasourceid"] != null)
           {
             //lay connectionstring tu report de goi store
-            connectionString = await _datasrc.GetConnectionString(Convert.ToInt32(report["DataSourceId"]));
+            connectionString = await _datasrc.GetConnectionString(Convert.ToInt32(report["datasourceid"]));
           }
         }
 
         // khai bao cac du lieu report can su dung trong controller
-        string? sqlContent = report.ContainsKey("SqlContent") ? Convert.ToString(report["SqlContent"]) : "";
-        string? sqlDefaultContent = report.ContainsKey("SqlDefaultContent") ? Convert.ToString(report["SqlDefaultContent"]) : "";
-        string? storeDRDisplay = report.ContainsKey("StoreDRDisplay") ? Convert.ToString(report["StoreDRDisplay"]) : "";
+        string? sqlContent = report.ContainsKey("sqlcontent") ? Convert.ToString(report["sqlcontent"]) : "";
+        string? sqlDefaultContent = report.ContainsKey("sqldefaultcontent") ? Convert.ToString(report["sqldefaultcontent"]) : "";
+        string? storeDRDisplay = report.ContainsKey("storedrdisplay") ? Convert.ToString(report["storedrdisplay"]) : "";
 
         if (string.IsNullOrWhiteSpace(sqlContent))
         {
@@ -171,12 +174,12 @@ namespace KOAHome.Controllers
 
         return View();
       }
-      catch (Exception ex)
+      catch (SqlException ex)
       {
         // Log the exception
         _logger.LogError(ex, "An error occurred while fetching booking service info.");
         // Optionally, return an error view
-        return View("Error");
+        return View("~/Views/Pages/MiscError.cshtml", new ErrorViewModel { RequestId = Activity.Current?.Id ?? HttpContext.TraceIdentifier, exception = ex });
       }
     }
 
@@ -209,19 +212,19 @@ namespace KOAHome.Controllers
 
         string? connectionString = null;
         //neu datasourceId la null thi lay connectionString mac dinh
-        if (report.ContainsKey("DataSourceId"))
+        if (report.ContainsKey("datasourceid"))
         {
-          if (report["DataSourceId"] != null)
+          if (report["datasourceid"] != null)
           {
             //lay connectionstring tu report de goi store
-            connectionString = await _datasrc.GetConnectionString(Convert.ToInt32(report["DataSourceId"]));
+            connectionString = await _datasrc.GetConnectionString(Convert.ToInt32(report["datasourceid"]));
           }
         }
 
         // khai bao cac du lieu report can su dung trong controller
-        string? sqlContent = report.ContainsKey("SqlContent") ? Convert.ToString(report["SqlContent"]) : "";
-        string? sqlDefaultContent = report.ContainsKey("SqlDefaultContent") ? Convert.ToString(report["SqlDefaultContent"]) : "";
-        string? storeDRDisplay = report.ContainsKey("StoreDRDisplay") ? Convert.ToString(report["StoreDRDisplay"]) : "";
+        string? sqlContent = report.ContainsKey("sqlcontent") ? Convert.ToString(report["sqlcontent"]) : "";
+        string? sqlDefaultContent = report.ContainsKey("sqldefaultcontent") ? Convert.ToString(report["sqldefaultcontent"]) : "";
+        string? storeDRDisplay = report.ContainsKey("storedrdisplay") ? Convert.ToString(report["storedrdisplay"]) : "";
 
         if (string.IsNullOrWhiteSpace(sqlContent))
         {
@@ -242,9 +245,9 @@ namespace KOAHome.Controllers
         if (id != null)
         {
           // nếu obj param đã có Id thì bỏ qua
-          if (!objParameters.ContainsKey("Id"))
+          if (!objParameters.ContainsKey("id"))
           {
-            objParameters.Add("Id", id ?? (object)DBNull.Value);
+            objParameters.Add("id", id ?? (object)DBNull.Value);
           }
         }
 
@@ -294,6 +297,11 @@ namespace KOAHome.Controllers
         //  Gán danh sach select cho cac display vào ViewBag
         ViewData["EditorDynamicServiceSelectOptions"] = listDisplayService;
 
+        // Nhận chuỗi json validate cho validation editor
+        var getValidationFromStore = await _report.NET_Report_GetValidation(ReportCode);
+        var validationJson = getValidationFromStore.ContainsKey("value") ? Convert.ToString(getValidationFromStore["value"]) ?? "" : "";
+        ViewData["editorcolumnvalidation"] = validationJson;
+
         // search
         stopwatch.Restart();
         var resultList = await _report.Report_search(objParameters, sqlContent, connectionString);
@@ -315,12 +323,12 @@ namespace KOAHome.Controllers
 
         return View();
       }
-      catch (Exception ex)
+      catch (SqlException ex)
       {
         // Log the exception
         _logger.LogError(ex, "An error occurred while fetching booking service info.");
         // Optionally, return an error view
-        return View("Error");
+        return View("~/Views/Pages/MiscError.cshtml", new ErrorViewModel { RequestId = Activity.Current?.Id ?? HttpContext.TraceIdentifier, exception = ex });
       }
     }
 
@@ -365,17 +373,17 @@ namespace KOAHome.Controllers
 
         string? connectionString = null;
         //neu datasourceId la null thi lay connectionString mac dinh
-        if (report.ContainsKey("DataSourceId"))
+        if (report.ContainsKey("datasourceid"))
         {
-          if (report["DataSourceId"] != null)
+          if (report["datasourceid"] != null)
           {
             //lay connectionstring tu report de goi store
-            connectionString = await _datasrc.GetConnectionString(Convert.ToInt32(report["DataSourceId"]));
+            connectionString = await _datasrc.GetConnectionString(Convert.ToInt32(report["datasourceid"]));
           }
         }
 
         // khai bao cac du lieu report can su dung trong controller
-        string? sqlEditContent = report.ContainsKey("SqlEditContent") ? Convert.ToString(report["SqlEditContent"]) : "";
+        string? sqlEditContent = report.ContainsKey("sqleditcontent") ? Convert.ToString(report["sqleditcontent"]) : "";
 
         if (string.IsNullOrWhiteSpace(sqlEditContent))
         {
@@ -409,12 +417,12 @@ namespace KOAHome.Controllers
           return Redirect($"{currentPath}?{queryString}");
         }
       }
-      catch (Exception ex)
+      catch (SqlException ex)
       {
         // Log the exception
         _logger.LogError(ex, "An error occurred while fetching booking service info.");
         // Optionally, return an error view
-        return View("Error");
+        return View("~/Views/Pages/MiscError.cshtml", new ErrorViewModel { RequestId = Activity.Current?.Id ?? HttpContext.TraceIdentifier, exception = ex });
       }
     }
 
@@ -451,19 +459,19 @@ namespace KOAHome.Controllers
 
         string? connectionString = null;
         //neu datasourceId la null thi lay connectionString mac dinh
-        if (report.ContainsKey("DataSourceId"))
+        if (report.ContainsKey("datasourceid"))
         {
-          if (report["DataSourceId"] != null)
+          if (report["datasourceid"] != null)
           {
             //lay connectionstring tu report de goi store
-            connectionString = await _datasrc.GetConnectionString(Convert.ToInt32(report["DataSourceId"]));
+            connectionString = await _datasrc.GetConnectionString(Convert.ToInt32(report["datasourceid"]));
           }
         }
 
         // khai bao cac du lieu report can su dung trong controller
-        string? sqlContent = report.ContainsKey("SqlContent") ? Convert.ToString(report["SqlContent"]) : "";
-        string? sqlDefaultContent = report.ContainsKey("SqlDefaultContent") ? Convert.ToString(report["SqlDefaultContent"]) : "";
-        string? storeDRDisplay = report.ContainsKey("StoreDRDisplay") ? Convert.ToString(report["StoreDRDisplay"]) : "";
+        string? sqlContent = report.ContainsKey("sqlcontent") ? Convert.ToString(report["sqlcontent"]) : "";
+        string? sqlDefaultContent = report.ContainsKey("sqldefaultcontent") ? Convert.ToString(report["sqldefaultcontent"]) : "";
+        string? storeDRDisplay = report.ContainsKey("storedrdisplay") ? Convert.ToString(report["storedrdisplay"]) : "";
 
         if (string.IsNullOrWhiteSpace(sqlContent))
         {
@@ -484,9 +492,9 @@ namespace KOAHome.Controllers
         if (id != null)
         {
           // nếu obj param đã có Id thì bỏ qua
-          if (!objParameters.ContainsKey("Id"))
+          if (!objParameters.ContainsKey("id"))
           {
-            objParameters.Add("Id", id ?? (object)DBNull.Value);
+            objParameters.Add("id", id ?? (object)DBNull.Value);
           }
         }
 
@@ -558,16 +566,100 @@ namespace KOAHome.Controllers
 
         return PartialView("~/Views/Shared/Partial/MainPageLayout/_Form_Report_Editor_Partial.cshtml");
       }
-      catch (Exception ex)
+      catch (SqlException ex)
       {
         // Log the exception
         _logger.LogError(ex, "An error occurred while fetching booking service info.");
         // Optionally, return an error view
-        return View("Error");
+        return View("~/Views/Pages/MiscError.cshtml", new ErrorViewModel { RequestId = Activity.Current?.Id ?? HttpContext.TraceIdentifier, exception = ex });
       }
       
     }
 
+    // POST: /report/editor-utility/5
+    // To protect from overposting attacks, enable the specific properties you want to bind to.
+    // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
+    [HttpPost]
+    public async Task<IActionResult> Form_Report_Editor(string? ReportCode, int? id, [FromForm] IFormCollection form)
+    {
+      try
+      {
+        // reset tempdata error message
+        TempData["ErrorMessage"] = null;
+
+        // Nếu bạn cần redirect (ví dụ sau khi lưu), có thể dùng:
+        // Tách các form input có tiền tố "q_" vì tiền tố q_ là các query param từ link
+        string queryString = ParseDataHelper.GetQueryStringFromForm(form);
+        string currentPath = HttpContext.Request.Path;
+
+        // Tách lại query param gốc từ form input "q_" để lọc dữ liệu khi xử lý
+        var queryParamerter = form
+            .Where(kv => kv.Key.StartsWith("q_"))
+            .ToDictionary(
+                kv => kv.Key.Substring(2),
+                kv => (object)kv.Value.ToString()
+            );
+
+        // xử lý form để loại các tiền tố q_ ra khỏi Key
+        form = ParseDataHelper.RemovePrefix_FromFormKey(form);
+
+        // lay thong tin report, va danh sach filter display cua report de xu ly
+        var report = await _report.NET_Report_Get(ReportCode);
+        // tra ve page loi neu khong tim thay report
+        if (report == null)
+        {
+          return Json(new { success = false, errorMessage = "Không tìm thấy bảng" });
+        }
+
+        string? connectionString = null;
+        //neu datasourceId la null thi lay connectionString mac dinh
+        if (report.ContainsKey("datasourceid"))
+        {
+          if (report["datasourceid"] != null)
+          {
+            //lay connectionstring tu report de goi store
+            connectionString = await _datasrc.GetConnectionString(Convert.ToInt32(report["datasourceid"]));
+          }
+        }
+
+        // khai bao cac du lieu report can su dung trong controller
+        string? sqlEditContent = report.ContainsKey("sqleditcontent") ? Convert.ToString(report["sqleditcontent"]) : "";
+
+        if (string.IsNullOrWhiteSpace(sqlEditContent))
+        {
+          return Json(new { success = false, errorMessage = "Không tồn tại store cập nhật dữ liệu của bảng" });
+        }
+
+        /////////////////////////////////////// xử lý lưu editor ////////////////////////////
+        // Convert the IFormCollection to a dictionary of strings
+        var formData = form.ToDictionary(
+                        pair => pair.Key,
+                        pair => (object)pair.Value.ToString()  // Ensure each value is a string (flatten StringValues)
+                    );
+
+        //xu ly report editor
+        // Dictionary để nhóm dữ liệu theo số thứ tự [n]
+        // Chuyển đổi dữ liệu sang JSON (loc du lieu form tra ve lay du lieu grid va chuyen thanh json)
+        string reportJsonData = await _re.ExtractGridDataToJson(form);
+        //end xu ly report form
+        var reportResultList = await _re.ReportEditor_Json_Update(queryParamerter, id, reportJsonData, sqlEditContent, connectionString);
+        //kiem tra ton tai error message
+        // Kiểm tra và nối giá trị của ErrorMessage
+        if (_con.CheckForErrors(reportResultList, out string errorMessage))
+        {
+          return Json(new { success = false, errorMessage = errorMessage });
+        }
+        // khong tra ve Id, cung khong tra ve error message thi bao loi chua tra ve id
+        else
+        {
+          return Json(new { success = true });
+        }
+      }
+      catch (SqlException ex)
+      {
+        return Json(new { success = false, errorMessage = ex.Message });
+      }
+    }
 
     // danh sach editor trong form
     [HttpGet]
@@ -601,19 +693,19 @@ namespace KOAHome.Controllers
 
         string? connectionString = null;
         //neu datasourceId la null thi lay connectionString mac dinh
-        if (report.ContainsKey("DataSourceId"))
+        if (report.ContainsKey("datasourceid"))
         {
-          if (report["DataSourceId"] != null)
+          if (report["datasourceid"] != null)
           {
             //lay connectionstring tu report de goi store
-            connectionString = await _datasrc.GetConnectionString(Convert.ToInt32(report["DataSourceId"]));
+            connectionString = await _datasrc.GetConnectionString(Convert.ToInt32(report["datasourceid"]));
           }
         }
 
         // khai bao cac du lieu report can su dung trong controller
-        string? sqlContent = report.ContainsKey("SqlContent") ? Convert.ToString(report["SqlContent"]) : "";
-        string? sqlDefaultContent = report.ContainsKey("SqlDefaultContent") ? Convert.ToString(report["SqlDefaultContent"]) : "";
-        string? storeDRDisplay = report.ContainsKey("StoreDRDisplay") ? Convert.ToString(report["StoreDRDisplay"]) : "";
+        string? sqlContent = report.ContainsKey("sqlcontent") ? Convert.ToString(report["sqlcontent"]) : "";
+        string? sqlDefaultContent = report.ContainsKey("sqldefaultcontent") ? Convert.ToString(report["sqldefaultcontent"]) : "";
+        string? storeDRDisplay = report.ContainsKey("storedrdisplay") ? Convert.ToString(report["storedrdisplay"]) : "";
 
         if (string.IsNullOrWhiteSpace(sqlContent))
         {
@@ -697,12 +789,12 @@ namespace KOAHome.Controllers
 
         return PartialView("~/Views/Shared/Partial/MainPageLayout/_Form_Report_Viewer_Partial.cshtml");
       }
-      catch (Exception ex)
+      catch (SqlException ex)
       {
         // Log the exception
         _logger.LogError(ex, "An error occurred while fetching booking service info.");
         // Optionally, return an error view
-        return View("Error");
+        return View("~/Views/Pages/MiscError.cshtml", new ErrorViewModel { RequestId = Activity.Current?.Id ?? HttpContext.TraceIdentifier, exception = ex });
       }
 
     }

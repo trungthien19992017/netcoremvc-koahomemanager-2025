@@ -32,6 +32,9 @@ namespace KOAHome.Services
 
     public async Task<(StringBuilder SqlQuery, List<SqlParameter> SqlParam)> Connection_GetQueryParam_Simple(Dictionary<string, object> parameters, string sqlStore, string? connectionString)
     {
+      //lower ten store
+      sqlStore = sqlStore.ToLower();
+
       // neu khong truyen connect string thi se lay connection string mac dinh
       if (connectionString == null)
       {
@@ -60,6 +63,9 @@ namespace KOAHome.Services
 
     public async Task<(StringBuilder SqlQuery, List<SqlParameter> SqlParam)> Connection_GetQueryParam(Dictionary<string, object> parameters, string sqlStore, string? connectionString)
     {
+      //lower ten store
+      sqlStore = sqlStore.ToLower();
+
       // neu khong truyen connect string thi se lay connection string mac dinh
       if (connectionString == null)
       {
@@ -68,7 +74,7 @@ namespace KOAHome.Services
       var sqlQuery = new StringBuilder("EXEC dbo." + sqlStore);
 
       //query store param 
-      string paramfromstore = "select parameter_name,data_type from information_schema.parameters where specific_name = '" + sqlStore + "'";
+      string paramfromstore = "select parameter_name,data_type from information_schema.parameters where LOWER(specific_name) = '" + sqlStore + "'";
 
       var paramfromstoreList = new List<dynamic>();
       using (var connection = new SqlConnection(connectionString))
@@ -101,7 +107,7 @@ namespace KOAHome.Services
       for (int i = 0; i < paramfromstoreList.Count(); i++)
       {
         //param key
-        string store_key = ((IDictionary<string, object>)paramfromstoreList[i])["parameter_name"].ToString().Substring(1, ((IDictionary<string, object>)paramfromstoreList[i])["parameter_name"].ToString().Length - 1);
+        string store_key = ((IDictionary<string, object>)paramfromstoreList[i])["parameter_name"].ToString().Substring(1, ((IDictionary<string, object>)paramfromstoreList[i])["parameter_name"].ToString().Length - 1).ToLower();
         //param type
         string store_datatype = ((IDictionary<string, object>)paramfromstoreList[i])["data_type"].ToString().Substring(0, ((IDictionary<string, object>)paramfromstoreList[i])["data_type"].ToString().Length);
         //neu form field co chua param trong store thi xu ly tiep
@@ -158,6 +164,9 @@ namespace KOAHome.Services
 
     public async Task<List<dynamic>> Connection_GetDataFromQuery(Dictionary<string, object> parameters, string sqlStore, string? connectionString, StringBuilder sqlQuery, List<SqlParameter> sqlParams)
     {
+      //lower ten store
+      sqlStore = sqlStore.ToLower();
+
       // neu khong truyen connect string thi se lay connection string mac dinh
       if (connectionString == null)
       {
@@ -192,7 +201,8 @@ namespace KOAHome.Services
                 {
                   value = (object)reader.GetValue(i);
                 }
-                string key = reader.GetName(i).ToString();
+                // in thường key khi truyền vào
+                string key = reader.GetName(i).ToString().ToLower();
 
                 row.Add(key, value);
               }
@@ -208,6 +218,9 @@ namespace KOAHome.Services
 
     public async Task<IDictionary<string, object>?> Connection_GetSingleDataFromQuery(Dictionary<string, object> parameters, string sqlStore, string? connectionString, StringBuilder sqlQuery, List<SqlParameter> sqlParams)
     {
+      //lower ten store
+      sqlStore = sqlStore.ToLower();
+
       // neu khong truyen connect string thi se lay connection string mac dinh
       if (connectionString == null)
       {
@@ -232,7 +245,7 @@ namespace KOAHome.Services
               for (int i = 0; i < reader.FieldCount; i++)
               {
                 object? value = reader.IsDBNull(i) ? null : reader.GetValue(i);
-                string key = reader.GetName(i);
+                string key = reader.GetName(i).ToLower();
                 row[key] = value;
               }
 
@@ -250,8 +263,8 @@ namespace KOAHome.Services
     public bool CheckForErrors(List<dynamic> resultList, out string errorMessage)
     {
       var errorMessages = resultList
-          .Where(item => ((IDictionary<string, object>)item).ContainsKey("ErrorMessage"))
-          .Select(item => item.ErrorMessage.ToString().Replace("\\n", "<br/>"))
+          .Where(item => ((IDictionary<string, object>)item).ContainsKey("errormessage"))
+          .Select(item => item.errormessage.ToString().Replace("\\n", "<br/>"))
           .ToList();
 
       if (errorMessages.Any())

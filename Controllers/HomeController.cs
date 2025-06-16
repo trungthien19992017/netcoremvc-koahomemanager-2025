@@ -4,6 +4,8 @@ using AspnetCoreMvcFull.Models;
 using KOAHome.EntityFramework;
 using KOAHome.Services;
 using System.Security.Cryptography;
+using Npgsql;
+using Microsoft.Data.SqlClient;
 
 namespace AspnetCoreMvcFull.Controllers;
 
@@ -80,14 +82,14 @@ public class HomeController : Controller
       var resultList = await _action.Action_store(formData, sqlstore, connectionString);
       //kiem tra du lieu success tra ve
       var success_return = resultList
-      .Where(item => ((IDictionary<string, object>)item).ContainsKey("Success"))
-      .Select(item => ((IDictionary<string, object>)item)["Success"])
+      .Where(item => ((IDictionary<string, object>)item).ContainsKey("success"))
+      .Select(item => ((IDictionary<string, object>)item)["success"])
       .FirstOrDefault(); // Lọc ra những phần tử có Success
 
       //kiem tra du lieu error message tra ve
       var errormessage_return = resultList
-      .Where(item => ((IDictionary<string, object>)item).ContainsKey("ErrorMessage"))
-      .Select(item => ((IDictionary<string, object>)item)["ErrorMessage"])
+      .Where(item => ((IDictionary<string, object>)item).ContainsKey("errormessage"))
+      .Select(item => ((IDictionary<string, object>)item)["errormessage"])
       .FirstOrDefault(); // Lọc ra những phần tử có ErrorMessage
 
       bool success = false;
@@ -116,7 +118,7 @@ public class HomeController : Controller
         return Json(new { success = false, errorMessage = "Store chưa trả về giá trị success." });
       }
     }
-    catch (Exception ex)
+    catch (SqlException ex)
     {
       return Json(new { success = false, errorMessage = ex.Message });
     }

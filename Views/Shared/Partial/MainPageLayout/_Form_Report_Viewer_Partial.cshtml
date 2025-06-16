@@ -1,5 +1,7 @@
 @using KOAHome.Helpers
 @using System.Text.Json
+@using Microsoft.Data.SqlClient
+@using Npgsql
 @{
     var resultList = ViewData["resultList"] as List<dynamic>;
 
@@ -36,8 +38,8 @@
     if (actionlistdetailList != null)
     {
         // phan biet action top va grid
-        actionlistdetailList_top = actionlistdetailList.Where(p => p.IsTop == true).ToList();
-        actionlistdetailList_grid = actionlistdetailList.Where(p => p.IsTop == null || p.IsTop == false).ToList();
+        actionlistdetailList_top = actionlistdetailList.Where(p => p.istop == true).ToList();
+        actionlistdetailList_grid = actionlistdetailList.Where(p => p.istop == null || p.istop == false).ToList();
     }
 
     // tao bien dem de dem row num cho report
@@ -53,7 +55,7 @@
                   @* nếu isPage = true thì hiển thị title *@
                   @if (isPage == true)
                   {
-                    <h2 class="card-header text-center" id="header-title">@(listFilterValue.ContainsKey("title") ? listFilterValue["title"] : report.ContainsKey("Name") ? report["Name"] : "Danh sách")</h2>
+                    <h2 class="card-header text-center" id="header-title">@(listFilterValue.ContainsKey("title") ? listFilterValue["title"] : report.ContainsKey("name") ? report["name"] : "Danh sách")</h2>
                   }
                   <div class="card-datatable" id="vertical-example">
                   @* nếu isPage = true, là trang hoàn chỉnh thì hiển thị thêm bộ lọc và action top *@
@@ -67,7 +69,7 @@
                                 <div class="accordion-item active">
                                     <h2 class="accordion-header" id="headingOne">
                                         <button type="button" class="accordion-button collapsed" data-bs-toggle="collapse" data-bs-target="#accordionOne" aria-expanded="true" aria-controls="accordionOne">
-                                            Tìm kiếm
+                                            Tìm kiếm nâng cao
                                         </button>
                                     </h2>
                                     <div id="accordionOne" class="accordion-collapse collapse" data-bs-parent="#accordionExample">
@@ -81,8 +83,8 @@
                                                     {
                                                         @* name: Key cua filter truyen vao, label: Ten filter, type: Loại filter, value: giá trị filter
                                                     , colspan: độ rộng filter *@
-                                                        string name = filter.Code;
-                                                        string label = filter.Name;
+                                                        string name = filter.code;
+                                                        string label = filter.name;
                                                         string type = filter.DynamicFieldName;
                                                         var value = listFilterValue.ContainsKey(name) ? listFilterValue[name] : "";
                                                         int colspan = Convert.ToInt32(filter.ColSpan);
@@ -96,6 +98,10 @@
                                                             else if (type == "DATE BOX")
                                                             {
                                                                 <input class="form-control form-control-sm" type="date" id="@name" name="@name" value="@value" @(filter.Required == true ? "required" : "") />
+                                                            }
+                                                            else if (type == "DATERANGEPICKER")
+                                                            {
+                                                                <input class="form-control form-control-sm bs-rangepicker-filter" type="text" id="@name" name="@name" value="@value" @(filter.required == true ? "required" : "") />
                                                             }
                                                             else if (type == "SELECT BOX")
                                                             {
@@ -180,14 +186,14 @@
                     @* action top *@
                     <div class="d-flex demo-inline-spacing align-items-center table-action">
                       @* xu ly action list detail top *@
-                      @foreach (var action in actionlistdetailList_top.OrderBy(p => p.ActionListDetailOrderId).ToList())
-                      {
+                        @foreach (var action in actionlistdetailList_top.OrderBy(p => p.actionlistdetailorderid).ToList())
+                        {
                           var actionDict = (IDictionary<string, object>)action;
-                          string actionName = actionDict.ContainsKey("ActionName") ? (actionDict["ActionName"].ToString() ?? "") : "";
-                          string actionCode = actionDict.ContainsKey("ActionCode") ? (actionDict["ActionCode"].ToString() ?? "") : "";
-                          bool actionIsTop = actionDict.ContainsKey("IsTop") ? Convert.ToBoolean(actionDict["IsTop"]) : false;
-                          string actionIcon = actionDict.ContainsKey("ActionIcon") ? (actionDict["ActionIcon"].ToString() ?? "") : "";
-                          string actionType = actionDict["Type"].ToString() ?? "";
+                          string actionName = actionDict.ContainsKey("actionname") ? (actionDict["actionname"].ToString() ?? "") : "";
+                          string actionCode = actionDict.ContainsKey("actioncode") ? (actionDict["actioncode"].ToString() ?? "") : "";
+                          bool actionIsTop = actionDict.ContainsKey("istop") ? Convert.ToBoolean(actionDict["istop"]) : false;
+                          string actionIcon = actionDict.ContainsKey("actionicon") ? (actionDict["actionicon"].ToString() ?? "") : "";
+                          string actionType = actionDict["type"].ToString() ?? "";
                           string actionValue = actionDict["Value"].ToString() ?? "";
 
                           if (actionType == "LINK")
@@ -202,11 +208,11 @@
                           {
                               string actionStore = actionValue;
                               // cac thong tin xac nhan, neu co thi truyen vao action
-                              bool isPopupConfirm = Convert.ToBoolean(actionDict["IsPopupConfirm"]);
-                              int? dataSourceID = actionDict.TryGetValue("DataSourceID", out var num) && num is int val ? Convert.ToInt32(num) : null;
-                              string confirmButtonText = !string.IsNullOrWhiteSpace(actionDict["ConfirmButtonText"].ToString()) ? actionDict["ConfirmButtonText"].ToString() : null;
-                              string confirmTitle = !string.IsNullOrWhiteSpace(actionDict["ConfirmTitle"].ToString()) ? actionDict["ConfirmTitle"].ToString() : null;
-                              string confirmText = !string.IsNullOrWhiteSpace(actionDict["ConfirmText"].ToString()) ? actionDict["ConfirmText"].ToString() : null;
+                              bool isPopupConfirm = Convert.ToBoolean(actionDict["ispopupconfirm"]);
+                              int? dataSourceID = actionDict.TryGetValue("datasourceid", out var num) && num is int val ? Convert.ToInt32(num) : null;
+                              string confirmButtonText = !string.IsNullOrWhiteSpace(actionDict["confirmbuttontext"].ToString()) ? actionDict["confirmbuttontext"].ToString() : null;
+                              string confirmTitle = !string.IsNullOrWhiteSpace(actionDict["confirmtitle"].ToString()) ? actionDict["confirmtitle"].ToString() : null;
+                              string confirmText = !string.IsNullOrWhiteSpace(actionDict["confirmtext"].ToString()) ? actionDict["confirmtext"].ToString() : null;
                               @if (isPopupConfirm)
                               {
                                   <a href="" data-isconfirm="@isPopupConfirm" data-confirmtext="@confirmText" data-confirmtitle="@confirmTitle" data-confirmbutton="@confirmButtonText" data-sqlstore="@actionStore" data-datasourceid="@dataSourceID" type="button" class="btn btn-icon btn-primary confirmAction" data-bs-toggle="tooltip" data-bs-offset="0,4" data-bs-placement="top" data-bs-html="true"
@@ -247,7 +253,7 @@
                           else if (actionType == "DOWNLOADFILETEMPLATE")
                           {
                               // lấy thông tin file template để xuất
-                              string fileTemplate = actionDict.ContainsKey("FileTemplate") ? (actionDict["FileTemplate"].ToString() ?? "") : "";
+                              string fileTemplate = actionDict.ContainsKey("filetemplate") ? (actionDict["filetemplate"].ToString() ?? "") : "";
                               string url = "";
                               if (!string.IsNullOrWhiteSpace(fileTemplate))
                               {
@@ -282,46 +288,48 @@
                         <div class="report-info d-flex gap-2"></div>
                     </div>
                     <div class="table-responsive" style="max-height: 600px">
-                      <table id="@("table-viewer-" + (ReportCode ?? "emptycode"))" id="@("table-viewer-" + (ReportCode ?? "emptycode"))" data-table-displayname="@(report.ContainsKey("Name") ? (report["Name"].ToString() ?? "Danh sách") : "Danh sách")" border="1" cellpadding="5" cellspacing="0" style="width: 100%; text-align: center; table-layout: auto;" class="table table-sm table-bordered table-hover display table-with-exportexcel">
+                      <table id="@("table-viewer-" + (ReportCode ?? "emptycode"))" id="@("table-viewer-" + (ReportCode ?? "emptycode"))" data-table-displayname="@(report.ContainsKey("name") ? (report["name"].ToString() ?? "Danh sách") : "Danh sách")" border="1" cellpadding="5" cellspacing="0" style="width: 100%; text-align: center; table-layout: auto;" class="table table-sm table-bordered table-hover display table-with-exportexcel">
                         <thead class="freepanze-head">
                             <tr>
                               @* Cột này sẽ tự động chứa checkbox "Chọn tất cả" *@
                               <th class="text-center" rowspan="@displayParentLevelNum" data-code="IdCheck" data-index="-1"  data-isexport="False" style="min-width:50px"></th>
+                              @* Cột chi tiết mặc định*@
+                              <th class="text-center" rowspan="@displayParentLevelNum" data-code="IdDetail" data-index="0"  data-isexport="False" style="min-width:10px"></th>
                               @* neu display khong null thi tiep tuc *@
                               @if (displayList != null)
 					          {
                                   @* voi moi cot dang co *@
                                   @* neu cot isdisplay = false thi không hien thi (chỉ lấy giá trị)  *@
-                                  @foreach (var display in displayList.Where(p=> p.IsDisplay == false).OrderBy(p => p.ColNum ?? 0).ToList())
+                                  @foreach (var display in displayList.Where(p=> p.isdisplay == false).OrderBy(p => p.colnum ?? 0).ToList())
                                   {
-                                    <th class="text-center d-none" rowspan="@displayParentLevelNum" data-code="@display.Code" data-index="@(display.ColNum ?? "0")" data-isexport="@(display.IsExport ?? "True")">@Html.Raw(display.Name)</th>
+                                    <th class="text-center d-none" rowspan="@displayParentLevelNum" data-code="@display.code" data-index="@(display.colnum ?? "0")" data-isexport="@(display.isexport ?? "True")">@Html.Raw(display.name)</th>
                                   }
                                   @* hien thi cot stt dau tien neu co *@
-						          @foreach (var display in displayList.Where(p=> p.IsDisplay == true && p.Code == "stt" && p.IsParent == false && string.IsNullOrEmpty(p.ParentCode)).OrderBy(p => p.ColNum ?? 0).ToList())
+						          @foreach (var display in displayList.Where(p=> p.isdisplay == true && p.code == "stt" && p.isparent == false && string.IsNullOrEmpty(p.parentcode)).OrderBy(p => p.colnum ?? 0).ToList())
                                   {
                                     @* co dinh cot neu co cau hinh (chi ap dung cho cot 1 rowspan) *@
-                                    <th class="text-center @(display.IsFreePane == true ? "freepanze-col" : "")" rowspan="@displayParentLevelNum" data-code="@display.Code" data-index="@(display.ColNum ?? "0")"  data-isexport="@(display.IsExport ?? "True")" style="min-width:@((display.Width ?? "200") + "px");@(display.CssHeader ?? "")">@Html.Raw(display.Name)</th>
+                                    <th class="text-center @(display.isfreepane == true ? "freepanze-col" : "")" rowspan="@displayParentLevelNum" data-code="@display.code" data-index="@(display.colnum ?? "0")"  data-isexport="@(display.isexport ?? "True")" style="min-width:@((display.width ?? "200") + "px");@(display.cssheader ?? "")">@Html.Raw(display.name)</th>
                                   }
                                   @* them mot cot xu ly *@
 						            <th class="text-center" data-code="HandleColumn" data-index="2" rowspan="@displayParentLevelNum" data-isexport="False" style="width:50px" >Xử lý</th>
                                   @* neu cot khong co parent code cung khong phai is parent thi xu ly rieng *@
-						          @foreach (var display in displayList.Where(p=> p.IsDisplay == true && p.Code != "stt" && p.IsParent == false && string.IsNullOrEmpty(p.ParentCode)).OrderBy(p => p.ColNum ?? 0).ToList())
+						          @foreach (var display in displayList.Where(p=> p.isdisplay == true && p.code != "stt" && p.isparent == false && string.IsNullOrEmpty(p.parentcode)).OrderBy(p => p.colnum ?? 0).ToList())
                                   {
                                     @* co dinh cot neu co cau hinh (chi ap dung cho cot 1 rowspan) *@
-                                    <th class="text-center @(display.IsFreePane == true ? "freepanze-col" : "")" rowspan="@displayParentLevelNum" data-code="@display.Code" data-index="@(display.ColNum ?? "0")"  data-isexport="@(display.IsExport ?? "True")" style="min-width:@((display.Width ?? "200") + "px");@(display.CssHeader ?? "")">@Html.Raw(display.Name)</th>
+                                    <th class="text-center @(display.isfreepane == true ? "freepanze-col" : "")" rowspan="@displayParentLevelNum" data-code="@display.code" data-index="@(display.colnum ?? "0")"  data-isexport="@(display.isexport ?? "True")" style="min-width:@((display.width ?? "200") + "px");@(display.cssheader ?? "")">@Html.Raw(display.name)</th>
                                   }
                                   @* neu ton tai cot co isparent thi xu ly tiep cot 2 cap *@
-                                  @if (displayList.Any(p => p.IsParent == true))
+                                  @if (displayList.Any(p => p.isparent == true))
                                   {
                                     @* hien thi cot cha *@
-						                        @foreach (var display in displayList.Where(p=> p.IsDisplay == true && p.IsParent == true).OrderBy(p => p.ColNum ?? 0).ToList())
+						            @foreach (var display in displayList.Where(p=> p.isdisplay == true && p.isparent == true).OrderBy(p => p.colnum ?? 0).ToList())
                                     {
                                       @* dem so cot con de tinh colspan *@
-                                      var countChild = displayList.Count(p => p.ParentCode == display.Code);
+                                      var countChild = displayList.Count(p => p.parentcode == display.code);
                                       @* neu co cot con thi xu ly tiep *@
                                       if (countChild > 0)
                                       {
-                                        <th class="text-center" colspan="@countChild"  data-code="@display.Code"  data-isexport="@(display.IsExport ?? "True")" style="@(display.CssHeader ?? "")">@Html.Raw(display.Name)</th>
+                                        <th class="text-center" colspan="@countChild"  data-code="@display.code"  data-isexport="@(display.isexport ?? "True")" style="@(display.cssheader ?? "")">@Html.Raw(display.name)</th>
                                       }
                               
                                     }
@@ -337,19 +345,19 @@
 					          {
                                   @* voi moi cot dang co *@
                                   @* neu ton tai cot co isparent thi xu ly tiep cot 2 cap *@
-                                  @if (displayList.Any(p => p.IsParent == true))
+                                  @if (displayList.Any(p => p.isparent == true))
                                   {
                                     @* hien thi cot cha *@
-						            @foreach (var display in displayList.Where(p=> p.IsDisplay == true && p.IsParent == true).OrderBy(p => p.ColNum ?? 0).ToList())
+						            @foreach (var display in displayList.Where(p=> p.isdisplay == true && p.isparent == true).OrderBy(p => p.colnum ?? 0).ToList())
                                     {
                                       @* dem so cot con de tinh colspan *@
-                                      var countChild = displayList.Count(p => p.ParentCode == display.Code);
+                                      var countChild = displayList.Count(p => p.parentcode == display.code);
                                       @* neu co cot con thi xu ly tiep *@
                                       @if (countChild > 0)
                                       {
-                                        @foreach (var displaychild in displayList.Where(p=> p.IsDisplay == true && p.ParentCode == display.Code).OrderBy(p => p.ColNum ?? 0).ToList())
+                                        @foreach (var displaychild in displayList.Where(p=> p.isdisplay == true && p.parentcode == display.code).OrderBy(p => p.colnum ?? 0).ToList())
                                         {
-                                            <th class="text-center" data-code="@display.Code" data-index="@(displaychild.ColNum ?? "0")" data-isexport="@(displaychild.IsExport ?? "True")" style="min-width:@(displaychild.Width ?? "200")px;@(displaychild.CssHeader ?? "")">@Html.Raw(displaychild.Name)</th>
+                                            <th class="text-center" data-code="@display.code" data-index="@(displaychild.colnum ?? "0")" data-isexport="@(displaychild.isexport ?? "True")" style="min-width:@(displaychild.width ?? "200")px;@(displaychild.cssheader ?? "")">@Html.Raw(displaychild.name)</th>
                                         }
                                       }
                               
@@ -366,22 +374,24 @@
                                 @foreach (var result in resultList)
                                 {
                                     var dictionary = (IDictionary<string, object>)result;
-                                    var Id = dictionary.ContainsKey("Id") ? Convert.ToInt32(dictionary["Id"]) : 0;
-                                    @* lay gia tri to mau background row (BGColorRowClass) *@
-                                    var bgColorRowClass = dictionary.ContainsKey("BGColorRowClass") ? Convert.ToString(dictionary["BGColorRowClass"]) : "";
+                                    var id = dictionary.ContainsKey("id") ? Convert.ToInt32(dictionary["id"]) : 0;
+                                    @* lay gia tri to mau background row (bgcolorrowclass) *@
+                                    var bgColorRowClass = dictionary.ContainsKey("bgcolorrowclass") ? Convert.ToString(dictionary["bgcolorrowclass"]) : "";
 
                                     <tr class="@bgColorRowClass">
                                     @* cột select box mặc đinh *@
-                                    <td class="text-center" data-isexport="False" data-value="@Id">
+                                    <td class="text-center" data-isexport="False" data-value="@id">
                                     </td>
+                                    @* cột chi tiết mặc đinh *@
+                                    <td class="text-center" data-isexport="False">
                                     @* voi moi cot dang co *@
                                     @* neu cot isdisplay = false thi khong hien thi  *@
-                                    @foreach (var display in displayList.Where(p=> p.IsDisplay == false).OrderBy(p => p.ColNum ?? 0).ToList())
+                                    @foreach (var display in displayList.Where(p=> p.isdisplay == false).OrderBy(p => p.colnum ?? 0).ToList())
                                     {
-                                        <td class="@FormatHelper.ParseTextAlignToClass(display.TextAlign) d-none" data-isexport="@(display.IsExport ?? "True")">
+                                        <td class="@FormatHelper.ParseTextAlignToClass(display.textalign) d-none" data-isexport="@(display.isexport ?? "True")">
                                             @{
                                                 object value;
-                                                if (dictionary.TryGetValue(display.Code, out value))
+                                                if (dictionary.TryGetValue(display.code, out value))
                                                 {
                                                     @Html.Raw(value)
                                                 }
@@ -393,13 +403,13 @@
                                         </td>
                                     }
                                     @* hien thi cot stt dau tien neu co *@
-					                @foreach (var display in displayList.Where(p=> p.IsDisplay == true && p.Code == "stt" && p.IsParent == false && string.IsNullOrEmpty(p.ParentCode)).OrderBy(p => p.ColNum ?? 0).ToList())
+					                @foreach (var display in displayList.Where(p=> p.isdisplay == true && p.code == "stt" && p.isparent == false && string.IsNullOrEmpty(p.parentcode)).OrderBy(p => p.colnum ?? 0).ToList())
                                     {
                                         @* neu isFreePane bang true thi them class freepanze-col *@
-                                        <td class="text-center @(display.IsFreePane == true ? "freepanze-col" : "")" data-isexport="@(display.IsExport ?? "True")">
+                                        <td class="text-center @(display.isfreepane == true ? "freepanze-col" : "")" data-isexport="@(display.isexport ?? "True")">
                                             @{
                                                 object value;
-                                                if (dictionary.TryGetValue(display.Code, out value))
+                                                if (dictionary.TryGetValue(display.code, out value))
                                                 {
                                                     @Html.Raw(value);
                                                 }
@@ -416,15 +426,15 @@
                                         <div class="btn-group" id="dropdown-icon-demo">
                                           <button type="button" class="btn btn-primary btn-xs dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false"><i class="ri-align-justify me-1"></i></button>
                                           <ul class="dropdown-menu overflow-auto" style="max-height:200px">
-                                            @foreach(var action in actionlistdetailList_grid.OrderBy(p=> p.ActionListDetailOrderId).ToList())
+                                            @foreach(var action in actionlistdetailList_grid.OrderBy(p=> p.actionlistdetailorderid).ToList())
                                             {
                                               var actionDict = (IDictionary<string, object>)action;
-                                              string actionName = actionDict.ContainsKey("ActionName") ? (actionDict["ActionName"].ToString() ?? "") : "";
-                                              string actionCode = actionDict.ContainsKey("ActionCode") ? (actionDict["ActionCode"].ToString() ?? "") : "";
-                                              bool actionIsTop = actionDict.ContainsKey("IsTop") ? Convert.ToBoolean(actionDict["IsTop"]) : false;
-                                              string actionIcon = actionDict.ContainsKey("ActionIcon") ? (actionDict["ActionIcon"].ToString() ?? "") : "";
-                                              string actionType = actionDict["Type"].ToString() ?? "";
-                                              string actionValue = actionDict["Value"].ToString() ?? "";
+                                              string actionName = actionDict.ContainsKey("actionname") ? (actionDict["actionname"].ToString() ?? "") : "";
+                                              string actionCode = actionDict.ContainsKey("actioncode") ? (actionDict["actioncode"].ToString() ?? "") : "";
+                                              bool actionIsTop = actionDict.ContainsKey("istop") ? Convert.ToBoolean(actionDict["istop"]) : false;
+                                              string actionIcon = actionDict.ContainsKey("actionicon") ? (actionDict["actionicon"].ToString() ?? "") : "";
+                                              string actionType = actionDict["type"].ToString() ?? "";
+                                              string actionValue = actionDict["value"].ToString() ?? "";
 
                                               if (actionType == "LINK")
                                               {
@@ -437,17 +447,17 @@
                                               {
                                                 string actionStore = actionValue;
                                                 // cac thong tin xac nhan, neu co thi truyen vao action
-                                                bool isPopupConfirm = Convert.ToBoolean(actionDict["IsPopupConfirm"]);
-                                                int? dataSourceID  = actionDict.TryGetValue("DataSourceID", out var num) && num is int val ? Convert.ToInt32(num) : null;
-                                                string confirmButtonText = !string.IsNullOrWhiteSpace(actionDict["ConfirmButtonText"].ToString()) ? actionDict["ConfirmButtonText"].ToString() : null;
-                                                string confirmTitle = !string.IsNullOrWhiteSpace(actionDict["ConfirmTitle"].ToString()) ? actionDict["ConfirmTitle"].ToString() : null;
-                                                string confirmText = !string.IsNullOrWhiteSpace(actionDict["ConfirmText"].ToString()) ? actionDict["ConfirmText"].ToString() : null;
+                                                bool isPopupConfirm = Convert.ToBoolean(actionDict["ispopupconfirm"]);
+                                                int? dataSourceID  = actionDict.TryGetValue("datasourceid", out var num) && num is int val ? Convert.ToInt32(num) : null;
+                                                string confirmButtonText = !string.IsNullOrWhiteSpace(actionDict["confirmbuttontext"].ToString()) ? actionDict["confirmbuttontext"].ToString() : null;
+                                                string confirmTitle = !string.IsNullOrWhiteSpace(actionDict["confirmtitle"].ToString()) ? actionDict["confirmtitle"].ToString() : null;
+                                                string confirmText = !string.IsNullOrWhiteSpace(actionDict["confirmtext"].ToString()) ? actionDict["confirmtext"].ToString() : null;
                                                 <li>
                                                   @if (isPopupConfirm){
-                                                    <a href="" data-id="@Id" data-isconfirm="@isPopupConfirm" data-confirmtext="@confirmText" data-confirmtitle ="@confirmTitle" data-confirmbutton ="@confirmButtonText" data-sqlstore="@actionStore" data-datasourceid="@dataSourceID" class="dropdown-item confirmActionTop"><i class="@(actionIcon + " me-1 text-primary")"></i> @actionName</a>
+                                                    <a href="" data-id="@id" data-isconfirm="@isPopupConfirm" data-confirmtext="@confirmText" data-confirmtitle ="@confirmTitle" data-confirmbutton ="@confirmButtonText" data-sqlstore="@actionStore" data-datasourceid="@dataSourceID" class="dropdown-item confirmActionTop"><i class="@(actionIcon + " me-1 text-primary")"></i> @actionName</a>
                                                   }
                                                   else{
-                                                    <a href="" data-id="@Id" data-sqlstore="@actionStore" data-datasourceid="@dataSourceID" class="dropdown-item confirmActionTop"><i class="@(actionIcon + " me-1 text-primary")"></i> @actionName</a>
+                                                    <a href="" data-id="@id" data-sqlstore="@actionStore" data-datasourceid="@dataSourceID" class="dropdown-item confirmActionTop"><i class="@(actionIcon + " me-1 text-primary")"></i> @actionName</a>
                                                   }
                                                 </li>
                                               }
@@ -473,15 +483,15 @@
                                       </div>
 							        </td>
                                     @* neu cot khong co parent code cung khong phai is parent thi xu ly rieng *@
-					                @foreach (var display in displayList.Where(p=> p.IsDisplay == true && p.Code != "stt" && p.IsParent == false && string.IsNullOrEmpty(p.ParentCode)).OrderBy(p => p.ColNum ?? 0).ToList())
+					                @foreach (var display in displayList.Where(p=> p.isdisplay == true && p.code != "stt" && p.isparent == false && string.IsNullOrEmpty(p.parentcode)).OrderBy(p => p.colnum ?? 0).ToList())
                                     {
-                                        var displayType = display.Type as string ?? "link";
-                                        var displayFormat = display.Format as string ?? "";
+                                        var displayType = display.type as string ?? "link";
+                                        var displayFormat = display.format as string ?? "";
                                         @* neu isFreePane bang true thi them class freepanze-col *@
-                                        <td class="@FormatHelper.ParseTextAlignToClass(display.TextAlign) @(display.IsFreePane == true ? "freepanze-col" : "")" data-isexport="@(display.IsExport ?? "True")" data-displaytype="@displayType" data-displayformat="@displayFormat">
+                                        <td class="@FormatHelper.ParseTextAlignToClass(display.textalign) @(display.isfreepane == true ? "freepanze-col" : "")" data-isexport="@(display.isexport ?? "True")" data-displaytype="@displayType" data-displayformat="@displayFormat">
                                             @{
                                                 object value;
-                                                if (dictionary.TryGetValue(display.Code, out value))
+                                                if (dictionary.TryGetValue(display.code, out value))
                                                 {
                                                     string valueType = "";
                                                     // kiem tra kieu du lieu cua value
@@ -531,7 +541,7 @@
                                                               }
                                                               </ul>
                                                           }
-                                                          catch (Exception ex)
+                                                          catch (SqlException ex)
                                                           {
                                                               <span class="text-danger">N/A</span>
                                                           }
@@ -593,7 +603,7 @@
                                                     else if (displayType == "combobox")
                                                     {
                                                         // check selected cho item dung voi gia tri
-                                                        var selectList = editorDynamicServiceSelectOptions[display.Code] as List<SelectListItem> ?? new List<SelectListItem>();
+                                                        var selectList = editorDynamicServiceSelectOptions[display.code] as List<SelectListItem> ?? new List<SelectListItem>();
                                                         // lay du lieu text từ service thông qua value
                                                         string displayValue = selectList.Where(p => p.Value.ToString() == value.ToString()).Select(p => p.Text).First().ToString() ?? "";
                                                         <span style="white-space: pre-wrap">@displayValue</span>
@@ -610,24 +620,24 @@
                                         </td>
                                     }
                                     @* neu ton tai cot co isparent thi xu ly tiep cot 2 cap *@
-                                    @if (displayList.Any(p => p.IsParent == true))
+                                    @if (displayList.Any(p => p.isparent == true))
                                     {
                                       @* hien thi cot cha *@
-						                          @foreach (var display in displayList.Where(p=> p.IsDisplay == true && p.IsParent == true).OrderBy(p => p.ColNum ?? 0).ToList())
+						                          @foreach (var display in displayList.Where(p=> p.isdisplay == true && p.isparent == true).OrderBy(p => p.colnum ?? 0).ToList())
                                       {
                                         @* dem so cot con de tinh colspan *@
-                                        var countChild = displayList.Count(p => p.ParentCode == display.Code);
+                                        var countChild = displayList.Count(p => p.parentcode == display.code);
                                         @* neu co cot con thi xu ly tiep *@
                                         if (countChild > 0)
                                         {
-                                          @foreach (var displaychild in displayList.Where(p=> p.IsDisplay == true && p.ParentCode == display.Code).OrderBy(p => p.ColNum ?? 0).ToList())
+                                          @foreach (var displaychild in displayList.Where(p=> p.isdisplay == true && p.parentcode == display.code).OrderBy(p => p.colnum ?? 0).ToList())
                                           {
-                                              var displayType = displaychild.Type as string ?? "link";
-                                              var displayFormat = displaychild.Format as string ?? "";
-                                              <td class="@FormatHelper.ParseTextAlignToClass(displaychild.TextAlign)" data-isexport="@(displaychild.IsExport ?? "0")" data-displaytype="@displayType" data-displayformat="@displayFormat">
+                                              var displayType = displaychild.type as string ?? "link";
+                                              var displayFormat = displaychild.format as string ?? "";
+                                              <td class="@FormatHelper.ParseTextAlignToClass(displaychild.textalign)" data-isexport="@(displaychild.isexport ?? "0")" data-displaytype="@displayType" data-displayformat="@displayFormat">
                                                   @{
                                                       object value;
-                                                      if (dictionary.TryGetValue(displaychild.Code, out value))
+                                                      if (dictionary.TryGetValue(displaychild.code, out value))
                                                       {
                                                           string valueType = "";
                                                           // kiem tra kieu du lieu cua value
@@ -677,7 +687,7 @@
                                                                     }
                                                                     </ul>
                                                                 }
-                                                                catch (Exception ex)
+                                                                catch (SqlException ex)
                                                                 {
                                                                     <span class="text-danger">N/A</span>
                                                                 }
@@ -739,7 +749,7 @@
                                                           else if (displayType == "combobox")
                                                           {
                                                               // check selected cho item dung voi gia tri
-                                                              var selectList = editorDynamicServiceSelectOptions[displaychild.Code] as List<SelectListItem> ?? new List<SelectListItem>();
+                                                              var selectList = editorDynamicServiceSelectOptions[displaychild.code] as List<SelectListItem> ?? new List<SelectListItem>();
                                                               // lay du lieu text từ service thông qua value
                                                               string displayValue = selectList.Where(p => p.Value.ToString() == value.ToString()).Select(p => p.Text).First().ToString() ?? "";
                                                               <span style="white-space: pre-wrap">@displayValue</span>
@@ -813,14 +823,6 @@
           // tim kiem trong select box
         $(document).ready(function () {
             function initSelect2() {
-              // không áp dụng cho Quiff HTML editor
-                $("select") .not(".ql-toolbar select, .ql-container select, .ql-editor select").not(".select2-hidden-accessible").not(".dt-length select").select2({
-                    placeholder: "Chọn",
-                    allowClear: true,
-                    width: "100%"
-                });
-            }
-
             // Khởi tạo Select2 cho các select đã có sẵn
             initSelect2();
 

@@ -43,6 +43,7 @@ namespace KOAHome
       services.AddScoped<INetServiceService, NetServiceService>();
       services.AddScoped<INetMenuService, NetMenuService>();
       services.AddScoped<INetTabPanelService, NetTabPanelService>();
+      services.AddScoped<INetFormWizardService, NetFormWizardService>();
     }
 
     // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
@@ -54,7 +55,7 @@ namespace KOAHome
       }
       else
       {
-        app.UseExceptionHandler("/Home/Error");
+        app.UseExceptionHandler("/Page/MiscError");
         // The default HSTS value is 30 days. You may want to change this for production scenarios, see https://aka.ms/aspnetcore-hsts.
         app.UseHsts();
       }
@@ -102,6 +103,12 @@ namespace KOAHome
               name: "tab/viewer",
               pattern: "tab/viewer/{tabCode}/{tabIndex}",
               defaults: new { controller = "NETTabPanel", action = "Viewer" }
+          );
+        // route cho form wizard
+        endpoints.MapControllerRoute(
+              name: "formwizard/viewer",
+              pattern: "formwizard/viewer/{stepperCode}",
+              defaults: new { controller = "NETFormWizard", action = "Viewer" }
           );
       });
     }

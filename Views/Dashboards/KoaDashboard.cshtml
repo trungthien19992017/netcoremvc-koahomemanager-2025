@@ -42,8 +42,8 @@
                 <p class="mb-2">Chiến thần doanh thu của tháng</p>
             </div>
             <div class="card-body text-nowrap">
-                <h4 class="text-primary mb-0">@(SimpleCard_ChucMung.ContainsKey("TongDoanhThuThang") ? SimpleCard_ChucMung["TongDoanhThuThang"] : "") VND</h4>
-                <p class="mb-2">@(SimpleCard_ChucMung.ContainsKey("PhanTramMucTieu") ? SimpleCard_ChucMung["PhanTramMucTieu"] : "")% mục tiêu 🚀</p>
+                <h4 class="text-primary mb-0">@(SimpleCard_ChucMung.ContainsKey("tongdoanhthuthang") ? SimpleCard_ChucMung["tongdoanhthuthang"] : "") VND</h4>
+                <p class="mb-2">@(SimpleCard_ChucMung.ContainsKey("phantrammuctieu") ? SimpleCard_ChucMung["phantrammuctieu"] : "")% mục tiêu 🚀</p>
                 <a href="javascript:;" class="btn btn-sm btn-primary">Xem chi tiết</a>
             </div>
             <img src="~/img/illustrations/trophy.png"
@@ -88,7 +88,7 @@
                             </div>
                             <div class="ms-3">
                                 <p class="mb-0">Doanh thu</p>
-                                <h5 class="mb-0">@(SimpleCard_SoLieuTrongThang.ContainsKey("DoanhThu") ? SimpleCard_SoLieuTrongThang["DoanhThu"] : "")</h5>
+                                <h5 class="mb-0">@(SimpleCard_SoLieuTrongThang.ContainsKey("doanhthu") ? SimpleCard_SoLieuTrongThang["doanhthu"] : "")</h5>
                             </div>
                         </div>
                     </div>
@@ -101,7 +101,7 @@
                             </div>
                             <div class="ms-3">
                                 <p class="mb-0">Lượt book</p>
-                                <h5 class="mb-0">@(SimpleCard_SoLieuTrongThang.ContainsKey("LuotBook") ? SimpleCard_SoLieuTrongThang["LuotBook"] : "")</h5>
+                                <h5 class="mb-0">@(SimpleCard_SoLieuTrongThang.ContainsKey("luotbook") ? SimpleCard_SoLieuTrongThang["luotbook"] : "")</h5>
                             </div>
                         </div>
                     </div>
@@ -114,7 +114,7 @@
                             </div>
                             <div class="ms-3">
                                 <p class="mb-0">Số giờ</p>
-                                <h5 class="mb-0">@(SimpleCard_SoLieuTrongThang.ContainsKey("SoGio") ? SimpleCard_SoLieuTrongThang["SoGio"] : "")</h5>
+                                <h5 class="mb-0">@(SimpleCard_SoLieuTrongThang.ContainsKey("sogio") ? SimpleCard_SoLieuTrongThang["sogio"] : "")</h5>
                             </div>
                         </div>
                     </div>
@@ -127,7 +127,7 @@
                             </div>
                             <div class="ms-3">
                                 <p class="mb-0">Chi phí</p>
-                                <h5 class="mb-0">@(SimpleCard_SoLieuTrongThang.ContainsKey("ChiPhi") ? SimpleCard_SoLieuTrongThang["ChiPhi"] : "")</h5>
+                                <h5 class="mb-0">@(SimpleCard_SoLieuTrongThang.ContainsKey("chiphi") ? SimpleCard_SoLieuTrongThang["chiphi"] : "")</h5>
                             </div>
                         </div>
                     </div>
@@ -158,7 +158,7 @@
                         </div>
                     </div>
                     <div class="card-body pt-lg-5">
-                        <div id="tyLeCacPhongThangRoundChart" data-values="@(PieChart_TyLeCacPhongTrongThang.ContainsKey("DoanhThu_ArrayValue") ? PieChart_TyLeCacPhongTrongThang["DoanhThu_ArrayValue"] : "")" data-series="@(PieChart_TyLeCacPhongTrongThang.ContainsKey("SeriesField_ArrayValue") ? PieChart_TyLeCacPhongTrongThang["SeriesField_ArrayValue"] : "")" data-total="@(PieChart_TyLeCacPhongTrongThang.ContainsKey("DoanhThu_Total") ? PieChart_TyLeCacPhongTrongThang["DoanhThu_Total"] : "")" style="min-height: 197.8px;">
+                        <div id="tyLeCacPhongThangRoundChart" data-values="@(PieChart_TyLeCacPhongTrongThang.ContainsKey("doanhthu_arrayvalue") ? PieChart_TyLeCacPhongTrongThang["doanhthu_arrayvalue"] : "")" data-series="@(PieChart_TyLeCacPhongTrongThang.ContainsKey("seriesfield_arrayvalue") ? PieChart_TyLeCacPhongTrongThang["seriesfield_arrayvalue"] : "")" data-total="@(PieChart_TyLeCacPhongTrongThang.ContainsKey("doanhthu_total") ? PieChart_TyLeCacPhongTrongThang["doanhthu_total"] : "")" style="min-height: 197.8px;">
                         </div>
                     </div>
                 </div>
@@ -193,20 +193,20 @@
                                 {
                                     <li class="d-flex mb-6">
                                         <div class="avatar flex-shrink-0 bg-lightest rounded me-3">
-                                            <img src="@row.RoomImage" alt="zipcar" />
+                                            <img src="@row.roomimage" alt="zipcar" />
                                         </div>
                                         <div class="d-flex w-100 flex-wrap align-items-center justify-content-between gap-2">
                                             <div class="me-2">
-                                                <h6 class="mb-0">@row.RoomName <small class="text-success mb-0">(@row.SoGio giờ)</small></h6>
-                                                <p class="mb-0">Tỷ lệ kín phòng @(row.TyLeLapDay)%</p>
+                                                <h6 class="mb-0">@row.roomname <small class="text-success mb-0">(@row.sogio giờ)</small></h6>
+                                                <p class="mb-0">Tỷ lệ kín phòng @(row.tylelapday)%</p>
                                             </div>
                                             <div>
-                                                <h6 class="mb-2">@row.DoanhThu VND</h6>
+                                                <h6 class="mb-2">@row.doanhthu VND</h6>
                                                 <div class="progress bg-label-primary" style="height: 4px">
                                                     <div class="progress-bar bg-primary"
-                                                         style="width: @(row.TyLeLapDay)%"
+                                                         style="width: @(row.tylelapday)%"
                                                          role="progressbar"
-                                                         aria-valuenow="@row.TyLeLapDay"
+                                                         aria-valuenow="@row.tylelapday"
                                                          aria-valuemin="0"
                                                          aria-valuemax="100"></div>
                                                 </div>
@@ -230,10 +230,10 @@
             <div class="col-sm-6">
                 <div class="card h-100">
                     <div class="card-header pb-0">
-                        <h5 class="mb-0">@(LineChart_DoanhThuCacThang.ContainsKey("DoanhThu_CurrentMonth") ? LineChart_DoanhThuCacThang["DoanhThu_CurrentMonth"] : "") VNĐ</h5>
+                        <h5 class="mb-0">@(LineChart_DoanhThuCacThang.ContainsKey("doanhthu_currentmonth") ? LineChart_DoanhThuCacThang["doanhthu_currentmonth"] : "") VNĐ</h5>
                     </div>
                     <div class="card-body">
-                        <div id="dtThangLineChart" class="mb-3" data-values="@(LineChart_DoanhThuCacThang.ContainsKey("DoanhThu_ArrayValue") ? LineChart_DoanhThuCacThang["DoanhThu_ArrayValue"] : "")"></div>
+                        <div id="dtThangLineChart" class="mb-3" data-values="@(LineChart_DoanhThuCacThang.ContainsKey("doanhthu_arrayvalue") ? LineChart_DoanhThuCacThang["doanhthu_arrayvalue"] : "")"></div>
                         <h6 class="text-center mb-0">Doanh thu tháng gần đây</h6>
                     </div>
                 </div>
@@ -243,10 +243,10 @@
             <div class="col-sm-6">
                 <div class="card h-100">
                     <div class="card-header pb-0">
-                        <h5 class="mb-0">@(ColumnChart_ChiPhiCacThang.ContainsKey("ChiPhi_CurrentMonth") ? ColumnChart_ChiPhiCacThang["ChiPhi_CurrentMonth"] : "") VNĐ</h5>
+                        <h5 class="mb-0">@(ColumnChart_ChiPhiCacThang.ContainsKey("chiphi_currentmonth") ? ColumnChart_ChiPhiCacThang["chiphi_currentmonth"] : "") VNĐ</h5>
                     </div>
                     <div class="card-body">
-                        <div id="cpThangColumnChart" class="mb-3" data-values="@(ColumnChart_ChiPhiCacThang.ContainsKey("ChiPhi_ArrayValue") ? ColumnChart_ChiPhiCacThang["ChiPhi_ArrayValue"] : "")"></div>
+                        <div id="cpThangColumnChart" class="mb-3" data-values="@(ColumnChart_ChiPhiCacThang.ContainsKey("chiphi_arrayvalue") ? ColumnChart_ChiPhiCacThang["chiphi_arrayvalue"] : "")"></div>
                         <h6 class="text-center mb-0">Chi phí tháng gần đây</h6>
                     </div>
                 </div>
@@ -268,7 +268,7 @@
                                     {
                                         <li class="d-flex mb-4 align-items-center pb-2">
                                             <div class="flex-shrink-0 me-4">
-                                                <img src="@row.ServiceImage"
+                                                <img src="@row.serviceimage"
                                                      class="img-fluid"
                                                      alt="gumroad"
                                                      height="30"
@@ -276,10 +276,10 @@
                                             </div>
                                             <div class="d-flex w-100 flex-wrap align-items-center justify-content-between gap-2">
                                                 <div class="me-2">
-                                                    <h6 class="mb-0">@row.ServiceName</h6>
-                                                    <p class="mb-0">@row.SoLuotBook lượt</p>
+                                                    <h6 class="mb-0">@row.servicename</h6>
+                                                    <p class="mb-0">@row.soluotbook lượt</p>
                                                 </div>
-                                                <h6 class="text-success mb-0">@row.DoanhThu</h6>
+                                                <h6 class="text-success mb-0">@row.doanhthu</h6>
                                             </div>
                                         </li>
                                     }
@@ -288,7 +288,7 @@
                     </div>
                 </div>
             </div>
-            <!-- Dich vu thang -->
+            <!-- Dich vu thang -->n
         </div>
     </div>
     <!--/ five card -->
@@ -297,7 +297,7 @@
         <div class="card">
             <div class="card-header">
                 <div class="d-flex justify-content-between">
-                    <div><h5 class="mb-1">Doanh thu tuần </h5><span class="badge bg-success mb-0">@(ColumnChart_DoanhThuTuan.ContainsKey("NgayTrongTuan") ? ColumnChart_DoanhThuTuan["NgayTrongTuan"] : "")</span></div>
+                    <div><h5 class="mb-1">Doanh thu tuần </h5><span class="badge bg-success mb-0">@(ColumnChart_DoanhThuTuan.ContainsKey("ngaytrongtuan") ? ColumnChart_DoanhThuTuan["ngaytrongtuan"] : "")</span></div>
                     <div class="dropdown">
                         <button class="btn text-muted p-0"
                                 type="button"
@@ -316,7 +316,7 @@
                 </div>
             </div>
             <div class="card-body pt-lg-2">
-                <div id="chartDoanhThuTuan" data-values="@(ColumnChart_DoanhThuTuan.ContainsKey("DoanhThu_ArrayValue") ? ColumnChart_DoanhThuTuan["DoanhThu_ArrayValue"] : "")" data-series="@(ColumnChart_DoanhThuTuan.ContainsKey("SeriesField_ArrayValue") ? ColumnChart_DoanhThuTuan["SeriesField_ArrayValue"] : "")"></div>
+                <div id="chartDoanhThuTuan" data-values="@(ColumnChart_DoanhThuTuan.ContainsKey("doanhthu_arrayvalue") ? ColumnChart_DoanhThuTuan["doanhthu_arrayvalue"] : "")" data-series="@(ColumnChart_DoanhThuTuan.ContainsKey("seriesfield_arrayvalue") ? ColumnChart_DoanhThuTuan["seriesfield_arrayvalue"] : "")"></div>
                 <div class="mt-1 mt-md-3">
                     <div class="d-flex align-items-center gap-4">
                         <h4 class="mb-0">10%</h4>
@@ -346,7 +346,7 @@
                             {
                                 <li class="d-flex mb-4 align-items-center pb-2">
                                     <div class="flex-shrink-0 me-4">
-                                        <img src="@row.RandomImage"
+                                        <img src="@row.randomimage"
                                              class="img-fluid"
                                              alt="gumroad"
                                              height="30"
@@ -354,11 +354,11 @@
                                     </div>
                                     <div class="d-flex w-100 flex-wrap align-items-center justify-content-between gap-2">
                                         <div class="me-2">
-                                            <h6 class="mb-0">@row.HoTen <small class="text-success mb-0">@row.TotalAmount</small></h6>
-                                            <p class="mb-2">@row.ListServiceName</p>
-                                            <span class="badge bg-label-danger rounded-pill mb-0">@row.CheckInDate</span> - <span class="badge bg-label-danger rounded-pill mb-0">@row.CheckOutDate</span>
+                                            <h6 class="mb-0">@row.hoten <small class="text-success mb-0">@row.totalamount</small></h6>
+                                            <p class="mb-2">@row.listservicename</p>
+                                            <span class="badge bg-label-danger rounded-pill mb-0">@row.checkindate</span> - <span class="badge bg-label-danger rounded-pill mb-0">@row.checkoutdate</span>
                                         </div>
-                                        <span class="badge @(row.RoomBadgeClass) rounded-pill mb-0">@row.RoomName</span>
+                                        <span class="badge @(row.roombadgeclass) rounded-pill mb-0">@row.roomname</span>
                                     </div>
                                 </li>
                             }

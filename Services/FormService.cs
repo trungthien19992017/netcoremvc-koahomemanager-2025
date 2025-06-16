@@ -18,6 +18,8 @@ namespace KOAHome.Services
     public Task<IDictionary<string, object>?> NET_Form_Get(string formCode);
     // lay thong tin form version field
     public Task<List<dynamic>> NET_Form_VersionField_WithForm_sel(string? formCode, int? formId);
+    public Task<string> NET_Form_GetValidation(string formCode);
+    public Task<string> NET_Form_GetListReportCode(string formCode);
 
   }
   public class FormService : IFormService
@@ -50,9 +52,9 @@ namespace KOAHome.Services
       }
 
       // neu chua ton tai Id them them vao
-      if (!parameters.ContainsKey("Id"))
+      if (!parameters.ContainsKey("id"))
       {
-        parameters.Add("Id", Id);
+        parameters.Add("id", Id);
       }
 
       // chuyen thanh cau query tu store va param truyen vao
@@ -76,9 +78,9 @@ namespace KOAHome.Services
     public async Task<List<dynamic>> Form_ups(Dictionary<string, object> parameters, int? id, string sqlStore, string? connectionString)
     {
       // add Id vao paramerter neu co
-      if (id != null && !parameters.ContainsKey("Id"))
+      if (id != null && !parameters.ContainsKey("id"))
       {
-        parameters.Add("Id", id);
+        parameters.Add("id", id);
       }
       // neu khong truyen connect string thi se lay connection string mac dinh
       if (connectionString == null)
@@ -131,10 +133,10 @@ namespace KOAHome.Services
       // su dung datasource config de lay du lieu
       string connectionString = _configuration.GetConnectionString("ConfigConnection"); // Thay thế bằng chuỗi kết nối của bạn
       // store get du lieu
-      string sqlStore = "NET_Form_sel";
+      string sqlStore = "net_form_sel";
       // khai bao param lien quan
       var parameters = new Dictionary<string, object>();
-      parameters.Add("FormCode", formCode);
+      parameters.Add("formcode", formCode);
 
       // chuyen thanh cau query tu store va param truyen vao
       var (sqlQuery, sqlParams) = await _con.Connection_GetQueryParam(parameters, sqlStore, connectionString);
@@ -149,11 +151,11 @@ namespace KOAHome.Services
       // su dung datasource config de lay du lieu
       string connectionString = _configuration.GetConnectionString("ConfigConnection"); // Thay thế bằng chuỗi kết nối của bạn
       // store get du lieu
-      string sqlStore = "NET_Form_VersionField_WithForm_sel";
+      string sqlStore = "net_form_versionfield_withform_sel";
       // khai bao param lien quan
       var parameters = new Dictionary<string, object>();
-      parameters.Add("FormCode", formCode);
-      parameters.Add("FormId", formId);
+      parameters.Add("formcode", formCode);
+      parameters.Add("formid", formId);
 
       // chuyen thanh cau query tu store va param truyen vao
       var (sqlQuery, sqlParams) = await _con.Connection_GetQueryParam(parameters, sqlStore, connectionString);
@@ -166,5 +168,46 @@ namespace KOAHome.Services
       return resultList;
     }
 
+    public async Task<string> NET_Form_GetValidation(string formCode)
+    {
+      // su dung datasource config de lay du lieu
+      string connectionString = _configuration.GetConnectionString("ConfigConnection"); // Thay thế bằng chuỗi kết nối của bạn
+      // store get du lieu
+      string sqlStore = "net_form_getvalidation";
+      // khai bao param lien quan
+      var parameters = new Dictionary<string, object>();
+      parameters.Add("formcode", formCode);
+
+      // chuyen thanh cau query tu store va param truyen vao
+      var (sqlQuery, sqlParams) = await _con.Connection_GetQueryParam(parameters, sqlStore, connectionString);
+
+      // xu ly lay du lieu dua truyen store va param truyen vao
+      var result = await _con.Connection_GetSingleDataFromQuery(parameters, sqlStore, connectionString, sqlQuery, sqlParams);
+
+      var validationJson = result.ContainsKey("value") ? Convert.ToString(result["value"]) ?? "[]" : "[]";
+
+      return validationJson;
+    }
+
+    public async Task<string> NET_Form_GetListReportCode(string formCode)
+    {
+      // su dung datasource config de lay du lieu
+      string connectionString = _configuration.GetConnectionString("ConfigConnection"); // Thay thế bằng chuỗi kết nối của bạn
+      // store get du lieu
+      string sqlStore = "net_form_getlist_reportcode";
+      // khai bao param lien quan
+      var parameters = new Dictionary<string, object>();
+      parameters.Add("formcode", formCode);
+
+      // chuyen thanh cau query tu store va param truyen vao
+      var (sqlQuery, sqlParams) = await _con.Connection_GetQueryParam(parameters, sqlStore, connectionString);
+
+      // xu ly lay du lieu dua truyen store va param truyen vao
+      var result = await _con.Connection_GetSingleDataFromQuery(parameters, sqlStore, connectionString, sqlQuery, sqlParams);
+
+      var stringaggreportcodes = result.ContainsKey("value") ? Convert.ToString(result["value"]) ?? "[]" : "[]";
+
+      return stringaggreportcodes;
+    }
   }
 }

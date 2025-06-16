@@ -1,7 +1,11 @@
+using AspnetCoreMvcFull.Models;
 using KOAHome.EntityFramework;
 using KOAHome.Services;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Data.SqlClient;
+using Npgsql;
+using System.Diagnostics;
 
 namespace KOAHome.Controllers
 {
@@ -71,12 +75,12 @@ namespace KOAHome.Controllers
 
         string? connectionString = null;
         //neu datasourceId la null thi lay connectionString mac dinh
-        if (tabpanel.ContainsKey("DatasourceId"))
+        if (tabpanel.ContainsKey("datasourceid"))
         {
-          if (tabpanel["DatasourceId"] != null)
+          if (tabpanel["datasourceid"] != null)
           {
             //lay connectionstring tu report de goi store
-            connectionString = await _datasrc.GetConnectionString(Convert.ToInt32(tabpanel["DatasourceId"]));
+            connectionString = await _datasrc.GetConnectionString(Convert.ToInt32(tabpanel["datasourceid"]));
           }
         }
 
@@ -95,12 +99,12 @@ namespace KOAHome.Controllers
 
         return View();
       }
-      catch (Exception ex)
+      catch (SqlException ex)
       {
         // Log the exception
         _logger.LogError(ex, "An error occurred while fetching booking service info.");
         // Optionally, return an error view
-        return View("Error");
+        return View("~/Views/Pages/MiscError.cshtml", new ErrorViewModel { RequestId = Activity.Current?.Id ?? HttpContext.TraceIdentifier, exception = ex });
       }
     }
 

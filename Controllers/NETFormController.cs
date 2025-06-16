@@ -1,9 +1,12 @@
+using AspnetCoreMvcFull.Models;
 using KOAHome.EntityFramework;
 using KOAHome.Helpers;
 using KOAHome.Services;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
+using Microsoft.Data.SqlClient;
+using Npgsql;
 using System.Diagnostics;
 
 namespace KOAHome.Controllers
@@ -44,10 +47,13 @@ namespace KOAHome.Controllers
     }
 
     // GET: HsBookings/Edit/5
-    public async Task<IActionResult> Viewer(string? FormCode, int? id, bool isReadOnly = false)
+    public async Task<IActionResult> Viewer(string? FormCode, int? id, bool isReadOnly = false, bool isPage = false)
     {
       try
       {
+        // truyền isPage qua view để kiểm tra hiển thị (nếu các component nhỏ như popup hoặc report trong form thì giới hạn hiển thị)
+        ViewData["isPage"] = isPage;
+
         // mac dinh id = 0
         id ??= 0;
 
@@ -77,18 +83,18 @@ namespace KOAHome.Controllers
 
         string? connectionString = null;
         //neu datasourceId la null thi lay connectionString mac dinh
-        if (config_form.ContainsKey("DatasourceId"))
+        if (config_form.ContainsKey("datasourceid"))
         {
-          if (config_form["DatasourceId"] != null)
+          if (config_form["datasourceid"] != null)
           {
             //lay connectionstring tu cau hinh form de goi store
-            connectionString = await _datasrc.GetConnectionString(Convert.ToInt32(config_form["DatasourceId"]));
+            connectionString = await _datasrc.GetConnectionString(Convert.ToInt32(config_form["datasourceid"]));
           }
         }
 
         // khai bao cac du lieu cau hinh form can su dung trong controller
-        string? storeDefaultData = config_form.ContainsKey("StoreDefaultData") ? Convert.ToString(config_form["StoreDefaultData"]) : "";
-        string? storeGetData = config_form.ContainsKey("StoreGetData") ? Convert.ToString(config_form["StoreGetData"]) : "";
+        string? storeDefaultData = config_form.ContainsKey("storedefaultdata") ? Convert.ToString(config_form["storedefaultdata"]) : "";
+        string? storeGetData = config_form.ContainsKey("storegetdata") ? Convert.ToString(config_form["storegetdata"]) : "";
         //string? storeSetData = config_form.ContainsKey("StoreSetData") ? Convert.ToString(config_form["StoreSetData"]) : "";
 
         if (string.IsNullOrWhiteSpace(storeDefaultData) && string.IsNullOrWhiteSpace(storeGetData) == null)
@@ -118,6 +124,10 @@ namespace KOAHome.Controllers
         //  Gán danh sach select cho cac filter vào ViewBag
         ViewData["DynamicServiceSelectOptions"] = config_formfieldService;
 
+        // Nhận chuỗi json validate cho validation form
+        var validationJson = await _form.NET_Form_GetValidation(FormCode);
+        ViewData["fieldvalidation"] = validationJson;
+
         //khai bao phan tu chua data
         var formData = await _form.Form_sel(objParameters, id, (id == 0 ? storeDefaultData : storeGetData), connectionString);
         ViewData["formData"] = formData;
@@ -125,18 +135,15 @@ namespace KOAHome.Controllers
         // xu ly file
         // Kiểm tra xem form có file nào không
         // lay danh sach object type code tu config form neu co field file uploader
-        string attObjectTypeCodes = config_form.ContainsKey("AttObjectTypeCodes") ? Convert.ToString(config_form["AttObjectTypeCodes"]) : "";
+        string attObjectTypeCodes = config_form.ContainsKey("attobjecttypecodes") ? Convert.ToString(config_form["attobjecttypecodes"]) : "";
         ViewData["fileUrls"] = await _att.HandleFiles(attObjectTypeCodes, null, id);
 
         // danh sach service theo booking 
-        var reportResultList = await _report.ReportDetail_FromParent("BookingID", (id ?? 0).ToString(), "HS_BookingService_search", null);
+        var reportResultList = await _report.ReportDetail_FromParent("bookingid", (id ?? 0).ToString(), "HS_BookingService_search", null);
         ViewData["reportResultList"] = reportResultList;
 
         // set readonly form neu co isreadonly = false
         ViewData["IsReadOnly"] = isReadOnly;
-
-        // dùng tạm để test dynamic report
-        ViewData["ServiceId"] = new SelectList(_db.HsServices.Where(p => p.IsActive == true).OrderBy(p => p.OrderId), "ServiceId", "Name");
 
         // neu co loi tu action POST tra ve thi bao loi
         if (TempData["ErrorMessage"] != null)
@@ -153,12 +160,12 @@ namespace KOAHome.Controllers
 
         return View();
       }
-      catch (Exception ex)
+      catch (SqlException ex)
       {
         // Log the exception
         _logger.LogError(ex, "An error occurred while fetching form.");
         // Optionally, return an error view
-        return View("Error");
+        return View("~/Views/Pages/MiscError.cshtml", new ErrorViewModel { RequestId = Activity.Current?.Id ?? HttpContext.TraceIdentifier, exception = ex });
       }
 
     }
@@ -193,9 +200,6 @@ namespace KOAHome.Controllers
       // xử lý form để loại các tiền tố q_ ra khỏi Key
       form = ParseDataHelper.RemovePrefix_FromFormKey(form);
 
-      // dùng tạm để test dynamic report
-      ViewData["ServiceId"] = new SelectList(_db.HsServices.Where(p => p.IsActive == true).OrderBy(p => p.OrderId), "ServiceId", "Name");
-
       // lay thong tin report, va danh sach filter display cua report de xu ly
       var config_form = await _form.NET_Form_Get(FormCode);
       // tra ve page loi neu khong tim thay report
@@ -207,18 +211,17 @@ namespace KOAHome.Controllers
 
       string? connectionString = null;
       //neu datasourceId la null thi lay connectionString mac dinh
-      if (config_form.ContainsKey("DatasourceId"))
+      if (config_form.ContainsKey("datasourceid"))
       {
-        if (config_form["DatasourceId"] != null)
+        if (config_form["datasourceid"] != null)
         {
           //lay connectionstring tu cau hinh form de goi store
-          connectionString = await _datasrc.GetConnectionString(Convert.ToInt32(config_form["DatasourceId"]));
+          connectionString = await _datasrc.GetConnectionString(Convert.ToInt32(config_form["datasourceid"]));
         }
       }
 
       // khai bao cac du lieu cau hinh form can su dung trong controller
-      string? storeSetData = config_form.ContainsKey("StoreSetData") ? Convert.ToString(config_form["StoreSetData"]) : "";
-      //string? storeSetData = config_form.ContainsKey("StoreSetData") ? Convert.ToString(config_form["StoreSetData"]) : "";
+      string? storeSetData = config_form.ContainsKey("storesetdata") ? Convert.ToString(config_form["storesetdata"]) : "";
 
       if (string.IsNullOrWhiteSpace(storeSetData))
       {
@@ -229,7 +232,7 @@ namespace KOAHome.Controllers
       // xu ly file
       // Kiểm tra xem form có file nào không
       // lay danh sach object type code tu config form neu co field file uploader
-      string attObjectTypeCodes = config_form.ContainsKey("AttObjectTypeCodes") ? Convert.ToString(config_form["AttObjectTypeCodes"]) : "";
+      string attObjectTypeCodes = config_form.ContainsKey("attobjecttypecodes") ? Convert.ToString(config_form["attobjecttypecodes"]) : "";
 
       await _att.HandleFiles(attObjectTypeCodes, form, id);
 
@@ -246,8 +249,8 @@ namespace KOAHome.Controllers
       var resultList = await _form.Form_ups(formData, id, storeSetData, connectionString);
       //kiem tra du lieu id tra ve
       var id_return = resultList
-      .Where(item => ((IDictionary<string, object>)item).ContainsKey("Id"))
-      .Select(item => ((IDictionary<string, object>)item)["Id"])
+      .Where(item => ((IDictionary<string, object>)item).ContainsKey("id"))
+      .Select(item => ((IDictionary<string, object>)item)["id"])
       .FirstOrDefault(); // Lọc ra những phần tử có Id
 
       // neu co gia tri tra ve thi bao thanh cong
@@ -264,24 +267,44 @@ namespace KOAHome.Controllers
           return Redirect($"{currentPath}?{queryString}");
         }
 
+
         //xu ly report form
-        // Dictionary để nhóm dữ liệu theo số thứ tự [n]
-        // Chuyển đổi dữ liệu sang JSON (loc du lieu form tra ve lay du lieu grid va chuyen thanh json)
-        string reportJsonData = await _re.ExtractGridDataToJson(form);
-        //end xu ly report form
-        var reportResultList = await _re.ReportEditor_Json_Update(queryParamerter, id, reportJsonData, "HS_BookingService_Json_ups", null);
-        //kiem tra ton tai error message
-        // Kiểm tra và nối giá trị của ErrorMessage
-        if (_con.CheckForErrors(reportResultList, out string errorMessage))
+        // lấy danh sách report code thuộc form
+        string stringaggreportcodes = await _form.NET_Form_GetListReportCode(FormCode);
+        // với mỗi report code đang có thì xử lý
+        if (!string.IsNullOrWhiteSpace(stringaggreportcodes))
         {
-          TempData["ErrorMessage"] = errorMessage;
-          return Redirect($"{currentPath}?{queryString}");
+          var reportCodes = stringaggreportcodes.Split(',', StringSplitOptions.RemoveEmptyEntries);
+
+          foreach (var code in reportCodes)
+          {
+            var reportCode = code.Trim();
+
+            // lay thong tin report de xu ly
+            var report = await _report.NET_Report_Get(reportCode);
+            // tìm thấy report thì tiếp tục
+            if (report != null)
+            {
+              // khai bao cac du lieu report can su dung trong controller
+              string? sqlEditContent = report.ContainsKey("sqleditcontent") ? Convert.ToString(report["sqleditcontent"]) : "";
+              // Dictionary để nhóm dữ liệu theo số thứ tự [n]
+              // Chuyển đổi dữ liệu sang JSON (loc du lieu form tra ve lay du lieu grid va chuyen thanh json)
+              string reportJsonData = await _re.ExtractGridDataToJson(form);
+              //end xu ly report form
+              var reportResultList = await _re.ReportEditor_Json_Update(queryParamerter, id, reportJsonData, sqlEditContent, null);
+              //kiem tra ton tai error message
+              // Kiểm tra và nối giá trị của ErrorMessage
+              if (_con.CheckForErrors(reportResultList, out string errorMessage))
+              {
+                TempData["ErrorMessage"] = errorMessage;
+                return Redirect($"{currentPath}?{queryString}");
+              }
+            }
+          }
         }
         // khong tra ve Id, cung khong tra ve error message thi bao loi chua tra ve id
-        else
-        {
-          return Redirect($"{currentPath}?{queryString}");
-        }
+        return Redirect($"{currentPath}?{queryString}");
+
       }
       else
       {
@@ -303,10 +326,11 @@ namespace KOAHome.Controllers
 
     // popup form view component
     [HttpGet]
-    public async Task<IActionResult> PopupForm(string FormCode, int? id, bool? isReadOnly = false)
+    public async Task<IActionResult> PopupForm(string FormCode, int? id, bool? isReadOnly = false, string? containerId = "", bool? isStepper = true)
     {
       try
-      { 
+      {
+        // isreadonly: kiểm tra form chỉ đọc, containerid: id của container cha của form popup, isStepper: kiểm tra form có thuộc dạng stepper(form wizard) không? 
         // mac dinh id = 0
         id ??= 0;
 
@@ -334,18 +358,18 @@ namespace KOAHome.Controllers
 
         string? connectionString = null;
         //neu datasourceId la null thi lay connectionString mac dinh
-        if (config_form.ContainsKey("DatasourceId"))
+        if (config_form.ContainsKey("datasourceid"))
         {
-          if (config_form["DatasourceId"] != null)
+          if (config_form["datasourceid"] != null)
           {
             //lay connectionstring tu cau hinh form de goi store
-            connectionString = await _datasrc.GetConnectionString(Convert.ToInt32(config_form["DatasourceId"]));
+            connectionString = await _datasrc.GetConnectionString(Convert.ToInt32(config_form["datasourceid"]));
           }
         }
 
         // khai bao cac du lieu cau hinh form can su dung trong controller
-        string? storeDefaultData = config_form.ContainsKey("StoreDefaultData") ? Convert.ToString(config_form["StoreDefaultData"]) : "";
-        string? storeGetData = config_form.ContainsKey("StoreGetData") ? Convert.ToString(config_form["StoreGetData"]) : "";
+        string? storeDefaultData = config_form.ContainsKey("storedefaultdata") ? Convert.ToString(config_form["storedefaultdata"]) : "";
+        string? storeGetData = config_form.ContainsKey("storegetdata") ? Convert.ToString(config_form["storegetdata"]) : "";
         //string? storeSetData = config_form.ContainsKey("StoreSetData") ? Convert.ToString(config_form["StoreSetData"]) : "";
 
         if (string.IsNullOrWhiteSpace(storeDefaultData) && string.IsNullOrWhiteSpace(storeGetData) == null)
@@ -376,6 +400,10 @@ namespace KOAHome.Controllers
         //  Gán danh sach select cho cac filter vào ViewBag
         ViewData["DynamicServiceSelectOptions"] = config_formfieldService;
 
+        // Nhận chuỗi json validate cho validation form
+        var validationJson = await _form.NET_Form_GetValidation(FormCode);
+        ViewData["fieldvalidation"] = validationJson;
+
         //khai bao phan tu chua data
         var formData = await _form.Form_sel(objParameters, id, (id == 0 ? storeDefaultData : storeGetData), connectionString);
         ViewData["formData"] = formData;
@@ -383,18 +411,21 @@ namespace KOAHome.Controllers
         // xu ly file
         // Kiểm tra xem form có file nào không
         // lay danh sach object type code tu config form neu co field file uploader
-        string attObjectTypeCodes = config_form.ContainsKey("AttObjectTypeCodes") ? Convert.ToString(config_form["AttObjectTypeCodes"]) : "";
+        string attObjectTypeCodes = config_form.ContainsKey("attobjecttypecodes") ? Convert.ToString(config_form["attobjecttypecodes"]) : "";
         ViewData["fileUrls"] = await _att.HandleFiles(attObjectTypeCodes, null, id);
 
         // danh sach service theo booking 
-        var reportResultList = await _report.ReportDetail_FromParent("BookingID", (id ?? 0).ToString(), "HS_BookingService_search", null);
+        var reportResultList = await _report.ReportDetail_FromParent("bookingid", (id ?? 0).ToString(), "HS_BookingService_search", null);
         ViewData["reportResultList"] = reportResultList;
 
         // set readonly form neu co isreadonly = false
         ViewData["IsReadOnly"] = isReadOnly;
 
-        // dùng tạm để test dynamic report
-        ViewData["ServiceId"] = new SelectList(_db.HsServices.Where(p => p.IsActive == true).OrderBy(p => p.OrderId), "ServiceId", "Name");
+        // set containerId
+        ViewData["ContainerId"] = containerId;
+
+        // set isStepper kiểm tra có phải dạng form wizard không ở phía view
+        ViewData["IsStepper"] = isStepper;
 
         // neu co loi tu action POST tra ve thi bao loi
         if (TempData["ErrorMessage"] != null)
@@ -411,12 +442,12 @@ namespace KOAHome.Controllers
 
         return PartialView("~/Views/Shared/Partial/MainPageLayout/_PopupForm_Partial.cshtml");
       }
-      catch (Exception ex)
+      catch (SqlException ex)
       {
         // Log the exception
         _logger.LogError(ex, "An error occurred while fetching form.");
         // Optionally, return an error view
-        return View("Error");
+        return View("~/Views/Pages/MiscError.cshtml", new ErrorViewModel { RequestId = Activity.Current?.Id ?? HttpContext.TraceIdentifier, exception = ex });
       }
     }
 
@@ -447,9 +478,6 @@ namespace KOAHome.Controllers
       // xử lý form để loại các tiền tố q_ ra khỏi Key
       form = ParseDataHelper.RemovePrefix_FromFormKey(form);
 
-      // dùng tạm để test dynamic report
-      ViewData["ServiceId"] = new SelectList(_db.HsServices.Where(p => p.IsActive == true).OrderBy(p => p.OrderId), "ServiceId", "Name");
-
       // lay thong tin report, va danh sach filter display cua report de xu ly
       var config_form = await _form.NET_Form_Get(FormCode);
       // tra ve page loi neu khong tim thay report
@@ -460,18 +488,17 @@ namespace KOAHome.Controllers
 
       string? connectionString = null;
       //neu datasourceId la null thi lay connectionString mac dinh
-      if (config_form.ContainsKey("DatasourceId"))
+      if (config_form.ContainsKey("datasourceid"))
       {
-        if (config_form["DatasourceId"] != null)
+        if (config_form["datasourceid"] != null)
         {
           //lay connectionstring tu cau hinh form de goi store
-          connectionString = await _datasrc.GetConnectionString(Convert.ToInt32(config_form["DatasourceId"]));
+          connectionString = await _datasrc.GetConnectionString(Convert.ToInt32(config_form["datasourceid"]));
         }
       }
 
       // khai bao cac du lieu cau hinh form can su dung trong controller
-      string? storeSetData = config_form.ContainsKey("StoreSetData") ? Convert.ToString(config_form["StoreSetData"]) : "";
-      //string? storeSetData = config_form.ContainsKey("StoreSetData") ? Convert.ToString(config_form["StoreSetData"]) : "";
+      string? storeSetData = config_form.ContainsKey("storesetdata") ? Convert.ToString(config_form["storesetdata"]) : "";
 
       if (string.IsNullOrWhiteSpace(storeSetData))
       {
@@ -481,7 +508,7 @@ namespace KOAHome.Controllers
       // xu ly file
       // Kiểm tra xem form có file nào không
       // lay danh sach object type code tu config form neu co field file uploader
-      string attObjectTypeCodes = config_form.ContainsKey("AttObjectTypeCodes") ? Convert.ToString(config_form["AttObjectTypeCodes"]) : "";
+      string attObjectTypeCodes = config_form.ContainsKey("attobjecttypecodes") ? Convert.ToString(config_form["attobjecttypecodes"]) : "";
 
       // Convert the IFormCollection to a dictionary of strings
       var formData = form.ToDictionary(
@@ -496,14 +523,14 @@ namespace KOAHome.Controllers
       var resultList = await _form.Form_ups(formData, id, storeSetData, connectionString);
       //kiem tra du lieu id tra ve
       var id_return = resultList
-      .Where(item => ((IDictionary<string, object>)item).ContainsKey("Id"))
-      .Select(item => ((IDictionary<string, object>)item)["Id"])
+      .Where(item => ((IDictionary<string, object>)item).ContainsKey("id"))
+      .Select(item => ((IDictionary<string, object>)item)["id"])
       .FirstOrDefault(); // Lọc ra những phần tử có Id
 
       // neu co gia tri tra ve thi bao thanh cong
       if (id_return != null && int.TryParse(id_return.ToString(), out int num) && num > 0)
       {
-        id = (int)id_return;
+        id = Convert.ToInt32(id_return);
 
         // xu ly luu bang attachment
         bool isSaveAttachment = await _att.SaveAttachmentTable(form, id ?? 0);
@@ -511,7 +538,7 @@ namespace KOAHome.Controllers
         // xu ly file
         // Kiểm tra xem form có file nào không
         // lay danh sach object type code tu config form neu co field file uploader
-        attObjectTypeCodes = config_form.ContainsKey("AttObjectTypeCodes") ? Convert.ToString(config_form["AttObjectTypeCodes"]) : "";
+        attObjectTypeCodes = config_form.ContainsKey("attobjecttypecodes") ? Convert.ToString(config_form["attobjecttypecodes"]) : "";
 
         if (!isSaveAttachment)
         {
@@ -519,22 +546,40 @@ namespace KOAHome.Controllers
         }
 
         //xu ly report form
-        // Dictionary để nhóm dữ liệu theo số thứ tự [n]
-        // Chuyển đổi dữ liệu sang JSON (loc du lieu form tra ve lay du lieu grid va chuyen thanh json)
-        string reportJsonData = await _re.ExtractGridDataToJson(form);
-        //end xu ly report form
-        var reportResultList = await _re.ReportEditor_Json_Update(queryParamerter, id, reportJsonData, "HS_BookingService_Json_ups", null);
-        //kiem tra ton tai error message
-        // Kiểm tra và nối giá trị của ErrorMessage
-        if (_con.CheckForErrors(reportResultList, out string errorMessage))
+        // lấy danh sách report code thuộc form
+        string stringaggreportcodes = await _form.NET_Form_GetListReportCode(FormCode);
+        // với mỗi report code đang có thì xử lý
+        if (!string.IsNullOrWhiteSpace(stringaggreportcodes))
         {
-          return Json(new { success = false, errorMessage = errorMessage });
+          var reportCodes = stringaggreportcodes.Split(',', StringSplitOptions.RemoveEmptyEntries);
+
+          foreach (var code in reportCodes)
+          {
+            var reportCode = code.Trim();
+
+            // lay thong tin report de xu ly
+            var report = await _report.NET_Report_Get(reportCode);
+            // tìm thấy report thì tiếp tục
+            if (report != null)
+            {
+                // khai bao cac du lieu report can su dung trong controller
+                string? sqlEditContent = report.ContainsKey("sqleditcontent") ? Convert.ToString(report["sqleditcontent"]) : "";
+                // Dictionary để nhóm dữ liệu theo số thứ tự [n]
+                // Chuyển đổi dữ liệu sang JSON (loc du lieu form tra ve lay du lieu grid va chuyen thanh json)
+                string reportJsonData = await _re.ExtractGridDataToJson(form);
+                //end xu ly report form
+                var reportResultList = await _re.ReportEditor_Json_Update(queryParamerter, id, reportJsonData, sqlEditContent, null);
+                //kiem tra ton tai error message
+                // Kiểm tra và nối giá trị của ErrorMessage
+                if (_con.CheckForErrors(reportResultList, out string errorMessage))
+                {
+                  return Json(new { success = false, errorMessage = errorMessage });
+                }
+            }
+          }
         }
         // khong tra ve Id, cung khong tra ve error message thi bao loi chua tra ve id
-        else
-        {
-          return Json(new { success = true });
-        }
+        return Json(new { success = true, id = id });
       }
       else
       {
@@ -550,6 +595,25 @@ namespace KOAHome.Controllers
           return Json(new { success = false, errorMessage = "Chưa trả về Id" });
         }
       }
+
+    }
+
+    [HttpGet]
+    public async Task<IActionResult> GetDataFillSelection(string value, string key, string datafillstore)
+    {
+      // param truyen vao
+      var parameters = new Dictionary<string, object>
+                {
+                    { key, value }
+                    // Thêm các tham số khác nếu cần
+                };
+
+      //xu ly tra ve data fill tu store
+      var data = await _form.Form_GetDataFill_FromSelection(parameters, datafillstore, null);
+
+      Console.WriteLine($"Type of data: {data?.GetType()}"); // Kiểm tra kiểu dữ liệu
+
+      return Ok(data);
     }
   }
 }

@@ -80,9 +80,9 @@ namespace KOAHome.Services
         parameters = new Dictionary<string, object>();
       }
       // nếu chưa tồn tại Id thì thêm vào
-      if (!parameters.ContainsKey("Id"))
+      if (!parameters.ContainsKey("id"))
       {
-        parameters.Add("Id", Id ?? (object)DBNull.Value);
+        parameters.Add("id", Id ?? (object)DBNull.Value);
       }
       // them chuỗi json xử lý dữ liệu
       parameters.Add("json", string.IsNullOrEmpty(json) ? (object)DBNull.Value : json);

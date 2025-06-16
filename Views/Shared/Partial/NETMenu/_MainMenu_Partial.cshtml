@@ -27,21 +27,21 @@
                 {
                     @foreach (var item in mainMenuList)
                     {
-                        <div class="dropdown-shortcuts-item col-md-6 main-menu-item" data-menucode="@item.Code">
-                            @if (!string.IsNullOrWhiteSpace(item.ImageUrl))
+                        <div class="dropdown-shortcuts-item col-md-6 main-menu-item" data-menucode="@item.code">
+                            @if (!string.IsNullOrWhiteSpace(item.imageurl))
                             {
                                 <span class="dropdown-shortcuts-icon mb-2">
-                                    <img src="@item.ImageUrl" alt="@item.Title" class="d-block w-100" />
+                                    <img src="@item.imageurl" alt="@item.title" class="d-block w-100" />
                                 </span>
                             }
                             else
                             {
                                 <span class="dropdown-shortcuts-icon rounded-circle mb-2">
-                                    <i class="@item.Icon"></i>
+                                    <i class="@item.icon"></i>
                                 </span>
                             }
-                            <div><strong class="stretched-link">@item.Title</strong></div>
-                            <small>@(item.Description ?? "")</small>
+                            <div><strong class="stretched-link">@item.title</strong></div>
+                            <small>@(item.description ?? "")</small>
                         </div>
                     }
                 }

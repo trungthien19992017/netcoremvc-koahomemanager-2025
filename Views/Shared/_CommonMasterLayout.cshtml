@@ -11,7 +11,7 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0" />
 
-    <script src="https://code.jquery.com/jquery-3.4.1.min.js"></script>
+    @* <script src="https://code.jquery.com/jquery-3.4.1.min.js"></script> *@
 
 
   @{
@@ -26,6 +26,9 @@
   <link rel="canonical" href='@productPage'>
   <!-- Favicon -->
   <link rel="icon" type="image/x-icon" href="~/img/icons/koa/koa-mascos-icon.ico" />
+
+  <!-- fa fa icon -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
 
   <!-- Core Styles -->
   @await Html.PartialAsync("Sections/_Styles")
@@ -59,98 +62,104 @@
     <!--  script xu ly chung duoc viet trong master-->
   <script>
           // tim kiem trong select box
-        $(document).ready(function () {
-            function initSelect2() {
-              // không áp dụng cho Quiff HTML editor
-                $("select") .not(".ql-toolbar select, .ql-container select, .ql-editor select").not(".select2-hidden-accessible").not(".dt-length select").select2({
-                    placeholder: "Chọn",
-                    allowClear: true,
-                    width: "100%"
-                });
-            }
+        function initSelect2() {
+          // không áp dụng cho Quiff HTML editor
+            $("select") .not(".ql-toolbar select, .ql-container select, .ql-editor select").not(".select2-hidden-accessible").not(".dt-length select").select2({
+                placeholder: "Chọn",
+                allowClear: true,
+                width: "100%"
+            });
+        }
 
+        $(document).ready(function () {
             // Khởi tạo Select2 cho các select đã có sẵn
             initSelect2();
 
         });
-
-          // focus vao field dau tien khong hop le
-        $("form").on("submit", function (event) {
-          var firstInvalid = $(this).find(":invalid").first();
-          if (firstInvalid.length) {
-          firstInvalid.focus();
-          event.preventDefault(); // Ngăn không cho form submit
-          }
-        });
+        
 
         // data fill sau khi on change select box
-        $(document).ready(function () {
-        $("select").change(function () {
-        let value = $(this).val();
-        let key = $(this).attr("name"); // Lấy name của select
-        let datafillstore = $(this).data("datafillstore"); // Lấy giá trị từ data-datafillstore
+       $(document).ready(function() {
+           $("select").change(function() {
+               let value = $(this).val();
+               let key = $(this).attr("name"); // Lấy name của select
+               let datafillstore = $(this).data("datafillstore"); // Lấy giá trị từ data-datafillstore
 
-        if (value && datafillstore && datafillstore != "") {
-        $.ajax({
-        url: `/HsBookings/GetDataFillSelection`, // Sử dụng serviceStore để xác định API cần gọi
-        type: "GET",
-        data: { value: value, key: key, datafillstore : datafillstore },
-        success: function (data) {
-        console.log("Dữ liệu trả về:", data);
-        console.log("Loại dữ liệu:", typeof data); // Phải là "object"
+               if (value && datafillstore && datafillstore != "") {
+                   $.ajax({
+                       url: `/NETForm/GetDataFillSelection`, // Sử dụng serviceStore để xác định API cần gọi
+                       type: "GET",
+                       data: {
+                           value: value,
+                           key: key,
+                           datafillstore: datafillstore
+                       },
+                       success: function(data) {
+                           console.log("Dữ liệu trả về:", data);
+                           console.log("Loại dữ liệu:", typeof data); // Phải là "object"
 
-        $.each(data, function (key, value) {
-        let inputField = $(`[name='${key}'], [id='${key}']`);
-        if (inputField.length) {
-            if (inputField.is(":radio")) {
-                // Tìm radio button có giá trị tương ứng
-                let radioToCheck = inputField.filter(`[value='${value}']`);
+                           $.each(data, function(key, value) {
+                               let inputField = $(`[name='${key}'], [id='${key}']`);
+                               if (inputField.length) {
+                                   if (inputField.is(":radio")) {
+                                       // Tìm radio button có giá trị tương ứng
+                                       let radioToCheck = inputField.filter(`[value='${value}']`);
 
-                if (radioToCheck.length) {
-                    // Nếu có radio button phù hợp, chọn nó
-                    radioToCheck.prop("checked", true);
-                } else {
-                    // Nếu không tìm thấy giá trị tương ứng, bỏ chọn tất cả radio của nhóm đó
-                    inputField.prop("checked", false);
-                }
-            } else {
-                // Nếu là input bình thường, gán giá trị trực tiếp
-                inputField.val(value);
-            }
-        }
-            });
-        },
-        error: function (xhr, status, error) {
-        console.error("Error:", xhr.responseText);
-        }
-        });
-        }
-        });
-        });
+                                       if (radioToCheck.length) {
+                                           // Nếu có radio button phù hợp, chọn nó
+                                           radioToCheck.prop("checked", true);
+                                       } else {
+                                           // Nếu không tìm thấy giá trị tương ứng, bỏ chọn tất cả radio của nhóm đó
+                                           inputField.prop("checked", false);
+                                       }
+                                   } else {
+                                       // Nếu là input bình thường, gán giá trị trực tiếp
+                                       inputField.val(value);
+                                   }
+                               }
+                           });
+                       },
+                       error: function(xhr, status, error) {
+                           console.error("Error:", xhr.responseText);
+                       }
+                   });
+               }
+           });
+       });
 
         // sau khi load, tu dong cap nhat format date
         $(document).ready(function () {
-            // Lấy tất cả các input có type="date" hoặc "datetime-local"
             $('input[type="date"], input[type="datetime-local"]').each(function () {
                 let originalValue = $(this).attr('value');
 
                 if (originalValue) {
-                    if ($(this).attr("type") === "date") {
-                        // Kiểm tra xem đã đúng định dạng YYYY-MM-DD chưa
-                        let isoDateRegex = /^\d{4}-\d{2}-\d{2}$/;
-                        if (!isoDateRegex.test(originalValue)) {
-                            let formattedDate = moment(originalValue, ["M/D/YYYY h:mm:ss A", "DD/MM/YYYY", "YYYY-MM-DD"]).format("YYYY-MM-DD");
-                            $(this).val(formattedDate); // Điền trực tiếp vào value
-                            $(this).attr("value", formattedDate); // Cập nhật lại giá trị trong HTML
+                    // Tạo moment từ nhiều format có thể gặp
+                    let parsedDate = moment(originalValue, [
+                        moment.ISO_8601,              // ISO format: 2025-05-24T10:30
+                        "YYYY-MM-DD",                 // Chuẩn HTML date
+                        "YYYY-MM-DDTHH:mm",           // Chuẩn HTML datetime-local
+                        "M/D/YYYY h:mm:ss A",
+                        "MM/DD/YYYY h:mm:ss A",
+                        "MM/DD/YYYY HH:mm:ss",
+                        "D/M/YYYY H:mm:ss",
+                        "DD/MM/YYYY H:mm:ss",
+                        "DD-MM-YYYY HH:mm:ss"
+                    ], true); // 'true' = strict parsing
+
+                    if (parsedDate.isValid()) {
+                        if ($(this).attr("type") === "date") {
+                            let formattedDate = parsedDate.format("YYYY-MM-DD");
+                            $(this).val(formattedDate);
+                            $(this).attr("value", formattedDate);
+                            // console.log("Date field:", $(this).attr('name'), "value:", originalValue);
+                        } else if ($(this).attr("type") === "datetime-local") {
+                            let formattedDateTime = parsedDate.format("YYYY-MM-DDTHH:mm");
+                            $(this).val(formattedDateTime);
+                            $(this).attr("value", formattedDateTime);
+                            // console.log("Date field:", $(this).attr('name'), "value:", originalValue);
                         }
-                    } else if ($(this).attr("type") === "datetime-local") {
-                        // Kiểm tra xem đã đúng định dạng YYYY-MM-DDTHH:mm chưa
-                        let isoDateTimeRegex = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}$/;
-                        if (!isoDateTimeRegex.test(originalValue)) {
-                            let formattedDateTime = moment(originalValue, ["M/D/YYYY h:mm:ss A", "DD/MM/YYYY HH:mm:ss", "YYYY-MM-DDTHH:mm:ss"]).format("YYYY-MM-DDTHH:mm");
-                            $(this).val(formattedDateTime); // Điền trực tiếp vào value
-                            $(this).attr("value", formattedDateTime); // Cập nhật lại giá trị trong HTML
-                        }
+                    } else {
+                        console.warn("⚠️ ",$(this).attr('name')," Không parse được giá trị ngày: ", originalValue);
                     }
                 }
             });
@@ -160,7 +169,7 @@
           function toggleDelete(button) {
             var row = $(button).closest("tr");
             var isDeletedInput = row.find(".isDeleted");
-            var idInput = row.find("input[name$='Id']").val();
+            var idInput = row.find("input[name$='id']").val();
 
             if (idInput === "" || idInput === null) {
                 row.remove(); // Xóa dòng nếu Id rỗng
@@ -266,57 +275,58 @@
           });
         });
 
-           function handleAjaxConfirmed(id, listid, sqlstore, datasourceid) {
-               // dua cac du lieu can truyen vao formdata
-               var formData = new FormData();
-                formData.append("Id", id); // key cua du lieu
-                formData.append("sqlstore", sqlstore); // Lấy sqlstore tu button truyen vao
-                formData.append("datasourceid", datasourceid); // Lấy datasource tu button truyen vao
-                formData.append("ListId", listid); // list id xuất hiện khi chọn nhiều dòng table, áp dụng với nút on top
+         // xử lý action report
+          function handleAjaxConfirmed(id, listid, sqlstore, datasourceid) {
+              // dua cac du lieu can truyen vao formdata
+              var formData = new FormData();
+              formData.append("id", id); // key cua du lieu
+              formData.append("sqlstore", sqlstore); // Lấy sqlstore tu button truyen vao
+              formData.append("datasourceid", datasourceid); // Lấy datasource tu button truyen vao
+              formData.append("listid", listid); // list id xuất hiện khi chọn nhiều dòng table, áp dụng với nút on top
 
-                // Gọi AJAX để gửi yêu cầu xóa
-                $.ajax({
-                    url: '/Home/Action_Confirmed', // Controller xử lý xóa
-                    type: 'POST', // Hoặc 'GET' nếu phù hợp
-                    data: formData, // Truyền ID của dòng cần xóa và store xử lý
-                    processData: false, // Không chuyển `FormData` thành query string
-                    contentType: false, // Để trình duyệt tự động đặt `content-type`
-                   success: function (response) {
-                       if (response.success) {
-                           rplm({
-                               title: "Xử lý thành công!",
-                               text: "Hành động của bạn đã được xử lý.",
-                               type: "success",
-                               timer: 2000,
-                               confirmButtonText: 'Xác nhận',
-                               html: true
-                           }, function () {
-                               // reload lại sau khi đóng popup
-                               location.reload();
-                           });
-                       } else {
-                           rplm({
-                               title: "Lỗi!",
-                               text: response.errorMessage || "Có vấn đề xảy ra.",
-                               type: "error",
-                               timer: 2000,
-                               confirmButtonText: 'Xác nhận',
-                               html: true
-                           });
-                       }
-                   },
-                   error: function () {
-                       rplm({
-                           title: "Lỗi!",
-                           text: "Lỗi khi kết nối đến máy chủ.",
-                           type: "error",
-                           timer: 2000,
-                           confirmButtonText: 'Done',
-                           html: true
-                       });
-                   }
-               });
-           }
+              // Gọi AJAX để gửi yêu cầu xóa
+              $.ajax({
+                  url: '/Home/Action_Confirmed', // Controller xử lý hành động
+                  type: 'POST', // Hoặc 'GET' nếu phù hợp
+                  data: formData, // Truyền ID của dòng cần hành động và store xử lý
+                  processData: false, // Không chuyển `FormData` thành query string
+                  contentType: false, // Để trình duyệt tự động đặt `content-type`
+                  success: function (response) {
+                      if (response.success) {
+                          rplm({
+                              title: "Xử lý thành công!",
+                              text: "Hành động của bạn đã được xử lý.",
+                              type: "success",
+                              timer: 2000,
+                              confirmButtonText: 'Xác nhận',
+                              html: true
+                          }, function () {
+                              // reload lại sau khi đóng popup
+                              location.reload();
+                          });
+                      } else {
+                          rplm({
+                              title: "Lỗi!",
+                              text: response.errorMessage || "Có vấn đề xảy ra.",
+                              type: "error",
+                              timer: 2000,
+                              confirmButtonText: 'Xác nhận',
+                              html: true
+                          });
+                      }
+                  },
+                  error: function () {
+                      rplm({
+                          title: "Lỗi!",
+                          text: "Lỗi khi kết nối đến máy chủ.",
+                          type: "error",
+                          timer: 2000,
+                          confirmButtonText: 'Done',
+                          html: true
+                      });
+                  }
+              });
+          }
 
         // xu ly confirm action store de hien thi popup confirm va xu ly ajax
         $('.confirmAction').on('click', function (e) {
@@ -365,159 +375,6 @@
                    }
                });
            }
-        });
-          // xu ly form popup
-          $(document).ready(function () {
-            // Khi modal được mở
-              $(".popup-form-action").click(function () {
-                var id = $(this).data("id"); // Lấy ID của booking
-                var sqlStore = $(this).data('sqlstore'); // Lấy SQL Store nếu cần
-                // neu khong truyen action va controller thi se goi action mac dinh
-                var controller = $(this).data("controller") || "HsBookings";
-                var action = $(this).data("action") || "GetDataFillSelection";
-
-                // Kiểm tra nếu không có ID thì không làm gì
-                if (!id) return;
-
-                // Gọi AJAX lấy dữ liệu từ action
-                $.ajax({
-                url: `/${controller}/${action}`, // Sử dụng serviceStore để xác định API cần gọi
-                type: "GET",
-                data: { value: id, key: "Id", datafillstore : sqlStore },
-                success: function (data) {
-                console.log("Dữ liệu trả về:", data);
-                console.log("Loại dữ liệu:", typeof data); // Phải là "object"
-
-                $.each(data, function (key, value) {
-                let inputField = $(`[name='${key}'], [id='${key}']`);
-                if (inputField.length) {
-                    if (inputField.is(":radio")) {
-                        // Tìm radio button có giá trị tương ứng
-                        let radioToCheck = inputField.filter(`[value='${value}']`);
-
-                        if (radioToCheck.length) {
-                            // Nếu có radio button phù hợp, chọn nó
-                            radioToCheck.prop("checked", true);
-                        } else {
-                            // Nếu không tìm thấy giá trị tương ứng, bỏ chọn tất cả radio của nhóm đó
-                            inputField.prop("checked", false);
-                        }
-                    }
-                    else if (inputField.is("select"))
-                    {
-                      // gan gia tri selected
-                      let selectedvalue = value
-                      if (inputField.hasClass("select2-hidden-accessible"))
-                      {
-                       inputField.select2("destroy");
-                      }
-                      inputField.empty().append('<option value="">Chọn</option>');  // Xóa các option cũ // Thêm option mặc định
-
-                      // Thêm các option mới
-                      let selectlistkey = "List"+key
-                      console.log("Dropdown field:", inputField);
-                      console.log("Data list:", data[selectlistkey]);
-                      if (data[selectlistkey] && Array.isArray(data[selectlistkey])) { // Kiểm tra danh sách hợp lệ
-                          let options = data[selectlistkey].map(item => {
-                              return new Option(item.name, item.id, false, item.id == selectedvalue);
-                          });
-
-                          inputField.append(options);
-                      } else {
-                          console.error("Danh sách không hợp lệ hoặc không có dữ liệu.");
-                      }
- 
-                      if (inputField.not(".select2-hidden-accessible"))
-                      {
-                          $(document).ready(function() {
-                              inputField.select2({
-                                  placeholder: "Chọn",
-                                  allowClear: true,
-                                  width: "100%",
-                                  dropdownParent: $('#modal-GiamGiaPhatSinh') // Chỉ định modal làm container
-                              });
-                          });
-                      }
-                    }
-                    else {
-                        // Nếu là input bình thường, gán giá trị trực tiếp
-                        inputField.val(value);
-                    }
-                }
-                    });
-                },
-                error: function (xhr, status, error) {
-                console.error("Error:", xhr.responseText);
-                }
-                });
-            });
-
-            // khong chu dong submit form ma thong qua button de tranh viec form tu xu ly
-            $(".modal-btn-submit").click(function () {
-                // $(this).closest("form").submit();
-                var form = $(this).closest("form").get(0); // Lấy HTMLFormElement
-
-                // kiem tra neu co validate thi bao loi va return
-                if (!form.checkValidity()) {
-                    form.classList.add("was-validated"); // Kích hoạt CSS validation của Bootstrap
-                    return;
-                }
-
-                $(this).closest("form").submit(); // Nếu hợp lệ, submit form
-            });
-
-           // xu ly luu form popup
-            $(".modal-form").submit(function (e) {
-                e.preventDefault(); // Ngăn form reload trang
-
-                let form = $(this);
-                let modalId = $(this).data("modal-id");
-                var formData = new FormData(this); // Tạo FormData từ form
-
-                $.ajax({
-                    type: form.attr("method"),
-                    url: form.attr("action"),
-                    data: formData,
-                    processData: false, // Không chuyển `FormData` thành query string
-                    contentType: false, // Để trình duyệt tự động đặt `content-type`
-                    success: function (data) {
-                      if (data.success) {
-                          rplm({
-                            title: "Xử lý thành công!",
-                            text: "Hành động của bạn đã được xử lý.",
-                            type: "success",
-                            timer: 2000,
-                            confirmButtonText: 'Xác nhận',
-                            html: true
-                          }, function (){
-                                $("#"+modalId+" .modal-btn-close").trigger("click");// Đóng modal
-                                // Sau khi đóng popup, reload lại trang
-                                location.reload();
-                            });
-                      } else {
-                          rplm({
-                              title: "Lỗi!",
-                              text: data.errorMessage || "Có vấn đề xảy ra.",
-                              type: "error",
-                              timer: 2000,
-                              confirmButtonText: 'Xác nhận',
-                              html: true
-                          });
-                      }
-                    },
-                    error: function (xhr, status, error) {
-                        console.log("Lỗi AJAX:", xhr.responseText); // Log lỗi AJAX
-                        rplm({
-                            title: "Lỗi!",
-                            text: xhr.responseText || "Có vấn đề xảy ra.",
-                            type: "error",
-                            timer: 2000,
-                            confirmButtonText: 'Xác nhận',
-                            html: true
-                        });
-                    }
-                });
-            });
         });
 
         // kiem tra nếu có nhập liệu trên bất kì dòng nào thì mới enable nút Lưu, và dòng nào nhập liệu thì mới truyền xuống IFormCollection
@@ -635,24 +492,30 @@
 
                     data.forEach(notification => {
                         let item = `
-                            <li class="list-group-item list-group-item-action dropdown-notifications-item waves-effect ${notification.IsRead ? 'marked-as-read' : ''}">
-                                   <div class="d-flex">
-                                       <div class="flex-shrink-0 me-3">
-                                           <div class="avatar">
-                                               ${notification.Images ? `<img src="${notification.Images}" class="w-px-40 h-auto rounded-circle">` : '<span class="avatar-initial rounded-circle bg-label-danger">N/A</span>'}
-                                           </div>
-                                       </div>
-                                       <div class="flex-grow-1">
-                                           <h6 class="small mb-1">${notification.Title}</h6>
-                                           <small class="mb-1 d-block text-body">${notification.Content}</small>
-                                           <small class="text-muted">${notification.ThoiGian}</small>
-                                       </div>
+                            <li class="list-group-item list-group-item-action dropdown-notifications-item waves-effect ${notification.IsRead ? 'marked-as-read' : ''} align-items-start p-3 shadow-sm mb-2 border border-light-subtle  position-relative notify-card hover-shadow">
+                                <div class="d-flex">
+                                    <div class="flex-shrink-0 me-3">
+                                        <div class="avatar bg-white p-1 rounded-circle">
+                                            ${notification.images ? `<img src="${notification.images}" class="w-px-40 h-auto rounded-circle">` : '<span class="avatar-initial rounded-circle bg-label-danger">N/A</span>'}
+                                        </div>
+                                    </div>
+                                    <div class="flex-grow-1">
+                                        <h6 class="mb-1 text-primary fw-semibold">
+                                            <i class="ri-calendar-check-line me-1 text-success"></i> ${notification.title}
+                                        </h6>
+                                        <div class="text-body small mb-1">
+                                            <i class="ri-edit-2-line text-info me-1"></i> ${notification.content}
+                                            <br>
+                                            <span class="text-muted">→ Lý do phát sinh: </span>
+                                        </div>
+                                        <small class="text-muted"><i class="ri-time-line me-1"></i> ${notification.thoigian}</small>
+                                    </div>
                                     <div class="flex-shrink-0 dropdown-notifications-actions">
-                                        <a href="javascript:void(0)" class="dropdown-notifications-read" onclick="markAsRead(${notification.Id})"><span class="badge badge-dot"></span></a>
+                                        <a href="javascript:void(0)" class="dropdown-notifications-read" onclick="markAsRead(${notification.id})"><span class="badge badge-dot"></span></a>
                                         <a href="javascript:void(0)" class="dropdown-notifications-archive"><span class="ri-close-line"></span></a>
                                     </div>
-                                   </div>
-                               </li>`;
+                                </div>
+                            </li>`;
 
                         notificationList.append(item);
                         if (!notification.IsRead) unreadCount++;
@@ -923,7 +786,7 @@
 
                  // xu ly data table
                  dt = $table.DataTable({
-                     dom: '<"d-flex justify-content-between align-items-center datatable-top-component"<"d-flex gap-2"fl><"d-flex gap-2"B>>irtp',
+                     dom: '<"d-flex flex-wrap justify-content-between align-items-center datatable-top-component"<"d-flex flex-wrap"fl><"d-flex flex-wrap"B>>irtp',
                       select: {
                           style: "multi",
                           selector: "td input.dt-checkboxes" // chỉ khi click vào checkbox mới select
@@ -943,7 +806,12 @@
                           render: function(data, type, row, meta) {
                               return '<input type="checkbox" class="dt-checkboxes form-check-input">'
                           }
-                      }
+                        },
+                        {
+                            className: 'control',
+                            orderable: false,
+                            targets: 1 // Cột đầu để hiển thị biểu tượng "+"
+                        }
                       ],
                       buttons: [{
                           extend: "collection",
@@ -1133,6 +1001,57 @@
                                   }
                               }
                          },
+                    // popup thông tin chi tiết dòng khi response
+                    responsive: {
+                        details: {
+                            display: DataTable.Responsive.display.modal({
+                                header: function(row) {
+                                    return 'Chi tiết'; // hoặc tùy cột có sẵn
+                                }
+                            }),
+                            type: 'column',
+                            target: 1,
+                            renderer: function(api, rowIdx, columns) {
+                                const tr = api.row(rowIdx).node(); // truy cập hàng HTML gốc
+                                const tds = $(tr).find('td');
+
+                                let htmlRows = columns.map(function(col,index) {  
+                                    const td = tds.eq(index);
+                                    // nếu là cột ẩn hoặc là cột check box mặc định hoặc là Id thì không hiển thị
+                                    if (td.hasClass('d-none') || col.title.includes("dt-checkboxes-select-all") || col.title.toLowerCase().includes("id")) {
+                                        return ''; // bỏ qua nếu có class d-none
+                                    }
+                                    if (col.title && col.title.trim() !== '') {
+                                        return `
+                                            <tr data-dt-row="${col.rowIndex}" data-dt-column="${col.columnIndex}">
+                                                <td><strong>${col.title}</strong></td>
+                                                <td>${col.data}</td>
+                                            </tr>
+                                        `;
+                                    }
+                                    return '';
+                                }).join('');
+
+                                if (htmlRows) {
+                                    const wrapper = document.createElement('div');
+                                    wrapper.classList.add('table-responsive');
+
+                                    const table = document.createElement('table');
+                                    table.classList.add('table', 'table-bordered', 'table-sm');
+
+                                    const tbody = document.createElement('tbody');
+                                    tbody.innerHTML = htmlRows;
+
+                                    table.appendChild(tbody);
+                                    wrapper.appendChild(table);
+
+                                    return wrapper;
+                                }
+
+                                return false;
+                            }
+                        }
+                    },
                     initComplete: function (settings, json) {
                         console.log('Init complete:', settings);
                     },
@@ -1166,31 +1085,30 @@
                         // Tùy chỉnh chuỗi hiển thị
                         return "Hiển thị dòng <span class='highlight'>"+start+"</span> đến <span class='highlight'>"+end+"</span> của <span class='highlight'>"+visibleCount+"</span> kết quả";
                     }
-
                  });
 
                // Di chuyển phần phân trang ra ngoài bảng
                // doi phan trang va cac nut xuat, tìm kiem ra ngoai (yeu cau class table-pagination va table-top-action table-info)
                dt.on('draw', function () {
-                   attachSelectAllHandler(dt);
-                   var wrapselector_id = selector + "-wrap";
+                   // attachSelectAllHandler(dt);
+                   // var wrapselector_id = selector + "-wrap";
 
-                    // chuyển toàn bộ class của wrapper tự gen sang cho wrap tự tạo
-                    var wrapper = $(selector + "_wrapper");
-                    var target = $(wrapselector_id);
+                   //  // chuyển toàn bộ class của wrapper tự gen sang cho wrap tự tạo
+                   //  var wrapper = $(selector + "_wrapper");
+                   //  var target = $(wrapselector_id);
 
-                    // Lấy danh sách class từ wrapper và gán sang target
-                    var classes = wrapper.attr('class');
-                    if (classes) {
-                      target.addClass(classes);
-                    }
+                   //  // Lấy danh sách class từ wrapper và gán sang target
+                   //  var classes = wrapper.attr('class');
+                   //  if (classes) {
+                   //    target.addClass(classes);
+                   //  }
 
-                   // Move pagination vào đúng chỗ
-                    $(wrapselector_id + ' .dt-paging').appendTo(wrapselector_id + ' .report-pagination');
-                    // Move info vào đúng chỗ nếu bạn cần
-                    $(selector + '_info').appendTo(wrapselector_id + ' .report-info');
-                    // Move filter + length nếu cần
-                    $(wrapselector_id + ' .datatable-top-component').appendTo(wrapselector_id + ' .report-top-action');
+                   // // Move pagination vào đúng chỗ
+                   //  $(wrapselector_id + ' .dt-paging').appendTo(wrapselector_id + ' .report-pagination');
+                   //  // Move info vào đúng chỗ nếu bạn cần
+                   //  $(selector + '_info').appendTo(wrapselector_id + ' .report-info');
+                   //  // Move filter + length nếu cần
+                   //  $(wrapselector_id + ' .datatable-top-component').appendTo(wrapselector_id + ' .report-top-action');
 
                     // đính kèm chức năng chọn nhiều
                     attachSelectAllHandler(dt);
@@ -1732,52 +1650,52 @@
 
       // thuc hien chuc nang scroll to top (lên đầu trang)
       document.getElementById("scrollToTopBtn").addEventListener("click", function (e) {
-      e.preventDefault(); // ngăn chuyển trang nếu href="#"
-      window.scrollTo({
-        top: 0,
-        behavior: "smooth"
+        e.preventDefault(); // ngăn chuyển trang nếu href="#"
+        window.scrollTo({
+          top: 0,
+          behavior: "smooth"
+        });
       });
-    });
 
- // tự động add param từ link vào hidden input trong form
-  window.addEventListener("DOMContentLoaded", () => {
-    const urlParams = new URLSearchParams(window.location.search);
-    const hiddenDiv = document.getElementById("hiddenInputs");
+     // tự động add param từ link vào hidden input trong form
+      window.addEventListener("DOMContentLoaded", () => {
+        const urlParams = new URLSearchParams(window.location.search);
+        const hiddenDiv = document.getElementById("hiddenInputs");
 
-    if (hiddenDiv != null)
-    {
-      urlParams.forEach((value, key) => {
-        const input = document.createElement("input");
-        input.type = "hidden";
-        input.name = "q_"+key;
-        input.value = value;
-        hiddenDiv.appendChild(input);
-      });
-    }
-  });
-
-        // Common function to parse Query String
-        // xử lý param truyền vào
-      function getQueryParams(queryParamOutSite = {}) {
-        // query param outsite áp dụng cho 1 số màn hình popup phải lấy params từ bên ngoài
-        var params = {};
-        var queryString = window.location.search.substring(1); // remove '?'
-
-        if (queryString.length > 0) {
-            var pairs = queryString.split("&");
-            for (var i = 0; i < pairs.length; i++) {
-                var pair = pairs[i].split('=');
-                if (pair.length === 2) {
-                    params[decodeURIComponent(pair[0])] = decodeURIComponent(pair[1].replace(/\+/g, ' '));
-                }
-            }
+        if (hiddenDiv != null)
+        {
+          urlParams.forEach((value, key) => {
+            const input = document.createElement("input");
+            input.type = "hidden";
+            input.name = "q_"+key;
+            input.value = value;
+            hiddenDiv.appendChild(input);
+          });
         }
+      });
 
-        // gộp queryParam và outSiteParam
-        let mergedParam = { ...queryParamOutSite, ...params };
+      // Common function to parse Query String
+      // xử lý param truyền vào
+      function getQueryParams(queryParamOutSite = {}) {
+          // query param outsite áp dụng cho 1 số màn hình popup phải lấy params từ bên ngoài
+          var params = {};
+          var queryString = window.location.search.substring(1); // remove '?'
 
-        return mergedParam;
-    }
+          if (queryString.length > 0) {
+              var pairs = queryString.split("&");
+              for (var i = 0; i < pairs.length; i++) {
+                  var pair = pairs[i].split('=');
+                  if (pair.length === 2) {
+                      params[decodeURIComponent(pair[0])] = decodeURIComponent(pair[1].replace(/\+/g, ' '));
+                  }
+              }
+          }
+
+          // gộp queryParam và outSiteParam
+          let mergedParam = { ...queryParamOutSite, ...params };
+
+          return mergedParam;
+      }
 
         // Hiển thị danh sách main menu
         $(document).ready(function () {
@@ -1854,6 +1772,7 @@
                                     // Gọi lại hàm load menu (MenuCode sẽ được lấy từ Session trong controller)
                                     $("#net-menu").empty(); // Xóa menu cũ
                                     loadMenu(); // Load lại
+                                    $('.layout-menu-collapsed').toggleClass('layout-menu-expanded');
                                 }
                              },
                               error: function (xhr, status, error) {
@@ -2014,10 +1933,12 @@
         }
         
         // load report viewer động trong form
-        function loadFormViewer(formCode, containerId, queryParamOutSite = {}, isPage = false, onSuccess) {
+        function loadFormViewer(formCode, containerId, queryParamOutSite = {}, isPage = false, onSuccess, isStepper = false) {
             var queryParams = getQueryParams(queryParamOutSite);
             queryParams.formCode = formCode; // Inject thêm reportCode
             queryParams.isPage = isPage;// kiểm tra đây có phải là 1 page không hay chỉ là 1 mẫu
+            queryParams.isStepper = isStepper;// kiểm tra form này có phải dạng stepper (form wizard) không
+            queryParams.containerId = containerId;
 
             $.ajax({
                 url: '/NETForm/PopupForm',
@@ -2058,6 +1979,226 @@
                 }
             });
         }
+
+        // response chuyển đổi tab&pill từ right sang top khi resize// Khai báo biến timer ngoài scope resize
+        let resizeTimer;
+
+        function updateNavAlignment() {
+          const isMobile = window.innerWidth < 768;
+
+          $('#nav-tabpanel').each(function () {
+            const $nav = $(this);
+            if (isMobile) {
+              if ($nav.hasClass('nav-align-left')) {
+                $nav.removeClass('nav-align-left').addClass('nav-align-bottom');
+              }
+            } else {
+              if ($nav.hasClass('nav-align-bottom')) {
+                $nav.removeClass('nav-align-bottom').addClass('nav-align-left');
+              }
+            }
+          });
+        }
+
+        $(document).ready(function () {
+          updateNavAlignment(); // Khi trang vừa load
+          $(window).on('resize', function () {
+              clearTimeout(resizeTimer);
+              resizeTimer = setTimeout(updateNavAlignment, 200); // đợi 200ms sau khi dừng resize // Khi người dùng resize cửa sổ
+          });
+        });
+
+        
+        // color picker
+        function Init_getColorPicker()
+        {
+          document.querySelectorAll('.form-color-picker').forEach(pickerEl => {
+            const pickerId = pickerEl.id;                  // ví dụ: 'color-background'
+            const fieldId = pickerId.replace('color-', ''); // ví dụ: 'background'
+
+            const inputEl = document.getElementById(fieldId);
+            if (!inputEl) return; // bỏ qua nếu không tìm thấy input ẩn tương ứng
+
+            // mặc định không hiển thị màu
+            let defaultColor; // fallback
+
+            const storedColor = inputEl.value?.trim();
+            const dataDefault = pickerEl.getAttribute('data-default')?.trim();
+
+            // nếu có giá trị màu store trả lên thì lấy
+            if (storedColor) {
+              defaultColor = storedColor;
+            }
+            // nếu không có thì kiểm tra có màu mặc định không? Không có thì lấy màu primary như ban đầu
+            else if (dataDefault) {
+              defaultColor = dataDefault;
+            }
+            
+            // gán giá trị vào input ẩn
+            inputEl.value = defaultColor
+
+            const pickr = Pickr.create({
+              el: '#' + pickerId,
+              theme: 'monolith',
+              default: defaultColor,  // nếu input ẩn có giá trị ban đầu
+              swatches: ["rgba(144, 85, 253, 1)", "rgba(86, 202, 0, 1)", "rgba(255, 76, 81, 1)", "rgba(255, 180, 0, 1)", "rgba(22, 177, 255, 1)"],
+              components: {
+                preview: true,
+                opacity: true,
+                hue: true,
+                interaction: {
+                  hex: true,
+                  rgba: true,
+                  hsla: !0,
+                  hsva: !0,
+                  cmyk: !0,
+                  input: true,
+                  clear: true,
+                  save: true
+                }
+              }
+            });
+
+            // Gán khi chọn xong
+            pickr.on('save', (color) => {
+              const hex = color.toHEXA().toString();
+              inputEl.value = hex;
+              console.log(`Saved color for ${fieldId}:`, hex);
+            });
+
+            // Gán liên tục khi thay đổi (tuỳ bạn)
+            pickr.on('change', (color) => {
+              const hex = color.toHEXA().toString();
+              inputEl.value = hex;
+            });
+          });
+        }
+        $(document).ready(function () {
+          Init_getColorPicker();
+        });
+
+       //  // // file (pending do dropzone không xử lý trong controller được mà trực tiếp lưu)
+       // $(document).ready(function () {
+       //   Dropzone.autoDiscover = false;
+
+       //    const previewTemplate = `<div class="dz-preview dz-file-preview">
+       //        <div class="dz-details">
+       //          <div class="dz-thumbnail">
+       //            <img data-dz-thumbnail>
+       //            <span class="dz-nopreview">No preview</span>
+       //            <div class="dz-success-mark"></div>
+       //            <div class="dz-error-mark"></div>
+       //            <div class="dz-error-message"><span data-dz-errormessage></span></div>
+       //            <div class="progress">
+       //              <div class="progress-bar progress-bar-primary" role="progressbar" aria-valuemin="0" aria-valuemax="100" data-dz-uploadprogress></div>
+       //            </div>
+       //          </div>
+       //          <div class="dz-filename" data-dz-name></div>
+       //          <div class="dz-size" data-dz-size></div>
+       //        </div>
+       //    </div>`;
+
+       //    const dropzoneElements = document.querySelectorAll(".file-input-dropzone");
+       //    const dropzones = {}; // Để lưu lại các Dropzone instance
+
+       //    dropzoneElements.forEach(el => {
+       //        const id = el.id;
+       //        const url = el.dataset.url || "/upload"; // có thể tùy chỉnh url riêng
+       //        const maxFiles = el.dataset.maxFiles || 1;
+
+       //        const dz = new Dropzone(el, {
+       //            url: url,
+       //            paramName: id, // tên file sẽ là ID của div
+       //            autoProcessQueue: true, // để không tự upload ngay
+       //            uploadMultiple: true,
+       //            parallelUploads: 5,
+       //            maxFilesize: 5, // MB
+       //            addRemoveLinks: true,
+       //            previewTemplate: previewTemplate
+       //        });
+
+       //        // Lưu lại để dùng sau (ví dụ processQueue thủ công)
+       //        dropzones[id] = dz;
+       //    });
+
+       //    // xử lý submit
+       //    document.querySelector("form").addEventListener("submit", function (e) {
+       //        e.preventDefault(); // Ngăn submit gốc
+
+       //        const form = e.target;
+       //        let totalQueuedFiles = 0;
+       //        let totalCompleted = 0;
+
+       //        // Đếm tổng số file trong tất cả dropzone đang chờ
+       //        for (const dz of Object.values(dropzones)) {
+       //            totalQueuedFiles += dz.getQueuedFiles().length;
+       //        }
+
+       //        if (totalQueuedFiles === 0) {
+       //            // Không có file upload → submit form luôn
+       //            form.submit();
+       //            return;
+       //        }
+
+       //        for (const dz of Object.values(dropzones)) {
+       //            dz.on("complete", function (file) {
+       //                totalCompleted++;
+
+       //                // Khi tất cả file upload xong (success hoặc error)
+       //                if (totalCompleted === totalQueuedFiles) {
+       //                    form.submit(); // ✅ Submit sau khi upload xong
+       //                }
+       //            });
+
+       //            // Bắt đầu upload nếu có file trong hàng đợi
+       //            if (dz.getQueuedFiles().length > 0) {
+       //                dz.processQueue();
+       //            }
+       //        }
+       //    });
+       //  });
+
+
+       // form validation
+        document.addEventListener("DOMContentLoaded", () => {
+            let form = document.querySelector("#create-form");
+            if (form) {
+              const fieldValidationsArray = @Html.Raw((string.IsNullOrWhiteSpace(ViewData["fieldvalidation"]?.ToString()) ? "[]" : ViewData["fieldvalidation"]));
+              const fieldValidations = Object.assign({}, ...fieldValidationsArray);
+
+              // 👉 Sau bước này, bạn có thể kiểm tra:
+              console.log("fieldValidations:", fieldValidations);
+
+                FormValidation.formValidation(form, {
+                  fields: fieldValidations,
+                  plugins: {
+                    trigger: new FormValidation.plugins.Trigger,
+                    bootstrap5: new FormValidation.plugins.Bootstrap5({
+                      eleValidClass: "",
+                      rowSelector: ".form-control-validation"
+                    }),
+                    autoFocus: new FormValidation.plugins.AutoFocus,
+                    submitButton: new FormValidation.plugins.SubmitButton,
+                  },
+                  init: instance => {
+                    instance.on("plugins.message.placed", function (ev) {
+                        if (ev.element.parentElement.classList.contains("input-group")) {
+                            ev.element.parentElement.insertAdjacentElement("afterend", ev.messageElement);
+                        }
+                    });
+                    instance.on('core.form.valid', function() {
+                        // ✅ KHÔNG submit, KHÔNG làm gì ở đây cả
+                        // Để form tiếp tục chạy các hàm khác (onsubmit...)
+                        console.log("✅ Form đã được kiểm tra hợp lệ, tiếp tục xử lý ở nơi khác...");
+                        const event = new Event("submit", { bubbles: true, cancelable: true });
+                        form.dispatchEvent(event); // ✅ Gọi lại sự kiện submit gốc
+                        form.submit();
+                    });
+                  }
+                });
+            }
+        });
+
     </script>
 
     <!-- Page Scripts-->

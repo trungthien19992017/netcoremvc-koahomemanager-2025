@@ -8,6 +8,13 @@
     var mainmenu = ViewData["mainmenu"] as IDictionary<string, object>;
 
     var menuList = ViewData["menuList"] as List<dynamic>;
+    var currentMenu = ViewData["currentMenu"] as IDictionary<string, object>;
+    int currentMenuParentId = 0;
+    if (currentMenu != null)
+    {
+        // lấy parent của current menu
+        currentMenuParentId = currentMenu.ContainsKey("parent") ? Convert.ToInt32(currentMenu["parent"] ?? 0) : 0;
+    }
 
     // lấy đường dẫn để kiểm tra
     string currentPage = (ViewBag.CurrentPage ?? "").ToString();
@@ -17,44 +24,44 @@
     @* nếu tồn tại main menu thì xử lý *@
     @if(mainmenu != null)
     {
-        <li class="menu-header mt-7"><span class="menu-header-text">@(mainmenu.ContainsKey("Title") ? (mainmenu["Title"]?.ToString() ?? "Tùy chọn") : "Tùy chọn")</span></li>
+        <li class="menu-header mt-7"><span class="menu-header-text">@(mainmenu.ContainsKey("title") ? (mainmenu["title"]?.ToString() ?? "Tùy chọn") : "Tùy chọn")</span></li>
         @* nếu tồn tại danh sách menu thì hiển thị *@
         @if (menuList != null)
         {
             @* chỉ lấy trước những menu không có parent hoặc đang là parent *@
-            @foreach (var menu in menuList.Where(p => p.Parent == null).OrderBy(p => (int?)(p?.Index ?? 0)).ToList())
+            @foreach (var menu in menuList.Where(p => p.parent == null).OrderBy(p => (int?)(p?.index ?? 0)).ToList())
             {
                 // lấy format cho thành phân
-                var textstyle = @ParseDataHelper.GetHtmlStyleFromJson(menu.textColor.ToString());
-                var iconstyle = @ParseDataHelper.GetHtmlStyleFromJson(menu.CSSIconFormat.ToString());
+                var textstyle = @ParseDataHelper.GetHtmlStyleFromJson(menu.textcolor.ToString());
+                var iconstyle = @ParseDataHelper.GetHtmlStyleFromJson(menu.cssiconformat.ToString());
 
                 @* nếu menu không phải là parent thì hiển thị bình thường *@
-                if (!menuList.Any(p => (int?)(p?.Parent ?? 0) == Convert.ToInt32(menu.Id)))
+                if (!menuList.Any(p => (int?)(p?.parent ?? 0) == Convert.ToInt32(menu.id)))
                 {
-                  <li class='menu-item@(currentPage == (menu.Link ?? "") ? " active" : "")'>
-                      <a href="@(menu.Link ?? "")" class="menu-link">
-                          <div><i class="@menu.Icon" style="@iconstyle"></i> <span style="@textstyle">@(menu.Title ?? menu.Name ?? menu.Code)</span></div>
+                  <li class='menu-item@(currentPage == (menu.link ?? "") ? " active" : "")'>
+                      <a href="@(menu.link ?? "")" class="menu-link">
+                          <div><i class="@menu.icon" style="@iconstyle"></i> <span style="@textstyle">@(menu.title ?? menu.name ?? menu.code)</span></div>
                       </a>
                   </li>
                 }
                 @* nếu là parent thì gọi cả các menu con *@
                 else
                 {
-                  <li class='menu-item active open'>
+                <li class='menu-item@(menu.id == currentMenuParentId ? " active open" : "")'>
                     <a href="javascript:void(0);" class="menu-link menu-toggle">
-                        <i class="menu-icon tf-icons @menu.Icon" style="@iconstyle"></i>
-                        <div><span style="@textstyle">@(menu.Title ?? menu.Name ?? menu.Code)</span></div>
+                        <i class="menu-icon tf-icons @menu.icon" style="@iconstyle"></i>
+                        <div><span style="@textstyle">@(menu.title ?? menu.name ?? menu.code)</span></div>
                     </a>
                     @* với mỗi menu con thì hiển thị theo menu cha *@
-                    @foreach (var menuchild in menuList.Where(p => (int?)(p?.Parent ?? 0) == menu.Id).OrderBy(p => (int?)(p?.Index ?? 0)).ToList())
+                    @foreach (var menuchild in menuList.Where(p => (int?)(p?.parent ?? 0) == menu.id).OrderBy(p => (int?)(p?.index ?? 0)).ToList())
                     {
                         // lấy format cho thành phân
-                        var child_textstyle = @ParseDataHelper.GetHtmlStyleFromJson(menuchild.textColor.ToString());
-                        var child_iconstyle = @ParseDataHelper.GetHtmlStyleFromJson(menuchild.CSSIconFormat.ToString());
+                        var child_textstyle = @ParseDataHelper.GetHtmlStyleFromJson(menuchild.textcolor.ToString());
+                        var child_iconstyle = @ParseDataHelper.GetHtmlStyleFromJson(menuchild.cssiconformat.ToString());
                         <ul class="menu-sub">
-                            <li class='menu-item@(currentPage == (menuchild.Link ?? "") ? " active" : "")'>
-                                <a href="@(menuchild.Link ?? "")" class="menu-link">
-                                    <div><i class="@menuchild.Icon" style="@child_iconstyle"></i> <span style="@child_textstyle">@(menuchild.Title ?? menuchild.Name ?? menuchild.Code)</span></div>
+                            <li class='menu-item@(currentPage == (menuchild.link ?? "") ? " active" : "")'>
+                                <a href="@(menuchild.link ?? "")" class="menu-link">
+                                    <div><i class="@menuchild.icon" style="@child_iconstyle"></i> <span style="@child_textstyle">@(menuchild.title ?? menuchild.name ?? menuchild.code)</span></div>
                                 </a>
                             </li>
                         </ul>

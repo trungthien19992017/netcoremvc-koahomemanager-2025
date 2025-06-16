@@ -33,10 +33,10 @@ namespace KOAHome.Services
       // su dung datasource config de lay du lieu
       string connectionString = _configuration.GetConnectionString("ConfigConnection"); // Thay thế bằng chuỗi kết nối của bạn
       // store get du lieu
-      string sqlStore = "NET_DatasourceDetail_sel";
+      string sqlStore = "net_datasourcedetail_sel";
       // khai bao param lien quan
       var parameters = new Dictionary<string, object>();
-      parameters.Add("Id", datasourceId);
+      parameters.Add("id", datasourceId);
 
       // chuyen thanh cau query tu store va param truyen vao
       var (sqlQuery, sqlParams) = await _con.Connection_GetQueryParam(parameters, sqlStore, connectionString);
@@ -45,7 +45,8 @@ namespace KOAHome.Services
       var result = await _con.Connection_GetSingleDataFromQuery(parameters, sqlStore, connectionString, sqlQuery, sqlParams);
 
       // tra ve chuoi connection string
-      string resultConnectionString = $"Server={result["Host"] ?? ""};Database={result["DBName"] ?? ""};User Id={result["User"] ?? ""};Password={result["Password"] ?? ""};Trusted_Connection=True;MultipleActiveResultSets=true;TrustServerCertificate=True;Max Pool Size=100;";
+      //string resultConnectionString = $"Server={result["host"] ?? ""};Port=5432;Database={result["dbname"] ?? ""};User Id={result["user"] ?? ""};Password={result["password"] ?? ""};SSL Mode=Require;Trust Server Certificate=true;Pooling=true;Minimum Pool Size=1;Maximum Pool Size=20;";
+      string resultConnectionString = $"Server={result["host"] ?? ""};Database={result["dbname"] ?? ""};User Id={result["user"] ?? ""};Password={result["password"] ?? ""};Trusted_Connection=True;MultipleActiveResultSets=true;TrustServerCertificate=True;Max Pool Size=100;";
 
       return resultConnectionString;
     }

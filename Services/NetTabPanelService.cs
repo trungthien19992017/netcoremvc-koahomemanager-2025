@@ -31,7 +31,7 @@ namespace KOAHome.Services
       string sqlStore = "NET_TabPanel_sel";
       // khai bao param lien quan
       var parameters = new Dictionary<string, object>();
-      parameters.Add("TabCode", tabCode);
+      parameters.Add("tabcode", tabCode);
 
       // chuyen thanh cau query tu store va param truyen vao
       var (sqlQuery, sqlParams) = await _con.Connection_GetQueryParam(parameters, sqlStore, connectionString);
@@ -49,8 +49,8 @@ namespace KOAHome.Services
       string sqlStore = "NET_TabPanel_Detail_sel";
       // khai bao param lien quan
       var parameters = new Dictionary<string, object>();
-      parameters.Add("TabCode", tabCode);
-      parameters.Add("TabId", tabId);
+      parameters.Add("tabcode", tabCode);
+      parameters.Add("tabid", tabId);
 
       // chuyen thanh cau query tu store va param truyen vao
       var (sqlQuery, sqlParams) = await _con.Connection_GetQueryParam(parameters, sqlStore, connectionString);

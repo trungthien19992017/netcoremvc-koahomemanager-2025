@@ -1,8 +1,11 @@
+using AspnetCoreMvcFull.Models;
 using KOAHome.EntityFramework;
 using KOAHome.Services;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
+using Microsoft.Data.SqlClient;
+using Npgsql;
 using System.Diagnostics;
 
 namespace KOAHome.Controllers
@@ -67,12 +70,12 @@ namespace KOAHome.Controllers
 
         return PartialView("~/Views/Shared/Partial/NETMenu/_MainMenu_Partial.cshtml");
       }
-      catch (Exception ex)
+      catch (SqlException ex)
       {
         // Log the exception
         _logger.LogError(ex, "An error occurred while fetching form.");
         // Optionally, return an error view
-        return View("Error");
+        return View("~/Views/Pages/MiscError.cshtml", new ErrorViewModel { RequestId = Activity.Current?.Id ?? HttpContext.TraceIdentifier, exception = ex });
       }
     }
 
@@ -130,16 +133,20 @@ namespace KOAHome.Controllers
         // chuyen cau hinh menu len giao dien de xu ly
         ViewData["menuList"] = menuList;
 
+        // nếu tồn tại menulist thì tiếp tục kiểm tra currentpage có tồn tại không
+        var currentMenu = menuList.FirstOrDefault(p => (currentPage == "/" && currentPage.StartsWith(p.link)) || (currentPage != "/" && p.link != "/" && currentPage.StartsWith(p.link))) as IDictionary<string, object>;
+        ViewData["currentMenu"] = currentMenu;
+
         ViewData["sucess"] = "Thành công";
 
         return PartialView("~/Views/Shared/Partial/NETMenu/_Menu_Partial.cshtml");
       }
-      catch (Exception ex)
+      catch (SqlException ex)
       {
         // Log the exception
         _logger.LogError(ex, "An error occurred while fetching booking service info.");
         // Optionally, return an error view
-        return View("Error");
+        return View("~/Views/Pages/MiscError.cshtml", new ErrorViewModel { RequestId = Activity.Current?.Id ?? HttpContext.TraceIdentifier, exception = ex });
       }
 
     }
