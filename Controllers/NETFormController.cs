@@ -326,7 +326,7 @@ namespace KOAHome.Controllers
 
     // popup form view component
     [HttpGet]
-    public async Task<IActionResult> PopupForm(string FormCode, int? id, bool? isReadOnly = false, string? containerId = "", bool? isStepper = true)
+    public async Task<IActionResult> PopupForm(string FormCode, int? id, bool? isReadOnly = false, string? containerId = "", bool? isStepper = false)
     {
       try
       {

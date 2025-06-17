@@ -867,18 +867,26 @@
             const id = $btn.data('id') ?? "";
             const formCode = $btn.data('formcode') ?? "";
             const isReadOnly = $btn.data('isreadonly') ?? false;
-            const queryParams = new URLSearchParams(window.location.search).toString(); // lấy full query string
+            const queryParams = new URLSearchParams(window.location.search); // lấy full query string
+            // truyền các tham số cần thiết
+            queryParams.set('isPage', 'false');// kiểm tra đây có phải là 1 page không hay chỉ là 1 mẫu
+            queryParams.set('isStepper', 'false');// kiểm tra form này có phải dạng stepper (form wizard) không
+            // mặc định container id cho popup form
+            queryParams.set('containerId', 'modal-PopupForm');
+
+            // Nếu cần chuyển thành chuỗi query lại:
+            const newQueryString = queryParams.toString();
 
             // có 2 cách lấy, 1 là lấy từ link, 2  là lấy từ form code và id
             let url = ""
             if (actionlink != null){
               url = actionlink;
-              if (queryParams !== "") {
-                  url += (actionlink.includes('?') ? '&' : '?') + queryParams;
+              if (newQueryString !== "") {
+                  url += (actionlink.includes('?') ? '&' : '?') + newQueryString;
               }
             }
             else{
-              url = `/form/popup-viewer/${formCode}/${id}?${queryParams}&isReadOnly=${isReadOnly}`;
+              url = `/form/popup-viewer/${formCode}/${id}?${newQueryString}&isReadOnly=${isReadOnly}`;
             }
 
             $.ajax({
