@@ -5,6 +5,7 @@ using KOAHome.EntityFramework;
 using KOAHome.Services;
 using System.Security.Cryptography;
 using Npgsql;
+using Microsoft.Data.SqlClient;
 
 namespace AspnetCoreMvcFull.Controllers;
 

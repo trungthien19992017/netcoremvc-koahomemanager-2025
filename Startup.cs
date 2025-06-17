@@ -58,6 +58,7 @@ namespace KOAHome
       services.AddScoped<INetServiceService, NetServiceService>();
       services.AddScoped<INetMenuService, NetMenuService>();
       services.AddScoped<INetTabPanelService, NetTabPanelService>();
+      services.AddScoped<INetFormWizardService, NetFormWizardService>();
 
       // add health check for deploy
       services.AddHealthChecks()
@@ -133,6 +134,12 @@ namespace KOAHome
               name: "tab/viewer",
               pattern: "tab/viewer/{tabCode}/{tabIndex}",
               defaults: new { controller = "NETTabPanel", action = "Viewer" }
+          );
+        // route cho form wizard
+        endpoints.MapControllerRoute(
+              name: "formwizard/viewer",
+              pattern: "formwizard/viewer/{stepperCode}",
+              defaults: new { controller = "NETFormWizard", action = "Viewer" }
           );
       });
     }

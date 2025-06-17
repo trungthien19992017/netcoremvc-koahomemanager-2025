@@ -144,7 +144,7 @@ namespace KOAHome.Services
       var sqlParams = new List<NpgsqlParameter>();
       foreach (var param in parameters)
       {
-        string paramName = param.Key;
+        string paramName = param.Key.ToLower();
         string cleanParamName = paramName.TrimStart('_'); // PostgreSQL dùng "_" cho tham số IN
         if (parameters.ContainsKey(cleanParamName))
         {
@@ -316,7 +316,7 @@ namespace KOAHome.Services
       foreach (var param in paramList)
       {
         var paramDict = (IDictionary<string, object>)param;
-        string paramName = paramDict.ContainsKey("ParamName") ? paramDict["ParamName"].ToString(): "";
+        string paramName = paramDict.ContainsKey("ParamName") ? paramDict["ParamName"].ToString().ToLower(): "";
         string paramType = paramDict.ContainsKey("ParamType") ? paramDict["ParamType"].ToString() : "";
         string paramMode = paramDict.ContainsKey("ParamMode") ? paramDict["ParamMode"].ToString() : "";
 
@@ -428,7 +428,8 @@ namespace KOAHome.Services
                 {
                   value = (object)reader.GetValue(i);
                 }
-                string key = reader.GetName(i).ToString();
+                // in thường key khi truyền vào
+                string key = reader.GetName(i).ToString().ToLower();
 
                 row.Add(key, value);
               }
@@ -476,7 +477,7 @@ namespace KOAHome.Services
               for (int i = 0; i < reader.FieldCount; i++)
               {
                 object? value = reader.IsDBNull(i) ? null : reader.GetValue(i);
-                string key = reader.GetName(i);
+                string key = reader.GetName(i).ToLower();
                 row[key] = value;
               }
 

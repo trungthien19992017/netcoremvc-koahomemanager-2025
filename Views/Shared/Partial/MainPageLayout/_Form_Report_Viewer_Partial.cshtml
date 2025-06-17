@@ -1,5 +1,6 @@
 @using KOAHome.Helpers
 @using System.Text.Json
+@using Microsoft.Data.SqlClient
 @using Npgsql
 @{
     var resultList = ViewData["resultList"] as List<dynamic>;
@@ -82,7 +83,7 @@
                                                     {
                                                         @* name: Key cua filter truyen vao, label: Ten filter, type: Loại filter, value: giá trị filter
                                                     , colspan: độ rộng filter *@
-                                                        string name = filter.code;
+                                                        string name = filter.code.ToLower();
                                                         string label = filter.name;
                                                         string type = filter.DynamicFieldName;
                                                         var value = listFilterValue.ContainsKey(name) ? listFilterValue[name] : "";
@@ -97,6 +98,10 @@
                                                             else if (type == "DATE BOX")
                                                             {
                                                                 <input class="form-control form-control-sm" type="date" id="@name" name="@name" value="@value" @(filter.Required == true ? "required" : "") />
+                                                            }
+                                                            else if (type == "DATERANGEPICKER")
+                                                            {
+                                                                <input class="form-control form-control-sm bs-rangepicker-filter" type="text" id="@name" name="@name" value="@value" @(filter.required == true ? "required" : "") />
                                                             }
                                                             else if (type == "SELECT BOX")
                                                             {
@@ -288,6 +293,8 @@
                             <tr>
                               @* Cột này sẽ tự động chứa checkbox "Chọn tất cả" *@
                               <th class="text-center" rowspan="@displayParentLevelNum" data-code="IdCheck" data-index="-1"  data-isexport="False" style="min-width:50px"></th>
+                              @* Cột chi tiết mặc định*@
+                              <th class="text-center" rowspan="@displayParentLevelNum" data-code="IdDetail" data-index="0"  data-isexport="False" style="min-width:10px"></th>
                               @* neu display khong null thi tiep tuc *@
                               @if (displayList != null)
 					          {
@@ -295,21 +302,21 @@
                                   @* neu cot isdisplay = false thi không hien thi (chỉ lấy giá trị)  *@
                                   @foreach (var display in displayList.Where(p=> p.isdisplay == false).OrderBy(p => p.colnum ?? 0).ToList())
                                   {
-                                    <th class="text-center d-none" rowspan="@displayParentLevelNum" data-code="@display.code" data-index="@(display.colnum ?? "0")" data-isexport="@(display.isexport ?? "True")">@Html.Raw(display.name)</th>
+                                    <th class="text-center d-none" rowspan="@displayParentLevelNum" data-code="@display.code?.ToLower()" data-index="@(display.colnum ?? "0")" data-isexport="@(display.isexport ?? "True")">@Html.Raw(display.name)</th>
                                   }
                                   @* hien thi cot stt dau tien neu co *@
-						          @foreach (var display in displayList.Where(p=> p.isdisplay == true && p.code == "stt" && p.isparent == false && string.IsNullOrEmpty(p.parentcode)).OrderBy(p => p.colnum ?? 0).ToList())
+						          @foreach (var display in displayList.Where(p=> p.isdisplay == true && p.code?.ToLower() == "stt" && p.isparent == false && string.IsNullOrEmpty(p.parentcode?.ToLower())).OrderBy(p => p.colnum ?? 0).ToList())
                                   {
                                     @* co dinh cot neu co cau hinh (chi ap dung cho cot 1 rowspan) *@
-                                    <th class="text-center @(display.isfreepane == true ? "freepanze-col" : "")" rowspan="@displayParentLevelNum" data-code="@display.code" data-index="@(display.colnum ?? "0")"  data-isexport="@(display.isexport ?? "True")" style="min-width:@((display.width ?? "200") + "px");@(display.cssheader ?? "")">@Html.Raw(display.name)</th>
+                                    <th class="text-center @(display.isfreepane == true ? "freepanze-col" : "")" rowspan="@displayParentLevelNum" data-code="@display.code?.ToLower()" data-index="@(display.colnum ?? "0")"  data-isexport="@(display.isexport ?? "True")" style="min-width:@((display.width ?? "200") + "px");@(display.cssheader ?? "")">@Html.Raw(display.name)</th>
                                   }
                                   @* them mot cot xu ly *@
 						            <th class="text-center" data-code="HandleColumn" data-index="2" rowspan="@displayParentLevelNum" data-isexport="False" style="width:50px" >Xử lý</th>
                                   @* neu cot khong co parent code cung khong phai is parent thi xu ly rieng *@
-						          @foreach (var display in displayList.Where(p=> p.isdisplay == true && p.code != "stt" && p.isparent == false && string.IsNullOrEmpty(p.parentcode)).OrderBy(p => p.colnum ?? 0).ToList())
+						          @foreach (var display in displayList.Where(p=> p.isdisplay == true && p.code?.ToLower() != "stt" && p.isparent == false && string.IsNullOrEmpty(p.parentcode?.ToLower())).OrderBy(p => p.colnum ?? 0).ToList())
                                   {
                                     @* co dinh cot neu co cau hinh (chi ap dung cho cot 1 rowspan) *@
-                                    <th class="text-center @(display.isfreepane == true ? "freepanze-col" : "")" rowspan="@displayParentLevelNum" data-code="@display.code" data-index="@(display.colnum ?? "0")"  data-isexport="@(display.isexport ?? "True")" style="min-width:@((display.width ?? "200") + "px");@(display.cssheader ?? "")">@Html.Raw(display.name)</th>
+                                    <th class="text-center @(display.isfreepane == true ? "freepanze-col" : "")" rowspan="@displayParentLevelNum" data-code="@display.code?.ToLower()" data-index="@(display.colnum ?? "0")"  data-isexport="@(display.isexport ?? "True")" style="min-width:@((display.width ?? "200") + "px");@(display.cssheader ?? "")">@Html.Raw(display.name)</th>
                                   }
                                   @* neu ton tai cot co isparent thi xu ly tiep cot 2 cap *@
                                   @if (displayList.Any(p => p.isparent == true))
@@ -318,11 +325,11 @@
 						            @foreach (var display in displayList.Where(p=> p.isdisplay == true && p.isparent == true).OrderBy(p => p.colnum ?? 0).ToList())
                                     {
                                       @* dem so cot con de tinh colspan *@
-                                      var countChild = displayList.Count(p => p.parentcode == display.code);
+                                      var countChild = displayList.Count(p => p.parentcode?.ToLower() == display.code?.ToLower());
                                       @* neu co cot con thi xu ly tiep *@
                                       if (countChild > 0)
                                       {
-                                        <th class="text-center" colspan="@countChild"  data-code="@display.code"  data-isexport="@(display.isexport ?? "True")" style="@(display.cssheader ?? "")">@Html.Raw(display.name)</th>
+                                        <th class="text-center" colspan="@countChild"  data-code="@display.code?.ToLower()"  data-isexport="@(display.isexport ?? "True")" style="@(display.cssheader ?? "")">@Html.Raw(display.name)</th>
                                       }
                               
                                     }
@@ -344,13 +351,13 @@
 						            @foreach (var display in displayList.Where(p=> p.isdisplay == true && p.isparent == true).OrderBy(p => p.colnum ?? 0).ToList())
                                     {
                                       @* dem so cot con de tinh colspan *@
-                                      var countChild = displayList.Count(p => p.parentcode == display.code);
+                                      var countChild = displayList.Count(p => p.parentcode?.ToLower() == display.code?.ToLower());
                                       @* neu co cot con thi xu ly tiep *@
                                       @if (countChild > 0)
                                       {
-                                        @foreach (var displaychild in displayList.Where(p=> p.isdisplay == true && p.parentcode == display.code).OrderBy(p => p.colnum ?? 0).ToList())
+                                        @foreach (var displaychild in displayList.Where(p=> p.isdisplay == true && p.parentcode?.ToLower() == display.code?.ToLower()).OrderBy(p => p.colnum ?? 0).ToList())
                                         {
-                                            <th class="text-center" data-code="@display.code" data-index="@(displaychild.colnum ?? "0")" data-isexport="@(displaychild.isexport ?? "True")" style="min-width:@(displaychild.width ?? "200")px;@(displaychild.cssheader ?? "")">@Html.Raw(displaychild.name)</th>
+                                            <th class="text-center" data-code="@display.code?.ToLower()" data-index="@(displaychild.colnum ?? "0")" data-isexport="@(displaychild.isexport ?? "True")" style="min-width:@(displaychild.width ?? "200")px;@(displaychild.cssheader ?? "")">@Html.Raw(displaychild.name)</th>
                                         }
                                       }
                               
@@ -375,6 +382,8 @@
                                     @* cột select box mặc đinh *@
                                     <td class="text-center" data-isexport="False" data-value="@id">
                                     </td>
+                                    @* cột chi tiết mặc đinh *@
+                                    <td class="text-center" data-isexport="False">
                                     @* voi moi cot dang co *@
                                     @* neu cot isdisplay = false thi khong hien thi  *@
                                     @foreach (var display in displayList.Where(p=> p.isdisplay == false).OrderBy(p => p.colnum ?? 0).ToList())
@@ -382,7 +391,7 @@
                                         <td class="@FormatHelper.ParseTextAlignToClass(display.textalign) d-none" data-isexport="@(display.isexport ?? "True")">
                                             @{
                                                 object value;
-                                                if (dictionary.TryGetValue(display.code, out value))
+                                                if (dictionary.TryGetValue(display.code?.ToLower(), out value))
                                                 {
                                                     @Html.Raw(value)
                                                 }
@@ -394,13 +403,13 @@
                                         </td>
                                     }
                                     @* hien thi cot stt dau tien neu co *@
-					                @foreach (var display in displayList.Where(p=> p.isdisplay == true && p.code == "stt" && p.isparent == false && string.IsNullOrEmpty(p.parentcode)).OrderBy(p => p.colnum ?? 0).ToList())
+					                @foreach (var display in displayList.Where(p=> p.isdisplay == true && p.code?.ToLower() == "stt" && p.isparent == false && string.IsNullOrEmpty(p.parentcode?.ToLower())).OrderBy(p => p.colnum ?? 0).ToList())
                                     {
                                         @* neu isFreePane bang true thi them class freepanze-col *@
                                         <td class="text-center @(display.isfreepane == true ? "freepanze-col" : "")" data-isexport="@(display.isexport ?? "True")">
                                             @{
                                                 object value;
-                                                if (dictionary.TryGetValue(display.code, out value))
+                                                if (dictionary.TryGetValue(display.code?.ToLower(), out value))
                                                 {
                                                     @Html.Raw(value);
                                                 }
@@ -474,15 +483,20 @@
                                       </div>
 							        </td>
                                     @* neu cot khong co parent code cung khong phai is parent thi xu ly rieng *@
-					                @foreach (var display in displayList.Where(p=> p.isdisplay == true && p.code != "stt" && p.isparent == false && string.IsNullOrEmpty(p.parentcode)).OrderBy(p => p.colnum ?? 0).ToList())
+					                @foreach (var display in displayList.Where(p=> p.isdisplay == true && p.code?.ToLower() != "stt" && p.isparent == false && string.IsNullOrEmpty(p.parentcode?.ToLower())).OrderBy(p => p.colnum ?? 0).ToList())
                                     {
                                         var displayType = display.type as string ?? "link";
                                         var displayFormat = display.format as string ?? "";
+                                        var displayCode = display.code.ToLower() as string ?? "";
+                                        var displayTextAlign = display.textalign as string ?? "";
+                                        var displayIsExport = display.isexport;
+                                        var displayIsReadOnly  = display.isreadonly ?? false;
+                                        var displayValidationRule = display.validationrule ?? "[]";
                                         @* neu isFreePane bang true thi them class freepanze-col *@
-                                        <td class="@FormatHelper.ParseTextAlignToClass(display.textalign) @(display.isfreepane == true ? "freepanze-col" : "")" data-isexport="@(display.isexport ?? "True")" data-displaytype="@displayType" data-displayformat="@displayFormat">
+                                        <td class="@FormatHelper.ParseTextAlignToClass(displayTextAlign) @(display.isfreepane == true ? "freepanze-col" : "")" data-isexport="@(displayIsExport ?? "True")" data-displaytype="@displayType" data-displayformat="@displayFormat">
                                             @{
                                                 object value;
-                                                if (dictionary.TryGetValue(display.code, out value))
+                                                if (dictionary.TryGetValue(displayCode, out value))
                                                 {
                                                     string valueType = "";
                                                     // kiem tra kieu du lieu cua value
@@ -594,7 +608,7 @@
                                                     else if (displayType == "combobox")
                                                     {
                                                         // check selected cho item dung voi gia tri
-                                                        var selectList = editorDynamicServiceSelectOptions[display.code] as List<SelectListItem> ?? new List<SelectListItem>();
+                                                        var selectList = editorDynamicServiceSelectOptions[displayCode] as List<SelectListItem> ?? new List<SelectListItem>();
                                                         // lay du lieu text từ service thông qua value
                                                         string displayValue = selectList.Where(p => p.Value.ToString() == value.ToString()).Select(p => p.Text).First().ToString() ?? "";
                                                         <span style="white-space: pre-wrap">@displayValue</span>
@@ -617,18 +631,25 @@
 						                          @foreach (var display in displayList.Where(p=> p.isdisplay == true && p.isparent == true).OrderBy(p => p.colnum ?? 0).ToList())
                                       {
                                         @* dem so cot con de tinh colspan *@
-                                        var countChild = displayList.Count(p => p.parentcode == display.code);
+                                        var countChild = displayList.Count(p => p.parentcode?.ToLower() == display.code?.ToLower());
                                         @* neu co cot con thi xu ly tiep *@
                                         if (countChild > 0)
                                         {
-                                          @foreach (var displaychild in displayList.Where(p=> p.isdisplay == true && p.parentcode == display.code).OrderBy(p => p.colnum ?? 0).ToList())
+                                          @foreach (var displaychild in displayList.Where(p=> p.isdisplay == true && p.parentcode?.ToLower() == display.code?.ToLower()).OrderBy(p => p.colnum ?? 0).ToList())
                                           {
-                                              var displayType = displaychild.type as string ?? "link";
+                                              @* mặc định type là string *@
+                                              var displayType = displaychild.type as string ?? "string";
                                               var displayFormat = displaychild.format as string ?? "";
-                                              <td class="@FormatHelper.ParseTextAlignToClass(displaychild.textalign)" data-isexport="@(displaychild.isexport ?? "0")" data-displaytype="@displayType" data-displayformat="@displayFormat">
+                                              var displayCode = displaychild.code.ToLower() as string ?? "";
+                                              var displayTextAlign = displaychild.textalign as string ?? "";
+                                              var displayIsExport = displaychild.isexport;
+                                              var displayIsReadOnly  = displaychild.isreadonly ?? false;
+                                              var displayValidationRule = displaychild.validationrule ?? "[]";
+
+                                              <td class="@FormatHelper.ParseTextAlignToClass(displaychild.textalign)" data-isexport="@(displayIsExport ?? "0")" data-displaytype="@displayType" data-displayformat="@displayFormat">
                                                   @{
                                                       object value;
-                                                      if (dictionary.TryGetValue(displaychild.code, out value))
+                                                      if (dictionary.TryGetValue(displayCode, out value))
                                                       {
                                                           string valueType = "";
                                                           // kiem tra kieu du lieu cua value
@@ -740,7 +761,7 @@
                                                           else if (displayType == "combobox")
                                                           {
                                                               // check selected cho item dung voi gia tri
-                                                              var selectList = editorDynamicServiceSelectOptions[displaychild.code] as List<SelectListItem> ?? new List<SelectListItem>();
+                                                              var selectList = editorDynamicServiceSelectOptions[displayCode] as List<SelectListItem> ?? new List<SelectListItem>();
                                                               // lay du lieu text từ service thông qua value
                                                               string displayValue = selectList.Where(p => p.Value.ToString() == value.ToString()).Select(p => p.Text).First().ToString() ?? "";
                                                               <span style="white-space: pre-wrap">@displayValue</span>
@@ -815,14 +836,6 @@
         $(document).ready(function () {
             debugger;
             function initSelect2() {
-              // không áp dụng cho Quiff HTML editor
-                $("select") .not(".ql-toolbar select, .ql-container select, .ql-editor select").not(".select2-hidden-accessible").not(".dt-length select").select2({
-                    placeholder: "Chọn",
-                    allowClear: true,
-                    width: "100%"
-                });
-            }
-
             // Khởi tạo Select2 cho các select đã có sẵn
             initSelect2();
 
@@ -867,18 +880,26 @@
             const id = $btn.data('id') ?? "";
             const formCode = $btn.data('formcode') ?? "";
             const isReadOnly = $btn.data('isreadonly') ?? false;
-            const queryParams = new URLSearchParams(window.location.search).toString(); // lấy full query string
+            const queryParams = new URLSearchParams(window.location.search); // lấy full query string
+            // truyền các tham số cần thiết
+            queryParams.set('isPage', 'false');// kiểm tra đây có phải là 1 page không hay chỉ là 1 mẫu
+            queryParams.set('isStepper', 'false');// kiểm tra form này có phải dạng stepper (form wizard) không
+            // mặc định container id cho popup form
+            queryParams.set('containerId', 'modal-PopupForm');
+
+            // Nếu cần chuyển thành chuỗi query lại:
+            const newQueryString = queryParams.toString();
 
             // có 2 cách lấy, 1 là lấy từ link, 2  là lấy từ form code và id
             let url = ""
             if (actionlink != null){
               url = actionlink;
-              if (queryParams !== "") {
-                  url += (actionlink.includes('?') ? '&' : '?') + queryParams;
+              if (newQueryString !== "") {
+                  url += (actionlink.includes('?') ? '&' : '?') + newQueryString;
               }
             }
             else{
-              url = `/form/popup-viewer/${formCode}/${id}?${queryParams}&isReadOnly=${isReadOnly}`;
+              url = `/form/popup-viewer/${formCode}/${id}?${newQueryString}&isReadOnly=${isReadOnly}`;
             }
 
             $.ajax({

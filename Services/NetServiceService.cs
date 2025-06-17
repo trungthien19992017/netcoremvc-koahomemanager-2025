@@ -190,7 +190,7 @@ namespace KOAHome.Services
               sw.Stop();
 
 
-              return (Code: code, SelectList: selectList); // 👈 đây là fix
+              return (Code: code.ToLower(), SelectList: selectList); // 👈 đây là fix
             })
             .ToList();
 

@@ -7,6 +7,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.AspNetCore.WebUtilities;
+using Microsoft.Data.SqlClient;
 using Npgsql;
 using System.Diagnostics;
 using static NuGet.Packaging.PackagingConstants;
@@ -295,6 +296,11 @@ namespace KOAHome.Controllers
         listDisplayService = await _netService.NET_Service_GetListSelectListByDisplay(displayList, objParameters);
         //  Gán danh sach select cho cac display vào ViewBag
         ViewData["EditorDynamicServiceSelectOptions"] = listDisplayService;
+
+        // Nhận chuỗi json validate cho validation editor
+        var getValidationFromStore = await _report.NET_Report_GetValidation(ReportCode);
+        var validationJson = getValidationFromStore.ContainsKey("value") ? Convert.ToString(getValidationFromStore["value"]) ?? "" : "";
+        ViewData["editorcolumnvalidation"] = validationJson;
 
         // search
         stopwatch.Restart();
