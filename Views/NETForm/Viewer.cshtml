@@ -231,7 +231,7 @@
                                     {
                                         @* name: Key cua field truyen vao, label: Ten field, type: Loại field, value: giá trị field
                                 , field width: độ rộng field *@
-                                        string name = field.code;
+                                        string name = field.code.ToLower();
                                         string label = field.name;
                                         string type = field.formfieldtypecode;
                                         string field_options = field.options;
@@ -278,7 +278,7 @@
                                                     {
                                                         @* name: Key cua field truyen vao, label: Ten field, type: Loại field, value: giá trị field
                                             , field width: độ rộng field *@
-                                                        string child_name = fieldchild.code;
+                                                        string child_name = fieldchild.code.ToLower();
                                                         string child_label = fieldchild.name;
                                                         string child_type = fieldchild.formfieldtypecode;
                                                         string child_field_options = fieldchild.options;
@@ -317,7 +317,7 @@
 
                                                         <div class="col-md-@(Convert.ToInt32(child_field_width) == 0 ? "4" : child_field_width) form-control-validation fv-plugins-icon-container">
                                                             <div class="@(
-                                                              noclasslabel_fieldtypes.Contains(child_type) ? "" : child_type == "CheckBox" ? "form-check mt-4" : child_type == "Switch" ? "form-check form-switch me-n3" : "form-floating form-floating-outline"
+                                                              noclasslabel_fieldtypes.Contains(child_type) ? "" : child_type == "CheckBox" ? "form-check mt-4" : child_type == "Switch" ? "form-check form-switch me-n3" : child_type == "DropDownBox" ? "form-floating form-floating-outline select2-dark form-floating-select2" : "form-floating form-floating-outline"
                                                             )">
                                                                 @if (child_type == "TextBox")
                                                                 {
@@ -633,7 +633,7 @@
                                             string[] noclasslabel_fieldtypes = ["RadioGroup","FileUploader","HTMLEditor"];
                                             <div class="col-md-@(Convert.ToInt32(field_width) == 0 ? "4" : field_width) form-control-validation fv-plugins-icon-container">
                                                 <div class="@(
-                                                    noclasslabel_fieldtypes.Contains(type) ? "" : type == "CheckBox" ? "form-check mt-4" : type == "Switch" ? "form-check form-switch me-n3" : "form-floating form-floating-outline"
+                                                    noclasslabel_fieldtypes.Contains(type) ? "" : type == "CheckBox" ? "form-check mt-4" : type == "Switch" ? "form-check form-switch me-n3" : type == "DropDownBox" ? "form-floating form-floating-outline select2-dark form-floating-select2" : "form-floating form-floating-outline"
                                                   )">
                                                     @if (type == "TextBox")
                                                     {

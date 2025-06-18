@@ -260,7 +260,7 @@
                                                                     int colspan = Convert.ToInt32(filter.colspan);
 
                                                                     @* neu colspan = 0 thi mac dinh = 4, neu khong thi lay colspan *@
-                                                                        <div class="col-md-@(Convert.ToInt32(filter.colspan) == 0 ? "4" : @filter.colspan) form-floating form-floating-outline mb-6">
+                                                                        <div class="col-md-@(Convert.ToInt32(filter.colspan) == 0 ? "4" : @filter.colspan) form-floating form-floating-outline mb-6 @(type == "TREEVIEW MULTIPLE" ? "select2-dark form-floating-select2" : "")">
                                                                         @if (type == "TEXT BOX")
                                                                         {
                                                                             <input class="form-control form-control-sm" type="text" id="@name" name="@name" value="@value" @(filter.required == true ? "required" : "") />
