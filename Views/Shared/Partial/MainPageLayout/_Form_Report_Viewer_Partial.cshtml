@@ -55,7 +55,14 @@
                   @* nếu isPage = true thì hiển thị title *@
                   @if (isPage == true)
                   {
-                    <h2 class="card-header text-center" id="header-title">@(listFilterValue.ContainsKey("title") ? listFilterValue["title"] : report.ContainsKey("name") ? report["name"] : "Danh sách")</h2>
+                    <h2 class="card-header text-center" id="header-title">
+                        @((listFilterValue != null && listFilterValue.ContainsKey("title")) 
+                            ? listFilterValue["title"] 
+                            : (report != null && report.ContainsKey("name")) 
+                                ? report["name"] 
+                                : "Danh sách")
+                    </h2>
+
                   }
                   <div class="card-datatable" id="vertical-example">
                   @* nếu isPage = true, là trang hoàn chỉnh thì hiển thị thêm bộ lọc và action top *@
