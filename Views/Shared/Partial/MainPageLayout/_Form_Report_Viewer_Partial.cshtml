@@ -1,0 +1,48 @@
+@using KOAHome.Helpers
+@using System.Text.Json
+@using Microsoft.Data.SqlClient
+@using Npgsql
+@{
+    var resultList = ViewData["resultList"] as List<dynamic>;
+
+    // giá trị isPage để kiểm tra có phải trang hoàn chỉnh không
+    var isPage = ViewData["isPage"] as bool?;
+
+    var containerId = ViewData["containerId"] as string;
+
+    // truyen cau hinh report de xu ly giao dien
+    var report = ViewData["report"] as IDictionary<string, object>;
+    string ReportCode = ViewData["ReportCode"] as string;
+
+    // truyen danh sach gia tri loc len giao dien
+    var listFilterValue = ViewData["ListFilterValue"] as Dictionary<string, object>;
+    var listFilterConfig = ViewData["ListFilterConfig"] as List<dynamic>;
+
+
+    // danh sách select list chứa danh mục của các selectbox, radio, dropdownbox thuoc filter
+    var dynamicServiceSelectOptions = ViewData["DynamicServiceSelectOptions"] as Dictionary<string, List<SelectListItem>>;
+    // danh sách select list chứa danh mục của các selectbox, radio, dropdownbox thuoc display editor
+    var editorDynamicServiceSelectOptions = ViewData["EditorDynamicServiceSelectOptions"] as Dictionary<string, List<SelectListItem>>;
+
+    // truyen danh sach gia tri cot du lieu len giao dien
+    var displayList = ViewData["displayList"] as List<dynamic>;
+    // tính cấp cha con display
+    int displayParentLevelNum = ViewData.ContainsKey("displayParentLevelNum") ? Convert.ToInt32(ViewData["displayParentLevelNum"]) : 1;
+
+    // truyen danh sach gia tri action du lieu len giao dien
+    var actionlistdetailList = ViewData["actionlistdetailList"] as List<dynamic>;
+
+    var actionlistdetailList_top = null as List<dynamic>;
+    var actionlistdetailList_grid = null as List<dynamic>;
+    // neu ton tai action list detail
+    if (actionlistdetailList != null)
+    {
+        // phan biet action top va grid
+        actionlistdetailList_top = actionlistdetailList.Where(p => p.istop == true).ToList();
+        actionlistdetailList_grid = actionlistdetailList.Where(p => p.istop == null || p.istop == false).ToList();
+    }
+
+    // tao bien dem de dem row num cho report
+    var reportRowIndex = 1;
+
+}
