@@ -9,12 +9,12 @@ COPY ["KOAHome.csproj", "."]
 RUN dotnet restore "./KOAHome.csproj"
 COPY . .
 WORKDIR "/src/."
-RUN dotnet build "./KOAHome.csproj" -c $BUILD_CONFIGURATION -p:TreatWarningsAsErrors=false -o /app/build
+RUN dotnet build "./KOAHome.csproj" -c $BUILD_CONFIGURATION --no-restore -p:TreatWarningsAsErrors=false -o /app/build
 
 # This stage is used to publish the service project to be copied to the final stage
 FROM build AS publish
 ARG BUILD_CONFIGURATION=Release
-RUN dotnet publish "./KOAHome.csproj" -c $BUILD_CONFIGURATION -p:TreatWarningsAsErrors=false -o /app/publish /p:UseAppHost=false
+RUN dotnet publish "./KOAHome.csproj" -c $BUILD_CONFIGURATION --no-build -p:TreatWarningsAsErrors=false -p:UseAppHost=false -o /app/publish
 
 # This stage is used in production or when running from VS in regular mode (Default when not using the Debug configuration)
 FROM base AS final
