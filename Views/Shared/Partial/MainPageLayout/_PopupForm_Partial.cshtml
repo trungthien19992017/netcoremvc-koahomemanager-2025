@@ -131,6 +131,10 @@ asp-route-id="@id" data-modal-id="modal-PopupForm" enctype="multipart/form-data"
                                             // tinh do rong cua field dua tren gia tri config
                                             int child_field_width = (12 / field_colcount * child_field_colspan);
 
+                                            //field icon va style cua field icon
+                                            string iconclass = (child_field_optionsDict.ContainsKey("iconClass") ? Convert.ToString(child_field_optionsDict["iconClass"]) : "");
+                                            string styleclass = (child_field_optionsDict.ContainsKey("iconStyle") ? Convert.ToString(child_field_optionsDict["iconStyle"]) : "");
+
                                             // lay thong tin validation
                                             string child_field_validates = fieldchild.validates;
                                             // parse validation thanh List<Dictionary<string, object>>
@@ -261,9 +265,6 @@ asp-route-id="@id" data-modal-id="modal-PopupForm" enctype="multipart/form-data"
                                                     {
                                                         // check selected cho item dung voi gia tri
                                                         var selectList = dynamicServiceSelectOptions[child_name] as List<SelectListItem> ?? new List<SelectListItem>();
-                                                        string iconclass = (child_field_optionsDict.ContainsKey("iconClass") ? Convert.ToString(child_field_optionsDict["iconClass"]) : "");
-
-                                                        string styleclass = (child_field_optionsDict.ContainsKey("iconStyle") ? Convert.ToString(child_field_optionsDict["iconStyle"]) : "");
                                                         string inputName = child_name; // ví dụ: "ListSelectionInput"
                                                         var selectedValues = (value.ToString() ?? "").Split(',', StringSplitOptions.RemoveEmptyEntries).ToList();
                                                         string hiddenInputId = $"hidden_{inputName}";
@@ -312,9 +313,6 @@ asp-route-id="@id" data-modal-id="modal-PopupForm" enctype="multipart/form-data"
                                                     else if (child_type == "FileUploader")
                                                     {
                                                         string codeUpload = child_field_optionsDict.ContainsKey("codeUpload") ? (child_field_optionsDict["codeUpload"].ToString() ?? "") : "";
-                                                        string iconclass = (child_field_optionsDict.ContainsKey("iconClass") ? Convert.ToString(child_field_optionsDict["iconClass"]) : "");
-
-                                                        string styleclass = (child_field_optionsDict.ContainsKey("iconStyle") ? Convert.ToString(child_field_optionsDict["iconStyle"]) : "");
                                                         var fileList = new List<string>();
                                                         if (fileUrlsDict != null)
                                                         {
@@ -407,9 +405,6 @@ asp-route-id="@id" data-modal-id="modal-PopupForm" enctype="multipart/form-data"
                                                     }
                                                     else if (child_type == "HTMLEditor")
                                                     {
-                                                        string iconclass = (child_field_optionsDict.ContainsKey("iconClass") ? Convert.ToString(child_field_optionsDict["iconClass"]) : "");
-
-                                                        string styleclass = (child_field_optionsDict.ContainsKey("iconStyle") ? Convert.ToString(child_field_optionsDict["iconStyle"]) : "");
                                                         <label for="@child_name" class="htmleditor-form-label"><i class="@iconclass" style="@styleclass"></i> @child_label <span class='text-danger'>@(child_isrequired == true ? "*" : "")</span></label>
                                                         // Quill Editor hiển thị
                                                         <div id="@("editor-container-"+child_name)" style="height:300px;" class="quill-editor"></div>
@@ -422,9 +417,6 @@ asp-route-id="@id" data-modal-id="modal-PopupForm" enctype="multipart/form-data"
                                                         string reportCode = field_editoroptionsDict.ContainsKey("reportCode") ? (field_editoroptionsDict["reportCode"].ToString() ?? "") : "";
                                                         bool isViewerUtility = field_editoroptionsDict.ContainsKey("isViewerUtility") ? Convert.ToBoolean(field_editoroptionsDict["isViewerUtility"]) : false;
                                                         bool isEditor = field_editoroptionsDict.ContainsKey("isEditor") ? Convert.ToBoolean(field_editoroptionsDict["isEditor"]) : false;
-                                                        string iconclass = (child_field_optionsDict.ContainsKey("iconClass") ? Convert.ToString(child_field_optionsDict["iconClass"]) : "");
-
-                                                        string styleclass = (child_field_optionsDict.ContainsKey("iconStyle") ? Convert.ToString(child_field_optionsDict["iconStyle"]) : "");
 
                                                         <div class="row gx-5">
                                                             <div class="col-md-12 card-header"><label class="mb-0"><i class="@iconclass" style="@styleclass"></i> @child_label</label></div>                        
@@ -443,15 +435,24 @@ asp-route-id="@id" data-modal-id="modal-PopupForm" enctype="multipart/form-data"
                                                         var styleString = string.Join(";", labelcss.Select(kv => $"{kv.Key}:{kv.Value}"));
                                                         <p for="reviewtitle" style="@styleString">@value</p>
                                                     }
+                                                    else if (child_type == "EmbedYoutube")
+                                                    {
+                                                        <lable for="@child_name" class="htmleditor-form-label"><i class="@iconclass" style="@styleclass"></i> @label</lable>
+                                                        <div class="youtube-video-embed w-100">
+                                                            <div class="plyr__video-embed" id="plyr-youtube-video">
+                                                                <iframe src="@child_value"
+                                                                        allowfullscreen
+                                                                        allowtransparency
+                                                                        allow="autoplay"></iframe>
+                                                            </div>
+                                                        </div>
+                                                    }
 
                                                     @{
                                                         // mot số trường sử dụng label riêng
                                                         string[] nolabel_fieldtypes = ["DynamicReport","FileUploader","HTMLEditor","RadioGroup","EmptyBox","ListSelection","Label"];
                                                         if (!nolabel_fieldtypes.Contains(child_type))
                                                         {
-                                                            string iconclass = (child_field_optionsDict.ContainsKey("iconClass") ? Convert.ToString(child_field_optionsDict["iconClass"]) : "");
-
-                                                            string styleclass = (child_field_optionsDict.ContainsKey("iconStyle") ? Convert.ToString(child_field_optionsDict["iconStyle"]) : "");
                                                             <label for="@child_name"><i class="@iconclass" style="@styleclass"></i> @child_label <span class='text-danger'>@(child_isrequired == true ? "*" : "")</span></label>
                                                         }
                                                     }
@@ -467,7 +468,12 @@ asp-route-id="@id" data-modal-id="modal-PopupForm" enctype="multipart/form-data"
                             else
                             {
                                 // nếu không phải là group item và không có parentid thì xử lý bình thường
-                                string[] noclasslabel_fieldtypes = ["RadioGroup","FileUploader","HTMLEditor"];
+                                string[] noclasslabel_fieldtypes = ["RadioGroup", "FileUploader", "HTMLEditor"];
+
+                                //icon va style cua icon
+                                string iconclass = (field_optionsDict.ContainsKey("iconClass") ? Convert.ToString(field_optionsDict["iconClass"]) : "");
+                                string styleclass = (field_optionsDict.ContainsKey("iconStyle") ? Convert.ToString(field_optionsDict["iconStyle"]) : "");
+
                                 <div class="col-md-@(Convert.ToInt32(field_width) == 0 ? "4" : field_width) form-control-validation fv-plugins-icon-container">
                                     <div class="@(
                                         noclasslabel_fieldtypes.Contains(type) ? "" : type == "CheckBox" ? "form-check mt-4" : type == "Switch" ? "form-check form-switch me-n3" : type == "DropDownBox" ? "form-floating form-floating-outline select2-dark form-floating-select2" : "form-floating form-floating-outline"
@@ -577,9 +583,6 @@ asp-route-id="@id" data-modal-id="modal-PopupForm" enctype="multipart/form-data"
                                         {
                                             // check selected cho item dung voi gia tri
                                             var selectList = dynamicServiceSelectOptions[name] as List<SelectListItem> ?? new List<SelectListItem>();
-                                            string iconclass = (field_optionsDict.ContainsKey("iconClass") ? Convert.ToString(field_optionsDict["iconClass"]) : "");
-
-                                            string styleclass = (field_optionsDict.ContainsKey("iconStyle") ? Convert.ToString(field_optionsDict["iconStyle"]) : "");
                                             string inputName = name; // ví dụ: "ListSelectionInput"
                                             var selectedValues = (value.ToString() ?? "").Split(',', StringSplitOptions.RemoveEmptyEntries).ToList();
                                             string hiddenInputId = $"hidden_{inputName}";
@@ -628,9 +631,6 @@ asp-route-id="@id" data-modal-id="modal-PopupForm" enctype="multipart/form-data"
                                         else if (type == "FileUploader")
                                         {
                                             string codeUpload = field_optionsDict.ContainsKey("codeUpload") ? (field_optionsDict["codeUpload"].ToString() ?? "") : "";
-                                            string iconclass = (field_optionsDict.ContainsKey("iconClass") ? Convert.ToString(field_optionsDict["iconClass"]) : "");
-
-                                            string styleclass = (field_optionsDict.ContainsKey("iconStyle") ? Convert.ToString(field_optionsDict["iconStyle"]) : "");
                                             var fileList = new List<string>();
                                             if (fileUrlsDict != null)
                                             {
@@ -723,9 +723,6 @@ asp-route-id="@id" data-modal-id="modal-PopupForm" enctype="multipart/form-data"
                                         }
                                         else if (type == "HTMLEditor")
                                         {
-                                            string iconclass = (field_optionsDict.ContainsKey("iconClass") ? Convert.ToString(field_optionsDict["iconClass"]) : "");
-
-                                            string styleclass = (field_optionsDict.ContainsKey("iconStyle") ? Convert.ToString(field_optionsDict["iconStyle"]) : "");
                                             <label for="@name" class="htmleditor-form-label">@label</label>
                                             // Quill Editor hiển thị
                                             <div id="@("editor-container-"+name)" style="height:300px;" class="quill-editor"></div>
@@ -738,9 +735,6 @@ asp-route-id="@id" data-modal-id="modal-PopupForm" enctype="multipart/form-data"
                                             string form_reportCode = field_editoroptionsDict.ContainsKey("reportCode") ? (field_editoroptionsDict["reportCode"].ToString() ?? "") : "";
                                             bool form_isViewerUtility = field_editoroptionsDict.ContainsKey("isViewerUtility") ? Convert.ToBoolean(field_editoroptionsDict["isViewerUtility"]) : false;
                                             bool form_isEditor = field_editoroptionsDict.ContainsKey("isEditor") ? Convert.ToBoolean(field_editoroptionsDict["isEditor"]) : false;
-                                            string iconclass = (field_optionsDict.ContainsKey("iconClass") ? Convert.ToString(field_optionsDict["iconClass"]) : "");
-
-                                            string styleclass = (field_optionsDict.ContainsKey("iconStyle") ? Convert.ToString(field_optionsDict["iconStyle"]) : "");
 
                                             <div class="row gx-5">
                                                 <div class="col-md-12 card-header"><label class="mb-0"><i class="@iconclass" style="@styleclass"></i> @label</label></div>                        
@@ -776,15 +770,25 @@ asp-route-id="@id" data-modal-id="modal-PopupForm" enctype="multipart/form-data"
                                             var styleString = string.Join(";", labelcss.Select(kv => $"{kv.Key}:{kv.Value}"));
                                             <p for="reviewtitle" style="@styleString">@value</p>
                                         }
+                                        else if (type == "EmbedYoutube")
+                                        {
+                                            @* <input class="form-control form-control-sm" type="text" id="@name" name="@name" value="@value" @(isreadonly == true ? "readonly" : "") @(isrequired == true ? "required" : "") /> *@
+                                            <lable for="@name" class="htmleditor-form-label"><i class="@iconclass" style="@styleclass"></i> @label</lable>
+                                            <div class="youtube-video-embed w-100">
+                                                <div class="plyr__video-embed" id="plyr-youtube-video">
+                                                    <iframe src="@value"
+                                                            allowfullscreen
+                                                            allowtransparency
+                                                            allow="autoplay"></iframe>
+                                                </div>
+                                            </div>
+                                        }
 
                                         @* neu type dynamic report hoac file uploadder thì tự check label riêng *@
                                         @{
                                             string[] nolabel_fieldtypes = ["DynamicReport","FileUploader","HTMLEditor","RadioGroup","EmptyBox","ListSelection","Label"];
                                             if (!nolabel_fieldtypes.Contains(type))
                                             {
-                                                string iconclass = (field_optionsDict.ContainsKey("iconClass") ? Convert.ToString(field_optionsDict["iconClass"]) : "");
-
-                                                string styleclass = (field_optionsDict.ContainsKey("iconStyle") ? Convert.ToString(field_optionsDict["iconStyle"]) : "");
                                                 <label for="@name"><i class="@iconclass" style="@styleclass"></i> @label <span class='text-danger'>@(isrequired == true ? "*" : "")</span></label>
                                             }
                                         }
