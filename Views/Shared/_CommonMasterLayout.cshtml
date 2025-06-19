@@ -2199,6 +2199,49 @@
             }
         });
 
+         document.addEventListener('DOMContentLoaded', () => {
+          // Lấy tất cả các phần tử có class youtube-video-embed
+          const wrappers = document.querySelectorAll('.youtube-video-embed');
+
+          wrappers.forEach((wrapper, index) => {
+            const embed = wrapper.querySelector('.plyr__video-embed');
+
+            // Gán ID duy nhất nếu chưa có
+            if (!embed.id) {
+              embed.id = `plyr-youtube-${index}`;
+            }
+
+            // Khởi tạo Plyr
+            let youtubePlayer = new Plyr(`#${embed.id}`, {
+              autoplay: false,
+              loop: { active: false },
+              volume: 1,
+              speed: { selected: 1, options: [0.75, 1, 1.25, 1.5, 2] },
+              controls: [
+                  'play-large', 'rewind', 'play', 'fast-forward',
+                  'progress', 'current-time', 'duration',
+                  'mute', 'volume', 'captions', 'settings', 'fullscreen', 'pip'
+              ],
+              i18n: {
+                  restart: 'Phát lại',
+                  rewind: 'Lùi 10s',
+                  play: 'Phát',
+                  pause: 'Tạm dừng',
+                  fastForward: 'Tiến 10s',
+                  fullscreen: 'Toàn màn hình',
+                  settings: 'Cài đặt',
+                  captions: 'Phụ đề',
+                  volume: 'Âm lượng'
+              }
+            });
+
+              // Ví dụ xử lý sự kiện
+              youtubePlayer.on('ended', () => {
+              alert('🎉 Video đã kết thúc!');
+              });
+          });
+        });
+
     </script>
 
     <!-- Page Scripts-->
