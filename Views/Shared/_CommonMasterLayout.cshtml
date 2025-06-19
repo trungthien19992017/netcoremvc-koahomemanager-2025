@@ -2243,7 +2243,7 @@
             // Khởi tạo Plyr
             let youtubePlayer = new Plyr(`#${embed.id}`, {
               autoplay: false,
-              loop: { active: false },
+              loop: { active: true },
               volume: 1,
               speed: { selected: 1, options: [0.75, 1, 1.25, 1.5, 2] },
               controls: [
@@ -2266,7 +2266,15 @@
 
               // Ví dụ xử lý sự kiện
               youtubePlayer.on('ended', () => {
-              alert('🎉 Video đã kết thúc!');
+		          rplm({
+			          title: "Hoàn thành",
+			          text: 'Bạn đã xem hết video',
+			          type: 'success',
+			          html: true,
+			          modalNOverlay: 'white',
+			          confirmButtonText: 'Xác nhận',
+			          allowOutsideClick: true,
+		          });
               });
           });
         });
