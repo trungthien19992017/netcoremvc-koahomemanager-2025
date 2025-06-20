@@ -2316,6 +2316,19 @@
               }
             });
 
+            //hiển thị trong now playing IOS
+            player.on('ready', () => {
+              if ('mediaSession' in navigator) {
+                navigator.mediaSession.metadata = new MediaMetadata({
+                  title: 'Hướng dẫn học lập trình .NET',
+                  artist: 'Kênh DevMaster',
+                  album: 'Khóa học nền tảng',
+                  artwork: [
+                    { src: '~/img/icon/koa/koala_with_headphones.png', sizes: '512x512', type: 'image/jpeg' }
+                  ]
+                });
+              }
+
               // Ví dụ xử lý sự kiệnx1
               videoPlayer.on('ended', () => {
 		          rplm({
