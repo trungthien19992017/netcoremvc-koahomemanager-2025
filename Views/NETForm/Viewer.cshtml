@@ -600,7 +600,7 @@
                                                                 }
                                                                 else if (child_type == "EmbedYoutube")
                                                                 {
-                                                                    <lable for="@child_name" class="htmleditor-form-label"><i class="@iconclass" style="@styleclass"></i> @label</lable>
+                                                                    <P for="@child_name" class="htmleditor-form-label"><i class="@iconclass" style="@styleclass"></i> @label</P>
                                                                     <div class="youtube-video-embed w-100">
                                                                         <div class="plyr__video-embed" id="plyr-youtube-video">
                                                                             <iframe src="@child_value"
@@ -610,10 +610,19 @@
                                                                         </div>
                                                                     </div>
                                                                 }
+                                                                else if (type == "VideoUploader")
+                                                                {
+                                                                    <p for="@child_name" class="htmleditor-form-label"><i class="@iconclass" style="@styleclass"></i> @label</p>
+                                                                    <div class="video-player-embed">
+                                                                        <video class="w-100 plyr__video-embed" id="@("plyr-video-player-"+name)" poster="https://cdn.plyr.io/static/demo/View_From_A_Blue_Moon_Trailer-HD.jpg" playsinline="" controls="">
+                                                                            <source src="~/img/testimg/musictest.mp4" type="video/mp4">
+                                                                        </video>
+                                                                    </div>
+                                                                }
 
                                                                 @{
                                                                     // mot số trường sử dụng label riêng
-                                                                    string[] nolabel_fieldtypes = ["DynamicReport", "FileUploader", "HTMLEditor", "RadioGroup", "EmptyBox", "ListSelection", "ColorBox", "Label", "EmbedYoutube"];
+                                                                    string[] nolabel_fieldtypes = ["DynamicReport", "FileUploader", "HTMLEditor", "RadioGroup", "EmptyBox", "ListSelection", "ColorBox", "Label", "EmbedYoutube","VideoUploader"];
                                                                     if (!nolabel_fieldtypes.Contains(child_type))
                                                                     {
                                                                         <label for="@child_name"><i class="@iconclass" style="@styleclass"></i> @child_label <span class='text-danger'>@(child_isrequired == true ? "*" : "")</span></label>
@@ -940,10 +949,9 @@
                                                     }
                                                     else if (type == "EmbedYoutube")
                                                     {
-                                                        @* <input class="form-control form-control-sm" type="text" id="@name" name="@name" value="@value" @(isreadonly == true ? "readonly" : "") @(isrequired == true ? "required" : "") /> *@
-                                                        <lable for="@name" class="htmleditor-form-label"><i class="@iconclass" style="@styleclass"></i> @label</lable>
+                                                        <p for="@name" class="htmleditor-form-label"><i class="@iconclass" style="@styleclass"></i> @label</p>
                                                         <div class="youtube-video-embed w-100">
-                                                            <div class="plyr__video-embed" id="plyr-youtube-video">
+                                                            <div class="plyr__video-embed" id="@("plyr-youtube-video-"+name)">
                                                                 <iframe src="@value"
                                                                         allowfullscreen
                                                                         allowtransparency
@@ -951,16 +959,24 @@
                                                             </div>
                                                         </div>
                                                     }
+                                                    else if (type == "VideoUploader")
+                                                    {
+                                                        <p for="@name" class="htmleditor-form-label"><i class="@iconclass" style="@styleclass"></i> @label</p>
+                                                        <div class="video-player-embed">
+                                                            <video class="w-100 plyr__video-embed" id="@("plyr-video-player-"+name)" poster="https://cdn.plyr.io/static/demo/View_From_A_Blue_Moon_Trailer-HD.jpg" playsinline="" controls="">
+                                                                <source src="~/img/testimg/musictest.mp4" type="video/mp4">
+                                                            </video>
+                                                        </div>
+                                                    }
 
                                                     @* neu type dynamic report hoac file uploadder thì tự check label riêng *@
                                                     @{
-                                                        string[] nolabel_fieldtypes = ["DynamicReport", "FileUploader", "HTMLEditor", "RadioGroup", "EmptyBox", "ListSelection", "ColorBox", "Label", "EmbedYoutube"];
+                                                        string[] nolabel_fieldtypes = ["DynamicReport", "FileUploader", "HTMLEditor", "RadioGroup", "EmptyBox", "ListSelection", "ColorBox", "Label", "EmbedYoutube", "VideoUploader"];
                                                         if (!nolabel_fieldtypes.Contains(type))
                                                         {
                                                             <label for="@name"><i class="@iconclass" style="@styleclass"></i> @label <span class='text-danger'>@(isrequired == true ? "*" : "")</span></label>
                                                         }
-                                                    }
-                                                    @*  <div class="valid-feedback"> Chính xác! </div>
+                                                    }                                                    @*  <div class="valid-feedback"> Chính xác! </div>
                                       <div class="invalid-feedback"> @required_message </div> *@
                                                 </div>
                                             </div>
