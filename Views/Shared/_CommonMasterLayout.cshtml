@@ -2317,7 +2317,7 @@
             });
 
             //hiển thị trong now playing IOS
-            videoPlayer.on('ready', () => {
+            videoPlayer.on('play', () => {
               if ('mediaSession' in navigator) {
                 navigator.mediaSession.metadata = new MediaMetadata({
                   title: 'Hướng dẫn học lập trình .NET',
