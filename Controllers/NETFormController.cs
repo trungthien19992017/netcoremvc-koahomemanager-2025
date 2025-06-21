@@ -492,148 +492,157 @@ namespace KOAHome.Controllers
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> PopupForm(string? FormCode, int? id, [FromForm] IFormCollection form)
     {
-      // reset tempdata error message
-      TempData["ErrorMessage"] = null;
-
-      // mac dinh id = 0
-      id ??= 0;
-
-      // Nếu bạn cần redirect (ví dụ sau khi lưu), có thể dùng:
-      // Tách các form input có tiền tố "q_" vì tiền tố q_ là các query param từ link
-      string queryString = ParseDataHelper.GetQueryStringFromForm(form);
-      string currentPath = HttpContext.Request.Path;
-
-      // Tách lại query param gốc từ form input "q_" để lọc dữ liệu khi xử lý
-      var queryParamerter = form
-          .Where(kv => kv.Key.StartsWith("q_"))
-          .ToDictionary(
-              kv => kv.Key.Substring(2),
-              kv => (object)kv.Value.ToString()
-          );
-
-      // xử lý form để loại các tiền tố q_ ra khỏi Key
-      form = ParseDataHelper.RemovePrefix_FromFormKey(form);
-
-      // lay thong tin report, va danh sach filter display cua report de xu ly
-      var config_form = await _form.NET_Form_Get(FormCode);
-      // tra ve page loi neu khong tim thay report
-      if (config_form == null)
+      try
       {
-        return Json(new { success = false, errorMessage = "Không tìm thấy biểu mẫu" });
-      }
+        // reset tempdata error message
+        TempData["ErrorMessage"] = null;
 
-      string? connectionString = null;
-      //neu datasourceId la null thi lay connectionString mac dinh
-      if (config_form.ContainsKey("datasourceid"))
-      {
-        if (config_form["datasourceid"] != null)
+        // mac dinh id = 0
+        id ??= 0;
+
+        // Nếu bạn cần redirect (ví dụ sau khi lưu), có thể dùng:
+        // Tách các form input có tiền tố "q_" vì tiền tố q_ là các query param từ link
+        string queryString = ParseDataHelper.GetQueryStringFromForm(form);
+        string currentPath = HttpContext.Request.Path;
+
+        // Tách lại query param gốc từ form input "q_" để lọc dữ liệu khi xử lý
+        var queryParamerter = form
+            .Where(kv => kv.Key.StartsWith("q_"))
+            .ToDictionary(
+                kv => kv.Key.Substring(2),
+                kv => (object)kv.Value.ToString()
+            );
+
+        // xử lý form để loại các tiền tố q_ ra khỏi Key
+        form = ParseDataHelper.RemovePrefix_FromFormKey(form);
+
+        // lay thong tin report, va danh sach filter display cua report de xu ly
+        var config_form = await _form.NET_Form_Get(FormCode);
+        // tra ve page loi neu khong tim thay report
+        if (config_form == null)
         {
-          //lay connectionstring tu cau hinh form de goi store
-          connectionString = await _datasrc.GetConnectionString(Convert.ToInt32(config_form["datasourceid"]));
-        }
-      }
-
-      // khai bao cac du lieu cau hinh form can su dung trong controller
-      string? storeSetData = config_form.ContainsKey("storesetdata") ? Convert.ToString(config_form["storesetdata"]) : "";
-
-      if (string.IsNullOrWhiteSpace(storeSetData))
-      {
-        return Json(new { success = false, errorMessage = "Không tồn tại store xử lý dữ liệu biểu mẫu" });
-      }
-
-      // xu ly file
-      // Kiểm tra xem form có file nào không
-      // lay danh sach object type code tu config form neu co field file uploader
-      string attObjectTypeCodes = config_form.ContainsKey("attobjecttypecodes") ? Convert.ToString(config_form["attobjecttypecodes"]) : "";
-
-      await _att.HandleFiles(attObjectTypeCodes, form, id);
-
-      // Convert the IFormCollection to a dictionary of strings
-      var formData = form.ToDictionary(
-                      pair => pair.Key,
-                      pair => (object)pair.Value.ToString()  // Ensure each value is a string (flatten StringValues)
-                  );
-
-      //// gui form data len view de hien thi
-      //ViewData["formData"] = formData;
-
-
-      var resultList = await _form.Form_ups(formData, id, storeSetData, connectionString);
-      //kiem tra du lieu id tra ve
-      var id_return = resultList
-      .Where(item => ((IDictionary<string, object>)item).ContainsKey("id"))
-      .Select(item => ((IDictionary<string, object>)item)["id"])
-      .FirstOrDefault(); // Lọc ra những phần tử có Id
-
-      // neu co gia tri tra ve thi bao thanh cong
-      if (id_return != null && int.TryParse(id_return.ToString(), out int num) && num > 0)
-      {
-        id = Convert.ToInt32(id_return);
-
-        // xu ly luu bang attachment
-        var saveAttachmentResult = await _att.SaveAttachmentTable(form, id ?? 0);
-
-        // Dùng JsonConvert để chuyển về JObject hoặc dynamic
-        var json = JObject.FromObject(saveAttachmentResult); // nếu dùng Newtonsoft.Json
-        bool success = json["success"]?.Value<bool>() ?? false;
-
-        if (!success)
-        {
-          string error = json["errorMessage"]?.ToString();
-          return Json(new { success = false, errorMessage = error ?? "Lưu file không thành công" });
+          return Json(new { success = false, errorMessage = "Không tìm thấy biểu mẫu" });
         }
 
-        //xu ly report form
-        // lấy danh sách report code thuộc form
-        string stringaggreportcodes = await _form.NET_Form_GetListReportCode(FormCode);
-        // với mỗi report code đang có thì xử lý
-        if (!string.IsNullOrWhiteSpace(stringaggreportcodes))
+        string? connectionString = null;
+        //neu datasourceId la null thi lay connectionString mac dinh
+        if (config_form.ContainsKey("datasourceid"))
         {
-          var reportCodes = stringaggreportcodes.Split(',', StringSplitOptions.RemoveEmptyEntries);
-
-          foreach (var code in reportCodes)
+          if (config_form["datasourceid"] != null)
           {
-            var reportCode = code.Trim();
-
-            // lay thong tin report de xu ly
-            var report = await _report.NET_Report_Get(reportCode);
-            // tìm thấy report thì tiếp tục
-            if (report != null)
-            {
-                // khai bao cac du lieu report can su dung trong controller
-                string? sqlEditContent = report.ContainsKey("sqleditcontent") ? Convert.ToString(report["sqleditcontent"]) : "";
-                // Dictionary để nhóm dữ liệu theo số thứ tự [n]
-                // Chuyển đổi dữ liệu sang JSON (loc du lieu form tra ve lay du lieu grid va chuyen thanh json)
-                string reportJsonData = await _re.ExtractGridDataToJson(form);
-                //end xu ly report form
-                var reportResultList = await _re.ReportEditor_Json_Update(queryParamerter, id, reportJsonData, sqlEditContent, null);
-                //kiem tra ton tai error message
-                // Kiểm tra và nối giá trị của ErrorMessage
-                if (_con.CheckForErrors(reportResultList, out string errorMessage))
-                {
-                  return Json(new { success = false, errorMessage = errorMessage });
-                }
-            }
+            //lay connectionstring tu cau hinh form de goi store
+            connectionString = await _datasrc.GetConnectionString(Convert.ToInt32(config_form["datasourceid"]));
           }
         }
-        // khong tra ve Id, cung khong tra ve error message thi bao loi chua tra ve id
-        return Json(new { success = true, id = id });
-      }
-      else
-      {
-        //kiem tra ton tai error message
-        // Kiểm tra và nối giá trị của ErrorMessage
-        if (_con.CheckForErrors(resultList, out string errorMessage))
+
+        // khai bao cac du lieu cau hinh form can su dung trong controller
+        string? storeSetData = config_form.ContainsKey("storesetdata") ? Convert.ToString(config_form["storesetdata"]) : "";
+
+        if (string.IsNullOrWhiteSpace(storeSetData))
         {
-          return Json(new { success = false, errorMessage = errorMessage });
+          return Json(new { success = false, errorMessage = "Không tồn tại store xử lý dữ liệu biểu mẫu" });
         }
-        // khong tra ve Id, cung khong tra ve error message thi bao loi chua tra ve id
+
+        // xu ly file
+        // Kiểm tra xem form có file nào không
+        // lay danh sach object type code tu config form neu co field file uploader
+        string attObjectTypeCodes = config_form.ContainsKey("attobjecttypecodes") ? Convert.ToString(config_form["attobjecttypecodes"]) : "";
+
+        await _att.HandleFiles(attObjectTypeCodes, form, id);
+
+        // Convert the IFormCollection to a dictionary of strings
+        var formData = form.ToDictionary(
+                        pair => pair.Key,
+                        pair => (object)pair.Value.ToString()  // Ensure each value is a string (flatten StringValues)
+                    );
+
+        //// gui form data len view de hien thi
+        //ViewData["formData"] = formData;
+
+
+        var resultList = await _form.Form_ups(formData, id, storeSetData, connectionString);
+        //kiem tra du lieu id tra ve
+        var id_return = resultList
+        .Where(item => ((IDictionary<string, object>)item).ContainsKey("id"))
+        .Select(item => ((IDictionary<string, object>)item)["id"])
+        .FirstOrDefault(); // Lọc ra những phần tử có Id
+
+        // neu co gia tri tra ve thi bao thanh cong
+        if (id_return != null && int.TryParse(id_return.ToString(), out int num) && num > 0)
+        {
+          id = Convert.ToInt32(id_return);
+
+          // xu ly luu bang attachment
+          var saveAttachmentResult = await _att.SaveAttachmentTable(form, id ?? 0);
+
+          // Dùng JsonConvert để chuyển về JObject hoặc dynamic
+          var json = JObject.FromObject(saveAttachmentResult); // nếu dùng Newtonsoft.Json
+          bool success = json["success"]?.Value<bool>() ?? false;
+
+          if (!success)
+          {
+            string error = json["errorMessage"]?.ToString();
+            return Json(new { success = false, errorMessage = error ?? "Lưu file không thành công" });
+          }
+
+          //xu ly report form
+          // lấy danh sách report code thuộc form
+          string stringaggreportcodes = await _form.NET_Form_GetListReportCode(FormCode);
+          // với mỗi report code đang có thì xử lý
+          if (!string.IsNullOrWhiteSpace(stringaggreportcodes))
+          {
+            var reportCodes = stringaggreportcodes.Split(',', StringSplitOptions.RemoveEmptyEntries);
+
+            foreach (var code in reportCodes)
+            {
+              var reportCode = code.Trim();
+
+              // lay thong tin report de xu ly
+              var report = await _report.NET_Report_Get(reportCode);
+              // tìm thấy report thì tiếp tục
+              if (report != null)
+              {
+                  // khai bao cac du lieu report can su dung trong controller
+                  string? sqlEditContent = report.ContainsKey("sqleditcontent") ? Convert.ToString(report["sqleditcontent"]) : "";
+                  // Dictionary để nhóm dữ liệu theo số thứ tự [n]
+                  // Chuyển đổi dữ liệu sang JSON (loc du lieu form tra ve lay du lieu grid va chuyen thanh json)
+                  string reportJsonData = await _re.ExtractGridDataToJson(form);
+                  //end xu ly report form
+                  var reportResultList = await _re.ReportEditor_Json_Update(queryParamerter, id, reportJsonData, sqlEditContent, null);
+                  //kiem tra ton tai error message
+                  // Kiểm tra và nối giá trị của ErrorMessage
+                  if (_con.CheckForErrors(reportResultList, out string errorMessage))
+                  {
+                    return Json(new { success = false, errorMessage = errorMessage });
+                  }
+              }
+            }
+          }
+          // khong tra ve Id, cung khong tra ve error message thi bao loi chua tra ve id
+          return Json(new { success = true, id = id });
+        }
         else
         {
-          return Json(new { success = false, errorMessage = "Chưa trả về Id" });
+          //kiem tra ton tai error message
+          // Kiểm tra và nối giá trị của ErrorMessage
+          if (_con.CheckForErrors(resultList, out string errorMessage))
+          {
+            return Json(new { success = false, errorMessage = errorMessage });
+          }
+          // khong tra ve Id, cung khong tra ve error message thi bao loi chua tra ve id
+          else
+          {
+            return Json(new { success = false, errorMessage = "Chưa trả về Id" });
+          }
         }
       }
-
+      catch (SqlException ex)
+      {
+        // Log the exception
+        _logger.LogError(ex, "An error occurred while fetching form.");
+        // Optionally, return an error view
+        return View("~/Views/Pages/MiscError.cshtml", new ErrorViewModel { RequestId = Activity.Current?.Id ?? HttpContext.TraceIdentifier, exception = ex });
+      }
     }
 
     [HttpGet]
