@@ -222,17 +222,17 @@
         <div class="row">
             <div id="wizard-validation" class="col-xl">
                 <form id="create-form" class="needs-validation" novalidate="" method="post" asp-controller="NETForm" asp-action="Viewer" asp-route-formCode="@formCode"
-                asp-route-id="@id" enctype="multipart/form-data">
+                      asp-route-id="@id" enctype="multipart/form-data">
                     @if (config_form != null)
                     {
-                    <div class="card mb-6" style="@formStyle">
-                        <div class="card-header sticky-element bg-label-primary d-flex justify-content-sm-between align-items-sm-center flex-column flex-sm-row" style="@labelBGStyle">
-                            <h5 class="card-title mb-sm-0 me-2" style="@labelStyle">@formTitle</h5>
-                            <div class="action-btns">
-                                <button type="submit" class="btn btn-primary">Lưu</button>
+                        <div class="card mb-6" style="@formStyle">
+                            <div class="card-header sticky-element bg-label-primary d-flex justify-content-sm-between align-items-sm-center flex-column flex-sm-row" style="@labelBGStyle">
+                                <h5 class="card-title mb-sm-0 me-2" style="@labelStyle">@formTitle</h5>
+                                <div class="action-btns">
+                                    <button type="submit" class="btn btn-primary">Lưu</button>
+                                </div>
                             </div>
-                        </div>
-                        <div class="card-body">
+                            <div class="card-body">
                                 @* hidden input để xử lý ẩn truyền dữ liệu từ param link vào bằng js *@
                                 <div id="hiddenInputs"></div>
                                 @* xu ly form dong *@
@@ -507,7 +507,7 @@
                                                                         <div class="col-md-4 card-header">
                                                                             <div class="mb-4">
                                                                                 <label for="@child_name" class="form-label"><i class="@iconclass" style="@iconstyle"></i> <span style="@labelstyle">@child_label</span>  <span class='text-danger'>@(child_isrequired == true ? "*" : "")</span></label>
-                                                                                <input class="form-control" type="file" id="@codeUpload" name="@codeUpload" data-target="@("#fileList-"+codeUpload)" data-carousel="@("#carouselSlideImage-"+codeUpload)" multiple />
+                                                                                <input class="form-control" type="file" id="@codeUpload" name="@codeUpload" data-target="@("#fileList-" + codeUpload)" data-carousel="@("#carouselSlideImage-" + codeUpload)" multiple />
                                                                                 @* tao danh sach file rong de xu ly js hiển thị *@
                                                                                 <ul id="@("fileList-"+codeUpload)"></ul>
                                                                             </div>
@@ -647,7 +647,7 @@
                                                                             thumbnailpath = (videodictinfo.ContainsKey("ThumbnailPath") ? Convert.ToString(videodictinfo["ThumbnailPath"] ?? "") : "");
                                                                         }
                                                                     }
-                                                        
+
                                                                     <p for="@child_name" class="htmleditor-form-label"><i class="@iconclass" style="@iconstyle"></i> <span style="@labelstyle">@child_label</span></p>
                                                                     <div class="video-player-embed">
                                                                         <video class="w-100 plyr__video-embed" id="@("plyr-video-player-"+name)" poster="@thumbnailpath" playsinline="" controls="" title="@mediatitle">
@@ -655,31 +655,10 @@
                                                                         </video>
                                                                     </div>
                                                                 }
-                                                                else if (child_type == "EmbedYoutube")
-                                                                {
-                                                                    <P for="@child_name" class="htmleditor-form-label"><i class="@iconclass" style="@styleclass"></i> @label</P>
-                                                                    <div class="youtube-video-embed w-100">
-                                                                        <div class="plyr__video-embed" id="plyr-youtube-video">
-                                                                            <iframe src="@child_value"
-                                                                                    allowfullscreen
-                                                                                    allowtransparency
-                                                                                    allow="autoplay"></iframe>
-                                                                        </div>
-                                                                    </div>
-                                                                }
-                                                                else if (type == "VideoUploader")
-                                                                {
-                                                                    <p for="@child_name" class="htmleditor-form-label"><i class="@iconclass" style="@styleclass"></i> @label</p>
-                                                                    <div class="video-player-embed">
-                                                                        <video class="w-100 plyr__video-embed" id="@("plyr-video-player-"+name)" poster="https://cdn.plyr.io/static/demo/View_From_A_Blue_Moon_Trailer-HD.jpg" playsinline="" controls="">
-                                                                            <source src="~/img/testimg/musictest.mp4" type="video/mp4">
-                                                                        </video>
-                                                                    </div>
-                                                                }
 
                                                                 @{
                                                                     // mot số trường sử dụng label riêng
-                                                                    string[] nolabel_fieldtypes = ["DynamicReport","FileUploader","HTMLEditor","RadioGroup","EmptyBox","ListSelection","ColorBox","Label","EmbedYoutube","VideoUploader"];
+                                                                    string[] nolabel_fieldtypes = ["DynamicReport", "FileUploader", "HTMLEditor", "RadioGroup", "EmptyBox", "ListSelection", "ColorBox", "Label", "EmbedYoutube", "VideoUploader"];
                                                                     if (!nolabel_fieldtypes.Contains(child_type))
                                                                     {
                                                                         <label for="@child_name"><i class="@iconclass" style="@iconstyle"></i> <span style="@labelstyle">@child_label</span> <span class='text-danger'>@(child_isrequired == true ? "*" : "")</span></label>
@@ -880,7 +859,7 @@
                                                             <div class="col-md-4 card-header">
                                                                 <div class="mb-4">
                                                                     <label for="@name" class="form-label"><i class="@iconclass" style="@iconstyle"></i> <span style="@labelstyle">@label</span> <span class='text-danger'>@(isrequired == true ? "*" : "")</span></label>
-                                                                    <input class="form-control" type="file" id="@codeUpload" name="@codeUpload" data-target="@("#fileList-"+codeUpload)" data-carousel="@("#carouselSlideImage-"+codeUpload)" multiple />
+                                                                    <input class="form-control" type="file" id="@codeUpload" name="@codeUpload" data-target="@("#fileList-" + codeUpload)" data-carousel="@("#carouselSlideImage-" + codeUpload)" multiple />
                                                                     @* tao danh sach file rong de xu ly js hiển thị *@
                                                                     <ul id="@("fileList-"+codeUpload)"></ul>
                                                                 </div>
@@ -1036,7 +1015,7 @@
                                                                 thumbnailpath = (videodictinfo.ContainsKey("ThumbnailPath") ? Convert.ToString(videodictinfo["ThumbnailPath"] ?? "") : "");
                                                             }
                                                         }
-                                                        
+
                                                         <p for="@name" class="htmleditor-form-label"><i class="@iconclass" style="@iconstyle"></i> <span style="@labelstyle">@label</span></p>
                                                         <div class="video-player-embed">
                                                             <video class="w-100 plyr__video-embed" id="@("plyr-video-player-"+name)" poster="@thumbnailpath" playsinline="" controls="" title="@mediatitle">
@@ -1044,46 +1023,26 @@
                                                             </video>
                                                         </div>
                                                     }
-                                                    else if (type == "EmbedYoutube")
-                                                    {
-                                                        <p for="@name" class="htmleditor-form-label"><i class="@iconclass" style="@styleclass"></i> @label</p>
-                                                        <div class="youtube-video-embed w-100">
-                                                            <div class="plyr__video-embed" id="@("plyr-youtube-video-"+name)">
-                                                                <iframe src="@value"
-                                                                        allowfullscreen
-                                                                        allowtransparency
-                                                                        allow="autoplay"></iframe>
-                                                            </div>
-                                                        </div>
-                                                    }
-                                                    else if (type == "VideoUploader")
-                                                    {
-                                                        <p for="@name" class="htmleditor-form-label"><i class="@iconclass" style="@styleclass"></i> @label</p>
-                                                        <div class="video-player-embed">
-                                                            <video class="w-100 plyr__video-embed" id="@("plyr-video-player-"+name)" poster="https://cdn.plyr.io/static/demo/View_From_A_Blue_Moon_Trailer-HD.jpg" playsinline="" controls="" title="Nhạc của tui">
-                                                                <source src="~/img/testimg/musictest.mp4" type="video/mp4">
-                                                            </video>
-                                                        </div>
-                                                    }
 
                                                     @* neu type dynamic report hoac file uploadder thì tự check label riêng *@
                                                     @{
-                                                        string[] nolabel_fieldtypes = ["DynamicReport","FileUploader","HTMLEditor","RadioGroup","EmptyBox","ListSelection","ColorBox","Label","EmbedYoutube","VideoUploader"];
+                                                        string[] nolabel_fieldtypes = ["DynamicReport", "FileUploader", "HTMLEditor", "RadioGroup", "EmptyBox", "ListSelection", "ColorBox", "Label", "EmbedYoutube", "VideoUploader"];
                                                         if (!nolabel_fieldtypes.Contains(type))
                                                         {
                                                             <label for="@name"><i class="@iconclass" style="@iconstyle"></i> <span style="@labelstyle">@label</span> <span class='text-danger'>@(isrequired == true ? "*" : "")</span></label>
                                                         }
-                                                    }                                                    @*  <div class="valid-feedback"> Chính xác! </div>
+                                                    }
+                                                    @*  <div class="valid-feedback"> Chính xác! </div>
                                       <div class="invalid-feedback"> @required_message </div> *@
-                                  </div>
+                                                </div>
+                                            </div>
+                                        }
+                                    }
                                 </div>
-                                }
-                            }
-                              </div>
-                    </div>
-                </div>
-                }
-              </form>
+                            </div>
+                        </div>
+                    }
+                </form>
             </div>
         </div>
         <!-- end Booking form -->

@@ -127,34 +127,6 @@
            });
        });
 
-        // // sau khi load, tu dong cap nhat format date
-        // $(document).ready(function () {
-        //     // Lấy tất cả các input có type="date" hoặc "datetime-local"
-        //     $('input[type="date"], input[type="datetime-local"]').each(function () {
-        //         let originalValue = $(this).attr('value');
-
-        //         if (originalValue) {
-        //             if ($(this).attr("type") === "date") {
-        //                 // Kiểm tra xem đã đúng định dạng YYYY-MM-DD chưa
-        //                 let isoDateRegex = /^\d{4}-\d{2}-\d{2}$/;
-        //                 if (!isoDateRegex.test(originalValue)) {
-        //                     let formattedDate = moment(originalValue, ["M/D/YYYY h:mm:ss A", "DD/MM/YYYY", "YYYY-MM-DD"]).format("YYYY-MM-DD");
-        //                     $(this).val(formattedDate); // Điền trực tiếp vào value
-        //                     $(this).attr("value", formattedDate); // Cập nhật lại giá trị trong HTML
-        //                 }
-        //             } else if ($(this).attr("type") === "datetime-local") {
-        //                 // Kiểm tra xem đã đúng định dạng YYYY-MM-DDTHH:mm chưa
-        //                 let isoDateTimeRegex = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}$/;
-        //                 if (!isoDateTimeRegex.test(originalValue)) {
-        //                     let formattedDateTime = moment(originalValue, ["M/D/YYYY h:mm:ss A", "DD/MM/YYYY HH:mm:ss", "YYYY-MM-DDTHH:mm:ss"]).format("YYYY-MM-DDTHH:mm");
-        //                     $(this).val(formattedDateTime); // Điền trực tiếp vào value
-        //                     $(this).attr("value", formattedDateTime); // Cập nhật lại giá trị trong HTML
-        //                 }
-        //             }
-        //         }
-        //     });
-        // });
-
         // sau khi load, tu dong cap nhat format date
         $(document).ready(function () {
             $('input[type="date"], input[type="datetime-local"]').each(function () {
@@ -2028,7 +2000,6 @@
           });
         }
 
-
         $(document).ready(function () {
           updateNavAlignment(); // Khi trang vừa load
           $(window).on('resize', function () {
@@ -2227,42 +2198,6 @@
                 });
             }
         });
-
-         document.addEventListener('DOMContentLoaded', () => {
-          // Lấy tất cả các phần tử có class youtube-video-embed
-          const wrappers = document.querySelectorAll('.youtube-video-embed');
-
-          wrappers.forEach((wrapper, index) => {
-            const embed = wrapper.querySelector('.plyr__video-embed');
-
-            // Gán ID duy nhất nếu chưa có
-            if (!embed.id) {
-              embed.id = `plyr-youtube-${index}`;
-            }
-
-            // Khởi tạo Plyr
-            let youtubePlayer = new Plyr(`#${embed.id}`, {
-              autoplay: false,
-              loop: { active: true },
-              volume: 1,
-              speed: { selected: 1, options: [0.75, 1, 1.25, 1.5, 2] },
-              controls: [
-                  'play-large', 'rewind', 'play', 'fast-forward',
-                  'progress', 'current-time', 'duration',
-                  'mute', 'volume', 'captions', 'settings', 'fullscreen', 'pip'
-              ],
-              i18n: {
-                  restart: 'Phát lại',
-                  rewind: 'Lùi 10s',
-                  play: 'Phát',
-                  pause: 'Tạm dừng',
-                  fastForward: 'Tiến 10s',
-                  fullscreen: 'Toàn màn hình',
-                  settings: 'Cài đặt',
-                  captions: 'Phụ đề',
-                  volume: 'Âm lượng'
-              }
-            });
 
         // xử lý video youtube trên form field
          document.addEventListener('DOMContentLoaded', () => {
