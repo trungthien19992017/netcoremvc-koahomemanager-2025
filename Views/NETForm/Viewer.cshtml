@@ -2,6 +2,7 @@
 @using Newtonsoft.Json.Serialization
 @using KOAHome.Helpers
 @{
+
     Layout = "~/Views/Shared/_ContentNavbarLayout.cshtml";
     // lay thong tin
     var id = ViewData["id"] as int?;
@@ -10,10 +11,21 @@
     // truyen cau hinh form de xu ly giao dien
     var config_form = ViewData["config_form"] as IDictionary<string, object>;
     var config_formOptions = null as IDictionary<string, object>;
+    var config_formCssOptionHeader = null as IDictionary<string, object>;
     var form_colCount = 3;
     string formTitle = "";
+    string formStyle = "";
+    string labelStyle = "";
+
+    string labelBGStyle = "";
     if (config_form != null)
     {
+        config_formCssOptionHeader = ParseDataHelper.ParseOptionsToDictionary(config_form.ContainsKey("cssoptionheader") ? config_form["cssoptionheader"]?.ToString() : "{}");
+        // thông tin css chung của form
+        formStyle = (config_formCssOptionHeader.ContainsKey("formStyle") ? Convert.ToString(config_formCssOptionHeader["formStyle"]) : "");
+        labelStyle = (config_formCssOptionHeader.ContainsKey("labelStyle") ? Convert.ToString(config_formCssOptionHeader["labelStyle"]) : "");
+        labelBGStyle = (config_formCssOptionHeader.ContainsKey("labelBGStyle") ? Convert.ToString(config_formCssOptionHeader["labelBGStyle"]) : "");
+
         config_formOptions = ParseDataHelper.ParseOptionsToDictionary(config_form.ContainsKey("options") ? config_form["options"].ToString() : "{}");
         // tra ve title cho page
         formTitle = config_form.ContainsKey("formtitle") ? config_form["formtitle"].ToString() : "Thông tin";
@@ -211,16 +223,16 @@
             <div id="wizard-validation" class="col-xl">
                 <form id="create-form" class="needs-validation" novalidate="" method="post" asp-controller="NETForm" asp-action="Viewer" asp-route-formCode="@formCode"
                 asp-route-id="@id" enctype="multipart/form-data">
-                    <div class="card mb-6">
-                        <div class="card-header sticky-element bg-label-primary d-flex justify-content-sm-between align-items-sm-center flex-column flex-sm-row">
-                            <h5 class="card-title mb-sm-0 me-2">@formTitle</h5>
+                    @if (config_form != null)
+                    {
+                    <div class="card mb-6" style="@formStyle">
+                        <div class="card-header sticky-element bg-label-primary d-flex justify-content-sm-between align-items-sm-center flex-column flex-sm-row" style="@labelBGStyle">
+                            <h5 class="card-title mb-sm-0 me-2" style="@labelStyle">@formTitle</h5>
                             <div class="action-btns">
                                 <button type="submit" class="btn btn-primary">Lưu</button>
                             </div>
                         </div>
                         <div class="card-body">
-                            @if (config_form != null)
-                            {
                                 @* hidden input để xử lý ẩn truyền dữ liệu từ param link vào bằng js *@
                                 <div id="hiddenInputs"></div>
                                 @* xu ly form dong *@
@@ -270,9 +282,15 @@
                                         // neu type la GroupItem thi hiển thị group và gọi các field con
                                         if (type == "GroupItem")
                                         {
-                                            <div class="@("col-md-" + field_width)">
+                                            // xử lý hiển thị các field
+                                            string parent_iconclass = (field_optionsDict.ContainsKey("iconClass") ? Convert.ToString(field_optionsDict["iconClass"]) : "");
+                                            string parent_iconstyle = (field_optionsDict.ContainsKey("iconStyle") ? Convert.ToString(field_optionsDict["iconStyle"]) : "");
+                                            string parent_labelstyle = (field_optionsDict.ContainsKey("labelStyle") ? Convert.ToString(field_optionsDict["labelStyle"]) : "");
+                                            string parent_inputstyle = (field_optionsDict.ContainsKey("inputStyle") ? Convert.ToString(field_optionsDict["inputStyle"]) : "");
+
+                                            <div class="@("col-md-" + field_width)" style="@parent_inputstyle">
                                                 <div class="row gx-5">
-                                                    <div class="col-md-12 card-header"><strong class="mb-0 text-primary">@label</strong></div>
+                                                    <div class="col-md-12 card-header"><strong class="mb-0 text-primary"><i class="@parent_iconclass" style="@parent_iconstyle"></i> <span style="@parent_labelstyle">@label</span></strong></div>
                                                     @* goi vong lap de lay cac field con *@
                                                     @foreach (var fieldchild in config_formfield.Where(p => p.parentid == field.id).OrderBy(p => p.tabindex).ToList())
                                                     {
@@ -293,10 +311,11 @@
                                                         // tinh do rong cua field dua tren gia tri config
                                                         int child_field_width = (12 / field_colcount * child_field_colspan);
 
-
+                                                        // xử lý hiển thị các field
                                                         string iconclass = (child_field_optionsDict.ContainsKey("iconClass") ? Convert.ToString(child_field_optionsDict["iconClass"]) : "");
-
-                                                        string styleclass = (child_field_optionsDict.ContainsKey("iconStyle") ? Convert.ToString(child_field_optionsDict["iconStyle"]) : "");
+                                                        string iconstyle = (child_field_optionsDict.ContainsKey("iconStyle") ? Convert.ToString(child_field_optionsDict["iconStyle"]) : "");
+                                                        string labelstyle = (child_field_optionsDict.ContainsKey("labelStyle") ? Convert.ToString(child_field_optionsDict["labelStyle"]) : "");
+                                                        string inputstyle = (child_field_optionsDict.ContainsKey("inputStyle") ? Convert.ToString(child_field_optionsDict["inputStyle"]) : "");
 
                                                         // lay thong tin validation
                                                         string child_field_validates = fieldchild.validates;
@@ -321,7 +340,7 @@
                                                         string[] noclasslabel_fieldtypes = ["RadioGroup","FileUploader","HTMLEditor"];
 
                                                         <div class="col-md-@(Convert.ToInt32(child_field_width) == 0 ? "4" : child_field_width) form-control-validation fv-plugins-icon-container">
-                                                            <div class="@(
+                                                            <div style="@inputstyle" class="@(
                                                               noclasslabel_fieldtypes.Contains(child_type) ? "" : child_type == "CheckBox" ? "form-check mt-4" : child_type == "Switch" ? "form-check form-switch me-n3" : child_type == "DropDownBox" ? "form-floating form-floating-outline select2-dark form-floating-select2" : "form-floating form-floating-outline"
                                                             )">
                                                                 @if (child_type == "TextBox")
@@ -433,7 +452,7 @@
                                                                     string hiddenInputId = $"hidden_{inputName}";
 
                                                                     <div class="selection-container">
-                                                                        <label><i class="@iconclass" style="@styleclass"></i> @label <span class='text-danger'>@(isrequired == true ? "*" : "")</span></label>
+                                                                        <label><i class="@iconclass" style="@iconstyle"></i> <span style="@labelstyle">@label</span> <span class='text-danger'>@(isrequired == true ? "*" : "")</span></label>
                                                                         <input type="hidden" name="@inputName" id="@hiddenInputId" value="@value" />
 
                                                                         <div class="selection-list" data-target="@hiddenInputId">
@@ -450,7 +469,7 @@
                                                                 }
                                                                 else if (child_type == "RadioGroup")
                                                                 {
-                                                                    <div class="d-lg-inline-block"><p class="d-block">@child_label: <span class="text-danger">@(child_isrequired == true ? "*" : "")</span></p></div>
+                                                                    <div class="d-lg-inline-block"><p class="d-block"><span style="@labelstyle">@child_label:</span> <span class="text-danger">@(child_isrequired == true ? "*" : "")</span></p></div>
                                                                     // check selected cho item dung voi gia tri
                                                                     var selectList = dynamicServiceSelectOptions[child_name] as List<SelectListItem> ?? new List<SelectListItem>();
 
@@ -486,7 +505,7 @@
                                                                     <div class="row gx-5">
                                                                         <div class="col-md-4 card-header">
                                                                             <div class="mb-4">
-                                                                                <label for="@child_name" class="form-label"><i class="@iconclass" style="@styleclass"></i> @child_label  <span class='text-danger'>@(child_isrequired == true ? "*" : "")</span></label>
+                                                                                <label for="@child_name" class="form-label"><i class="@iconclass" style="@iconstyle"></i> <span style="@labelstyle">@child_label</span>  <span class='text-danger'>@(child_isrequired == true ? "*" : "")</span></label>
                                                                                 <input class="form-control" type="file" id="@codeUpload" name="@codeUpload" data-target="@("#fileList-"+codeUpload)" data-carousel="@("#carouselSlideImage-"+codeUpload)" multiple />
                                                                                 @* tao danh sach file rong de xu ly js hiển thị *@
                                                                                 <ul id="@("fileList-"+codeUpload)"></ul>
@@ -568,7 +587,7 @@
                                                                 }
                                                                 else if (child_type == "HTMLEditor")
                                                                 {
-                                                                    <label for="@child_name" class="htmleditor-form-label"><i class="@iconclass" style="@styleclass"></i> @child_label <span class='text-danger'>@(child_isrequired == true ? "*" : "")</span></label>
+                                                                    <label for="@child_name" class="htmleditor-form-label"><i class="@iconclass" style="@iconstyle"></i> <span style="@labelstyle">@child_label</span> <span class='text-danger'>@(child_isrequired == true ? "*" : "")</span></label>
                                                                     // Quill Editor hiển thị
                                                                     <div id="@("editor-container-"+child_name)" style="height:300px;" class="quill-editor"></div>
                                                                     // Hidden input để submit
@@ -582,7 +601,7 @@
                                                                     bool isEditor = field_editoroptionsDict.ContainsKey("isEditor") ? Convert.ToBoolean(field_editoroptionsDict["isEditor"]) : false;
 
                                                                     <div class="row gx-5">
-                                                                        <div class="col-md-12 card-header"><label class="mb-0"><i class="@iconclass" style="@styleclass"></i> @child_label</label></div>
+                                                                        <div class="col-md-12 card-header"><label class="mb-0"><i class="@iconclass" style="@iconstyle"></i> <span style="@labelstyle">@child_label</span></label></div>
                                                                         <div class="col-md-12 card-body">
                                                                             @* Khu vực chứa Report Editor *@
                                                                             <div id="@("ReportEditor-" + child_name)" class="form-report-editor" data-reportcode = "@reportCode">
@@ -596,11 +615,11 @@
                                                                     @* lấy chuỗi css và parse thành style tương ứng *@
                                                                     var labelcss = ParseDataHelper.ParseOptionsToDictionary(child_field_optionsDict.ContainsKey("labelCss") ? Convert.ToString(child_field_optionsDict["labelCss"]) : "{}");
                                                                     var styleString = string.Join(";", labelcss.Select(kv => $"{kv.Key}:{kv.Value}"));
-                                                                    <p for="reviewtitle" style="@styleString">@value</p>
+                                                                    <p for="@name" style="@styleString">@Html.Raw(value)</p>
                                                                 }
                                                                 else if (child_type == "EmbedYoutube")
                                                                 {
-                                                                    <lable for="@child_name" class="htmleditor-form-label"><i class="@iconclass" style="@styleclass"></i> @label</lable>
+                                                                    <P for="@child_name" class="htmleditor-form-label"><i class="@iconclass" style="@iconstyle"></i> <span style="@labelstyle">@label</span></P>
                                                                     <div class="youtube-video-embed w-100">
                                                                         <div class="plyr__video-embed" id="plyr-youtube-video">
                                                                             <iframe src="@child_value"
@@ -610,13 +629,39 @@
                                                                         </div>
                                                                     </div>
                                                                 }
+                                                                else if (child_type == "VideoUploader")
+                                                                {
+                                                                    @* video info là chuỗi json chứa các thông tin video *@
+                                                                    string videoinfo = child_value?.ToString();
+                                                                    string mediapath = "";
+                                                                    string mediatitle = "";
+                                                                    string thumbnailpath = "";
+                                                                    if (!string.IsNullOrWhiteSpace(videoinfo))
+                                                                    {
+                                                                        var videodictinfo = ParseDataHelper.ParseJsonPathToDictionary(videoinfo);
+
+                                                                        if (videodictinfo != null && videodictinfo.Count > 0)
+                                                                        {
+                                                                            mediapath = (videodictinfo.ContainsKey("MediaPath") ? Convert.ToString(videodictinfo["MediaPath"] ?? "") : "");
+                                                                            mediatitle = (videodictinfo.ContainsKey("MediaTitle") ? Convert.ToString(videodictinfo["MediaTitle"] ?? "") : "");
+                                                                            thumbnailpath = (videodictinfo.ContainsKey("ThumbnailPath") ? Convert.ToString(videodictinfo["ThumbnailPath"] ?? "") : "");
+                                                                        }
+                                                                    }
+                                                        
+                                                                    <p for="@child_name" class="htmleditor-form-label"><i class="@iconclass" style="@iconstyle"></i> <span style="@labelstyle">@child_label</span></p>
+                                                                    <div class="video-player-embed">
+                                                                        <video class="w-100 plyr__video-embed" id="@("plyr-video-player-"+name)" poster="@thumbnailpath" playsinline="" controls="" title="@mediatitle">
+                                                                            <source src="@mediapath" type="video/mp4">
+                                                                        </video>
+                                                                    </div>
+                                                                }
 
                                                                 @{
                                                                     // mot số trường sử dụng label riêng
-                                                                    string[] nolabel_fieldtypes = ["DynamicReport","FileUploader","HTMLEditor","RadioGroup","EmptyBox","ListSelection","ColorBox","Label","EmbedYoutube"];
+                                                                    string[] nolabel_fieldtypes = ["DynamicReport","FileUploader","HTMLEditor","RadioGroup","EmptyBox","ListSelection","ColorBox","Label","EmbedYoutube","VideoUploader"];
                                                                     if (!nolabel_fieldtypes.Contains(child_type))
                                                                     {
-                                                                        <label for="@child_name"><i class="@iconclass" style="@styleclass"></i> @child_label <span class='text-danger'>@(child_isrequired == true ? "*" : "")</span></label>
+                                                                        <label for="@child_name"><i class="@iconclass" style="@iconstyle"></i> <span style="@labelstyle">@child_label</span> <span class='text-danger'>@(child_isrequired == true ? "*" : "")</span></label>
                                                                     }
                                                                 }
                                                                 @* <div class="valid-feedback"> Chính xác! </div>
@@ -633,10 +678,12 @@
                                             // nếu không phải là group item và không có parentId thì xử lý bình thường
                                             string[] noclasslabel_fieldtypes = ["RadioGroup", "FileUploader", "HTMLEditor"];
                                             string iconclass = (field_optionsDict.ContainsKey("iconClass") ? Convert.ToString(field_optionsDict["iconClass"]) : "");
-                                            string styleclass = (field_optionsDict.ContainsKey("iconStyle") ? Convert.ToString(field_optionsDict["iconStyle"]) : "");
+                                            string iconstyle = (field_optionsDict.ContainsKey("iconStyle") ? Convert.ToString(field_optionsDict["iconStyle"]) : "");
+                                            string labelstyle = (field_optionsDict.ContainsKey("labelStyle") ? Convert.ToString(field_optionsDict["labelStyle"]) : "");
+                                            string inputstyle = (field_optionsDict.ContainsKey("inputStyle") ? Convert.ToString(field_optionsDict["inputStyle"]) : "");
 
                                             <div class="col-md-@(Convert.ToInt32(field_width) == 0 ? "4" : field_width) form-control-validation fv-plugins-icon-container">
-                                                <div class="@(
+                                                <div style="@inputstyle" class="@(
                                                     noclasslabel_fieldtypes.Contains(type) ? "" : type == "CheckBox" ? "form-check mt-4" : type == "Switch" ? "form-check form-switch me-n3" : type == "DropDownBox" ? "form-floating form-floating-outline select2-dark form-floating-select2" : "form-floating form-floating-outline"
                                                   )">
                                                     @if (type == "TextBox")
@@ -749,7 +796,7 @@
                                                         string hiddenInputId = $"hidden_{inputName}";
 
                                                         <div class="selection-container">
-                                                            <label><i class="@iconclass" style="@styleclass"></i> @label  <span class='text-danger'>@(isrequired == true ? "*" : "")</span></label>
+                                                            <label><i class="@iconclass" style="@iconstyle"></i> <span style="@labelstyle">@label</span>  <span class='text-danger'>@(isrequired == true ? "*" : "")</span></label>
                                                             <input type="hidden" name="@inputName" id="@hiddenInputId" value="@value" />
 
                                                             <div class="selection-list" data-target="@hiddenInputId">
@@ -766,7 +813,7 @@
                                                     }
                                                     else if (type == "RadioGroup")
                                                     {
-                                                        <div class="d-lg-inline-block"><p class="d-block">@label: <span class="text-danger">@(isrequired == true ? "*" : "")</span></p></div>
+                                                        <div class="d-lg-inline-block"><p class="d-block"><span style="@labelstyle">@label:</span> <span class="text-danger">@(isrequired == true ? "*" : "")</span></p></div>
                                                         // check selected cho item dung voi gia tri
                                                         var selectList = dynamicServiceSelectOptions[name] as List<SelectListItem> ?? new List<SelectListItem>();
 
@@ -810,7 +857,7 @@
                                                         <div class="row gx-5">
                                                             <div class="col-md-4 card-header">
                                                                 <div class="mb-4">
-                                                                    <label for="@name" class="form-label"><i class="@iconclass" style="@styleclass"></i> @label <span class='text-danger'>@(isrequired == true ? "*" : "")</span></label>
+                                                                    <label for="@name" class="form-label"><i class="@iconclass" style="@iconstyle"></i> <span style="@labelstyle">@label</span> <span class='text-danger'>@(isrequired == true ? "*" : "")</span></label>
                                                                     <input class="form-control" type="file" id="@codeUpload" name="@codeUpload" data-target="@("#fileList-"+codeUpload)" data-carousel="@("#carouselSlideImage-"+codeUpload)" multiple />
                                                                     @* tao danh sach file rong de xu ly js hiển thị *@
                                                                     <ul id="@("fileList-"+codeUpload)"></ul>
@@ -892,7 +939,7 @@
                                                     }
                                                     else if (type == "HTMLEditor")
                                                     {
-                                                        <label for="@name" class="htmleditor-form-label"><i class="@iconclass" style="@styleclass"></i> @label</label>
+                                                        <label for="@name" class="htmleditor-form-label"><i class="@iconclass" style="@iconstyle"></i> <span style="@labelstyle">@label</span></label>
                                                         // Quill Editor hiển thị
                                                         <div id="@("editor-container-"+name)" style="height:300px;" class="quill-editor"></div>
                                                         // Hidden input để submit
@@ -906,7 +953,7 @@
                                                         bool form_isEditor = field_editoroptionsDict.ContainsKey("isEditor") ? Convert.ToBoolean(field_editoroptionsDict["isEditor"]) : false;
 
                                                         <div class="row gx-5">
-                                                            <div class="col-md-12 card-header"><label class="mb-0"><i class="@iconclass" style="@styleclass"></i> @label</label></div>
+                                                            <div class="col-md-12 card-header"><label class="mb-0"><i class="@iconclass" style="@iconstyle"></i> <span style="@labelstyle">@label</span></label></div>
                                                             <div class="col-md-12 card-body">
                                                                 @* neu report dang editor thi load report editor, neu report dang viewer thi load report viewer *@
                                                                 @if (form_isEditor)
@@ -937,14 +984,13 @@
                                                         @* lấy chuỗi css và parse thành style tương ứng *@
                                                         var labelcss = ParseDataHelper.ParseOptionsToDictionary(field_optionsDict.ContainsKey("labelCss") ? Convert.ToString(field_optionsDict["labelCss"]) : "{}");
                                                         var styleString = string.Join(";", labelcss.Select(kv => $"{kv.Key}:{kv.Value}"));
-                                                        <p for="reviewtitle" style="@styleString">@value</p>
+                                                        <p for="@name" style="@styleString">@Html.Raw(value)</p>
                                                     }
                                                     else if (type == "EmbedYoutube")
                                                     {
-                                                        @* <input class="form-control form-control-sm" type="text" id="@name" name="@name" value="@value" @(isreadonly == true ? "readonly" : "") @(isrequired == true ? "required" : "") /> *@
-                                                        <lable for="@name" class="htmleditor-form-label"><i class="@iconclass" style="@styleclass"></i> @label</lable>
+                                                        <p for="@name" class="htmleditor-form-label"><i class="@iconclass" style="@iconstyle"></i> <span style="@labelstyle">@label</span></p>
                                                         <div class="youtube-video-embed w-100">
-                                                            <div class="plyr__video-embed" id="plyr-youtube-video">
+                                                            <div class="plyr__video-embed" id="@("plyr-youtube-video-"+name)">
                                                                 <iframe src="@value"
                                                                         allowfullscreen
                                                                         allowtransparency
@@ -952,13 +998,39 @@
                                                             </div>
                                                         </div>
                                                     }
+                                                    else if (type == "VideoUploader")
+                                                    {
+                                                        @* video info là chuỗi json chứa các thông tin video *@
+                                                        string videoinfo = value?.ToString();
+                                                        string mediapath = "";
+                                                        string mediatitle = "";
+                                                        string thumbnailpath = "";
+                                                        if (!string.IsNullOrWhiteSpace(videoinfo))
+                                                        {
+                                                            var videodictinfo = ParseDataHelper.ParseJsonPathToDictionary(videoinfo);
+
+                                                            if (videodictinfo != null && videodictinfo.Count > 0)
+                                                            {
+                                                                mediapath = (videodictinfo.ContainsKey("MediaPath") ? Convert.ToString(videodictinfo["MediaPath"] ?? "") : "");
+                                                                mediatitle = (videodictinfo.ContainsKey("MediaTitle") ? Convert.ToString(videodictinfo["MediaTitle"] ?? "") : "");
+                                                                thumbnailpath = (videodictinfo.ContainsKey("ThumbnailPath") ? Convert.ToString(videodictinfo["ThumbnailPath"] ?? "") : "");
+                                                            }
+                                                        }
+                                                        
+                                                        <p for="@name" class="htmleditor-form-label"><i class="@iconclass" style="@iconstyle"></i> <span style="@labelstyle">@label</span></p>
+                                                        <div class="video-player-embed">
+                                                            <video class="w-100 plyr__video-embed" id="@("plyr-video-player-"+name)" poster="@thumbnailpath" playsinline="" controls="" title="@mediatitle">
+                                                                <source src="@mediapath" type="video/mp4">
+                                                            </video>
+                                                        </div>
+                                                    }
 
                                                     @* neu type dynamic report hoac file uploadder thì tự check label riêng *@
                                                     @{
-                                                        string[] nolabel_fieldtypes = ["DynamicReport","FileUploader","HTMLEditor","RadioGroup","EmptyBox","ListSelection","ColorBox","Label","EmbedYoutube"];
+                                                        string[] nolabel_fieldtypes = ["DynamicReport","FileUploader","HTMLEditor","RadioGroup","EmptyBox","ListSelection","ColorBox","Label","EmbedYoutube","VideoUploader"];
                                                         if (!nolabel_fieldtypes.Contains(type))
                                                         {
-                                                            <label for="@name"><i class="@iconclass" style="@styleclass"></i> @label <span class='text-danger'>@(isrequired == true ? "*" : "")</span></label>
+                                                            <label for="@name"><i class="@iconclass" style="@iconstyle"></i> <span style="@labelstyle">@label</span> <span class='text-danger'>@(isrequired == true ? "*" : "")</span></label>
                                                         }
                                                     }
                                      @*  <div class="valid-feedback"> Chính xác! </div>
@@ -968,9 +1040,9 @@
                                 }
                             }
                               </div>
-                            }
                     </div>
                 </div>
+                }
               </form>
             </div>
         </div>

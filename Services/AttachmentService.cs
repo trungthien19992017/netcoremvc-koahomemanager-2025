@@ -17,7 +17,7 @@ namespace KOAHome.Services
   public interface IAttachmentService
   {
     public Task<Dictionary<string, List<string>>> UpdateFiles(IFormCollection form);
-    public Task<bool> SaveAttachmentTable(IFormCollection form, int Id);
+    public Task<object> SaveAttachmentTable(IFormCollection form, int Id);
     public Task<Dictionary<string, List<string>>> GetFiles(int? Id, List<string> ListObjectTypeCode);
     public Task<Dictionary<string, List<string>>> HandleFiles(string objectTypeCodes, IFormCollection? form, int? id);
 
@@ -84,7 +84,7 @@ namespace KOAHome.Services
       return result;
     }
 
-    public async Task<bool> SaveAttachmentTable(IFormCollection form, int Id)
+    public async Task<object> SaveAttachmentTable(IFormCollection form, int Id)
     {
       if (form.Files.Any())
       {
@@ -121,19 +121,33 @@ namespace KOAHome.Services
         resultList = await _con.Connection_GetDataFromQuery(parameters, sqlStore, connectionString, sqlQuery, sqlParams);
 
         //kiem tra du lieu id tra ve
-        var id_return = resultList
+        var ids_return = resultList
         .Where(item => ((IDictionary<string, object>)item).ContainsKey("id"))
         .Select(item => ((IDictionary<string, object>)item)["id"])
         .FirstOrDefault(); // Lọc ra những phần tử có Id
 
         // neu co gia tri tra ve thi bao thanh cong
-        if (id_return != null && int.TryParse(id_return.ToString(), out int num) && num > 0)
+        if (ids_return != null)
         {
-          return true;
+          string listidStr = ids_return.ToString();
+
+          if (!string.IsNullOrWhiteSpace(listidStr))
+          {
+            // Trả về kiểu object để controller serialize thành JsonResult
+            return new
+            {
+              success = true,
+              listAttachmentId = listidStr
+            };
+          }
         }
-        return false;
+        return new { success = false, errorMessage = "Lưu file không thành công" };
       }
-      return true;
+      // Trả về kiểu object để controller serialize thành JsonResult
+      return new
+      {
+        success = true
+      };
     }
 
     public async Task<Dictionary<string, List<string>>> GetFiles(int? Id, List<string> ListObjectTypeCode)

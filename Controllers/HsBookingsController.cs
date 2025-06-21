@@ -205,11 +205,18 @@ namespace KOAHome.Controllers
             if (id_return != null && int.TryParse(id_return.ToString(), out int num) && num > 0)
             {
               int id = (int)id_return;
+
               // xu ly luu bang attachment
-              bool isSaveAttachment = await _att.SaveAttachmentTable(form, id);
-              if (!isSaveAttachment)
+              var saveAttachmentResult = await _att.SaveAttachmentTable(form, id);
+
+              // Dùng JsonConvert để chuyển về JObject hoặc dynamic
+              var json = JObject.FromObject(saveAttachmentResult); // nếu dùng Newtonsoft.Json
+              bool success = json["success"]?.Value<bool>() ?? false;
+
+              if (!success)
               {
-                ViewBag.ErrorMessage = "Lưu file không thành công";
+                string error = json["errorMessage"]?.ToString();
+                ViewBag.ErrorMessage = error ?? "Lưu file không thành công";
               }
         
               // xu ly file
@@ -347,18 +354,23 @@ namespace KOAHome.Controllers
               if (id_return != null && int.TryParse(id_return.ToString(), out int num) && num > 0)
               {
                 id = (int)id_return;
-        
+
                 // xu ly luu bang attachment
-                bool isSaveAttachment = await _att.SaveAttachmentTable(form, id);
+                var saveAttachmentResult = await _att.SaveAttachmentTable(form, id);
+
+                // Dùng JsonConvert để chuyển về JObject hoặc dynamic
+                var json = JObject.FromObject(saveAttachmentResult); // nếu dùng Newtonsoft.Json
+                bool success = json["success"]?.Value<bool>() ?? false;
+
+                if (!success)
+                {
+                  string error = json["errorMessage"]?.ToString();
+                  ViewBag.ErrorMessage = error ?? "Lưu file không thành công";
+                }
         
                 // xu ly file
                 // Kiểm tra xem form có file nào không
                 ViewBag.fileUrls = await _att.HandleFiles("KOAAttachment", null,id);
-
-                if (!isSaveAttachment)
-                {
-                  ViewBag.ErrorMessage = "Lưu file không thành công";
-                }
 
                 //xu ly report form
                 // Dictionary để nhóm dữ liệu theo số thứ tự [n]

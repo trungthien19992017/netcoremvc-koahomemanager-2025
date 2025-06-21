@@ -2199,6 +2199,7 @@
             }
         });
 
+        // xử lý video youtube trên form field
          document.addEventListener('DOMContentLoaded', () => {
           // Lấy tất cả các phần tử có class youtube-video-embed
           const wrappers = document.querySelectorAll('.youtube-video-embed');
@@ -2214,7 +2215,7 @@
             // Khởi tạo Plyr
             let youtubePlayer = new Plyr(`#${embed.id}`, {
               autoplay: false,
-              loop: { active: false },
+              loop: { active: true },
               volume: 1,
               speed: { selected: 1, options: [0.75, 1, 1.25, 1.5, 2] },
               controls: [
@@ -2237,8 +2238,81 @@
 
               // Ví dụ xử lý sự kiện
               youtubePlayer.on('ended', () => {
-              alert('🎉 Video đã kết thúc!');
+		          rplm({
+			          title: "Hoàn thành",
+			          text: 'Bạn đã xem hết video',
+			          type: 'success',
+			          html: true,
+			          modalNOverlay: 'white',
+			          confirmButtonText: 'Xác nhận',
+			          allowOutsideClick: true,
+		          });
               });
+          });
+        });
+
+          // xử lý video file trên form field
+         document.addEventListener('DOMContentLoaded', () => {
+          // Lấy tất cả các phần tử có class youtube-video-embed
+          const wrappers = document.querySelectorAll('.video-player-embed');
+
+          wrappers.forEach((wrapper, index) => {
+            const embed = wrapper.querySelector('.plyr__video-embed');
+
+            // Gán ID duy nhất nếu chưa có
+            if (!embed.id) {
+              embed.id = `plyr-video-${index}`;
+            }
+
+            // Khởi tạo Plyr
+            let videoPlayer = new Plyr(`#${embed.id}`, {
+              autoplay: false,
+              loop: { active: true },
+              volume: 1,
+              speed: { selected: 1, options: [0.75, 1, 1.25, 1.5, 2] },
+              controls: [
+                  'play-large', 'rewind', 'play', 'fast-forward',
+                  'progress', 'current-time', 'duration',
+                  'mute', 'volume', 'captions', 'settings', 'fullscreen', 'pip'
+              ],
+              i18n: {
+                  restart: 'Phát lại',
+                  rewind: 'Lùi 10s',
+                  play: 'Phát',
+                  pause: 'Tạm dừng',
+                  fastForward: 'Tiến 10s',
+                  fullscreen: 'Toàn màn hình',
+                  settings: 'Cài đặt',
+                  captions: 'Phụ đề',
+                  volume: 'Âm lượng'
+              }
+            });
+
+            //hiển thị trong now playing IOS
+            videoPlayer.on('play', () => {
+              const videoTitle = embed.getAttribute('title') || 'KOA Video'; // fallback nếu không có title
+
+              if ('mediaSession' in navigator) {
+                navigator.mediaSession.metadata = new MediaMetadata({
+                  title: videoTitle,
+                  artist: 'KOA Video',
+                  album: 'KOA Video Album'
+                });
+              }
+            });
+
+            // Ví dụ xử lý sự kiệnx1
+            videoPlayer.on('ended', () => {
+		        rplm({
+			        title: "Hoàn thành",
+			        text: 'Bạn đã xem hết video',
+			        type: 'success',
+			        html: true,
+			        modalNOverlay: 'white',
+			        confirmButtonText: 'Xác nhận',
+			        allowOutsideClick: true,
+		        });
+            });
           });
         });
 
