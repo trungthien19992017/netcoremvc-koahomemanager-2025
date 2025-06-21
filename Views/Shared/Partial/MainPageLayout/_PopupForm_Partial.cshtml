@@ -14,10 +14,23 @@
     // truyen cau hinh form de xu ly giao dien
     var config_form = ViewData["config_form"] as IDictionary<string, object>;
     var config_formOptions = null as IDictionary<string, object>;
+    var config_formCssOptionHeader = null as IDictionary<string, object>;
     var form_colCount = 3;
     string formTitle = "";
+    string formStyle = "";
+    string labelStyle = "";
+    string labelBGStyle = "";
+
     if (config_form != null)
     {
+        config_formCssOptionHeader = ParseDataHelper.ParseOptionsToDictionary(config_form.ContainsKey("cssoptionheader") ? config_form["cssoptionheader"]?.ToString() : "{}");
+        // thông tin css chung của form
+        formStyle = (config_formCssOptionHeader.ContainsKey("formStyle") ? Convert.ToString(config_formCssOptionHeader["formStyle"]) : "");
+        labelStyle = (config_formCssOptionHeader.ContainsKey("labelStyle") ? Convert.ToString(config_formCssOptionHeader["labelStyle"]) : "");
+        labelBGStyle = (config_formCssOptionHeader.ContainsKey("labelBGStyle") ? Convert.ToString(config_formCssOptionHeader["labelBGStyle"]) : "");
+
+        config_formOptions = ParseDataHelper.ParseOptionsToDictionary(config_form.ContainsKey("options") ? config_form["options"].ToString() : "{}");
+
         formTitle = config_form.ContainsKey("formtitle") ? config_form["formtitle"].ToString() : "Thông tin";
         config_formOptions = ParseDataHelper.ParseOptionsToDictionary(config_form.ContainsKey("options") ? config_form["options"].ToString() : "{}");
         // mac dinh col count cua form = 3
@@ -439,7 +452,7 @@ asp-route-id="@id" data-modal-id="modal-PopupForm" enctype="multipart/form-data"
                                                     }
                                                     else if (child_type == "EmbedYoutube")
                                                     {
-                                                        <lable for="@child_name" class="htmleditor-form-label"><i class="@iconclass" style="@iconstyle"></i> @label</lable>
+                                                        <P for="@child_name" class="htmleditor-form-label"><i class="@iconclass" style="@iconstyle"></i> <span style="@labelstyle">@label</span></P>
                                                         <div class="youtube-video-embed w-100">
                                                             <div class="plyr__video-embed" id="plyr-youtube-video">
                                                                 <iframe src="@child_value"
@@ -449,10 +462,36 @@ asp-route-id="@id" data-modal-id="modal-PopupForm" enctype="multipart/form-data"
                                                             </div>
                                                         </div>
                                                     }
+                                                    else if (child_type == "VideoUploader")
+                                                    {
+                                                        @* video info là chuỗi json chứa các thông tin video *@
+                                                        string videoinfo = child_value?.ToString();
+                                                        string mediapath = "";
+                                                        string mediatitle = "";
+                                                        string thumbnailpath = "";
+                                                        if (!string.IsNullOrWhiteSpace(videoinfo))
+                                                        {
+                                                            var videodictinfo = ParseDataHelper.ParseJsonPathToDictionary(videoinfo);
+
+                                                            if (videodictinfo != null && videodictinfo.Count > 0)
+                                                            {
+                                                                mediapath = (videodictinfo.ContainsKey("MediaPath") ? Convert.ToString(videodictinfo["MediaPath"] ?? "") : "");
+                                                                mediatitle = (videodictinfo.ContainsKey("MediaTitle") ? Convert.ToString(videodictinfo["MediaTitle"] ?? "") : "");
+                                                                thumbnailpath = (videodictinfo.ContainsKey("ThumbnailPath") ? Convert.ToString(videodictinfo["ThumbnailPath"] ?? "") : "");
+                                                            }
+                                                        }
+
+                                                        <p for="@child_name" class="htmleditor-form-label"><i class="@iconclass" style="@iconstyle"></i> <span style="@labelstyle">@child_label</span></p>
+                                                        <div class="video-player-embed">
+                                                            <video class="w-100 plyr__video-embed" id="@("plyr-video-player-"+name)" poster="@thumbnailpath" playsinline="" controls="" title="@mediatitle">
+                                                                <source src="@mediapath" type="video/mp4">
+                                                            </video>
+                                                        </div>
+                                                    }
 
                                                     @{
                                                         // mot số trường sử dụng label riêng
-                                                        string[] nolabel_fieldtypes = ["DynamicReport","FileUploader","HTMLEditor","RadioGroup","EmptyBox","ListSelection","Label"];
+                                                        string[] nolabel_fieldtypes = ["DynamicReport","FileUploader","HTMLEditor","RadioGroup","EmptyBox","ListSelection","Label","EmbedYoutube","VideoUploader"];
                                                         if (!nolabel_fieldtypes.Contains(child_type))
                                                         {
                                                             <label for="@child_name"><i class="@iconclass" style="@iconstyle"></i> <span style="@labelstyle">@child_label</span> <span class='text-danger'>@(child_isrequired == true ? "*" : "")</span></label>
@@ -776,10 +815,9 @@ asp-route-id="@id" data-modal-id="modal-PopupForm" enctype="multipart/form-data"
                                         }
                                         else if (type == "EmbedYoutube")
                                         {
-                                            @* <input class="form-control form-control-sm" type="text" id="@name" name="@name" value="@value" @(isreadonly == true ? "readonly" : "") @(isrequired == true ? "required" : "") /> *@
-                                            <lable for="@name" class="htmleditor-form-label"><i class="@iconclass" style="@iconstyle"></i> @label</lable>
+                                            <p for="@name" class="htmleditor-form-label"><i class="@iconclass" style="@iconstyle"></i> <span style="@labelstyle">@label</span></p>
                                             <div class="youtube-video-embed w-100">
-                                                <div class="plyr__video-embed" id="plyr-youtube-video">
+                                                <div class="plyr__video-embed" id="@("plyr-youtube-video-"+name)">
                                                     <iframe src="@value"
                                                             allowfullscreen
                                                             allowtransparency
@@ -787,10 +825,36 @@ asp-route-id="@id" data-modal-id="modal-PopupForm" enctype="multipart/form-data"
                                                 </div>
                                             </div>
                                         }
+                                        else if (type == "VideoUploader")
+                                        {
+                                            @* video info là chuỗi json chứa các thông tin video *@
+                                            string videoinfo = value?.ToString();
+                                            string mediapath = "";
+                                            string mediatitle = "";
+                                            string thumbnailpath = "";
+                                            if (!string.IsNullOrWhiteSpace(videoinfo))
+                                            {
+                                                var videodictinfo = ParseDataHelper.ParseJsonPathToDictionary(videoinfo);
+
+                                                if (videodictinfo != null && videodictinfo.Count > 0)
+                                                {
+                                                    mediapath = (videodictinfo.ContainsKey("MediaPath") ? Convert.ToString(videodictinfo["MediaPath"] ?? "") : "");
+                                                    mediatitle = (videodictinfo.ContainsKey("MediaTitle") ? Convert.ToString(videodictinfo["MediaTitle"] ?? "") : "");
+                                                    thumbnailpath = (videodictinfo.ContainsKey("ThumbnailPath") ? Convert.ToString(videodictinfo["ThumbnailPath"] ?? "") : "");
+                                                }
+                                            }
+
+                                            <p for="@name" class="htmleditor-form-label"><i class="@iconclass" style="@iconstyle"></i> <span style="@labelstyle">@label</span></p>
+                                            <div class="video-player-embed">
+                                                <video class="w-100 plyr__video-embed" id="@("plyr-video-player-"+name)" poster="@thumbnailpath" playsinline="" controls="" title="@mediatitle">
+                                                    <source src="@mediapath" type="video/mp4">
+                                                </video>
+                                            </div>
+                                        }
 
                                         @* neu type dynamic report hoac file uploadder thì tự check label riêng *@
                                         @{
-                                            string[] nolabel_fieldtypes = ["DynamicReport","FileUploader","HTMLEditor","RadioGroup","EmptyBox","ListSelection","Label"];
+                                            string[] nolabel_fieldtypes = ["DynamicReport","FileUploader","HTMLEditor","RadioGroup","EmptyBox","ListSelection","Label","EmbedYoutube","VideoUploader"];
                                             if (!nolabel_fieldtypes.Contains(type))
                                             {
                                                 <label for="@name"><i class="@iconclass" style="@iconstyle"></i> <span style="@labelstyle">@label</span> <span class='text-danger'>@(isrequired == true ? "*" : "")</span></label>
