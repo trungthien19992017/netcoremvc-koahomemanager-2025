@@ -291,26 +291,30 @@ namespace KOAHome.Services
 
               List<SelectListItem> selectList;
 
-              var sw = Stopwatch.StartNew();
+              // Tạo bản sao của objParameters cho mỗi filter de tranh ghi de
+              var clonedParameters = new Dictionary<string, object>(objParameters);
+              selectList = await NET_Service_DynamicExecute(serviceId, clonedParameters);
 
-              // Kiểm tra cache trước
-              if (!_cache.TryGetValue(cacheKey, out selectList))
-              {
-                _logger.LogInformation($"⏳ Đang gọi service {serviceId} cho filter '{code}'");
+              //var sw = Stopwatch.StartNew();
 
-                // Tạo bản sao của objParameters cho mỗi filter de tranh ghi de
-                var clonedParameters = new Dictionary<string, object>(objParameters);
-                selectList = await NET_Service_DynamicExecute(serviceId, clonedParameters);
+              //// Kiểm tra cache trước
+              //if (!_cache.TryGetValue(cacheKey, out selectList))
+              //{
+              //  _logger.LogInformation($"⏳ Đang gọi service {serviceId} cho filter '{code}'");
 
-                // Lưu cache trong 5 phút (có thể tuỳ chỉnh)
-                _cache.Set(cacheKey, selectList, TimeSpan.FromMinutes(5));
-                _logger.LogInformation($"✅ Service {serviceId} filter '{code}' hoàn tất sau {sw.ElapsedMilliseconds}ms (không dùng cache)");
-              }
-              else
-              {
-                _logger.LogInformation($"⚡ Service {serviceId} filter '{code}' dùng cache sau {sw.ElapsedMilliseconds}ms");
-              }
-              sw.Stop();
+              //  // Tạo bản sao của objParameters cho mỗi filter de tranh ghi de
+              //  var clonedParameters = new Dictionary<string, object>(objParameters);
+              //  selectList = await NET_Service_DynamicExecute(serviceId, clonedParameters);
+
+              //  // Lưu cache trong 5 phút (có thể tuỳ chỉnh)
+              //  _cache.Set(cacheKey, selectList, TimeSpan.FromMinutes(5));
+              //  _logger.LogInformation($"✅ Service {serviceId} filter '{code}' hoàn tất sau {sw.ElapsedMilliseconds}ms (không dùng cache)");
+              //}
+              //else
+              //{
+              //  _logger.LogInformation($"⚡ Service {serviceId} filter '{code}' dùng cache sau {sw.ElapsedMilliseconds}ms");
+              //}
+              //sw.Stop();
 
 
               return (Code: code.ToLower(), SelectList: selectList); // 👈 đây là fix

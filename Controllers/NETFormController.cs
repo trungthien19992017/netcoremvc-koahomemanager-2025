@@ -3,9 +3,11 @@ using KOAHome.EntityFramework;
 using KOAHome.Helpers;
 using KOAHome.Services;
 using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.Data.SqlClient;
+using Newtonsoft.Json.Linq;
 using Npgsql;
 using System.Diagnostics;
 
@@ -222,6 +224,9 @@ namespace KOAHome.Controllers
 
       // khai bao cac du lieu cau hinh form can su dung trong controller
       string? storeSetData = config_form.ContainsKey("storesetdata") ? Convert.ToString(config_form["storesetdata"]) : "";
+      // kiểm tra kiểu lưu dữ liệu editor (1.Form trước editor sau, 2. Editor trước form sau, 3. Attachment trước -> Form -> Editor)
+      // mặc định là 1
+      int saveEditorType = config_form.ContainsKey("saveeditortype") ? Convert.ToInt32(config_form["saveeditortype"] ?? 1) : 1;
 
       if (string.IsNullOrWhiteSpace(storeSetData))
       {
@@ -242,9 +247,32 @@ namespace KOAHome.Controllers
                       pair => (object)pair.Value.ToString()  // Ensure each value is a string (flatten StringValues)
                   );
 
+
+      // nếu saveEditorType là 3 (Lưu attachment trước form sau) thì lưu attachment ở đây và trả về list attachmentid cho store set data
+      if (saveEditorType == 3)
+      {
+        // xu ly luu bang attachment
+        var saveAttachmentResult = await _att.SaveAttachmentTable(form, id ?? 0);
+
+        // Dùng JsonConvert để chuyển về JObject hoặc dynamic
+        var json = JObject.FromObject(saveAttachmentResult); // nếu dùng Newtonsoft.Json
+        bool success = json["success"]?.Value<bool>() ?? false;
+
+        if (!success)
+        {
+          string error = json["errorMessage"]?.ToString();
+          TempData["ErrorMessage"] = error ?? "Lưu file không thành công";
+          return Redirect($"{currentPath}?{queryString}");
+        }
+
+        // Nếu thành công
+        string listAttachmentId = json["listAttachmentId"]?.ToString(); // VD: "11233,11234"
+        // đưa list attachment id vào formData để xử lý ở store lưu form
+        formData["attachmentids"] = listAttachmentId;
+      }
+
       //// gui form data len view de hien thi
       //ViewData["formData"] = formData;
-
 
       var resultList = await _form.Form_ups(formData, id, storeSetData, connectionString);
       //kiem tra du lieu id tra ve
@@ -258,15 +286,23 @@ namespace KOAHome.Controllers
       {
         id = (int)id_return;
 
-        // xu ly luu bang attachment
-        bool isSaveAttachment = await _att.SaveAttachmentTable(form, id ?? 0);
-
-        if (!isSaveAttachment)
+        // nếu saveEditorType là 3 (Lưu attachment trước form sau) thì không cần lưu attachment ở đây
+        if (saveEditorType != 3)
         {
-          TempData["ErrorMessage"] = "Lưu file không thành công";
-          return Redirect($"{currentPath}?{queryString}");
-        }
+          // xu ly luu bang attachment
+          var saveAttachmentResult = await _att.SaveAttachmentTable(form, id ?? 0);
 
+          // Dùng JsonConvert để chuyển về JObject hoặc dynamic
+          var json = JObject.FromObject(saveAttachmentResult); // nếu dùng Newtonsoft.Json
+          bool success = json["success"]?.Value<bool>() ?? false;
+
+          if (!success)
+          {
+            string error = json["errorMessage"]?.ToString();
+            TempData["ErrorMessage"] = error ?? "Lưu file không thành công";
+            return Redirect($"{currentPath}?{queryString}");
+          }
+        }
 
         //xu ly report form
         // lấy danh sách report code thuộc form
@@ -326,7 +362,7 @@ namespace KOAHome.Controllers
 
     // popup form view component
     [HttpGet]
-    public async Task<IActionResult> PopupForm(string FormCode, int? id, bool? isReadOnly = false, string? containerId = "", bool? isStepper = true)
+    public async Task<IActionResult> PopupForm(string FormCode, int? id, bool? isReadOnly = false, string? containerId = "", bool? isStepper = false)
     {
       try
       {
@@ -510,6 +546,8 @@ namespace KOAHome.Controllers
       // lay danh sach object type code tu config form neu co field file uploader
       string attObjectTypeCodes = config_form.ContainsKey("attobjecttypecodes") ? Convert.ToString(config_form["attobjecttypecodes"]) : "";
 
+      await _att.HandleFiles(attObjectTypeCodes, form, id);
+
       // Convert the IFormCollection to a dictionary of strings
       var formData = form.ToDictionary(
                       pair => pair.Key,
@@ -533,16 +571,16 @@ namespace KOAHome.Controllers
         id = Convert.ToInt32(id_return);
 
         // xu ly luu bang attachment
-        bool isSaveAttachment = await _att.SaveAttachmentTable(form, id ?? 0);
+        var saveAttachmentResult = await _att.SaveAttachmentTable(form, id ?? 0);
 
-        // xu ly file
-        // Kiểm tra xem form có file nào không
-        // lay danh sach object type code tu config form neu co field file uploader
-        attObjectTypeCodes = config_form.ContainsKey("attobjecttypecodes") ? Convert.ToString(config_form["attobjecttypecodes"]) : "";
+        // Dùng JsonConvert để chuyển về JObject hoặc dynamic
+        var json = JObject.FromObject(saveAttachmentResult); // nếu dùng Newtonsoft.Json
+        bool success = json["success"]?.Value<bool>() ?? false;
 
-        if (!isSaveAttachment)
+        if (!success)
         {
-          return Json(new { success = false, errorMessage = "Lưu file không thành công" });
+          string error = json["errorMessage"]?.ToString();
+          return Json(new { success = false, errorMessage = error ?? "Lưu file không thành công" });
         }
 
         //xu ly report form
