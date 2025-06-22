@@ -2296,7 +2296,11 @@
                 navigator.mediaSession.metadata = new MediaMetadata({
                   title: videoTitle,
                   artist: 'KOA Video',
-                  album: 'KOA Video Album'
+                  album: 'KOA Video Album',
+                  artwork: [
+                    { src: 'https://upload.wikimedia.org/wikipedia/commons/thumb/4/47/PNG_transparency_demonstration_1.png/512px-PNG_transparency_demonstration_1.png', sizes: '512x512', type: 'image/png' }
+                    // { src: '/img/icons/koa/koala_with_headphones.png', sizes: '512x512', type: 'image/png' }
+                  ]
                 });
               }
             });
