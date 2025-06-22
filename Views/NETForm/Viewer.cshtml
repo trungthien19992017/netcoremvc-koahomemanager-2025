@@ -155,23 +155,23 @@
         // }
 
         // xử lý hiển thị dynamic report trong form nếu có
-        $(document).ready(function () {
-        // Khi trang load, tìm tất cả div có class "form-report-editor" để load report editor
-        $('.form-report-editor').each(function () {
-        var reportCode = $(this).data('reportcode'); // lấy thuộc tính data-reportcode
-        var containerId = $(this).attr('id');         // lấy id của div
-        if (reportCode && containerId) {
-        loadFormReportEditor(reportCode, containerId);
-        }
-        });
-        // Khi trang load, tìm tất cả div có class "form-report-viewer" để load report viewer
-        $('.form-report-viewer').each(function () {
-        var reportCode = $(this).data('reportcode'); // lấy thuộc tính data-reportcode
-        var containerId = $(this).attr('id');         // lấy id của div
-        if (reportCode && containerId) {
-        loadFormReportViewer(reportCode, containerId);
-        }
-        });
+        document.addEventListener("DOMContentLoaded", function () {
+            // Khi trang load, tìm tất cả div có class "form-report-editor" để load report editor
+            $('.form-report-editor').each(function () {
+            var reportCode = $(this).data('reportcode'); // lấy thuộc tính data-reportcode
+            var containerId = $(this).attr('id');         // lấy id của div
+            if (reportCode && containerId) {
+            loadFormReportEditor(reportCode, containerId);
+            }
+            });
+            // Khi trang load, tìm tất cả div có class "form-report-viewer" để load report viewer
+            $('.form-report-viewer').each(function () {
+            var reportCode = $(this).data('reportcode'); // lấy thuộc tính data-reportcode
+            var containerId = $(this).attr('id');         // lấy id của div
+            if (reportCode && containerId) {
+            loadFormReportViewer(reportCode, containerId);
+            }
+            });
         });
 
     </script>
@@ -222,17 +222,17 @@
         <div class="row">
             <div id="wizard-validation" class="col-xl">
                 <form id="create-form" class="needs-validation" novalidate="" method="post" asp-controller="NETForm" asp-action="Viewer" asp-route-formCode="@formCode"
-                      asp-route-id="@id" enctype="multipart/form-data">
+                asp-route-id="@id" enctype="multipart/form-data">
                     @if (config_form != null)
                     {
-                        <div class="card mb-6" style="@formStyle">
-                            <div class="card-header sticky-element bg-label-primary d-flex justify-content-sm-between align-items-sm-center flex-column flex-sm-row" style="@labelBGStyle">
-                                <h5 class="card-title mb-sm-0 me-2" style="@labelStyle">@formTitle</h5>
-                                <div class="action-btns">
-                                    <button type="submit" class="btn btn-primary">Lưu</button>
-                                </div>
+                    <div class="card mb-6" style="@formStyle">
+                        <div class="card-header sticky-element bg-label-primary d-flex justify-content-sm-between align-items-sm-center flex-column flex-sm-row" style="@labelBGStyle">
+                            <h5 class="card-title mb-sm-0 me-2" style="@labelStyle">@formTitle</h5>
+                            <div class="action-btns">
+                                <button type="submit" class="btn btn-primary">Lưu</button>
                             </div>
-                            <div class="card-body">
+                        </div>
+                        <div class="card-body">
                                 @* hidden input để xử lý ẩn truyền dữ liệu từ param link vào bằng js *@
                                 <div id="hiddenInputs"></div>
                                 @* xu ly form dong *@
@@ -266,7 +266,7 @@
                                         // kiem tra bat buoc nhap
                                         bool isrequired = false;
                                         string required_message = "";
-                                        var required_rule = ParseDataHelper.GetFormFieldValidate(field_validatesListDict, "required");
+                                        var required_rule = ParseDataHelper.GetFormFieldValidate(field_validatesListDict,"required");
                                         if (required_rule != null && required_rule.Count > 0)
                                         {
                                             isrequired = true;
@@ -325,7 +325,7 @@
                                                         // kiem tra bat buoc nhap
                                                         bool child_isrequired = false;
                                                         string child_required_message = "";
-                                                        var child_required_rule = ParseDataHelper.GetFormFieldValidate(child_field_validatesListDict, "required");
+                                                        var child_required_rule = ParseDataHelper.GetFormFieldValidate(child_field_validatesListDict,"required");
                                                         if (child_required_rule != null && child_required_rule.Count > 0)
                                                         {
                                                             child_isrequired = true;
@@ -337,7 +337,7 @@
 
                                                         // nhan gia tri cua field
                                                         var child_value = formData.ContainsKey(child_name) ? formData[child_name] : "";
-                                                        string[] noclasslabel_fieldtypes = ["RadioGroup", "FileUploader", "HTMLEditor"];
+                                                        string[] noclasslabel_fieldtypes = ["RadioGroup","FileUploader","HTMLEditor"];
 
                                                         <div class="col-md-@(Convert.ToInt32(child_field_width) == 0 ? "4" : child_field_width) form-control-validation fv-plugins-icon-container">
                                                             <div style="@inputstyle" class="@(
@@ -349,30 +349,29 @@
                                                                 }
                                                                 else if (child_type == "ColorBox")
                                                                 {
-                                                                    // kiểm tra có thông tin màu mặc định thì truyền vào
+                                                                // kiểm tra có thông tin màu mặc định thì truyền vào
                                                                     string defaultcolor = child_field_editoroptionsDict.ContainsKey("default") ? Convert.ToString(child_field_editoroptionsDict["default"]) : "";
 
-                                                                    <div class="d-lg-inline-block">
-                                                                        <smaill class="d-flex">@child_label: <span class="text-danger">@(child_isrequired == true ? "*" : "")</span></smaill>
+                                                                    <div class="d-lg-inline-block"><smaill class="d-flex">@child_label: <span class="text-danger">@(child_isrequired == true ? "*" : "")</span></smaill>                                                
                                                                         <button type="button" id="@("color-"+child_name)" data-default="@defaultcolor" class="pcr-button form-color-picker" role="button" aria-label="@child_label"></button>
                                                                         <input type="hidden" id="@child_name" name="@child_name" value="@child_value" />
                                                                     </div>
                                                                 }
                                                                 else if (child_type == "TextArea")
                                                                 {
-                                                                    // lấy thông tin chiều cao (mặc định 200)
+                                                                // lấy thông tin chiều cao (mặc định 200)
                                                                     int height = child_field_editoroptionsDict.ContainsKey("height") ? Convert.ToInt32(child_field_editoroptionsDict["height"]) : 200;
                                                                     <textarea style="height:@(height + "px")" class="form-control" placeholder="@child_label" name="@child_name" id="@child_name" aria-label="@child_label" @(child_isreadonly == true ? "readonly" : "") @(child_isrequired == true ? "required" : "")>@child_value</textarea>
                                                                 }
                                                                 else if (child_type == "NumberBox")
                                                                 {
-                                                                    <input class="form-control form-control-sm" type="number" id="@child_name" name="@child_name" value="@child_value" @(child_isreadonly == true ? "readonly" : "") @(child_isrequired == true ? "required" : "") />
+                                                                    <input class="form-control form-control-sm" type="number" id="@child_name"  name="@child_name" value="@child_value" @(child_isreadonly == true ? "readonly" : "") @(child_isrequired == true ? "required" : "") />
                                                                 }
                                                                 else if (child_type == "DateBox")
                                                                 {
                                                                     @* mac dinh datetype la date *@
                                                                     string datetype = child_field_editoroptionsDict.ContainsKey("type") ? (child_field_editoroptionsDict["type"].ToString() ?? "date") : "date";
-                                                                    <input class="form-control form-control-sm" type="@datetype" id="@child_name" name="@child_name" value="@child_value" @(child_isreadonly == true ? "readonly" : "") @(child_isrequired == true ? "required" : "") />
+                                                                    <input class="form-control form-control-sm" type="@datetype" id="@child_name" name="@child_name" value="@child_value" @(child_isreadonly == true ? "readonly" : "") @(child_isrequired == true ? "required" : "")/>
                                                                 }
                                                                 else if (child_type == "EmptyBox")
                                                                 {
@@ -386,16 +385,17 @@
                                                                     var selectList = dynamicServiceSelectOptions[child_name] as List<SelectListItem> ?? new List<SelectListItem>();
 
                                                                     <select name="@child_name"
-                                                                            id="@child_name"
-                                                                            class="form-select color-dropdown form-select-sm"
-                                                                            data-datafillstore="@dataFillStore"
+                                                                    id="@child_name"
+                                                                    class="form-select color-dropdown form-select-sm"
+                                                                    data-datafillstore="@dataFillStore"
                                                                     @(child_isrequired ? "required" : "")
-                                                                    @(child_isreadonly == true ? "disabled" : "")>
+                                                                    @(child_isreadonly == true ? "disabled" : "")
+                                                                    >
                                                                         <option value="">-- Chọn --</option>
                                                                         @foreach (var item in selectList)
                                                                         {
                                                                             <option value="@item.Value"
-                                                                                    selected="@(item.Value.ToString() == (child_value ?? "").ToString() ? "selected" : null)">
+                                                                            selected="@(item.Value.ToString() == (child_value ?? "").ToString() ? "selected" : null)">
                                                                                 @item.Text
                                                                             </option>
                                                                         }
@@ -407,11 +407,11 @@
                                                                     var selectList = dynamicServiceSelectOptions[child_name] as List<SelectListItem> ?? new List<SelectListItem>();
 
                                                                     <select name="@child_name"
-                                                                            id="@child_name"
-                                                                            class="form-select color-dropdown form-select-sm"
+                                                                    id="@child_name"
+                                                                    class="form-select color-dropdown form-select-sm"
                                                                     @(child_isrequired ? "required" : "")
                                                                     @(child_isreadonly == true ? "disabled" : "")
-                                                                            multiple>
+                                                                    multiple>
                                                                         <option value="">-- Chọn --</option>
                                                                         @foreach (var item in selectList)
                                                                         {
@@ -420,7 +420,7 @@
                                                                             var splitvalue = child_value.ToString().Split(",", StringSplitOptions.RemoveEmptyEntries);
                                                                             // kiểm tra cac giá trị có khớp không
                                                                             <option value="@item.Value"
-                                                                                    selected="@((splitvalue.Any(s => s.Trim().Equals(item.Value.ToString(), StringComparison.OrdinalIgnoreCase))) ? "selected" : null)">
+                                                                            selected="@((splitvalue.Any(s => s.Trim().Equals(item.Value.ToString(), StringComparison.OrdinalIgnoreCase))) ? "selected" : null)">
                                                                                 @item.Text
                                                                             </option>
                                                                         }
@@ -428,25 +428,24 @@
                                                                 }
                                                                 else if (child_type == "TagBox")
                                                                 {
-                                                                    // check selected cho item dung voi gia tri
+                                                                // check selected cho item dung voi gia tri
                                                                     var selectList = dynamicServiceSelectOptions[child_name] as List<SelectListItem> ?? new List<SelectListItem>();
-                                                                    var tagBoxWhitelist = selectList.Select(x => new
-                                                                    {
+                                                                    var tagBoxWhitelist = selectList.Select(x => new {
                                                                         value = x.Value,
                                                                         label = x.Text
                                                                     });
 
                                                                     // serialize whitelist tiếng Việt không bị escape unicode
                                                                     var whitelistJson = JsonConvert.SerializeObject(tagBoxWhitelist, new JsonSerializerSettings
-                                {
-                                    StringEscapeHandling = StringEscapeHandling.Default
-                                });
+                                                    {
+                                                        StringEscapeHandling = StringEscapeHandling.Default
+                                                    });
 
                                                                     <input id="@child_name" class="tag-input form-control h-auto" name="@child_name" value="@child_value" data-jsonwhitelist='@whitelistJson' aria-label="@child_label" tabindex="-1">
                                                                 }
                                                                 else if (child_type == "ListSelection")
                                                                 {
-                                                                    // check selected cho item dung voi gia tri
+                                                                // check selected cho item dung voi gia tri
                                                                     var selectList = dynamicServiceSelectOptions[child_name] as List<SelectListItem> ?? new List<SelectListItem>();
                                                                     string inputName = child_name; // ví dụ: "ListSelectionInput"
                                                                     var selectedValues = (value.ToString() ?? "").Split(',', StringSplitOptions.RemoveEmptyEntries).ToList();
@@ -461,7 +460,7 @@
                                                                             {
                                                                                 bool isSelected = selectedValues.Contains(item.Value);
                                                                                 <div class="selection-item @(isSelected ? "selected" : "")"
-                                                                                     data-value="@item.Value">
+                                                                                data-value="@item.Value">
                                                                                     @item.Text
                                                                                 </div>
                                                                             }
@@ -480,9 +479,9 @@
                                                                         {
                                                                             <div class="form-check form-check-inline">
                                                                                 <input type="radio" class="form-check-input"
-                                                                                       name="@child_name"
-                                                                                       id="@(child_name + "_" + item.Value)"
-                                                                                       value="@item.Value"
+                                                                                name="@child_name"
+                                                                                id="@(child_name + "_" + item.Value)"
+                                                                                value="@item.Value"
                                                                                 @((child_value ?? "").ToString() == item.Value.ToString() ? "checked" : "") />
                                                                                 <label class="form-check-label" for="@(child_name + "_" + item.Value)">@item.Text</label>
                                                                             </div>
@@ -491,7 +490,7 @@
                                                                 }
                                                                 else if (child_type == "CheckBox" || child_type == "Switch")
                                                                 {
-                                                                    <input class="form-check-input" type="checkbox" id="@child_name" name="@child_name" value="true" @((child_value ?? "").ToString().ToLower() == "true" ? "checked" : "") @(child_isreadonly == true ? "readonly" : "") @(child_isrequired == true ? "required" : "") />
+                                                                    <input class="form-check-input" type="checkbox" id="@child_name" name="@child_name" value="true" @((child_value ?? "").ToString().ToLower() == "true" ? "checked" : "") @(child_isreadonly == true ? "readonly" : "") @(child_isrequired == true ? "required" : "")/>
                                                                 }
                                                                 else if (child_type == "FileUploader")
                                                                 {
@@ -507,7 +506,7 @@
                                                                         <div class="col-md-4 card-header">
                                                                             <div class="mb-4">
                                                                                 <label for="@child_name" class="form-label"><i class="@iconclass" style="@iconstyle"></i> <span style="@labelstyle">@child_label</span>  <span class='text-danger'>@(child_isrequired == true ? "*" : "")</span></label>
-                                                                                <input class="form-control" type="file" id="@codeUpload" name="@codeUpload" data-target="@("#fileList-" + codeUpload)" data-carousel="@("#carouselSlideImage-" + codeUpload)" multiple />
+                                                                                <input class="form-control" type="file" id="@codeUpload" name="@codeUpload" data-target="@("#fileList-"+codeUpload)" data-carousel="@("#carouselSlideImage-"+codeUpload)" multiple />
                                                                                 @* tao danh sach file rong de xu ly js hiển thị *@
                                                                                 <ul id="@("fileList-"+codeUpload)"></ul>
                                                                             </div>
@@ -515,8 +514,8 @@
                                                                         @* Image slide *@
                                                                         <div class="col-md-8">
                                                                             <div id="@("carouselSlideImage-"+codeUpload)"
-                                                                                 class="carousel slide carousel-fade w-50"
-                                                                                 data-bs-ride="carousel">
+                                                                            class="carousel slide carousel-fade w-50"
+                                                                            data-bs-ride="carousel">
                                                                                 <div class="carousel-indicators">
                                                                                     @if (fileList != null)
                                                                                     {
@@ -532,14 +531,14 @@
                                                                                             }
                                                                                             else
                                                                                             {
-                                                                                                // kiem tra file truoc do co phai la img khong? neu khong phai thi img sau phai tru 1
+                                                                                            // kiem tra file truoc do co phai la img khong? neu khong phai thi img sau phai tru 1
                                                                                                 index = isPreviousImg == true ? index : index - 1;
                                                                                                 <button type="button"
-                                                                                                        data-bs-target="@("#carouselSlideImage-" + codeUpload)"
-                                                                                                        data-bs-slide-to="@index"
-                                                                                                        class="@(index == 0 ? "active" : "")"
-                                                                                                        aria-current="@(index == 0 ? "true" : "false")"
-                                                                                                        aria-label="Slide @(index + 1)">
+                                                                                                data-bs-target="@("#carouselSlideImage-"+codeUpload)"
+                                                                                                data-bs-slide-to="@index"
+                                                                                                class="@(index == 0 ? "active" : "")"
+                                                                                                aria-current="@(index == 0 ? "true" : "false")"
+                                                                                                aria-label="Slide @(index + 1)">
                                                                                                 </button>
                                                                                             }
                                                                                         }
@@ -561,7 +560,7 @@
                                                                                             }
                                                                                             else
                                                                                             {
-                                                                                                // kiem tra file truoc do co phai la img khong? neu khong phai thi img sau phai tru 1
+                                                                                            // kiem tra file truoc do co phai la img khong? neu khong phai thi img sau phai tru 1
                                                                                                 index = isPreviousImg == true ? index : index - 1;
                                                                                                 <div class="carousel-item @(index == 0 ? "active" : "")">
                                                                                                     <img class="d-block w-100" src="@fileUrl" alt="@fileName" />
@@ -605,7 +604,8 @@
                                                                         <div class="col-md-12 card-header"><label class="mb-0"><i class="@iconclass" style="@iconstyle"></i> <span style="@labelstyle">@child_label</span></label></div>
                                                                         <div class="col-md-12 card-body">
                                                                             @* Khu vực chứa Report Editor *@
-                                                                            <div id="@("ReportEditor-" + child_name)" class="form-report-editor" data-reportcode="@reportCode">
+                                                                            <div id="@("ReportEditor-" + child_name)" class="form-report-editor" data-reportcode = "@reportCode">
+
                                                                             </div>
                                                                         </div>
                                                                     </div>
@@ -647,7 +647,7 @@
                                                                             thumbnailpath = (videodictinfo.ContainsKey("ThumbnailPath") ? Convert.ToString(videodictinfo["ThumbnailPath"] ?? "") : "");
                                                                         }
                                                                     }
-
+                                                        
                                                                     <p for="@child_name" class="htmleditor-form-label"><i class="@iconclass" style="@iconstyle"></i> <span style="@labelstyle">@child_label</span></p>
                                                                     <div class="video-player-embed">
                                                                         <video class="w-100 plyr__video-embed" id="@("plyr-video-player-"+name)" poster="@thumbnailpath" playsinline="" controls="" title="@mediatitle">
@@ -658,7 +658,7 @@
 
                                                                 @{
                                                                     // mot số trường sử dụng label riêng
-                                                                    string[] nolabel_fieldtypes = ["DynamicReport", "FileUploader", "HTMLEditor", "RadioGroup", "EmptyBox", "ListSelection", "ColorBox", "Label", "EmbedYoutube", "VideoUploader"];
+                                                                    string[] nolabel_fieldtypes = ["DynamicReport","FileUploader","HTMLEditor","RadioGroup","EmptyBox","ListSelection","ColorBox","Label","EmbedYoutube","VideoUploader"];
                                                                     if (!nolabel_fieldtypes.Contains(child_type))
                                                                     {
                                                                         <label for="@child_name"><i class="@iconclass" style="@iconstyle"></i> <span style="@labelstyle">@child_label</span> <span class='text-danger'>@(child_isrequired == true ? "*" : "")</span></label>
@@ -670,7 +670,7 @@
                                                         </div>
                                                     }
                                                 </div>
-                                            </div>
+                                            </div>                              
 
                                         }
                                         else
@@ -695,8 +695,7 @@
                                                         // kiểm tra có thông tin màu mặc định thì truyền vào
                                                         string defaultcolor = field_editoroptionsDict.ContainsKey("default") ? Convert.ToString(field_editoroptionsDict["default"]) : "";
 
-                                                        <div class="d-lg-inline-block">
-                                                            <smaill class="d-flex">@label: <span class="text-danger">@(isrequired == true ? "*" : "")</span></smaill>
+                                                        <div class="d-lg-inline-block"><smaill class="d-flex">@label: <span class="text-danger">@(isrequired == true ? "*" : "")</span></smaill>
                                                             <button type="button" id="@("color-"+name)" data-default="@defaultcolor" class="pcr-button form-color-picker" role="button" aria-label="@label"></button>
                                                             <input type="hidden" id="@name" name="@name" value="@value" />
                                                         </div>
@@ -710,13 +709,13 @@
                                                     }
                                                     else if (type == "NumberBox")
                                                     {
-                                                        <input class="form-control form-control-sm" type="number" id="@name" name="@name" value="@value" @(isreadonly == true ? "readonly" : "") @(isrequired == true ? "required" : "") />
+                                                        <input class="form-control form-control-sm" type="number" id="@name"  name="@name" value="@value" @(isreadonly == true ? "readonly" : "") @(isrequired == true ? "required" : "") />
                                                     }
                                                     else if (type == "DateBox")
                                                     {
                                                         @* mac dinh datetype la date *@
                                                         string datetype = field_editoroptionsDict.ContainsKey("type") ? (field_editoroptionsDict["type"].ToString() ?? "date") : "date";
-                                                        <input class="form-control form-control-sm" type="@datetype" id="@name" name="@name" value="@value" @(isreadonly == true ? "readonly" : "") @(isrequired == true ? "required" : "") />
+                                                        <input class="form-control form-control-sm" type="@datetype" id="@name" name="@name" value="@value" @(isreadonly == true ? "readonly" : "") @(isrequired == true ? "required" : "")/>
                                                     }
                                                     else if (type == "EmptyBox")
                                                     {
@@ -730,16 +729,17 @@
                                                         var selectList = dynamicServiceSelectOptions[name] as List<SelectListItem> ?? new List<SelectListItem>();
 
                                                         <select name="@name"
-                                                                id="@name"
-                                                                class="form-select color-dropdown form-select-sm"
-                                                                data-datafillstore="@dataFillStore"
+                                                        id="@name"
+                                                        class="form-select color-dropdown form-select-sm"
+                                                        data-datafillstore="@dataFillStore"
                                                         @(isrequired ? "required" : "")
-                                                        @(isreadonly == true ? "disabled" : "")>
+                                                        @(isreadonly == true ? "disabled" : "")
+                                                        >
                                                             <option value="">-- Chọn --</option>
                                                             @foreach (var item in selectList)
                                                             {
                                                                 <option value="@item.Value"
-                                                                        selected="@(item.Value.ToString() == (value ?? "").ToString() ? "selected" : null)">
+                                                                selected="@(item.Value.ToString() == (value ?? "").ToString() ? "selected" : null)">
                                                                     @item.Text
                                                                 </option>
                                                             }
@@ -751,11 +751,11 @@
                                                         var selectList = dynamicServiceSelectOptions[name] as List<SelectListItem> ?? new List<SelectListItem>();
 
                                                         <select name="@name"
-                                                                id="@name"
-                                                                class="form-select color-dropdown form-select-sm"
+                                                        id="@name"
+                                                        class="form-select color-dropdown form-select-sm"
                                                         @(isrequired ? "required" : "")
                                                         @(isreadonly == true ? "disabled" : "")
-                                                                multiple>
+                                                        multiple>
                                                             <option value="">-- Chọn --</option>
                                                             @foreach (var item in selectList)
                                                             {
@@ -764,7 +764,7 @@
                                                                 var splitvalue = value.ToString().Split(",", StringSplitOptions.RemoveEmptyEntries);
                                                                 // kiểm tra cac giá trị có khớp không
                                                                 <option value="@item.Value"
-                                                                        selected="@((splitvalue.Any(s => s.Trim().Equals(item.Value.ToString(), StringComparison.OrdinalIgnoreCase))) ? "selected" : null)">
+                                                                selected="@((splitvalue.Any(s => s.Trim().Equals(item.Value.ToString(), StringComparison.OrdinalIgnoreCase))) ? "selected" : null)">
                                                                     @item.Text
                                                                 </option>
                                                             }
@@ -774,17 +774,16 @@
                                                     {
                                                         // check selected cho item dung voi gia tri
                                                         var selectList = dynamicServiceSelectOptions[name] as List<SelectListItem> ?? new List<SelectListItem>();
-                                                        var tagBoxWhitelist = selectList.Select(x => new
-                                                        {
+                                                        var tagBoxWhitelist = selectList.Select(x => new {
                                                             value = x.Value,
                                                             label = x.Text
                                                         });
 
                                                         // serialize whitelist tiếng Việt không bị escape unicode
                                                         var whitelistJson = JsonConvert.SerializeObject(tagBoxWhitelist, new JsonSerializerSettings
-                            {
-                                StringEscapeHandling = StringEscapeHandling.Default
-                            });
+                                          {
+                                              StringEscapeHandling = StringEscapeHandling.Default
+                                          });
 
                                                         <input id="@name" class="tag-input form-control h-auto" name="@name" value="@value" data-jsonwhitelist='@whitelistJson' aria-label="@label" tabindex="-1">
                                                     }
@@ -805,7 +804,7 @@
                                                                 {
                                                                     bool isSelected = selectedValues.Contains(item.Value);
                                                                     <div class="selection-item @(isSelected ? "selected" : "")"
-                                                                         data-value="@item.Value">
+                                                                    data-value="@item.Value">
                                                                         @item.Text
                                                                     </div>
                                                                 }
@@ -824,9 +823,9 @@
                                                             {
                                                                 <div class="form-check form-check-inline">
                                                                     <input type="radio" class="form-check-input"
-                                                                           name="@name"
-                                                                           id="@(name + "_" + item.Value)"
-                                                                           value="@item.Value"
+                                                                    name="@name"
+                                                                    id="@(name + "_" + item.Value)"
+                                                                    value="@item.Value"
                                                                     @((value ?? "").ToString() == item.Value.ToString() ? "checked" : "") />
                                                                     <label class="form-check-label" for="@(name + "_" + item.Value)">@item.Text</label>
                                                                 </div>
@@ -835,7 +834,7 @@
                                                     }
                                                     else if (type == "CheckBox" || type == "Switch")
                                                     {
-                                                        <input class="form-check-input" type="checkbox" id="@name" name="@name" value="true" @((value ?? "").ToString().ToLower() == "true" ? "checked" : "") @(isreadonly == true ? "readonly" : "") @(isrequired == true ? "required" : "") />
+                                                        <input class="form-check-input" type="checkbox" id="@name" name="@name" value="true" @((value ?? "").ToString().ToLower() == "true" ? "checked" : "") @(isreadonly == true ? "readonly" : "") @(isrequired == true ? "required" : "")/>
                                                     }
                                                     else if (type == "FileUploader")
                                                     {
@@ -859,7 +858,7 @@
                                                             <div class="col-md-4 card-header">
                                                                 <div class="mb-4">
                                                                     <label for="@name" class="form-label"><i class="@iconclass" style="@iconstyle"></i> <span style="@labelstyle">@label</span> <span class='text-danger'>@(isrequired == true ? "*" : "")</span></label>
-                                                                    <input class="form-control" type="file" id="@codeUpload" name="@codeUpload" data-target="@("#fileList-" + codeUpload)" data-carousel="@("#carouselSlideImage-" + codeUpload)" multiple />
+                                                                    <input class="form-control" type="file" id="@codeUpload" name="@codeUpload" data-target="@("#fileList-"+codeUpload)" data-carousel="@("#carouselSlideImage-"+codeUpload)" multiple />
                                                                     @* tao danh sach file rong de xu ly js hiển thị *@
                                                                     <ul id="@("fileList-"+codeUpload)"></ul>
                                                                 </div>
@@ -867,8 +866,8 @@
                                                             @* Image slide *@
                                                             <div class="col-md-8">
                                                                 <div id="@("carouselSlideImage-"+codeUpload)"
-                                                                     class="carousel slide carousel-fade w-50"
-                                                                     data-bs-ride="carousel">
+                                                                class="carousel slide carousel-fade w-50"
+                                                                data-bs-ride="carousel">
                                                                     <div class="carousel-indicators">
                                                                         @if (fileList != null)
                                                                         {
@@ -884,14 +883,14 @@
                                                                                 }
                                                                                 else
                                                                                 {
-                                                                                    // kiem tra file truoc do co phai la img khong? neu khong phai thi img sau phai tru 1
+                                                                                // kiem tra file truoc do co phai la img khong? neu khong phai thi img sau phai tru 1
                                                                                     index = isPreviousImg == true ? index : index - 1;
                                                                                     <button type="button"
-                                                                                            data-bs-target="@("#carouselSlideImage-" + codeUpload)"
-                                                                                            data-bs-slide-to="@index"
-                                                                                            class="@(index == 0 ? "active" : "")"
-                                                                                            aria-current="@(index == 0 ? "true" : "false")"
-                                                                                            aria-label="Slide @(index + 1)">
+                                                                                    data-bs-target="@("#carouselSlideImage-"+codeUpload)"
+                                                                                    data-bs-slide-to="@index"
+                                                                                    class="@(index == 0 ? "active" : "")"
+                                                                                    aria-current="@(index == 0 ? "true" : "false")"
+                                                                                    aria-label="Slide @(index + 1)">
                                                                                     </button>
                                                                                 }
                                                                             }
@@ -913,7 +912,7 @@
                                                                                 }
                                                                                 else
                                                                                 {
-                                                                                    // kiem tra file truoc do co phai la img khong? neu khong phai thi img sau phai tru 1
+                                                                                // kiem tra file truoc do co phai la img khong? neu khong phai thi img sau phai tru 1
                                                                                     index = isPreviousImg == true ? index : index - 1;
                                                                                     <div class="carousel-item @(index == 0 ? "active" : "")">
                                                                                         <img class="d-block w-100" src="@fileUrl" alt="@fileName" />
@@ -960,19 +959,21 @@
                                                                 @if (form_isEditor)
                                                                 {
                                                                     @* Khu vực chứa Report Editor *@
-                                                                    <div id="@("ReportEditor-" + name)" class="form-report-editor" data-reportcode="@form_reportCode">
+                                                                    <div id="@("ReportEditor-" + name)" class="form-report-editor" data-reportcode = "@form_reportCode">
+
                                                                     </div>
                                                                 }
                                                                 else if (form_isViewerUtility)
                                                                 {
                                                                     @* Khu vực chứa Report Viewer *@
-                                                                    <div id="@("ReportViewer-" + name)" class="form-report-viewer" data-reportcode="@form_reportCode">
+                                                                    <div id="@("ReportViewer-" + name)" class="form-report-viewer" data-reportcode = "@form_reportCode">
+
                                                                     </div>
                                                                 }
-                                                                else
-                                                                {
+                                                                else{
                                                                     @* Khu vực chứa Report Viewer *@
-                                                                    <div id="@("ReportViewer-" + name)" class="form-report-viewer" data-reportcode="@form_reportCode">
+                                                                    <div id="@("ReportViewer-" + name)" class="form-report-viewer" data-reportcode = "@form_reportCode">
+
                                                                     </div>
                                                                 }
                                                             </div>
@@ -1015,7 +1016,7 @@
                                                                 thumbnailpath = (videodictinfo.ContainsKey("ThumbnailPath") ? Convert.ToString(videodictinfo["ThumbnailPath"] ?? "") : "");
                                                             }
                                                         }
-
+                                                        
                                                         <p for="@name" class="htmleditor-form-label"><i class="@iconclass" style="@iconstyle"></i> <span style="@labelstyle">@label</span></p>
                                                         <div class="video-player-embed">
                                                             <video class="w-100 plyr__video-embed" id="@("plyr-video-player-"+name)" poster="@thumbnailpath" playsinline="" controls="" title="@mediatitle">
@@ -1026,23 +1027,23 @@
 
                                                     @* neu type dynamic report hoac file uploadder thì tự check label riêng *@
                                                     @{
-                                                        string[] nolabel_fieldtypes = ["DynamicReport", "FileUploader", "HTMLEditor", "RadioGroup", "EmptyBox", "ListSelection", "ColorBox", "Label", "EmbedYoutube", "VideoUploader"];
+                                                        string[] nolabel_fieldtypes = ["DynamicReport","FileUploader","HTMLEditor","RadioGroup","EmptyBox","ListSelection","ColorBox","Label","EmbedYoutube","VideoUploader"];
                                                         if (!nolabel_fieldtypes.Contains(type))
                                                         {
                                                             <label for="@name"><i class="@iconclass" style="@iconstyle"></i> <span style="@labelstyle">@label</span> <span class='text-danger'>@(isrequired == true ? "*" : "")</span></label>
                                                         }
                                                     }
-                                                    @*  <div class="valid-feedback"> Chính xác! </div>
+                                     @*  <div class="valid-feedback"> Chính xác! </div>
                                       <div class="invalid-feedback"> @required_message </div> *@
-                                                </div>
-                                            </div>
-                                        }
-                                    }
+                                  </div>
                                 </div>
-                            </div>
-                        </div>
-                    }
-                </form>
+                                }
+                            }
+                              </div>
+                    </div>
+                </div>
+                }
+              </form>
             </div>
         </div>
         <!-- end Booking form -->

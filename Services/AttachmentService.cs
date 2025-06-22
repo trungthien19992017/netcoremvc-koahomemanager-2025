@@ -1,7 +1,14 @@
 
+using Amazon.S3;
+using Amazon.S3.Model;
+using Amazon.S3.Transfer;
 using KOAHome.EntityFramework;
+using KOAHome.Models;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.Data.SqlClient;
+using Microsoft.Extensions.Options;
+using Minio.DataModel.Args;
+using Minio;
 using Newtonsoft.Json;
 using OfficeOpenXml.FormulaParsing.Excel.Functions.Text;
 using System.Data;
@@ -29,13 +36,63 @@ namespace KOAHome.Services
     private readonly IConfiguration _configuration;
     private readonly IConnectionService _con;
     private const string CartSession = "CartSession";
-    public AttachmentService(QLKCL_NEWContext db, IHttpContextAccessor httpContextAccessor, IConfiguration configuration, IConnectionService con)
+    private readonly CloudflareR2Config _r2config;
+    public AttachmentService(QLKCL_NEWContext db, IHttpContextAccessor httpContextAccessor, IConfiguration configuration, IConnectionService con, IOptions<CloudflareR2Config> r2config)
     {
       _db = db;
       _httpContextAccessor = httpContextAccessor;
       _configuration = configuration;
       _con = con;
+      _r2config = r2config.Value;
     }
+    //public async Task<Dictionary<string, List<string>>> UpdateFiles(IFormCollection form)
+    //{
+    //  var result = new Dictionary<string, List<string>>();
+
+    //  if (form.Files.Any())
+    //  {
+    //    foreach (var file in form.Files)
+    //    {
+    //      if (file.Length > 0)
+    //      {
+    //        // Lấy name của input file từ file đầu tiên (chỉ lấy 1 lần)
+    //        string? objectTypeCode = file.Name;
+    //        var folder = Path.Combine("AttachmentFiles", "FORM", objectTypeCode, DateTime.Now.ToString("yyyyMMdd", CultureInfo.InvariantCulture));
+    //        var uploadFolder = Path.Combine("wwwroot", folder);
+
+    //        // Kiểm tra và tạo thư mục nếu chưa tồn tại
+    //        if (!Directory.Exists(uploadFolder))
+    //        {
+    //          Directory.CreateDirectory(uploadFolder);
+    //        }
+
+    //        var filePath = Path.Combine(uploadFolder, file.FileName);
+    //        // Kiểm tra và xóa file cũ nếu cần
+    //        if (System.IO.File.Exists(filePath))
+    //        {
+    //          System.IO.File.Delete(filePath);
+    //        }
+
+    //        using (var stream = new FileStream(filePath, FileMode.Create, FileAccess.Write, FileShare.ReadWrite))
+    //        {
+    //          file.CopyTo(stream);
+    //        }
+
+    //        var fileUrl = $"/{folder.Replace("\\", "/")}/{file.FileName}";
+
+    //        if (!result.ContainsKey(objectTypeCode))
+    //        {
+    //          result[objectTypeCode] = new List<string>();
+    //        }
+
+    //        result[objectTypeCode].Add(fileUrl);
+    //      }
+    //    }
+    //  }
+
+    //  return result;
+    //}
+
     public async Task<Dictionary<string, List<string>>> UpdateFiles(IFormCollection form)
     {
       var result = new Dictionary<string, List<string>>();
@@ -46,35 +103,41 @@ namespace KOAHome.Services
         {
           if (file.Length > 0)
           {
-            // Lấy name của input file từ file đầu tiên (chỉ lấy 1 lần)
-            string? objectTypeCode = file.Name;
-            var folder = Path.Combine("AttachmentFiles", "FORM", objectTypeCode, DateTime.Now.ToString("yyyyMMdd", CultureInfo.InvariantCulture));
-            var uploadFolder = Path.Combine("wwwroot", folder);
+            string objectTypeCode = file.Name;
+            string folder = $"FORM/{objectTypeCode}/{DateTime.UtcNow:yyyyMMdd}";
+            string key = $"{folder}/{file.FileName}";
 
-            // Kiểm tra và tạo thư mục nếu chưa tồn tại
-            if (!Directory.Exists(uploadFolder))
+            using (var memoryStream = new MemoryStream())
             {
-              Directory.CreateDirectory(uploadFolder);
-            }
+              await file.CopyToAsync(memoryStream);
+              memoryStream.Position = 0;
 
-            var filePath = Path.Combine(uploadFolder, file.FileName);
-            // Kiểm tra và xóa file cũ nếu cần
-            if (System.IO.File.Exists(filePath))
-            {
-              System.IO.File.Delete(filePath);
-            }
+              var endpoint = $"{_r2config.AccountId}.r2.cloudflarestorage.com";
+              var accessKey = _r2config.AccessKey;
+              var secretKey = _r2config.SecretKey;
+              var bucket = _r2config.Bucket;
 
-            using (var stream = new FileStream(filePath, FileMode.Create, FileAccess.Write, FileShare.ReadWrite))
-            {
-              file.CopyTo(stream);
-            }
+              var minio = new MinioClient()
+                  .WithEndpoint(endpoint)
+                  .WithCredentials(accessKey, secretKey)
+                  .WithSSL()
+                  .Build();
 
-            var fileUrl = $"/{folder.Replace("\\", "/")}/{file.FileName}";
+              await minio.PutObjectAsync(new PutObjectArgs()
+                  .WithBucket(bucket)
+                  .WithObject(key)
+                  .WithStreamData(memoryStream)
+                  .WithObjectSize(memoryStream.Length)
+                  .WithContentType(file.ContentType)
+                  .WithHeaders(new Dictionary<string, string>
+                  {
+            { "x-amz-acl", "public-read" }
+                  }));
+            }
+            var fileUrl = $"https://{_r2config.AccountId}.r2.dev/{key}";
 
             if (!result.ContainsKey(objectTypeCode))
-            {
               result[objectTypeCode] = new List<string>();
-            }
 
             result[objectTypeCode].Add(fileUrl);
           }
@@ -193,7 +256,7 @@ namespace KOAHome.Services
       return fileUrls;
     }
 
-    public async Task<Dictionary<string,List<string>>> HandleFiles(string objectTypeCodes, IFormCollection? form, int? id)
+    public async Task<Dictionary<string, List<string>>> HandleFiles(string objectTypeCodes, IFormCollection? form, int? id)
     {
       var listAttFileUrls = new Dictionary<string, List<string>>();
       // neu co bat ky object type code nào thì tiếp tục
