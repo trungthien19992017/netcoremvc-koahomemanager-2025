@@ -2,6 +2,8 @@ using KOAHome.EntityFramework;
 using Microsoft.EntityFrameworkCore;
 using KOAHome.Services;
 using System.Data.Common;
+using Amazon.S3;
+using KOAHome.Models;
 //using KOAHome.Services;
 
 namespace KOAHome
@@ -47,6 +49,20 @@ namespace KOAHome
       services.AddScoped<INetMenuService, NetMenuService>();
       services.AddScoped<INetTabPanelService, NetTabPanelService>();
       services.AddScoped<INetFormWizardService, NetFormWizardService>();
+      services.Configure<CloudflareR2Config>(Configuration.GetSection("CloudflareR2"));
+      //services.AddSingleton(s =>
+      //{
+      //  var config = Configuration.GetSection("CloudflareR2").Get<CloudflareR2Config>();
+
+      //  var s3Config = new AmazonS3Config
+      //  {
+      //    RegionEndpoint = Amazon.RegionEndpoint.USEast1, // Không ảnh hưởng vì R2 là regionless
+      //    ServiceURL = $"https://{config.AccountId}.r2.cloudflarestorage.com",
+      //    ForcePathStyle = true
+      //  };
+
+      //  return new AmazonS3Client(config.AccessKey, config.SecretKey, s3Config);
+      //});
     }
 
     // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.

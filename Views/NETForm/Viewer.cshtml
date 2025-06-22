@@ -155,23 +155,23 @@
         // }
 
         // xử lý hiển thị dynamic report trong form nếu có
-        $(document).ready(function () {
-        // Khi trang load, tìm tất cả div có class "form-report-editor" để load report editor
-        $('.form-report-editor').each(function () {
-        var reportCode = $(this).data('reportcode'); // lấy thuộc tính data-reportcode
-        var containerId = $(this).attr('id');         // lấy id của div
-        if (reportCode && containerId) {
-        loadFormReportEditor(reportCode, containerId);
-        }
-        });
-        // Khi trang load, tìm tất cả div có class "form-report-viewer" để load report viewer
-        $('.form-report-viewer').each(function () {
-        var reportCode = $(this).data('reportcode'); // lấy thuộc tính data-reportcode
-        var containerId = $(this).attr('id');         // lấy id của div
-        if (reportCode && containerId) {
-        loadFormReportViewer(reportCode, containerId);
-        }
-        });
+        document.addEventListener("DOMContentLoaded", function () {
+            // Khi trang load, tìm tất cả div có class "form-report-editor" để load report editor
+            $('.form-report-editor').each(function () {
+            var reportCode = $(this).data('reportcode'); // lấy thuộc tính data-reportcode
+            var containerId = $(this).attr('id');         // lấy id của div
+            if (reportCode && containerId) {
+            loadFormReportEditor(reportCode, containerId);
+            }
+            });
+            // Khi trang load, tìm tất cả div có class "form-report-viewer" để load report viewer
+            $('.form-report-viewer').each(function () {
+            var reportCode = $(this).data('reportcode'); // lấy thuộc tính data-reportcode
+            var containerId = $(this).attr('id');         // lấy id của div
+            if (reportCode && containerId) {
+            loadFormReportViewer(reportCode, containerId);
+            }
+            });
         });
 
     </script>

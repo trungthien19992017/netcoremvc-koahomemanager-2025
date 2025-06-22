@@ -377,108 +377,6 @@
            }
         });
 
-        // kiem tra nếu có nhập liệu trên bất kì dòng nào thì mới enable nút Lưu, và dòng nào nhập liệu thì mới truyền xuống IFormCollection
-        document.addEventListener("DOMContentLoaded", function () {
-            // Theo dõi tất cả form trên trang
-            document.querySelectorAll("form").forEach(form => {
-                const table = form.querySelector("table"); // Tìm bảng trong form
-                const submitButton = form.querySelector("button[type='submit']");
-
-                if (!table || !submitButton) return; // Bỏ qua nếu không có bảng hoặc nút submit
-
-                function checkChanges() {
-                    let hasChanges = false;
-
-                     // Kiểm tra nếu form không có id là "editor-form", trả về false và dừng
-                     if (form.id !== "editor-form") {
-                         // Luôn bật nút lưu nếu không phải form editor-form
-                         return;
-                     }
-
-                    // neu khong co tr nào co attr data change thi mac dinh hien thi nut Luu
-                    if (table.querySelectorAll("tr[data-changed]").length == 0)
-                    {
-                      return;
-                    }
-
-                    table.querySelectorAll("tr").forEach(row => {
-                        if (row.getAttribute("data-changed") === "true") {
-                            hasChanges = true;
-                        }
-                    });
-
-                    submitButton.disabled = !hasChanges; // Bật/tắt nút submit
-                }
-
-                // Một hàm duy nhất đánh dấu dòng thay đổi
-                function markRowChanged(target) {
-                    if (target.classList.contains("track-change")) {
-                        const row = target.closest("tr");
-                        if (row) {
-                            row.setAttribute("data-changed", "true");
-                            row.classList.add("row-changed"); // ➡️ Thêm dòng này để highlight
-                            checkChanges();
-                        }
-                    }
-                }
-
-                // Theo dõi input và change chung
-                table.addEventListener("input", event => {
-                    markRowChanged(event.target);
-                });
-
-                table.addEventListener("change", event => {
-                    markRowChanged(event.target);
-                });
-
-                // Nếu dùng jQuery và select2
-                if (window.jQuery && $(table).length) {
-                    $(table).on('select2:select select2:unselect', 'select.track-change', function (event) {
-                        markRowChanged(event.target);
-                    });
-                }
-
-                // Nếu người dùng click vào nút trong bảng
-                table.addEventListener("click", event => {
-                    const target = event.target;
-                    if (target.closest("button")) {
-                        const row = target.closest("tr");
-                        if (row) {
-                            row.setAttribute("data-changed", "true");
-                            row.classList.add("row-changed"); // ➡️ Thêm dòng này để highlight
-                            checkChanges();
-                        }
-                    }
-                });
-
-                // Chỉ gử i dữ liệu của bảng đã thay đổi
-                form.addEventListener("submit", function (event) {
-                    let rows = table.querySelectorAll("tbody tr");
-
-                    rows.forEach(row => {
-                      // neu khong khai bao data change thi bo qua, neu co khai bao data change thi kiem tra = false thi xoa 
-                        if (row.getAttribute('data-changed') !== undefined && row.getAttribute('data-changed') !== null)
-                        {
-                          if (row.getAttribute("data-changed") !== "true") {
-                            row.remove(); // Xóa các dòng chưa thay đổi khỏi form trước khi submit
-                          }
-                        }
-                      // neu khong khai bao data template thi bo qua, neu co khai bao data template thi kiem tra = true thi xoa 
-                        if (row.getAttribute('data-template') !== undefined && row.getAttribute('data-template') !== null)
-                        {
-                          if (row.getAttribute("data-template") == "true") {
-                            row.remove(); // Xóa các dòng chưa thay đổi khỏi form trước khi submit
-                          }
-                        }
-                    });
-
-                    // form.submit();
-                });
-
-                checkChanges(); // Kiểm tra trạng thái ban đầu
-            });
-        });
-
            // xu ly thong bao
         $(document).ready(function () {
             $.ajax({
@@ -1872,6 +1770,7 @@
                         // Nếu không có lỗi, chèn HTML vào container
                         let html = response;
                         $("#" + containerId).html(html);
+                        checkEditorForm();
 
                         // ✅ Gọi callback nếu có
                         if (typeof onSuccess === 'function') {
@@ -2008,6 +1907,112 @@
           });
         });
 
+        function checkEditorForm()
+        {
+             // Theo dõi tất cả form trên trang
+               document.querySelectorAll("form").forEach(form => {
+                   const table = form.querySelector("table"); // Tìm bảng trong form
+                   const submitButton = form.querySelector("button[type='submit']");
+
+                   if (!table || !submitButton) return; // Bỏ qua nếu không có bảng hoặc nút submit
+
+                   function checkChanges() {
+                       let hasChanges = false;
+
+                        // Kiểm tra nếu form không có id là "editor-form", trả về false và dừng
+                        if (form.id !== "editor-form") {
+                            // Luôn bật nút lưu nếu không phải form editor-form
+                            return;
+                        }
+
+                       // neu khong co tr nào co attr data change thi mac dinh hien thi nut Luu
+                       if (table.querySelectorAll("tr[data-changed]").length == 0)
+                       {
+                         return;
+                       }
+
+                       table.querySelectorAll("tr").forEach(row => {
+                           if (row.getAttribute("data-changed") === "true") {
+                               hasChanges = true;
+                           }
+                       });
+
+                       submitButton.disabled = !hasChanges; // Bật/tắt nút submit
+                   }
+
+                   // Một hàm duy nhất đánh dấu dòng thay đổi
+                   function markRowChanged(target) {
+                       if (target.classList.contains("track-change")) {
+                           const row = target.closest("tr");
+                           if (row) {
+                               row.setAttribute("data-changed", "true");
+                               row.classList.add("row-changed"); // ➡️ Thêm dòng này để highlight
+                               checkChanges();
+                           }
+                       }
+                   }
+
+                   // Theo dõi input và change chung
+                   table.addEventListener("input", event => {
+                       markRowChanged(event.target);
+                   });
+
+                   table.addEventListener("change", event => {
+                       markRowChanged(event.target);
+                   });
+
+                   // Nếu dùng jQuery và select2
+                   if (window.jQuery && $(table).length) {
+                       $(table).on('select2:select select2:unselect', 'select.track-change', function (event) {
+                           markRowChanged(event.target);
+                       });
+                   }
+
+                   // Nếu người dùng click vào nút trong bảng
+                   table.addEventListener("click", event => {
+                       const target = event.target;
+                       if (target.closest("button")) {
+                           const row = target.closest("tr");
+                           if (row) {
+                               row.setAttribute("data-changed", "true");
+                               row.classList.add("row-changed"); // ➡️ Thêm dòng này để highlight
+                               checkChanges();
+                           }
+                       }
+                   });
+
+                   // Chỉ gử i dữ liệu của bảng đã thay đổi
+                   form.addEventListener("submit", function (event) {
+                       let rows = table.querySelectorAll("tbody tr");
+
+                       rows.forEach(row => {
+                         // neu khong khai bao data change thi bo qua, neu co khai bao data change thi kiem tra = false thi xoa
+                           if (row.getAttribute('data-changed') !== undefined && row.getAttribute('data-changed') !== null)
+                           {
+                             if (row.getAttribute("data-changed") !== "true") {
+                               row.remove(); // Xóa các dòng chưa thay đổi khỏi form trước khi submit
+                             }
+                           }
+                         // neu khong khai bao data template thi bo qua, neu co khai bao data template thi kiem tra = true thi xoa
+                           if (row.getAttribute('data-template') !== undefined && row.getAttribute('data-template') !== null)
+                           {
+                             if (row.getAttribute("data-template") == "true") {
+                               row.remove(); // Xóa các dòng chưa thay đổi khỏi form trước khi submit
+                             }
+                           }
+                       });
+
+                       // form.submit();
+                   });
+
+                   checkChanges(); // Kiểm tra trạng thái ban đầu
+               });
+           }
+
+        // kiem tra nếu có nhập liệu trên bất kì dòng nào thì mới enable nút Lưu, và dòng nào nhập liệu thì mới truyền xuống IFormCollection
+        $(document).ready(function () {
+            checkEditorForm();
+        });
         
         // color picker
         function Init_getColorPicker()
@@ -2296,7 +2301,10 @@
                 navigator.mediaSession.metadata = new MediaMetadata({
                   title: videoTitle,
                   artist: 'KOA Video',
-                  album: 'KOA Video Album'
+                  album: 'KOA Video Album',
+                  artwork: [
+                       { src: 'https://pub-7171d6b031a04e3983a20a87daffce46.r2.dev/koala_with_headphones.png', sizes: '512x512', type: 'image/png' }
+                  ]
                 });
               }
             });
