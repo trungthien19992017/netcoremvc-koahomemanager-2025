@@ -1018,10 +1018,13 @@
                                                         }
                                                         
                                                         <p for="@name" class="htmleditor-form-label"><i class="@iconclass" style="@iconstyle"></i> <span style="@labelstyle">@label</span></p>
-                                                        <div class="video-player-embed">
-                                                            <video class="w-100 plyr__video-embed" id="@("plyr-video-player-"+name)" poster="@thumbnailpath" playsinline="" controls="" title="@mediatitle">
-                                                                <source src="@mediapath" type="video/mp4">
-                                                            </video>
+                                                        <!-- Bọc bằng khung giữ tỷ lệ -->
+                                                        <div class="video-wrapper">
+                                                          <div class="video-player-embed">
+                                                              <video class="w-100 plyr__video-embed" id="@("plyr-video-player-"+name)" poster="@thumbnailpath" playsinline="" controls="" title="@mediatitle">
+                                                                  <source src="@mediapath" type="video/mp4">
+                                                              </video>
+                                                          </div>
                                                         </div>
                                                     }
 
