@@ -22,7 +22,12 @@ namespace KOAHome
         Host.CreateDefaultBuilder(args)
             .ConfigureWebHostDefaults(webBuilder =>
             {
-              webBuilder.UseStartup<Startup>();
+              // Cấu hình Kestrel để giới hạn kích thước yêu cầu
+              webBuilder.UseStartup<Startup>()
+                 .ConfigureKestrel(options =>
+                 {
+                   options.Limits.MaxRequestBodySize = 104857600; // 100 MB
+                 });
 
               // Sử dụng /app/data-protection-keys thay vì /root
               var keysDir = Path.Combine(Directory.GetCurrentDirectory(), "data-protection-keys");
@@ -35,6 +40,7 @@ namespace KOAHome
               });
 
               webBuilder.UseUrls($"http://0.0.0.0:" + (Environment.GetEnvironmentVariable("PORT") ?? "8080"));
+
             });
 
   }
