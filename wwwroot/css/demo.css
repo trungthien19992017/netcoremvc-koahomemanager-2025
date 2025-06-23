@@ -466,16 +466,14 @@ h2.card-header {
   display: table-cell !important;
 }
 
+/*css cho video player và youtube video embed*/
 .video-player-embed {
-  position: relative;
   border-radius: 20px;
   backdrop-filter: blur(8px);
-  background: rgba(255, 255, 255, 0.2);
-  border: 1px solid rgba(255, 255, 255, 0.3);
-  padding: 10px;
+  background: rgb(103 195 239 / 20%);
+  border: 2px solid rgba(84, 146, 255, 1);
+  padding: 3px;
   box-shadow: 0 10px 25px rgba(136, 160, 255, 0.3);
-  transition: all 0.35s ease;
-  overflow: hidden;
 }
 
   .video-player-embed:hover {
@@ -483,31 +481,17 @@ h2.card-header {
     transform: translateY(-4px) scale(1.01);
   }
 
-  .video-player-embed video {
-    border-radius: 16px;
-    width: 100%;
-    height: auto;
-  }
 
 .youtube-video-embed {
-  position: relative;
   border-radius: 20px;
   backdrop-filter: blur(8px);
-  background: rgba(255, 255, 255, 0.2);
-  border: 1px solid rgba(255, 255, 255, 0.3);
-  padding: 10px;
+  background: rgb(103 195 239 / 20%);
+  border: 2px solid rgba(84, 146, 255, 1);
+  padding: 3px;
   box-shadow: 0 10px 25px rgba(136, 160, 255, 0.3);
-  transition: all 0.35s ease;
-  overflow: hidden;
 }
 
   .youtube-video-embed:hover {
     box-shadow: 0 12px 30px rgb(36, 126, 194, 0.5);
     transform: translateY(-4px) scale(1.01);
-  }
-
-  .youtube-video-embed video {
-    border-radius: 16px;
-    width: 100%;
-    height: auto;
   }
