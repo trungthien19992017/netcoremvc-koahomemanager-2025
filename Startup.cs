@@ -4,6 +4,7 @@ using KOAHome.Services;
 using System.Data.Common;
 using Amazon.S3;
 using KOAHome.Models;
+using Microsoft.AspNetCore.Http.Features;
 //using KOAHome.Services;
 
 namespace KOAHome
@@ -50,6 +51,10 @@ namespace KOAHome
       services.AddScoped<INetTabPanelService, NetTabPanelService>();
       services.AddScoped<INetFormWizardService, NetFormWizardService>();
       services.Configure<CloudflareR2Config>(Configuration.GetSection("CloudflareR2"));
+      services.Configure<FormOptions>(options =>
+      {
+        options.MultipartBodyLengthLimit = 104857600; // 100MB
+      });
       //services.AddSingleton(s =>
       //{
       //  var config = Configuration.GetSection("CloudflareR2").Get<CloudflareR2Config>();
