@@ -10,6 +10,8 @@ using Humanizer;
 using System.Collections.Generic;
 using Microsoft.SqlServer.Server;
 using KOAHome.Models;
+using static System.Runtime.InteropServices.JavaScript.JSType;
+using System.Text.Json;
 
 namespace AspnetCoreMvcFull.Controllers;
 
@@ -80,6 +82,24 @@ public class DashboardsController : Controller
     //////// Column chart Doanh thu tuần
     var ColumnChart_DoanhThuTuan = await _widget.Widget_GetObject(objParameters, "HS_Widget_ColumnChart_DoanhThuTuan", null);
     ViewBag.ColumnChart_DoanhThuTuan = ColumnChart_DoanhThuTuan;
+
+    //////// Heat map Trang Thai dat phong trong thang
+    var HeatMap_TrangThaiDatPhongThang = await _widget.Widget_GetList(objParameters, "HS_Widget_HeatMap_trangThaiDatPhongThang", null);
+
+    // B2: nhóm theo DayOfWeekName để tạo từng dòng (series)
+    var grouped = HeatMap_TrangThaiDatPhongThang
+        .GroupBy(d => (string)d.dayofweekname)
+        .Select(g => new
+        {
+          name = g.Key, // SUN, MON,...
+          data = g.Select(item => new {
+            x = (string)item.weekname,
+            y = (decimal)item.revenue
+          }).ToList()
+        }).ToList();
+
+    // B3: truyền ra View qua ViewBag hoặc ViewData
+    ViewBag.HeatMap_TrangThaiDatPhongThang = JsonSerializer.Serialize(grouped);
 
     return View();
   }

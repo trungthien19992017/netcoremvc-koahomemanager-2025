@@ -2324,6 +2324,72 @@
           });
         });
 
+        // let player;
+
+        // function getYouTubeEmbedURL(url) {
+        //   const regExp = /^.*(?:youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=)([^#\&\?]*).*/;
+        //   const match = url.match(regExp);
+        //   if (match && match[1].length === 11) {
+        //     return `https://www.youtube.com/embed/${match[1]}?origin=${location.origin}&iv_load_policy=3&modestbranding=1`;
+        //   }
+        //   return null;
+        // }
+
+        // function loadVideo() {
+        //   const url = document.getElementById("youtubeQuickViewUrl").value;
+        //   const embedUrl = getYouTubeEmbedURL(url);
+
+        //   if (!embedUrl) {
+        //     alert("URL không hợp lệ!");
+        //     return;
+        //   }
+
+        //   // Xóa player cũ nếu có
+        //   if (player) {
+        //     player.destroy();
+        //   }
+
+        //   const playerDiv = document.getElementById("player");
+        //   playerDiv.innerHTML = `
+        //     <iframe
+        //       src="${embedUrl}"
+        //       allowfullscreen
+        //       allowtransparency
+        //       allow="autoplay"
+        //     ></iframe>`;
+
+        //   // Khởi tạo Plyr lại với iframe mới
+        //   player = new Plyr(playerDiv, {
+        //     youtube: {
+        //         autoplay: false,
+        //         loop: { active: true },
+        //         volume: 1,
+        //         speed: { selected: 1, options: [0.75, 1, 1.25, 1.5, 2] },
+        //         controls: [
+        //             'play-large', 'rewind', 'play', 'fast-forward',
+        //             'progress', 'current-time', 'duration',
+        //             'mute', 'volume', 'captions', 'settings', 'fullscreen', 'pip'
+        //         ],
+        //         i18n: {
+        //             restart: 'Phát lại',
+        //             rewind: 'Lùi 10s',
+        //             play: 'Phát',
+        //             pause: 'Tạm dừng',
+        //             fastForward: 'Tiến 10s',
+        //             fullscreen: 'Toàn màn hình',
+        //             settings: 'Cài đặt',
+        //             captions: 'Phụ đề',
+        //             volume: 'Âm lượng'
+        //         }
+        //     }
+        //   });
+        // }
+
+        //  document.getElementById("youtubeQuickViewBtn").addEventListener("click", function (e) {
+        //   e.preventDefault(); // Chỉ cần nếu nằm trong form
+        //   loadVideo(e);
+        // });
+
     </script>
 
     <!-- Page Scripts-->

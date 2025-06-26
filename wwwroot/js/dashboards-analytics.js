@@ -12,6 +12,20 @@
   borderColor = config.colors.borderColor;
   chartBgColor = config.colors.chartBgColor;
   bodyColor = config.colors.bodyColor;
+    function c(e, o) {
+      let t = 0;
+      for (var r = []; t < e;) {
+        var s = "w" + (t + 1).toString()
+          , a = Math.floor(Math.random() * (o.max - o.min + 1)) + o.min;
+        r.push({
+          x: s,
+          y: a
+        }),
+          t++
+      }
+      return r
+    }
+
 
   // Weekly Overview Line Chart
   // --------------------------------------------------------------------
@@ -1014,4 +1028,122 @@
     const tyLeCacPhongThangRoundChart = new ApexCharts(tyLeCacPhongThangRoundChartEl, tyLeCacPhongThangRoundChartConfig);
     tyLeCacPhongThangRoundChart.render();
   };
+
+  // Lấy JSON string từ attribute và parse
+  const trangThaiDatPhongThangHeatMapJsonEl = document.getElementById("heatmap-data");
+  const trangThaiDatPhongThangHeatMapSeries = JSON.parse(trangThaiDatPhongThangHeatMapJsonEl.textContent);
+  const trangThaiDatPhongThangHeatMapSeriesJson = JSON.parse(trangThaiDatPhongThangHeatMapSeries);
+  console.log(typeof(parsed));
+
+    // Pie chart ty le cac phong trong thang
+    const trangThaiDatPhongThangHeatMapEl = document.querySelector('#trangThaiDatPhongThangHeatMap'),
+      trangThaiDatPhongThangHeatMapConfig = {
+        chart: {
+          height: 350,
+          fontFamily: "Inter",
+          type: "heatmap",
+          parentHeightOffset: 0,
+          toolbar: {
+            show: !1
+          }
+        },
+        plotOptions: {
+          heatmap: {
+            enableShades: !1,
+            colorScale: {
+              ranges: [{
+                from: 0,
+                to: 1000,
+                name: "0-1.000k",
+                color: "#b9b3f8"
+              }, {
+                from: 1001,
+                to: 2500,
+                name: "1.001k-2.500k",
+                color: "#aba4f6"
+              }, {
+                from: 2501,
+                to: 3000,
+                name: "2.501k-3.000k",
+                color: "#9d95f5"
+              }, {
+                from: 3001,
+                to: 3500,
+                name: "3.001k-3.500k",
+                color: "#8f85f3"
+              }, {
+                from: 3501,
+                to: 4000,
+                name: "3.501k-4.000k",
+                color: "#8176f2"
+              }, {
+                from: 4000,
+                to: 10000,
+                name: "> 4.000k",
+                color: "#7367f0"
+              }]
+            }
+          }
+        },
+        dataLabels: {
+          enabled: !1
+        },
+        grid: {
+          show: !1
+        },
+        legend: {
+          show: !0,
+          position: "bottom",
+          labels: {
+            colors: bodyColor,
+            useSeriesColors: !1
+          },
+          markers: {
+            size: 6,
+            offsetY: 0,
+            shape: "circle",
+            strokeWidth: 0
+          },
+          itemMargin: {
+            vertical: 3,
+            horizontal: 10
+          }
+        },
+        stroke: {
+          curve: "smooth",
+          width: 2,
+          lineCap: "round",
+          colors: [cardColor]
+        },
+        series: trangThaiDatPhongThangHeatMapSeriesJson,
+        xaxis: {
+          labels: {
+            show: !1,
+            style: {
+              colors: labelColor,
+              fontSize: "11px"
+            }
+          },
+          axisBorder: {
+            show: !1
+          },
+          axisTicks: {
+            show: !1
+          }
+        },
+        yaxis: {
+          tickAmount: 5,
+          labels: {
+            style: {
+              colors: labelColor,
+              fontSize: "13px"
+            }
+          }
+        }
+      };
+
+    if (typeof trangThaiDatPhongThangHeatMapEl !== undefined && trangThaiDatPhongThangHeatMapEl !== null) {
+      const trangThaiDatPhongThangHeatMap = new ApexCharts(trangThaiDatPhongThangHeatMapEl, trangThaiDatPhongThangHeatMapConfig);
+      trangThaiDatPhongThangHeatMap.render();
+    };
 })();
