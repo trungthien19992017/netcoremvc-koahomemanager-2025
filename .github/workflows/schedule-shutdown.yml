@@ -1,0 +1,30 @@
+name: Nightly Shutdown
+
+on:
+  schedule:
+    - cron: '0 11 * * *' # 23h giờ Việt Nam (Railway giờ UTC)
+    - cron: '0 12 * * *'  # 7h sáng giờ Việt Nam (Railway giờ UTC)
+  workflow_dispatch: # Cho phép chạy tay
+
+jobs:
+  stop:
+    if: github.event.schedule == '0 16 * * *'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Install Railway CLI
+        run: npm install -g railway
+      - name: Stop Project
+        run: railway down --project <project-name-or-id>
+        env:
+          RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
+
+  start:
+    if: github.event.schedule == '0 0 * * *'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Install Railway CLI
+        run: npm install -g railway
+      - name: Start Project
+        run: railway up --project <project-name-or-id>
+        env:
+          RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
