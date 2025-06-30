@@ -392,13 +392,15 @@ namespace KOAHome.Services
     public int Display_GetReportMaxParentLevel(List<dynamic> displayList)
     {
       // B1: Tạo lookup table cho tra cứu nhanh theo Code
-      var lookup = displayList.ToDictionary(x => (string)x.code, x => x);
+      var lookup = displayList.ToDictionary(x => (string)x.code?.ToLower(), x => x);
 
       // B2: Hàm tính độ sâu của từng item (truy ngược lên parent)
       Dictionary<string, int> depthCache = new(); // Để tránh tính lại
 
       int GetDepth(string code)
       {
+        // in thường trước khi xử lý
+        code = code?.ToLower();
         if (depthCache.ContainsKey(code))
           return depthCache[code];
 
@@ -406,7 +408,8 @@ namespace KOAHome.Services
           return 1; // Nếu không tìm thấy code -> root
 
         var item = lookup[code];
-        string parentCode = item.parentcode as string;
+        // in thường trước khi xử lý
+        string parentCode = item.parentcode?.ToLower() as string;
 
         int depth = 1;
         if (!string.IsNullOrEmpty(parentCode) && lookup.ContainsKey(parentCode))
@@ -422,7 +425,7 @@ namespace KOAHome.Services
       int maxDepth = 0;
       foreach (var item in displayList)
       {
-        string code = item.code as string;
+        string code = item.code?.ToLower() as string;
         if (!string.IsNullOrEmpty(code))
         {
           int depth = GetDepth(code);
