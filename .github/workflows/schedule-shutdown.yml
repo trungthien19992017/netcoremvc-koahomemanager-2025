@@ -2,8 +2,8 @@ name: Nightly Shutdown
 
 on:
   schedule:
-    - cron: '0 11 * * *' # 23h giờ Việt Nam (Railway giờ UTC)
-    - cron: '0 12 * * *'  # 7h sáng giờ Việt Nam (Railway giờ UTC)
+    - cron: '0 3 * * *' # 10h giờ Việt Nam (Railway giờ UTC)
+    - cron: '0 4 * * *'  # 11h sáng giờ Việt Nam (Railway giờ UTC)
   workflow_dispatch: # Cho phép chạy tay
 
 jobs:
