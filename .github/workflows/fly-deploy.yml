@@ -1,0 +1,24 @@
+name: Deploy to Fly.io
+
+on:
+  push:
+    branches:
+      - version-production
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v3
+      with:
+        ref: version-production
+
+    - name: Install flyctl
+      uses: superfly/flyctl-actions/setup-flyctl@master
+
+    - name: Deploy app
+      run: flyctl deploy --remote-only --app koa-home-manager
+      env:
+        FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}
