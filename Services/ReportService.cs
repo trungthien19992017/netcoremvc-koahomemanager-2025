@@ -152,7 +152,7 @@ namespace KOAHome.Services
         using (var package = new ExcelPackage(stream))
         {
           // Sheet "Import" để lấy tên Store Procedure
-          var importSheet = package.Workbook.Worksheets.FirstOrDefault(ws => ws.Name == "Import");
+          var importSheet = package.Workbook.Worksheets["Import"];
           if (importSheet != null)
           {
             sqlstore = importSheet.Cells[1, 1].Text?.Trim(); // Lấy A1
