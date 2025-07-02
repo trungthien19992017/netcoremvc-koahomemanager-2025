@@ -25,11 +25,13 @@ namespace KOAHome.Services
     private readonly QLKCL_NEWContext _db;
     private readonly IHttpContextAccessor _httpContextAccessor;
     private readonly IConfiguration _configuration;
-    public ConnectionService(QLKCL_NEWContext db, IHttpContextAccessor httpContextAccessor, IConfiguration configuration)
+    private readonly ILogger<NetDatasourcedetail> _logger;
+    public ConnectionService(QLKCL_NEWContext db, IHttpContextAccessor httpContextAccessor, IConfiguration configuration, ILogger<NetDatasourcedetail> logger)
     {
       _db = db;
       _httpContextAccessor = httpContextAccessor;
       _configuration = configuration;
+      _logger = logger;
     }
     private object? ConvertToClrType(string postgresType, object? value)
     {
@@ -369,6 +371,9 @@ namespace KOAHome.Services
       {
         connectionString = _configuration.GetConnectionString("DefaultConnection");
       }
+
+      // log lại query khi call store
+      _logger.LogInformation($"Query mới: '{sqlQuery}'");
 
       var resultList = new List<dynamic>();
       using (var connection = new NpgsqlConnection(connectionString))
