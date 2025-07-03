@@ -175,8 +175,9 @@ namespace KOAHome.Services
         connectionString = _configuration.GetConnectionString("DefaultConnection"); // Thay thế bằng chuỗi kết nối của bạn
       }
 
-      // log lại query khi call store
-      _logger.LogInformation($"Query mới: '{sqlQuery}'");
+      // log lại query khi call store// log lại query khi call store
+      string singleLineQuery = sqlQuery.ToString().Replace(Environment.NewLine, " ").Replace("\n", " ");
+      _logger.LogInformation($"Query mới: '{singleLineQuery}'");
 
       var resultList = new List<dynamic>();
       using (var connection = new SqlConnection(connectionString))
