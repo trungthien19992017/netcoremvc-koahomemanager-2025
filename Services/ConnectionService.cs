@@ -373,7 +373,7 @@ namespace KOAHome.Services
       }
 
       // log lại query khi call store
-      _logger.LogInformation($"Query mới: '{sqlQuery}'");
+      _logger.LogInformation($"Query mới: '{sqlQuery.ToString()}'");
 
       var resultList = new List<dynamic>();
       using (var connection = new NpgsqlConnection(connectionString))
