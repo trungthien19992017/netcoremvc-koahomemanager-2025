@@ -909,7 +909,23 @@ asp-route-id="@id" data-modal-id="modal-PopupForm" enctype="multipart/form-data"
 
         // xử lý form popup
          $(document).ready(function () {
-            const urlParams = new URLSearchParams(window.location.search);
+            const urlParams = new URLSearchParams(window.location.search);            // đối với dạng popup, phải lấy query param từ bên ngoài thông qua viewdata
+            var queryParamOutSite = {};
+            var viewDataParams = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(ViewData["objParameters"] ?? new Dictionary<string, object>()));
+            // Gộp với viewDataParams nếu có, và ưu tiên viewDataParams
+            if (typeof viewDataParams === 'object' && viewDataParams !== null) {
+                for (var key in viewDataParams) {
+                    if (viewDataParams.hasOwnProperty(key)) {
+                        queryParamOutSite[key] = viewDataParams[key];
+                    }
+                }
+            }
+            // Gộp queryParamOutSite vào urlParams (ưu tiên giá trị trong viewDataParams)
+            for (const key in queryParamOutSite) {
+                if (queryParamOutSite.hasOwnProperty(key)) {
+                    urlParams.set(key, queryParamOutSite[key]); // ghi đè nếu trùng key
+                }
+            }
             const hiddenDiv = document.getElementById("hiddenInputs");
 
             urlParams.forEach((value, key) => {

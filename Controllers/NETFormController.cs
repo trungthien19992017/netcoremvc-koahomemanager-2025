@@ -513,13 +513,20 @@ namespace KOAHome.Controllers
       string queryString = ParseDataHelper.GetQueryStringFromForm(form);
       string currentPath = HttpContext.Request.Path;
 
-      // Tách lại query param gốc từ form input "q_" để lọc dữ liệu khi xử lý
+      // Tách lại query param gốc từ form input "q_" để lọc dữ liệu khi xử lý (vẫn lấy dữ liệu form nhưng không lấy dữ liệu report)
       var queryParamerter = form
-          .Where(kv => kv.Key.StartsWith("q_"))
+          .Where(kv => !kv.Key.Contains("["))
           .ToDictionary(
-              kv => kv.Key.Substring(2),
+              kv => kv.Key.Replace("q_",""),
               kv => (object)kv.Value.ToString()
           );
+
+      //var queryParamerter = form
+      //    .Where(kv => kv.Key.StartsWith("q_"))
+      //    .ToDictionary(
+      //        kv => kv.Key.Substring(2),
+      //        kv => (object)kv.Value.ToString()
+      //    );
 
       // xử lý form để loại các tiền tố q_ ra khỏi Key
       form = ParseDataHelper.RemovePrefix_FromFormKey(form);
