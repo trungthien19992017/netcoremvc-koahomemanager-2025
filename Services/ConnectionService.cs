@@ -24,7 +24,7 @@ namespace KOAHome.Services
     private readonly IHttpContextAccessor _httpContextAccessor;
     private readonly IConfiguration _configuration;
     private readonly ILogger<NetDataSourceDetail> _logger;
-    public ConnectionService(QLKCL_NEWContext db, IHttpContextAccessor httpContextAccessor, IConfiguration configuration, ILogger<NetDatasourcedetail> logger)
+    public ConnectionService(QLKCL_NEWContext db, IHttpContextAccessor httpContextAccessor, IConfiguration configuration, ILogger<NetDataSourceDetail> logger)
     {
       _db = db;
       _httpContextAccessor = httpContextAccessor;
