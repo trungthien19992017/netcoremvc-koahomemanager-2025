@@ -21,6 +21,11 @@ using OfficeOpenXml;
 using System.Reflection.Metadata;
 using System.ComponentModel;
 using LicenseContext = OfficeOpenXml.LicenseContext;
+using KOAHome.Helpers;
+using Npgsql;
+using System.Text.Json;
+using System.Web;
+using JsonSerializer = System.Text.Json.JsonSerializer;
 
 namespace KOAHome.Services
 {
@@ -43,6 +48,21 @@ namespace KOAHome.Services
     // dung de tính số cấp cha con của cột hiển thị
     public int Display_GetReportMaxParentLevel(List<dynamic> displayList);
     public Task<IDictionary<string, object>?> NET_Report_GetValidation(string reportCode);
+    public Task<string> BuildHtmlTableRows(
+        List<dynamic> resultList,
+        List<dynamic> displayList,
+        List<dynamic> actionlistdetailList,
+        Dictionary<string, object> listFilterValue,
+        Dictionary<string, List<SelectListItem>> editorDynamicServiceSelectOptions);
+    public Task<string> BuildRowAsync
+       (
+        dynamic result,
+        List<dynamic> displayList,
+        List<dynamic> actionlistdetailList,
+        Dictionary<string, object> listFilterValue,
+        Dictionary<string, List<SelectListItem>> editorDynamicServiceSelectOptions,
+        int index
+    );
   }
   public class ReportService : IReportService
   {
@@ -454,6 +474,429 @@ namespace KOAHome.Services
       var result = await _con.Connection_GetSingleDataFromQuery(parameters, sqlStore, connectionString, sqlQuery, sqlParams);
 
       return result;
+    }
+    public async Task<string> BuildHtmlTableRows
+      (
+        List<dynamic> resultList,
+        List<dynamic> displayList,
+        List<dynamic> actionlistdetailList,
+        Dictionary<string, object> listFilterValue,
+        Dictionary<string, List<SelectListItem>> editorDynamicServiceSelectOptions
+      )
+    {
+      var sb = new StringBuilder();
+      var tasks = new List<Task<string>>(); // Ensure the type is Task<string>  
+
+      var index = 0; // Chỉ số dòng gốc  
+
+      // Lặp qua từng dòng trong resultList và tạo các task song song  
+      foreach (var result in resultList)
+      {
+        var currentIndex = index++; // Lưu giữ chỉ số dòng gốc  
+        tasks.Add(BuildRowAsync(result, displayList, actionlistdetailList, listFilterValue, editorDynamicServiceSelectOptions, currentIndex));
+      }
+
+      // Chờ tất cả các task hoàn thành và kết hợp kết quả  
+      var results = await Task.WhenAll(tasks);
+
+      // Kết hợp tất cả các kết quả lại trong đúng thứ tự  
+      foreach (var result in results)
+      {
+        sb.Append(result);
+      }
+
+      return sb.ToString();
+    }
+
+
+    public async Task<string> BuildRowAsync
+    (
+        dynamic result,
+        List<dynamic> displayList,
+        List<dynamic> actionlistdetailList,
+        Dictionary<string, object> listFilterValue,
+        Dictionary<string, List<SelectListItem>> editorDynamicServiceSelectOptions,
+        int index
+    )
+    {
+      var sb = new StringBuilder();
+
+      // Tiến hành xử lý dòng, tương tự như trong logic trước đó
+      var rowDict = (IDictionary<string, object>)result;
+      var rowId = rowDict.ContainsKey("id") ? Convert.ToInt32(rowDict["id"]) : 0;
+      var bgColorRowClass = rowDict.ContainsKey("bgcolorrowclass") ? rowDict["bgcolorrowclass"]?.ToString() : "";
+
+      sb.AppendLine($"<tr class='{bgColorRowClass}'>");
+
+      // Cột select box mặc định
+      sb.AppendLine($"<td class='text-center' data-isexport='False' data-value='{rowId}'></td>");
+
+      // Cột chi tiết mặc định
+      sb.AppendLine("<td class='text-center' data-isexport='False'></td>");
+
+      // Cột dữ liệu tĩnh (cột display == false)
+      var staticColumns = displayList
+          .Where(p => p.isdisplay == false)
+          .OrderBy(p => p.colnum ?? 0);
+
+      foreach (var display in staticColumns)
+      {
+        string fieldCode = display.code?.ToLower() ?? "";
+        string value = rowDict.TryGetValue(fieldCode, out var rawVal)
+            ? rawVal?.ToString() ?? "N/A"
+            : "N/A";
+
+        string tdClass = "d-none " + FormatHelper.ParseTextAlignToClass(display.textalign);
+        string isExport = display.isexport?.ToString() ?? "True";
+
+        sb.AppendLine($"<td class='{tdClass}' data-isexport='{isExport}'>{value}</td>");
+      }
+
+      // Các cột STT nếu có
+      var sttCols = displayList
+          .Where(p => p.isdisplay == true && (p.code?.ToLower() == "stt") && p.isparent == false && string.IsNullOrEmpty(p.parentcode))
+          .OrderBy(p => p.colnum ?? 0);
+
+      foreach (var display in sttCols)
+      {
+        var css = display.isfreepane == true ? "freepanze-col" : "";
+        var isExport = display.isexport?.ToString() ?? "True";
+
+        string fieldCode = display.code?.ToLower() ?? "";
+        string value = rowDict.TryGetValue(fieldCode, out var rawVal)
+            ? rawVal?.ToString() ?? "N/A"
+            : "N/A";
+
+        sb.AppendLine($"<td class='text-center {css}' data-isexport='{isExport}'>{HttpUtility.HtmlEncode(value)}</td>");
+      }
+
+      // Xử lý dropdown action list từ actionListDetailGrid
+      sb.AppendLine("<td class='text-center' data-isexport='False'>");
+      sb.AppendLine("<div class='demo-inline-spacing'>");
+      sb.AppendLine("<div class='btn-group' id='dropdown-icon-demo'>");
+      sb.AppendLine("<button type='button' class='btn btn-primary btn-xs dropdown-toggle' data-bs-toggle='dropdown' aria-expanded='false'><i class='ri-align-justify me-1'></i></button>");
+      sb.AppendLine("<ul class='dropdown-menu overflow-auto' style='max-height:200px'>");
+
+      var actionlistdetailList_grid = null as List<dynamic>;
+      // neu ton tai action list detail
+      if (actionlistdetailList != null)
+      {
+        // phan biet action top va grid
+        actionlistdetailList_grid = actionlistdetailList.Where(p => p.istop == null || p.istop == false).ToList();
+      }
+
+      foreach (var action in actionlistdetailList_grid.OrderBy(p => p.actionlistdetailorderid))
+      {
+        var actionDict = (IDictionary<string, object>)action;
+        string actionName = actionDict.ContainsKey("actionname") ? (actionDict["actionname"].ToString() ?? "") : "";
+        string actionCode = actionDict.ContainsKey("actioncode") ? (actionDict["actioncode"].ToString() ?? "") : "";
+        bool actionIsTop = actionDict.ContainsKey("istop") ? Convert.ToBoolean(actionDict["istop"]) : false;
+        string actionIcon = actionDict.ContainsKey("actionicon") ? (actionDict["actionicon"].ToString() ?? "") : "";
+        string actionType = actionDict["type"].ToString() ?? "";
+        string actionValue = actionDict["value"].ToString() ?? "";
+
+        if (actionType == "LINK")
+        {
+          string url = ParseDataHelper.GetReplaceLinkWithResult(actionValue, rowDict, listFilterValue);
+          sb.AppendLine($"<li><a href='{url}' class='dropdown-item'><i class='{actionIcon + " me-1 text-primary"}'></i> {actionName}</a></li>");
+        }
+        else if (actionType == "STORE")
+        {
+          string actionStore = actionValue;
+          bool isPopupConfirm = Convert.ToBoolean(actionDict["ispopupconfirm"]);
+          int? dataSourceID = actionDict.TryGetValue("datasourceid", out var num) && num is int val ? Convert.ToInt32(num) : null;
+          string confirmButtonText = !string.IsNullOrWhiteSpace(actionDict["confirmbuttontext"].ToString()) ? actionDict["confirmbuttontext"].ToString() : null;
+          string confirmTitle = !string.IsNullOrWhiteSpace(actionDict["confirmtitle"].ToString()) ? actionDict["confirmtitle"].ToString() : null;
+          string confirmText = !string.IsNullOrWhiteSpace(actionDict["confirmtext"].ToString()) ? actionDict["confirmtext"].ToString() : null;
+          sb.AppendLine("<li>");
+          sb.AppendLine(isPopupConfirm
+              ? $"<a href='' data-id='{rowId}' data-isconfirm='{isPopupConfirm}' data-confirmtext='{confirmText}' data-confirmtitle='{confirmTitle}' data-confirmbutton='{confirmButtonText}' data-sqlstore='{actionStore}' data-datasourceid='{dataSourceID}' class='dropdown-item confirmAction'><i class='{actionIcon + " me-1 text-primary"}'></i> {actionName}</a>"
+              : $"<a href='' data-id='{rowId}' data-sqlstore='{actionStore}' data-datasourceid='{dataSourceID}' class='dropdown-item confirmAction'><i class='{actionIcon + " me-1 text-primary"}'></i> {actionName}</a>");
+          sb.AppendLine("</li>");
+        }
+        else if (actionType == "POPUPFORM")
+        {
+          var popupDictValue = ParseDataHelper.GetReplacePopupLinkWithResult(actionValue, rowDict, listFilterValue);
+          string actionFormCode = popupDictValue.ContainsKey("FORMCODE") ? popupDictValue["FORMCODE"].ToString() ?? "" : "";
+          string actionLink = popupDictValue.ContainsKey("LINK") ? popupDictValue["LINK"].ToString() ?? "" : "";
+          sb.AppendLine($"<li><a href='' data-bs-toggle='modal' data-bs-target='#modal-PopupForm' data-actionlink='{actionLink}' class='dropdown-item popupform-action'><i class='{actionIcon + " me-1 text-primary"}'></i> {actionName}</a></li>");
+        }
+        else
+        {
+          string url = ParseDataHelper.GetReplaceLinkWithResult(actionValue, rowDict, listFilterValue);
+          sb.AppendLine($"<li><a href='{url}' class='dropdown-item'><i class='{actionIcon + " me-1 text-primary"}'></i> {actionName}</a></li>");
+        }
+      }
+
+      sb.AppendLine("</ul>");
+      sb.AppendLine("</div>");
+      sb.AppendLine("</div>");
+      sb.AppendLine("</td>");
+
+      // Xử lý cột không có parentcode và không phải là parent
+      var columnsWithoutParent = displayList
+          .Where(p => p.isdisplay == true && p.code?.ToLower() != "stt" && p.isparent == false && string.IsNullOrEmpty(p.parentcode))
+          .OrderBy(p => p.colnum ?? 0);
+
+      foreach (var display in columnsWithoutParent)
+      {
+        var displayType = display.type as string ?? "link";
+        var displayFormat = display.format as string ?? "";
+        var displayCode = display.code.ToLower() as string ?? "";
+        var displayTextAlign = display.textalign as string ?? "";
+        var displayIsExport = display.isexport;
+        var displayIsReadOnly = display.isreadonly ?? false;
+        var displayValidationRule = display.validationrule ?? "[]";
+
+        // Kiểm tra nếu là FreePane
+        var freePaneClass = display.isfreepane == true ? "freepanze-col" : "";
+        sb.AppendLine($"<td class='{FormatHelper.ParseTextAlignToClass(displayTextAlign)} {freePaneClass}' data-isexport='{displayIsExport ?? "True"}' data-displaytype='{displayType}' data-displayformat='{displayFormat}'>");
+
+        object value;
+        if (rowDict.TryGetValue(displayCode, out value))
+        {
+          string valueType = value?.GetType().ToString() ?? "";
+          // kiem tra kieu du lieu cua display
+          string[] stringVavlidType = ["string", "date", "datetime", "int", "long", "float", "textarea"];
+          // Kiểm tra kiểu dữ liệu của value và xử lý
+          if (valueType == "System.Boolean")
+          {
+            sb.AppendLine($"<input type='checkbox' {(Convert.ToBoolean(value) ? "checked" : "")} disabled />");
+          }
+          else if (displayType == "icons")
+          {
+            var iconsJson = value?.ToString()?.Trim() ?? "";
+            if (!string.IsNullOrEmpty(iconsJson))
+            {
+              if (iconsJson.TrimStart().StartsWith("{"))
+              {
+                iconsJson = "[" + iconsJson + "]";
+              }
+
+              try
+              {
+                var icons = JsonSerializer.Deserialize<List<JsonElement>>(iconsJson);
+                sb.AppendLine("<ul class='list-unstyled m-0 avatar-group d-flex align-items-center'>");
+                foreach (var icon in icons)
+                {
+                  var title = icon.GetProperty("title").GetString();
+                  var image = icon.GetProperty("image").GetString();
+                  sb.AppendLine($"<li data-bs-toggle='tooltip' class='avatar avatar-xs pull-up' aria-label='{title}'><img src='{image}' alt='Avatar' class='rounded-circle' /></li>");
+                }
+                sb.AppendLine("</ul>");
+              }
+              catch (PostgresException)
+              {
+                sb.AppendLine("<span class='text-danger'>N/A</span>");
+              }
+            }
+          }
+          else if (displayType == "file")
+          {
+            var filesJson = value?.ToString()?.Trim() ?? "";
+            if (!string.IsNullOrEmpty(filesJson))
+            {
+              if (filesJson.StartsWith("{"))
+              {
+                filesJson = "[" + filesJson + "]";
+              }
+
+              try
+              {
+                var fileList = JsonSerializer.Deserialize<List<JsonElement>>(filesJson);
+                if (fileList?.Count > 0)
+                {
+                  sb.AppendLine("<div class='d-flex flex-wrap gap-1'>");
+                  foreach (var file in fileList)
+                  {
+                    var fileName = file.GetProperty("fileName").GetString();
+                    var url = file.GetProperty("url").GetString();
+                    var displayName = fileName?.Length > 50 ? fileName.Substring(0, 50) + "..." : fileName;
+                    sb.AppendLine($"<a href='{url}' download class='btn btn-sm btn-outline-primary file-download-link' title='{fileName}'><i class='ri-download-2-fill'></i> {displayName}</a>");
+                  }
+                  sb.AppendLine("</div>");
+                }
+              }
+              catch
+              {
+                sb.AppendLine("<span class='text-danger'>Lỗi định dạng file JSON</span>");
+              }
+            }
+          }
+          else if (displayType == "link")
+          {
+            sb.AppendLine($"{HttpUtility.HtmlEncode(value)}");
+          }
+          // neu la kieu du lieu co the format duoc
+          else if (stringVavlidType.Contains(displayType))
+          {
+            // kiem tra neu co format thi format lai chuoi
+            var displayValue = @FormatHelper.FormatDynamicValue(value, displayFormat);
+            sb.AppendLine($"<span style='white-space: pre-wrap'>{displayValue}</span>");
+
+          }
+          else if (displayType == "combobox")
+          {
+            // check selected cho item dung voi gia tri
+            var selectList = editorDynamicServiceSelectOptions[displayCode] as List<SelectListItem> ?? new List<SelectListItem>();
+            // lay du lieu text từ service thông qua value
+            string displayValue = selectList.Where(p => p.Value.ToString() == value.ToString()).Select(p => p.Text).First().ToString() ?? "";
+            sb.AppendLine($"<span style='white-space: pre-wrap'>{displayValue}</span>");
+          }
+          else
+          {
+            sb.AppendLine(HttpUtility.HtmlEncode(value));
+          }
+        }
+        else
+        {
+          sb.AppendLine("<span class='text-muted'>N/A</span>");
+        }
+
+        sb.AppendLine("</td>");
+      }
+      // **Xử lý cột có isparent == true và các cột con (2 cấp)**
+      var parentColumns = displayList
+          .Where(p => p.isparent == true && p.isdisplay == true)
+          .OrderBy(p => p.colnum ?? 0);
+
+      foreach (var display in parentColumns)
+      {
+        // Đếm số cột con (child)
+        var countChild = displayList.Count(p => p.parentcode?.ToLower() == display.code.ToLower());
+
+        if (countChild > 0)
+        {
+          // Hiển thị cột con (child columns)
+          var childColumns = displayList
+              .Where(p => p.parentcode?.ToLower() == display.code.ToLower() && p.isdisplay == true)
+              .OrderBy(p => p.colnum ?? 0);
+
+          foreach (var displaychild in childColumns)
+          {
+
+            // mặc định type là string
+            var displayType = displaychild.type as string ?? "string";
+            var displayFormat = displaychild.format as string ?? "";
+            var displayCode = displaychild.code.ToLower() as string ?? "";
+            var displayTextAlign = displaychild.textalign as string ?? "";
+            var displayIsExport = displaychild.isexport;
+            var displayIsReadOnly = displaychild.isreadonly ?? false;
+            var displayValidationRule = displaychild.validationrule ?? "[]";
+
+            // Kiểm tra nếu là FreePane
+            var freePaneClass = displaychild.isfreepane == true ? "freepanze-col" : "";
+
+            sb.AppendLine($"<td class='{FormatHelper.ParseTextAlignToClass(displayTextAlign)} {freePaneClass}' data-isexport='{displayIsExport ?? "True"}' data-displaytype='{displayType}' data-displayformat='{displayFormat}'>");
+
+            object value;
+            if (rowDict.TryGetValue(displayCode, out value))
+            {
+              string valueType = value?.GetType().ToString() ?? "";
+              // kiem tra kieu du lieu cua display
+              string[] stringVavlidType = ["string", "date", "datetime", "int", "long", "float", "textarea"];
+
+              // Kiểm tra kiểu dữ liệu của value và xử lý
+              if (valueType == "System.Boolean")
+              {
+                sb.AppendLine($"<input type='checkbox' {(Convert.ToBoolean(value) ? "checked" : "")} disabled />");
+              }
+              else if (displayType == "icons")
+              {
+                var iconsJson = value?.ToString()?.Trim() ?? "";
+                if (!string.IsNullOrEmpty(iconsJson))
+                {
+                  if (iconsJson.TrimStart().StartsWith("{"))
+                  {
+                    iconsJson = "[" + iconsJson + "]";
+                  }
+
+                  try
+                  {
+                    var icons = JsonSerializer.Deserialize<List<JsonElement>>(iconsJson);
+                    sb.AppendLine("<ul class='list-unstyled m-0 avatar-group d-flex align-items-center'>");
+                    foreach (var icon in icons)
+                    {
+                      var title = icon.GetProperty("title").GetString();
+                      var image = icon.GetProperty("image").GetString();
+                      sb.AppendLine($"<li data-bs-toggle='tooltip' class='avatar avatar-xs pull-up' aria-label='{title}'><img src='{image}' alt='Avatar' class='rounded-circle' /></li>");
+                    }
+                    sb.AppendLine("</ul>");
+                  }
+                  catch (PostgresException)
+                  {
+                    sb.AppendLine("<span class='text-danger'>N/A</span>");
+                  }
+                }
+              }
+              else if (displayType == "file")
+              {
+                var filesJson = value?.ToString()?.Trim() ?? "";
+                if (!string.IsNullOrEmpty(filesJson))
+                {
+                  if (filesJson.StartsWith("{"))
+                  {
+                    filesJson = "[" + filesJson + "]";
+                  }
+
+                  try
+                  {
+                    var fileList = JsonSerializer.Deserialize<List<JsonElement>>(filesJson);
+                    if (fileList?.Count > 0)
+                    {
+                      sb.AppendLine("<div class='d-flex flex-wrap gap-1'>");
+                      foreach (var file in fileList)
+                      {
+                        var fileName = file.GetProperty("fileName").GetString();
+                        var url = file.GetProperty("url").GetString();
+                        var displayName = fileName?.Length > 50 ? fileName.Substring(0, 50) + "..." : fileName;
+                        sb.AppendLine($"<a href='{url}' download class='btn btn-sm btn-outline-primary file-download-link' title='{fileName}'><i class='ri-download-2-fill'></i> {displayName}</a>");
+                      }
+                      sb.AppendLine("</div>");
+                    }
+                  }
+                  catch
+                  {
+                    sb.AppendLine("<span class='text-danger'>Lỗi định dạng file JSON</span>");
+                  }
+                }
+              }
+              else if (displayType == "link")
+              {
+                sb.AppendLine($"{HttpUtility.HtmlEncode(value)}");
+              }
+              // neu la kieu du lieu co the format duoc
+              else if (stringVavlidType.Contains(displayType))
+              {
+                // kiem tra neu co format thi format lai chuoi
+                var displayValue = @FormatHelper.FormatDynamicValue(value, displayFormat);
+                sb.AppendLine($"<span style='white-space: pre-wrap'>{displayValue}</span>");
+
+              }
+              else if (displayType == "combobox")
+              {
+                // check selected cho item dung voi gia tri
+                var selectList = editorDynamicServiceSelectOptions[displayCode] as List<SelectListItem> ?? new List<SelectListItem>();
+                // lay du lieu text từ service thông qua value
+                string displayValue = selectList.Where(p => p.Value.ToString() == value.ToString()).Select(p => p.Text).First().ToString() ?? "";
+                sb.AppendLine($"<span style='white-space: pre-wrap'>{displayValue}</span>");
+              }
+              else
+              {
+                sb.AppendLine(HttpUtility.HtmlEncode(value));
+              }
+            }
+            else
+            {
+              sb.AppendLine("<span class='text-muted'>N/A</span>");
+            }
+            sb.AppendLine("</td>");
+          }
+        }
+      }
+      sb.AppendLine("</tr>");
+
+      return sb.ToString();
     }
   }
 }

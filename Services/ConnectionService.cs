@@ -365,32 +365,35 @@ namespace KOAHome.Services
         string sqlStore,
         string? connectionString,
         StringBuilder sqlQuery,
-        List<NpgsqlParameter> SqlParams)
+        List<NpgsqlParameter> sqlParams)
     {
+      // Kiểm tra nếu không truyền chuỗi kết nối thì lấy chuỗi kết nối mặc định
       if (connectionString == null)
       {
         connectionString = _configuration.GetConnectionString("DefaultConnection");
       }
 
-      // log lại query khi call store// log lại query khi call store
+      // Log query một lần khi gọi store
       string singleLineQuery = sqlQuery.ToString().Replace(Environment.NewLine, " ").Replace("\n", " ");
       _logger.LogInformation($"Query mới: '{singleLineQuery}'");
 
       var resultList = new List<dynamic>();
+
       using (var connection = new NpgsqlConnection(connectionString))
       {
-        await connection.OpenAsync();
+        await connection.OpenAsync(); // Mở kết nối ngay khi vào
 
         // Gọi procedure để tạo bảng tạm
         using (var command = new NpgsqlCommand(sqlQuery.ToString(), connection))
         {
-          command.Parameters.AddRange(SqlParams.ToArray());
-          await command.ExecuteNonQueryAsync();
+          command.Parameters.AddRange(sqlParams.ToArray());
+          await command.ExecuteNonQueryAsync(); // Thực thi stored procedure
         }
 
+        // Kiểm tra xem bảng tạm 'tmp_result' có tồn tại không
         bool tmpResultExists;
         string getDataQuery;
-        // 1. Kiểm tra bảng tạm có tồn tại không
+
         using (var checkCmd = new NpgsqlCommand(@"
             SELECT EXISTS (
                 SELECT 1
@@ -400,7 +403,7 @@ namespace KOAHome.Services
                   AND n.oid = pg_my_temp_schema()
             );", connection))
         {
-          tmpResultExists = (bool)checkCmd.ExecuteScalar();
+          tmpResultExists = (bool)await checkCmd.ExecuteScalarAsync(); // Kiểm tra bảng tạm tồn tại
         }
 
         if (tmpResultExists)
@@ -409,44 +412,38 @@ namespace KOAHome.Services
         }
         else
         {
-          getDataQuery = "SELECT true AS success;";
+          getDataQuery = "SELECT true AS success;"; // Trả về 'success' nếu bảng tạm không tồn tại
         }
 
-
-
-        // Đọc dữ liệu từ bảng tạm tmp_result
+        // Đọc dữ liệu từ bảng tạm tmp_result hoặc câu truy vấn success
         using (var selectCommand = new NpgsqlCommand(getDataQuery, connection))
         {
           using (var reader = await selectCommand.ExecuteReaderAsync())
           {
+            var columnNames = reader.GetSchemaTable()?.Rows.Cast<DataRow>()
+                                    .Select(row => row["ColumnName"].ToString().ToLower())
+                                    .ToList(); // Lấy tên cột một lần
+
             while (await reader.ReadAsync())
             {
               var row = new ExpandoObject() as IDictionary<string, object>;
+
               for (int i = 0; i < reader.FieldCount; i++)
               {
-                object? value = null;
-                // xu ly gia tri null hoac {} truyen vao gay loi
-                if (reader.IsDBNull(i))
-                {
-                  value = null;
-                }
-                else
-                {
-                  value = (object)reader.GetValue(i);
-                }
-                // in thường key khi truyền vào
-                string key = reader.GetName(i).ToString().ToLower();
+                object? value = reader.IsDBNull(i) ? null : reader.GetValue(i); // Xử lý giá trị null
 
-                row.Add(key, value);
+                string key = columnNames != null ? columnNames[i] : reader.GetName(i).ToString().ToLower(); // Tên cột chữ thường
+                row[key] = value; // Thêm giá trị vào ExpandoObject
               }
-              resultList.Add(row);
+              resultList.Add(row); // Thêm dòng vào kết quả
             }
           }
         }
-        await connection.CloseAsync();
+        await connection.CloseAsync(); // Đảm bảo đóng kết nối sau khi hoàn thành
       }
-      return resultList;
-}
+
+      return resultList; // Trả về kết quả
+    }
 
     public async Task<IDictionary<string, object>?> Connection_GetSingleDataFromQuery(
         Dictionary<string, object> parameters,

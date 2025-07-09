@@ -169,6 +169,13 @@ namespace KOAHome.Controllers
         _logger.LogInformation($"Query resultList executed in {stopwatch.ElapsedMilliseconds} ms");
         ViewData["resultList"] = resultList;
 
+        ViewData["TableRowsHtml"] = await _report.BuildHtmlTableRows(
+            resultList, displayList,
+            actionlistdetailList, objParameters,
+            listDisplayService
+        );
+
+
         //khai bao success
         ViewData["success"] = "Thành công";
 
