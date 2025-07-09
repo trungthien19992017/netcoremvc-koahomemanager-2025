@@ -212,7 +212,7 @@ namespace KOAHome.Services
 
                 row.Add(key, value);
               }
-              resultList.Add(row);
+              resultList.Add(row); // Thêm dòng vào kết quả
             }
           }
         }
