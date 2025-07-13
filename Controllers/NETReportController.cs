@@ -64,7 +64,7 @@ namespace KOAHome.Controllers
         ViewData["ReportCode"] = ReportCode;
 
         // Lấy dynamic query parameters
-        var parameters= Request.Query;
+        var parameters = Request.Query;
 
         // lay thong tin report, va danh sach filter display cua report de xu ly
         var report = await _report.NET_Report_Get(ReportCode);
@@ -144,7 +144,7 @@ namespace KOAHome.Controllers
         var listFilterService = new Dictionary<string, List<SelectListItem>>();
 
         //Chuyển kết quả sang Dictionary<string, List<SelectListItem>>
-        listFilterService = await _netService.NET_Service_GetListSelectListByFilter(filterList,objParameters);
+        listFilterService = await _netService.NET_Service_GetListSelectListByFilter(filterList, objParameters);
         //  Gán danh sach select cho cac filter vào ViewBag
         ViewData["DynamicServiceSelectOptions"] = listFilterService;
 
@@ -168,6 +168,13 @@ namespace KOAHome.Controllers
         stopwatch.Stop();
         _logger.LogInformation($"Query resultList executed in {stopwatch.ElapsedMilliseconds} ms");
         ViewData["resultList"] = resultList;
+
+        ViewData["TableRowsHtml"] = await _report.BuildHtmlTableRows(
+            resultList, displayList,
+            actionlistdetailList, objParameters,
+            listDisplayService
+        );
+
 
         //khai bao success
         ViewData["success"] = "Thành công";
@@ -573,7 +580,7 @@ namespace KOAHome.Controllers
         // Optionally, return an error view
         return View("~/Views/Pages/MiscError.cshtml", new ErrorViewModel { RequestId = Activity.Current?.Id ?? HttpContext.TraceIdentifier, exception = ex });
       }
-      
+
     }
 
     // POST: /report/editor-utility/5

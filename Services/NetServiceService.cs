@@ -81,60 +81,60 @@ namespace KOAHome.Services
 
     public async Task<List<SelectListItem>> NET_Service_DynamicExecute(int serviceId, Dictionary<string, object>? parameters)
     {
-        // su dung datasource config de lay du lieu
-        string connectionString = _configuration.GetConnectionString("ConfigConnection"); // Thay thế bằng chuỗi kết nối của bạn
+      // su dung datasource config de lay du lieu
+      string connectionString = _configuration.GetConnectionString("ConfigConnection"); // Thay thế bằng chuỗi kết nối của bạn
 
-        // lấy các cột service cần xử lý
-        string colValue = _dbconfig.NetServices.FindAsync(serviceId).Result.Colvalue.ToString().ToLower() ?? "id";
-        string colDisplay = _dbconfig.NetServices.FindAsync(serviceId).Result.Coldisplay.ToString().ToLower() ?? "name";
+      // lấy các cột service cần xử lý
+      string colValue = _dbconfig.NetServices.FindAsync(serviceId).Result.Colvalue.ToString().ToLower() ?? "id";
+      string colDisplay = _dbconfig.NetServices.FindAsync(serviceId).Result.Coldisplay.ToString().ToLower() ?? "name";
 
       // store get du lieu
       string sqlStore = "NET_Service_DynamicExecute";
-        // neu parameter rong thi tu tao 1 parameter moi truyen vao
-        if (parameters == null)
-        {
-          parameters = new Dictionary<string, object>();
-        }
+      // neu parameter rong thi tu tao 1 parameter moi truyen vao
+      if (parameters == null)
+      {
+        parameters = new Dictionary<string, object>();
+      }
 
-        // chuyen tat ca param dang co thanh 1 chuoi json va truyen vao bien Param
-        var displayParameter = new Dictionary<string, object>();
-        if (!parameters.ContainsKey("param"))
-        {
-            parameters.Add("param", JsonConvert.SerializeObject(parameters));
-        }
+      // chuyen tat ca param dang co thanh 1 chuoi json va truyen vao bien Param
+      var displayParameter = new Dictionary<string, object>();
+      if (!parameters.ContainsKey("param"))
+      {
+        parameters.Add("param", JsonConvert.SerializeObject(parameters));
+      }
 
-        if (!parameters.ContainsKey("serviceid"))
-        {
-          parameters.Add("serviceid", serviceId);
-        }
-        else
-        {
-          parameters["serviceid"] = serviceId;
-        }
+      if (!parameters.ContainsKey("serviceid"))
+      {
+        parameters.Add("serviceid", serviceId);
+      }
+      else
+      {
+        parameters["serviceid"] = serviceId;
+      }
 
-        // chuyen thanh cau query tu store va param truyen vao
-        var (sqlQuery, sqlParams) = await _con.Connection_GetQueryParam(parameters, sqlStore, connectionString);
+      // chuyen thanh cau query tu store va param truyen vao
+      var (sqlQuery, sqlParams) = await _con.Connection_GetQueryParam(parameters, sqlStore, connectionString);
 
-        var resultList = new List<dynamic>();
+      var resultList = new List<dynamic>();
 
-        // xu ly lay du lieu dua truyen store va param truyen vao
-        resultList = await _con.Connection_GetDataFromQuery(parameters, sqlStore, connectionString, sqlQuery, sqlParams);
+      // xu ly lay du lieu dua truyen store va param truyen vao
+      resultList = await _con.Connection_GetDataFromQuery(parameters, sqlStore, connectionString, sqlQuery, sqlParams);
 
-        // xoa param serviceid ngay de tranh loi phat sinh
-        if (parameters.ContainsKey("serviceid"))
-        {
-          parameters.Remove("serviceid");
-        }
+      // xoa param serviceid ngay de tranh loi phat sinh
+      if (parameters.ContainsKey("serviceid"))
+      {
+        parameters.Remove("serviceid");
+      }
 
       List<SelectListItem> listItems = resultList
-          .Select(x => 
+          .Select(x =>
           {
             var dict = x as IDictionary<string, object>;
 
             return new SelectListItem
             {
-                Value = dict.ContainsKey(colValue) ? dict[colValue]?.ToString() ?? "" : "",
-                Text = dict.ContainsKey(colDisplay) ? dict[colDisplay]?.ToString() ?? "" : ""
+              Value = dict.ContainsKey(colValue) ? dict[colValue]?.ToString() ?? "" : "",
+              Text = dict.ContainsKey(colDisplay) ? dict[colDisplay]?.ToString() ?? "" : ""
             };
           })
           .ToList();
