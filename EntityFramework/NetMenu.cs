@@ -64,4 +64,6 @@ public partial class NetMenu
     public int? SiteId { get; set; }
 
     public string? SiteCode { get; set; }
+
+    public bool? IsDeleted { get; set; }
 }

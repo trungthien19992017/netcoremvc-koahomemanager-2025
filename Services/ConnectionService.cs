@@ -164,62 +164,63 @@ namespace KOAHome.Services
       return (sqlQuery, sqlParams);
     }
 
-    public async Task<List<dynamic>> Connection_GetDataFromQuery(Dictionary<string, object> parameters, string sqlStore, string? connectionString, StringBuilder sqlQuery, List<SqlParameter> sqlParams)
+    public async Task<List<dynamic>> Connection_GetDataFromQuery(
+        Dictionary<string, object> parameters,
+        string sqlStore,
+        string? connectionString,
+        StringBuilder sqlQuery,
+        List<SqlParameter> sqlParams)
     {
-      //lower ten store
+      // Chuyển tên store về chữ thường
       sqlStore = sqlStore.ToLower();
 
-      // neu khong truyen connect string thi se lay connection string mac dinh
+      // Kiểm tra nếu không truyền chuỗi kết nối thì lấy chuỗi kết nối mặc định
       if (connectionString == null)
       {
         connectionString = _configuration.GetConnectionString("DefaultConnection"); // Thay thế bằng chuỗi kết nối của bạn
       }
 
-      // log lại query khi call store// log lại query khi call store
+      // Log query một lần khi gọi store
       string singleLineQuery = sqlQuery.ToString().Replace(Environment.NewLine, " ").Replace("\n", " ");
       _logger.LogInformation($"Query mới: '{singleLineQuery}'");
 
       var resultList = new List<dynamic>();
+
+      // Sử dụng using để quản lý tài nguyên cho connection và command
       using (var connection = new SqlConnection(connectionString))
       {
-        if (connection.State != ConnectionState.Open)
-        {
-          await connection.OpenAsync();
-        }
+        await connection.OpenAsync(); // Mở kết nối ngay khi vào
         using (var command = new SqlCommand(sqlQuery.ToString(), connection))
         {
+          // Thêm các tham số vào command
           command.Parameters.AddRange(sqlParams.ToArray());
 
-          using (var reader = await command.ExecuteReaderAsync())
+          // Đọc dữ liệu với ExecuteReaderAsync và tối ưu việc đọc dữ liệu
+          using (var reader = await command.ExecuteReaderAsync(CommandBehavior.SequentialAccess))
           {
+            var columnNames = reader.GetSchemaTable()?.Rows.Cast<DataRow>()
+                                      .Select(row => row["ColumnName"].ToString().ToLower())
+                                      .ToList();
+
             while (await reader.ReadAsync())
             {
               var row = new ExpandoObject() as IDictionary<string, object>;
+
+              // Duyệt qua các cột
               for (int i = 0; i < reader.FieldCount; i++)
               {
-                object? value = null;
-                // xu ly gia tri null hoac {} truyen vao gay loi
-                if (reader.IsDBNull(i))
-                {
-                  value = null;
-                }
-                else
-                {
-                  value = (object)reader.GetValue(i);
-                }
-                // in thường key khi truyền vào
-                string key = reader.GetName(i).ToString().ToLower();
+                object? value = reader.IsDBNull(i) ? null : reader.GetValue(i); // Lấy giá trị cột hoặc null nếu DBNull
 
-                row.Add(key, value);
+                string key = columnNames != null ? columnNames[i] : reader.GetName(i).ToString().ToLower();
+                row[key] = value;
               }
-              resultList.Add(row); // Thêm dòng vào kết quả
+              resultList.Add(row);
             }
           }
         }
-        await connection.CloseAsync();
       }
 
-      return resultList;
+      return resultList; // Trả về danh sách kết quả
     }
 
     public async Task<IDictionary<string, object>?> Connection_GetSingleDataFromQuery(Dictionary<string, object> parameters, string sqlStore, string? connectionString, StringBuilder sqlQuery, List<SqlParameter> sqlParams)

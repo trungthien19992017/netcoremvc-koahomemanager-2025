@@ -105,7 +105,7 @@ namespace KOAHome.Services
           {
             string objectTypeCode = file.Name;
             string folder = $"FORM/{objectTypeCode}/{DateTime.UtcNow:yyyyMMdd}";
-            string key = $"{folder}/{file.FileName}";
+            string key = $"AttachmentFiles/MAINMENU/{file.FileName}";
 
             using (var memoryStream = new MemoryStream())
             {
@@ -134,7 +134,7 @@ namespace KOAHome.Services
             { "x-amz-acl", "public-read" }
                   }));
             }
-            var fileUrl = $"https://{_r2config.AccountId}.r2.dev/{key}";
+            var fileUrl = $"https://{_r2config.PublicKey}.r2.dev/{key}";
 
             if (!result.ContainsKey(objectTypeCode))
               result[objectTypeCode] = new List<string>();

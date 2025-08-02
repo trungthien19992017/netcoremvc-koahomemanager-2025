@@ -11,7 +11,7 @@ public partial class HsCustomer
 
     public string LastName { get; set; } = null!;
 
-    public string Email { get; set; } = null!;
+    public string? Email { get; set; }
 
     public string? PhoneNumber { get; set; }
 

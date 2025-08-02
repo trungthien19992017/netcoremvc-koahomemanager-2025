@@ -5,7 +5,7 @@
 namespace KOAHome.Migrations
 {
     /// <inheritdoc />
-    public partial class TenMigrationMoi : Migration
+    public partial class InsertIdentityTablesWithIntPrimaryKey : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
