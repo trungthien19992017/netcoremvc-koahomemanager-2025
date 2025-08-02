@@ -44,4 +44,6 @@ public partial class NetValidation
     public string? SiteCode { get; set; }
 
     public int? DatasourceId { get; set; }
+
+    public string? Key { get; set; }
 }

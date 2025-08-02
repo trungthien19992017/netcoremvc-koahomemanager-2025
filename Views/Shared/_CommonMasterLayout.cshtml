@@ -25,7 +25,7 @@
   <!-- Canonical SEO -->
   <link rel="canonical" href='@productPage'>
   <!-- Favicon -->
-  <link rel="icon" type="image/x-icon" href="~/img/icons/koa/koa-mascos-icon.ico" />
+  <link rel="icon" type="image/x-icon" href="@(User.FindFirst("TenantIcoUrl")?.Value ?? "")" />
 
   <!-- fa fa icon -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
@@ -375,108 +375,6 @@
                    }
                });
            }
-        });
-
-        // kiem tra nếu có nhập liệu trên bất kì dòng nào thì mới enable nút Lưu, và dòng nào nhập liệu thì mới truyền xuống IFormCollection
-        document.addEventListener("DOMContentLoaded", function () {
-            // Theo dõi tất cả form trên trang
-            document.querySelectorAll("form").forEach(form => {
-                const table = form.querySelector("table"); // Tìm bảng trong form
-                const submitButton = form.querySelector("button[type='submit']");
-
-                if (!table || !submitButton) return; // Bỏ qua nếu không có bảng hoặc nút submit
-
-                function checkChanges() {
-                    let hasChanges = false;
-
-                     // Kiểm tra nếu form không có id là "editor-form", trả về false và dừng
-                     if (form.id !== "editor-form") {
-                         // Luôn bật nút lưu nếu không phải form editor-form
-                         return;
-                     }
-
-                    // neu khong co tr nào co attr data change thi mac dinh hien thi nut Luu
-                    if (table.querySelectorAll("tr[data-changed]").length == 0)
-                    {
-                      return;
-                    }
-
-                    table.querySelectorAll("tr").forEach(row => {
-                        if (row.getAttribute("data-changed") === "true") {
-                            hasChanges = true;
-                        }
-                    });
-
-                    submitButton.disabled = !hasChanges; // Bật/tắt nút submit
-                }
-
-                // Một hàm duy nhất đánh dấu dòng thay đổi
-                function markRowChanged(target) {
-                    if (target.classList.contains("track-change")) {
-                        const row = target.closest("tr");
-                        if (row) {
-                            row.setAttribute("data-changed", "true");
-                            row.classList.add("row-changed"); // ➡️ Thêm dòng này để highlight
-                            checkChanges();
-                        }
-                    }
-                }
-
-                // Theo dõi input và change chung
-                table.addEventListener("input", event => {
-                    markRowChanged(event.target);
-                });
-
-                table.addEventListener("change", event => {
-                    markRowChanged(event.target);
-                });
-
-                // Nếu dùng jQuery và select2
-                if (window.jQuery && $(table).length) {
-                    $(table).on('select2:select select2:unselect', 'select.track-change', function (event) {
-                        markRowChanged(event.target);
-                    });
-                }
-
-                // Nếu người dùng click vào nút trong bảng
-                table.addEventListener("click", event => {
-                    const target = event.target;
-                    if (target.closest("button")) {
-                        const row = target.closest("tr");
-                        if (row) {
-                            row.setAttribute("data-changed", "true");
-                            row.classList.add("row-changed"); // ➡️ Thêm dòng này để highlight
-                            checkChanges();
-                        }
-                    }
-                });
-
-                // Chỉ gử i dữ liệu của bảng đã thay đổi
-                form.addEventListener("submit", function (event) {
-                    let rows = table.querySelectorAll("tbody tr");
-
-                    rows.forEach(row => {
-                      // neu khong khai bao data change thi bo qua, neu co khai bao data change thi kiem tra = false thi xoa 
-                        if (row.getAttribute('data-changed') !== undefined && row.getAttribute('data-changed') !== null)
-                        {
-                          if (row.getAttribute("data-changed") !== "true") {
-                            row.remove(); // Xóa các dòng chưa thay đổi khỏi form trước khi submit
-                          }
-                        }
-                      // neu khong khai bao data template thi bo qua, neu co khai bao data template thi kiem tra = true thi xoa 
-                        if (row.getAttribute('data-template') !== undefined && row.getAttribute('data-template') !== null)
-                        {
-                          if (row.getAttribute("data-template") == "true") {
-                            row.remove(); // Xóa các dòng chưa thay đổi khỏi form trước khi submit
-                          }
-                        }
-                    });
-
-                    // form.submit();
-                });
-
-                checkChanges(); // Kiểm tra trạng thái ban đầu
-            });
         });
 
            // xu ly thong bao
@@ -1872,6 +1770,7 @@
                         // Nếu không có lỗi, chèn HTML vào container
                         let html = response;
                         $("#" + containerId).html(html);
+                        checkEditorForm();
 
                         // ✅ Gọi callback nếu có
                         if (typeof onSuccess === 'function') {
@@ -2008,6 +1907,112 @@
           });
         });
 
+        function checkEditorForm()
+        {
+             // Theo dõi tất cả form trên trang
+               document.querySelectorAll("form").forEach(form => {
+                   const table = form.querySelector("table"); // Tìm bảng trong form
+                   const submitButton = form.querySelector("button[type='submit']");
+
+                   if (!table || !submitButton) return; // Bỏ qua nếu không có bảng hoặc nút submit
+
+                   function checkChanges() {
+                       let hasChanges = false;
+
+                        // Kiểm tra nếu form không có id là "editor-form", trả về false và dừng
+                        if (form.id !== "editor-form") {
+                            // Luôn bật nút lưu nếu không phải form editor-form
+                            return;
+                        }
+
+                       // neu khong co tr nào co attr data change thi mac dinh hien thi nut Luu
+                       if (table.querySelectorAll("tr[data-changed]").length == 0)
+                       {
+                         return;
+                       }
+
+                       table.querySelectorAll("tr").forEach(row => {
+                           if (row.getAttribute("data-changed") === "true") {
+                               hasChanges = true;
+                           }
+                       });
+
+                       submitButton.disabled = !hasChanges; // Bật/tắt nút submit
+                   }
+
+                   // Một hàm duy nhất đánh dấu dòng thay đổi
+                   function markRowChanged(target) {
+                       if (target.classList.contains("track-change")) {
+                           const row = target.closest("tr");
+                           if (row) {
+                               row.setAttribute("data-changed", "true");
+                               row.classList.add("row-changed"); // ➡️ Thêm dòng này để highlight
+                               checkChanges();
+                           }
+                       }
+                   }
+
+                   // Theo dõi input và change chung
+                   table.addEventListener("input", event => {
+                       markRowChanged(event.target);
+                   });
+
+                   table.addEventListener("change", event => {
+                       markRowChanged(event.target);
+                   });
+
+                   // Nếu dùng jQuery và select2
+                   if (window.jQuery && $(table).length) {
+                       $(table).on('select2:select select2:unselect', 'select.track-change', function (event) {
+                           markRowChanged(event.target);
+                       });
+                   }
+
+                   // Nếu người dùng click vào nút trong bảng
+                   table.addEventListener("click", event => {
+                       const target = event.target;
+                       if (target.closest("button")) {
+                           const row = target.closest("tr");
+                           if (row) {
+                               row.setAttribute("data-changed", "true");
+                               row.classList.add("row-changed"); // ➡️ Thêm dòng này để highlight
+                               checkChanges();
+                           }
+                       }
+                   });
+
+                   // Chỉ gử i dữ liệu của bảng đã thay đổi
+                   form.addEventListener("submit", function (event) {
+                       let rows = table.querySelectorAll("tbody tr");
+
+                       rows.forEach(row => {
+                         // neu khong khai bao data change thi bo qua, neu co khai bao data change thi kiem tra = false thi xoa
+                           if (row.getAttribute('data-changed') !== undefined && row.getAttribute('data-changed') !== null)
+                           {
+                             if (row.getAttribute("data-changed") !== "true") {
+                               row.remove(); // Xóa các dòng chưa thay đổi khỏi form trước khi submit
+                             }
+                           }
+                         // neu khong khai bao data template thi bo qua, neu co khai bao data template thi kiem tra = true thi xoa
+                           if (row.getAttribute('data-template') !== undefined && row.getAttribute('data-template') !== null)
+                           {
+                             if (row.getAttribute("data-template") == "true") {
+                               row.remove(); // Xóa các dòng chưa thay đổi khỏi form trước khi submit
+                             }
+                           }
+                       });
+
+                       // form.submit();
+                   });
+
+                   checkChanges(); // Kiểm tra trạng thái ban đầu
+               });
+           }
+
+        // kiem tra nếu có nhập liệu trên bất kì dòng nào thì mới enable nút Lưu, và dòng nào nhập liệu thì mới truyền xuống IFormCollection
+        $(document).ready(function () {
+            checkEditorForm();
+        });
         
         // color picker
         function Init_getColorPicker()
@@ -2198,6 +2203,192 @@
                 });
             }
         });
+
+        // xử lý video youtube trên form field
+         document.addEventListener('DOMContentLoaded', () => {
+          // Lấy tất cả các phần tử có class youtube-video-embed
+          const wrappers = document.querySelectorAll('.youtube-video-embed');
+
+          wrappers.forEach((wrapper, index) => {
+            const embed = wrapper.querySelector('.plyr__video-embed');
+
+            // Gán ID duy nhất nếu chưa có
+            if (!embed.id) {
+              embed.id = `plyr-youtube-${index}`;
+            }
+
+            // Khởi tạo Plyr
+            let youtubePlayer = new Plyr(`#${embed.id}`, {
+              autoplay: false,
+              loop: { active: true },
+              volume: 1,
+              speed: { selected: 1, options: [0.75, 1, 1.25, 1.5, 2] },
+              controls: [
+                  'play-large', 'rewind', 'play', 'fast-forward',
+                  'progress', 'current-time', 'duration',
+                  'mute', 'volume', 'captions', 'settings', 'fullscreen', 'pip'
+              ],
+              i18n: {
+                  restart: 'Phát lại',
+                  rewind: 'Lùi 10s',
+                  play: 'Phát',
+                  pause: 'Tạm dừng',
+                  fastForward: 'Tiến 10s',
+                  fullscreen: 'Toàn màn hình',
+                  settings: 'Cài đặt',
+                  captions: 'Phụ đề',
+                  volume: 'Âm lượng'
+              }
+            });
+
+              // Ví dụ xử lý sự kiện
+              youtubePlayer.on('ended', () => {
+		          rplm({
+			          title: "Hoàn thành",
+			          text: 'Bạn đã xem hết video',
+			          type: 'success',
+			          html: true,
+			          modalNOverlay: 'white',
+			          confirmButtonText: 'Xác nhận',
+			          allowOutsideClick: true,
+		          });
+              });
+          });
+        });
+
+          // xử lý video file trên form field
+         document.addEventListener('DOMContentLoaded', () => {
+          // Lấy tất cả các phần tử có class youtube-video-embed
+          const wrappers = document.querySelectorAll('.video-player-embed');
+
+          wrappers.forEach((wrapper, index) => {
+            const embed = wrapper.querySelector('.plyr__video-embed');
+
+            // Gán ID duy nhất nếu chưa có
+            if (!embed.id) {
+              embed.id = `plyr-video-${index}`;
+            }
+
+            // Khởi tạo Plyr
+            let videoPlayer = new Plyr(`#${embed.id}`, {
+              autoplay: false,
+              loop: { active: true },
+              volume: 1,
+              speed: { selected: 1, options: [0.75, 1, 1.25, 1.5, 2] },
+              controls: [
+                  'play-large', 'rewind', 'play', 'fast-forward',
+                  'progress', 'current-time', 'duration',
+                  'mute', 'volume', 'captions', 'settings', 'fullscreen', 'pip'
+              ],
+              i18n: {
+                  restart: 'Phát lại',
+                  rewind: 'Lùi 10s',
+                  play: 'Phát',
+                  pause: 'Tạm dừng',
+                  fastForward: 'Tiến 10s',
+                  fullscreen: 'Toàn màn hình',
+                  settings: 'Cài đặt',
+                  captions: 'Phụ đề',
+                  volume: 'Âm lượng'
+              }
+            });
+
+            //hiển thị trong now playing IOS
+            videoPlayer.on('play', () => {
+              const videoTitle = embed.getAttribute('title') || 'KOA Video'; // fallback nếu không có title
+
+              if ('mediaSession' in navigator) {
+                navigator.mediaSession.metadata = new MediaMetadata({
+                  title: videoTitle,
+                  artist: 'KOA Video',
+                  album: 'KOA Video Album',
+                  artwork: [
+                       { src: 'https://pub-7171d6b031a04e3983a20a87daffce46.r2.dev/koala_with_headphones.png', sizes: '512x512', type: 'image/png' }
+                  ]
+                });
+              }
+            });
+
+            // Ví dụ xử lý sự kiệnx1
+            videoPlayer.on('ended', () => {
+		        rplm({
+			        title: "Hoàn thành",
+			        text: 'Bạn đã xem hết video',
+			        type: 'success',
+			        html: true,
+			        modalNOverlay: 'white',
+			        confirmButtonText: 'Xác nhận',
+			        allowOutsideClick: true,
+		        });
+            });
+          });
+        });
+
+        // let player;
+
+        // function getYouTubeEmbedURL(url) {
+        //   const regExp = /^.*(?:youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=)([^#\&\?]*).*/;
+        //   const match = url.match(regExp);
+        //   if (match && match[1].length === 11) {
+        //     return `https://www.youtube.com/embed/${match[1]}?origin=${location.origin}&iv_load_policy=3&modestbranding=1`;
+        //   }
+        //   return null;
+        // }
+
+        // function loadVideo() {
+        //   const url = document.getElementById("youtubeQuickViewUrl").value;
+        //   const embedUrl = getYouTubeEmbedURL(url);
+
+        //   if (!embedUrl) {
+        //     alert("URL không hợp lệ!");
+        //     return;
+        //   }
+
+        //   // Xóa player cũ nếu có
+        //   if (player) {
+        //     player.destroy();
+        //   }
+
+        //   const playerDiv = document.getElementById("player");
+        //   playerDiv.innerHTML = `
+        //     <iframe
+        //       src="${embedUrl}"
+        //       allowfullscreen
+        //       allowtransparency
+        //       allow="autoplay"
+        //     ></iframe>`;
+
+        //   // Khởi tạo Plyr lại với iframe mới
+        //   player = new Plyr(playerDiv, {
+        //     youtube: {
+        //         autoplay: false,
+        //         loop: { active: true },
+        //         volume: 1,
+        //         speed: { selected: 1, options: [0.75, 1, 1.25, 1.5, 2] },
+        //         controls: [
+        //             'play-large', 'rewind', 'play', 'fast-forward',
+        //             'progress', 'current-time', 'duration',
+        //             'mute', 'volume', 'captions', 'settings', 'fullscreen', 'pip'
+        //         ],
+        //         i18n: {
+        //             restart: 'Phát lại',
+        //             rewind: 'Lùi 10s',
+        //             play: 'Phát',
+        //             pause: 'Tạm dừng',
+        //             fastForward: 'Tiến 10s',
+        //             fullscreen: 'Toàn màn hình',
+        //             settings: 'Cài đặt',
+        //             captions: 'Phụ đề',
+        //             volume: 'Âm lượng'
+        //         }
+        //     }
+        //   });
+        // }
+
+        //  document.getElementById("youtubeQuickViewBtn").addEventListener("click", function (e) {
+        //   e.preventDefault(); // Chỉ cần nếu nằm trong form
+        //   loadVideo(e);
+        // });
 
     </script>
 

@@ -2,6 +2,13 @@ using KOAHome.EntityFramework;
 using Microsoft.EntityFrameworkCore;
 using KOAHome.Services;
 using System.Data.Common;
+using Amazon.S3;
+using KOAHome.Models;
+using Microsoft.AspNetCore.Http.Features;
+using Microsoft.AspNetCore.Identity;
+using System;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc.Authorization;
 //using KOAHome.Services;
 
 namespace KOAHome
@@ -19,19 +26,64 @@ namespace KOAHome
     public void ConfigureServices(IServiceCollection services)
     {
       services.AddDbContext<QLKCL_NEWContext>(options =>
-          options.UseSqlServer(
-              Configuration.GetConnectionString("DefaultConnection")));
+          options.UseSqlServer(sqlOptions =>
+          {
+            Configuration.GetConnectionString("DefaultConnection");
+            sqlOptions.CommandTimeout(300); // Thiết lập CommandTimeout là 300 giây
+
+          })
+         );
       services.AddDbContext<TttConfigContext>(options =>
-          options.UseSqlServer(
-              Configuration.GetConnectionString("ConfigConnection")));
+          options.UseSqlServer(sqlOptions =>
+          {
+            Configuration.GetConnectionString("ConfigConnection");
+            sqlOptions.CommandTimeout(300); // Thiết lập CommandTimeout là 300 giây
+          })
+        );
       services.AddDistributedMemoryCache();
       services.AddSession(options => {
         options.IdleTimeout = TimeSpan.FromMinutes(20);//You can set Time
         options.Cookie.HttpOnly = true;
         options.Cookie.IsEssential = true;
       });
+
+      // Cấu hình Identity - Cookie based authentication
+      services.AddIdentity<ApplicationUser, ApplicationRole>()
+          .AddEntityFrameworkStores<TttConfigContext>()
+          .AddDefaultTokenProviders();
+
+      services.ConfigureApplicationCookie(options =>
+      {
+        options.LoginPath = "/Account/Login";
+        options.AccessDeniedPath = "/Account/AccessDenied";
+        options.ExpireTimeSpan = TimeSpan.FromMinutes(30); // tùy chọn RememberMe sẽ ghi đè
+        options.SlidingExpiration = true;
+        options.Cookie.HttpOnly = true;
+        options.Cookie.SecurePolicy = CookieSecurePolicy.Always;
+        options.Cookie.SameSite = SameSiteMode.Strict;
+      });
+
+      services.AddAuthentication()
+      .AddGoogle(options =>
+      {
+        options.ClientId = Configuration["Authentication:Google:ClientId"];
+        options.ClientSecret = Configuration["Authentication:Google:ClientSecret"];
+      });
+
       services.AddHttpContextAccessor();
-      services.AddControllersWithViews();
+      services.AddControllersWithViews(options =>
+      {
+        // Áp dụng AuthorizeAttribute cho toàn bộ controller/action
+        var policy = new AuthorizationPolicyBuilder()
+                        .RequireAuthenticatedUser()
+                        .Build();
+        options.Filters.Add(new AuthorizeFilter(policy));
+      })
+          .AddViewOptions(options => options.HtmlHelperOptions.ClientValidationEnabled = false);
+
+      services.AddScoped<IHsCustomerService, HsCustomerService>();
+      services.AddScoped<IHsBookingTableService, HsBookingTableService>();
+      services.AddScoped<IHsBookingServiceService, HsBookingServiceService>();
       services.AddScoped<IReportEditorService, ReportEditorService>();
       services.AddScoped<IAttachmentService, AttachmentService>();
       services.AddScoped<IReportService, ReportService>();
@@ -44,6 +96,26 @@ namespace KOAHome
       services.AddScoped<INetMenuService, NetMenuService>();
       services.AddScoped<INetTabPanelService, NetTabPanelService>();
       services.AddScoped<INetFormWizardService, NetFormWizardService>();
+      services.Configure<CloudflareR2Config>(Configuration.GetSection("CloudflareR2"));
+      services.Configure<FormOptions>(options =>
+      {
+        options.MultipartBodyLengthLimit = 104857600; // 100MB
+      });
+
+
+      //services.AddSingleton(s =>
+      //{
+      //  var config = Configuration.GetSection("CloudflareR2").Get<CloudflareR2Config>();
+
+      //  var s3Config = new AmazonS3Config
+      //  {
+      //    RegionEndpoint = Amazon.RegionEndpoint.USEast1, // Không ảnh hưởng vì R2 là regionless
+      //    ServiceURL = $"https://{config.AccountId}.r2.cloudflarestorage.com",
+      //    ForcePathStyle = true
+      //  };
+
+      //  return new AmazonS3Client(config.AccessKey, config.SecretKey, s3Config);
+      //});
     }
 
     // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
@@ -64,6 +136,7 @@ namespace KOAHome
 
       app.UseRouting();
 
+      app.UseAuthentication(); // ⚠️ Phải có
       app.UseAuthorization();
 
       app.UseSession();

@@ -232,5 +232,33 @@ namespace KOAHome.Helpers
         return string.Empty;
       }
     }
+    public static IDictionary<string, object> ParseJsonPathToDictionary(string json)
+    {
+      if (string.IsNullOrWhiteSpace(json)) return new Dictionary<string, object>();
+
+      try
+      {
+        var token = JToken.Parse(json);
+
+        if (token is JObject jObj)
+        {
+          // Trường hợp là object JSON
+          return jObj.Properties()
+                     .ToDictionary(p => p.Name, p => (object)p.Value);
+        }
+        else if (token is JArray jArr && jArr.Count > 0 && jArr[0] is JObject firstObj)
+        {
+          // Trường hợp là array và phần tử đầu là object JSON
+          return firstObj.Properties()
+                         .ToDictionary(p => p.Name, p => (object)p.Value);
+        }
+      }
+      catch (JsonException)
+      {
+        // swallow
+      }
+
+      return new Dictionary<string, object>();
+    }
   }
 }

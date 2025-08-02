@@ -38,4 +38,8 @@ public partial class NetTabPanelDetail
     public string? StoreLoop { get; set; }
 
     public string? HinTabPanelCode { get; set; }
+
+    public string? TabIcon { get; set; }
+
+    public string? TabIconColor { get; set; }
 }
