@@ -3,7 +3,7 @@ using System.Collections.Generic;
 
 namespace KOAHome.EntityFramework;
 
-public partial class NetDynamicfield
+public partial class NetStepperDetail
 {
     public int Id { get; set; }
 
@@ -21,13 +21,19 @@ public partial class NetDynamicfield
 
     public DateTime? Deletiontime { get; set; }
 
-    public string Name { get; set; }
+    public long? Stepperid { get; set; }
 
-    public string Type { get; set; }
+    public long? Formid { get; set; }
 
-    public string Value { get; set; }
+    public long? Orderid { get; set; }
 
-    public int? Siteid { get; set; }
+    public bool? Isactive { get; set; }
+
+    public string Labelactioncode { get; set; }
+
+    public string Hinworkflowcode { get; set; }
 
     public string Sitecode { get; set; }
+
+    public int? Siteid { get; set; }
 }

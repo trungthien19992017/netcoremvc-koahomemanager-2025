@@ -7,9 +7,9 @@ public partial class NetValidation
 {
     public int Id { get; set; }
 
-    public string? Code { get; set; }
+    public string Code { get; set; }
 
-    public string? Name { get; set; }
+    public string Name { get; set; }
 
     public int? Type { get; set; }
 
@@ -17,11 +17,11 @@ public partial class NetValidation
 
     public int? Max { get; set; }
 
-    public string? Pattern { get; set; }
+    public string Pattern { get; set; }
 
-    public string? Store { get; set; }
+    public string Store { get; set; }
 
-    public string? Message { get; set; }
+    public string Message { get; set; }
 
     public int? Isactive { get; set; }
 
@@ -41,7 +41,9 @@ public partial class NetValidation
 
     public int? Siteid { get; set; }
 
-    public string? Sitecode { get; set; }
+    public string Sitecode { get; set; }
 
     public int? Datasourceid { get; set; }
+
+    public string Key { get; set; }
 }

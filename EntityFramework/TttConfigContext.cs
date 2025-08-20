@@ -59,6 +59,10 @@ public partial class TttConfigContext : DbContext
 
     public virtual DbSet<NetService> NetServices { get; set; }
 
+    public virtual DbSet<NetStepper> NetSteppers { get; set; }
+
+    public virtual DbSet<NetStepperDetail> NetStepperDetails { get; set; }
+
     public virtual DbSet<NetTabpanel> NetTabpanels { get; set; }
 
     public virtual DbSet<NetTabpanelDetail> NetTabpanelDetails { get; set; }
@@ -88,6 +92,10 @@ public partial class TttConfigContext : DbContext
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
+        modelBuilder
+            .HasPostgresExtension("dblink")
+            .HasPostgresExtension("postgres_fdw");
+
         modelBuilder.Entity<NetAction>(entity =>
         {
             entity.HasKey(e => e.Id).HasName("pk_net_action");
@@ -995,6 +1003,70 @@ public partial class TttConfigContext : DbContext
             entity.Property(e => e.Storeddefaultparam).HasColumnName("storeddefaultparam");
         });
 
+        modelBuilder.Entity<NetStepper>(entity =>
+        {
+            entity.HasKey(e => e.Id).HasName("pk_net_stepper");
+
+            entity.ToTable("net_stepper", "dbo");
+
+            entity.Property(e => e.Id).HasColumnName("id");
+            entity.Property(e => e.Code).HasColumnName("code");
+            entity.Property(e => e.Creationtime).HasColumnName("creationtime");
+            entity.Property(e => e.Creatoruserid).HasColumnName("creatoruserid");
+            entity.Property(e => e.Datasourceid).HasColumnName("datasourceid");
+            entity.Property(e => e.Deleteruserid).HasColumnName("deleteruserid");
+            entity.Property(e => e.Deletiontime).HasColumnName("deletiontime");
+            entity.Property(e => e.Isactive).HasColumnName("isactive");
+            entity.Property(e => e.Isactiveeventheader).HasColumnName("isactiveeventheader");
+            entity.Property(e => e.Isdeleted).HasColumnName("isdeleted");
+            entity.Property(e => e.Isdynamicdata).HasColumnName("isdynamicdata");
+            entity.Property(e => e.Issaveeachform).HasColumnName("issaveeachform");
+            entity.Property(e => e.Isviewonly)
+                .HasDefaultValue(false)
+                .HasColumnName("isviewonly");
+            entity.Property(e => e.Lastmodificationtime).HasColumnName("lastmodificationtime");
+            entity.Property(e => e.Lastmodifieruserid).HasColumnName("lastmodifieruserid");
+            entity.Property(e => e.Name).HasColumnName("name");
+            entity.Property(e => e.Orderid).HasColumnName("orderid");
+            entity.Property(e => e.Sitecode)
+                .HasMaxLength(255)
+                .HasColumnName("sitecode");
+            entity.Property(e => e.Siteid).HasColumnName("siteid");
+            entity.Property(e => e.Storedefaultdata).HasColumnName("storedefaultdata");
+            entity.Property(e => e.Storegetdata).HasColumnName("storegetdata");
+            entity.Property(e => e.Storeloaddynamicdata).HasColumnName("storeloaddynamicdata");
+            entity.Property(e => e.Storesetdata).HasColumnName("storesetdata");
+            entity.Property(e => e.Vertical).HasColumnName("vertical");
+        });
+
+        modelBuilder.Entity<NetStepperDetail>(entity =>
+        {
+            entity.HasKey(e => e.Id).HasName("pk_net_stepper_detail");
+
+            entity.ToTable("net_stepper_detail", "dbo");
+
+            entity.Property(e => e.Id).HasColumnName("id");
+            entity.Property(e => e.Creationtime).HasColumnName("creationtime");
+            entity.Property(e => e.Creatoruserid).HasColumnName("creatoruserid");
+            entity.Property(e => e.Deleteruserid).HasColumnName("deleteruserid");
+            entity.Property(e => e.Deletiontime).HasColumnName("deletiontime");
+            entity.Property(e => e.Formid).HasColumnName("formid");
+            entity.Property(e => e.Hinworkflowcode)
+                .HasMaxLength(255)
+                .HasColumnName("hinworkflowcode");
+            entity.Property(e => e.Isactive).HasColumnName("isactive");
+            entity.Property(e => e.Isdeleted).HasColumnName("isdeleted");
+            entity.Property(e => e.Labelactioncode).HasColumnName("labelactioncode");
+            entity.Property(e => e.Lastmodificationtime).HasColumnName("lastmodificationtime");
+            entity.Property(e => e.Lastmodifieruserid).HasColumnName("lastmodifieruserid");
+            entity.Property(e => e.Orderid).HasColumnName("orderid");
+            entity.Property(e => e.Sitecode)
+                .HasMaxLength(255)
+                .HasColumnName("sitecode");
+            entity.Property(e => e.Siteid).HasColumnName("siteid");
+            entity.Property(e => e.Stepperid).HasColumnName("stepperid");
+        });
+
         modelBuilder.Entity<NetTabpanel>(entity =>
         {
             entity.HasKey(e => e.Id).HasName("pk_net_tabpanel");
@@ -1081,6 +1153,9 @@ public partial class TttConfigContext : DbContext
             entity.Property(e => e.Tabicon)
                 .HasMaxLength(50)
                 .HasColumnName("tabicon");
+            entity.Property(e => e.Tabiconcolor)
+                .HasMaxLength(30)
+                .HasColumnName("tabiconcolor");
             entity.Property(e => e.Template).HasColumnName("template");
             entity.Property(e => e.Title).HasColumnName("title");
         });
@@ -1102,6 +1177,9 @@ public partial class TttConfigContext : DbContext
             entity.Property(e => e.Deletiontime).HasColumnName("deletiontime");
             entity.Property(e => e.Isactive).HasColumnName("isactive");
             entity.Property(e => e.Isdeleted).HasColumnName("isdeleted");
+            entity.Property(e => e.Key)
+                .HasMaxLength(50)
+                .HasColumnName("key");
             entity.Property(e => e.Lastmodificationtime).HasColumnName("lastmodificationtime");
             entity.Property(e => e.Lastmodifieruserid).HasColumnName("lastmodifieruserid");
             entity.Property(e => e.Max).HasColumnName("max");

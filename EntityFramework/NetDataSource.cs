@@ -21,19 +21,19 @@ public partial class NetDatasource
 
     public DateTime? Deletiontime { get; set; }
 
-    public string? Code { get; set; }
+    public string Code { get; set; }
 
-    public string? Name { get; set; }
+    public string Name { get; set; }
 
     public int? Type { get; set; }
 
-    public string? Sqltype { get; set; }
+    public string Sqltype { get; set; }
 
-    public string? Sitecode { get; set; }
+    public string Sitecode { get; set; }
 
     public int? Siteid { get; set; }
 
-    public string? Username { get; set; }
+    public string Username { get; set; }
 
-    public string? Password { get; set; }
+    public string Password { get; set; }
 }

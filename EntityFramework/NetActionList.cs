@@ -9,23 +9,23 @@ public partial class NetActionlist
 
     public int? Objectid { get; set; }
 
-    public string? Objectcode { get; set; }
+    public string Objectcode { get; set; }
 
     public int? Actionlisttypeid { get; set; }
 
-    public string? Actionlisttypecode { get; set; }
+    public string Actionlisttypecode { get; set; }
 
-    public string? Code { get; set; }
+    public string Code { get; set; }
 
-    public string? Name { get; set; }
+    public string Name { get; set; }
 
-    public string? Description { get; set; }
+    public string Description { get; set; }
 
     public int? Orderid { get; set; }
 
     public int? Siteid { get; set; }
 
-    public string? Sitecode { get; set; }
+    public string Sitecode { get; set; }
 
     public bool? Isactive { get; set; }
 

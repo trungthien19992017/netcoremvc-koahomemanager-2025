@@ -3,7 +3,7 @@ using System.Collections.Generic;
 
 namespace KOAHome.EntityFramework;
 
-public partial class NetFormfieldtype
+public partial class NetStepper
 {
     public int Id { get; set; }
 
@@ -25,13 +25,31 @@ public partial class NetFormfieldtype
 
     public string Name { get; set; }
 
-    public string Description { get; set; }
-
-    public string Icon { get; set; }
-
     public long? Orderid { get; set; }
 
     public bool? Isactive { get; set; }
 
-    public bool? Isrowtemplate { get; set; }
+    public int? Datasourceid { get; set; }
+
+    public string Storegetdata { get; set; }
+
+    public string Storesetdata { get; set; }
+
+    public string Storedefaultdata { get; set; }
+
+    public bool? Isdynamicdata { get; set; }
+
+    public string Storeloaddynamicdata { get; set; }
+
+    public bool? Issaveeachform { get; set; }
+
+    public bool? Vertical { get; set; }
+
+    public bool? Isviewonly { get; set; }
+
+    public int? Siteid { get; set; }
+
+    public string Sitecode { get; set; }
+
+    public bool? Isactiveeventheader { get; set; }
 }
