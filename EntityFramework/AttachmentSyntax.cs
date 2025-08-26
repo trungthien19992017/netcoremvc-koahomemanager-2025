@@ -3,39 +3,39 @@ using System.Collections.Generic;
 
 namespace KOAHome.EntityFramework;
 
-public partial class AttachmentSyntax
+public partial class Attachmentsyntax
 {
     public int Id { get; set; }
 
-    public DateTime CreationTime { get; set; }
+    public DateTime? Creationtime { get; set; }
 
-    public long? CreatorUserId { get; set; }
+    public long? Creatoruserid { get; set; }
 
-    public DateTime? LastModificationTime { get; set; }
+    public DateTime? Lastmodificationtime { get; set; }
 
-    public long? LastModifierUserId { get; set; }
+    public long? Lastmodifieruserid { get; set; }
 
-    public bool IsDeleted { get; set; }
+    public bool? Isdeleted { get; set; }
 
-    public long? DeleterUserId { get; set; }
+    public long? Deleteruserid { get; set; }
 
-    public DateTime? DeletionTime { get; set; }
+    public DateTime? Deletiontime { get; set; }
 
-    public int? TenantId { get; set; }
+    public int? Tenantid { get; set; }
 
     public string? Code { get; set; }
 
     public string? Name { get; set; }
 
-    public string? SyntaxPath { get; set; }
+    public string? Syntaxpath { get; set; }
 
-    public bool? IsDefault { get; set; }
+    public bool? Isdefault { get; set; }
 
-    public bool? IsChangeSyntaxName { get; set; }
+    public bool? Ischangesyntaxname { get; set; }
 
-    public string? SyntaxName { get; set; }
+    public string? Syntaxname { get; set; }
 
-    public int? OrderId { get; set; }
+    public int? Orderid { get; set; }
 
-    public int? DeleteUserId { get; set; }
+    public int? Deleteuserid { get; set; }
 }

@@ -5,62 +5,59 @@ namespace KOAHome.EntityFramework;
 
 public partial class HsBooking
 {
-    public int BookingId { get; set; }
+    public int Bookingid { get; set; }
 
-    public int CustomerId { get; set; }
+    public int? Customerid { get; set; }
 
-    public int RoomId { get; set; }
+    public int? Roomid { get; set; }
 
-    public DateTime CheckInDate { get; set; }
+    public DateTime? Checkindate { get; set; }
 
-    public DateTime CheckOutDate { get; set; }
+    public DateTime? Checkoutdate { get; set; }
 
-    public DateTime BookingDate { get; set; }
+    public DateTime? Bookingdate { get; set; }
 
-    public double? UnitPrice { get; set; }
+    public double? Unitprice { get; set; }
 
-    public double? TotalAmount { get; set; }
+    public double? Totalamount { get; set; }
 
-    /// <summary>
-    /// tien coc
-    /// </summary>
     public double? Deposit { get; set; }
 
-    public double? TotalTime { get; set; }
+    public double? Totaltime { get; set; }
 
-    public string? OtherPhoneNumber { get; set; }
+    public string? Otherphonenumber { get; set; }
 
-    public double? DiscountPercent { get; set; }
+    public double? Discountpercent { get; set; }
 
-    public double? OtherDiscountAmount { get; set; }
+    public double? Otherdiscountamount { get; set; }
 
-    public string? ReasonDiscount { get; set; }
+    public string? Reasondiscount { get; set; }
 
-    public bool? IsPay { get; set; }
+    public bool? Ispay { get; set; }
 
-    public string? ReasonCancel { get; set; }
+    public string? Reasoncancel { get; set; }
 
-    public bool? IsActive { get; set; }
+    public bool? Isactive { get; set; }
 
-    public bool? IsDeleted { get; set; }
+    public bool? Isdeleted { get; set; }
 
-    public DateTime? CreationTime { get; set; }
+    public DateTime? Creationtime { get; set; }
 
-    public int? CreatorUserId { get; set; }
+    public int? Creatoruserid { get; set; }
 
-    public DateTime? LastModificationTime { get; set; }
+    public DateTime? Lastmodificationtime { get; set; }
 
-    public int? LastModifierUserId { get; set; }
+    public int? Lastmodifieruserid { get; set; }
 
-    public DateTime? DeletionTime { get; set; }
+    public DateTime? Deletiontime { get; set; }
 
-    public int? DeleteUserId { get; set; }
+    public int? Deleteuserid { get; set; }
 
-    public virtual HsCustomer Customer { get; set; } = null!;
+    public virtual HsCustomer? Customer { get; set; }
 
-    public virtual ICollection<HsBookingService> HsBookingServices { get; set; } = new List<HsBookingService>();
+    public virtual ICollection<HsBookingservice> HsBookingservices { get; set; } = new List<HsBookingservice>();
 
     public virtual ICollection<HsPayment> HsPayments { get; set; } = new List<HsPayment>();
 
-    public virtual HsRoom Room { get; set; } = null!;
+    public virtual HsRoom? Room { get; set; }
 }

@@ -118,7 +118,7 @@ public class HomeController : Controller
         return Json(new { success = false, errorMessage = "Store chưa trả về giá trị success." });
       }
     }
-    catch (SqlException ex)
+    catch (PostgresException ex)
     {
       return Json(new { success = false, errorMessage = ex.Message });
     }

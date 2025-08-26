@@ -5,6 +5,7 @@ using KOAHome.Services;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Data.SqlClient;
+using Npgsql;
 using System.Diagnostics;
 
 namespace KOAHome.Controllers
@@ -99,7 +100,7 @@ namespace KOAHome.Controllers
 
         return View();
       }
-      catch (SqlException ex)
+      catch (PostgresException ex)
       {
         // Log the exception
         _logger.LogError(ex, "An error occurred while fetching form wizard.");

@@ -5,35 +5,35 @@ namespace KOAHome.EntityFramework;
 
 public partial class HsReview
 {
-    public int ReviewId { get; set; }
+    public int Reviewid { get; set; }
 
-    public int CustomerId { get; set; }
+    public int? Customerid { get; set; }
 
-    public int RoomId { get; set; }
+    public int? Roomid { get; set; }
 
-    public int Rating { get; set; }
+    public int? Rating { get; set; }
 
     public string? Comment { get; set; }
 
-    public DateTime ReviewDate { get; set; }
+    public DateTime? Reviewdate { get; set; }
 
-    public bool? IsActive { get; set; }
+    public bool? Isactive { get; set; }
 
-    public bool? IsDeleted { get; set; }
+    public bool? Isdeleted { get; set; }
 
-    public DateTime? CreationTime { get; set; }
+    public DateTime? Creationtime { get; set; }
 
-    public int? CreatorUserId { get; set; }
+    public int? Creatoruserid { get; set; }
 
-    public DateTime? LastModificationTime { get; set; }
+    public DateTime? Lastmodificationtime { get; set; }
 
-    public int? LastModifierUserId { get; set; }
+    public int? Lastmodifieruserid { get; set; }
 
-    public DateTime? DeletionTime { get; set; }
+    public DateTime? Deletiontime { get; set; }
 
-    public int? DeleteUserId { get; set; }
+    public int? Deleteuserid { get; set; }
 
-    public virtual HsCustomer Customer { get; set; } = null!;
+    public virtual HsCustomer? Customer { get; set; }
 
-    public virtual HsRoom Room { get; set; } = null!;
+    public virtual HsRoom? Room { get; set; }
 }

@@ -1,0 +1,15 @@
+[build]
+builder = "dockerfile"
+dotnet-version = "9.0"
+dockerfilePath = "./Dockerfile"
+
+[deploy]
+startCommand = "dotnet KOAHome.dll"
+restartPolicyType = "Always"
+healthcheckPath = "/health"
+
+[variables]
+ASPNETCORE_ENVIRONMENT = "Production"
+
+[service]
+port = 8080

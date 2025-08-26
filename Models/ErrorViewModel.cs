@@ -9,5 +9,5 @@ public class ErrorViewModel
 
     public bool ShowRequestId => !string.IsNullOrEmpty(RequestId);
     // Thêm exception
-    public SqlException? exception { get; set; }
+    public PostgresException? exception { get; set; }
 }

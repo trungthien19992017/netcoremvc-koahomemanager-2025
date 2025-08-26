@@ -3,8 +3,14 @@ using Microsoft.EntityFrameworkCore;
 using KOAHome.Services;
 using System.Data.Common;
 using Amazon.S3;
+using Microsoft.AspNetCore.HttpOverrides;
+using Microsoft.AspNetCore.DataProtection;
 using KOAHome.Models;
 using Microsoft.AspNetCore.Http.Features;
+using Microsoft.AspNetCore.Identity;
+using System;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc.Authorization;
 //using KOAHome.Services;
 
 namespace KOAHome
@@ -19,25 +25,67 @@ namespace KOAHome
     public IConfiguration Configuration { get; }
 
     // This method gets called by the runtime. Use this method to add services to the container.
+
+
     public void ConfigureServices(IServiceCollection services)
     {
       services.AddDbContext<QLKCL_NEWContext>(options =>
-          options.UseSqlServer(
-              Configuration.GetConnectionString("DefaultConnection")));
+          options.UseNpgsql(
+              sqlOptions =>
+              {
+                  Configuration.GetConnectionString("DefaultConnection");
+                  sqlOptions.CommandTimeout(300); // Thiết lập CommandTimeout là 300 giây
+
+              }));
       services.AddDbContext<TttConfigContext>(options =>
-          options.UseSqlServer(
-              Configuration.GetConnectionString("ConfigConnection")));
+          options.UseNpgsql(
+              sqlOptions =>
+              {
+                  Configuration.GetConnectionString("ConfigConnection");
+                  sqlOptions.CommandTimeout(300); // Thiết lập CommandTimeout là 300 giây
+              }));
       services.AddDistributedMemoryCache();
+      services.AddResponseCaching();
       services.AddSession(options => {
         options.IdleTimeout = TimeSpan.FromMinutes(20);//You can set Time
         options.Cookie.HttpOnly = true;
         options.Cookie.IsEssential = true;
       });
+
+        //// Cấu hình Identity - Cookie based authentication
+        //services.AddIdentity<ApplicationUser, ApplicationRole>()
+        //    .AddEntityFrameworkStores<TttConfigContext>()
+        //    .AddDefaultTokenProviders();
+
+        //services.ConfigureApplicationCookie(options =>
+        //{
+        //    options.LoginPath = "/Account/Login";
+        //    options.AccessDeniedPath = "/Account/AccessDenied";
+        //    options.ExpireTimeSpan = TimeSpan.FromMinutes(30); // tùy chọn RememberMe sẽ ghi đè
+        //    options.SlidingExpiration = true;
+        //    options.Cookie.HttpOnly = true;
+        //    options.Cookie.SecurePolicy = CookieSecurePolicy.Always;
+        //    options.Cookie.SameSite = SameSiteMode.Strict;
+        //});
+
+        //services.AddAuthentication()
+        //.AddGoogle(options =>
+        //{
+        //    options.ClientId = Configuration["Authentication:Google:ClientId"];
+        //    options.ClientSecret = Configuration["Authentication:Google:ClientSecret"];
+        //});
+
+        services.AddDataProtection()
+          .PersistKeysToFileSystem(new DirectoryInfo("/app/keys"))
+          .SetApplicationName("KOAHome");
+
+      services.Configure<ForwardedHeadersOptions>(options => {
+        options.ForwardedHeaders =
+            ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto;
+      });
+
       services.AddHttpContextAccessor();
       services.AddControllersWithViews();
-      services.AddScoped<IHsCustomerService, HsCustomerService>();
-      services.AddScoped<IHsBookingTableService, HsBookingTableService>();
-      services.AddScoped<IHsBookingServiceService, HsBookingServiceService>();
       services.AddScoped<IReportEditorService, ReportEditorService>();
       services.AddScoped<IAttachmentService, AttachmentService>();
       services.AddScoped<IReportService, ReportService>();
@@ -68,6 +116,10 @@ namespace KOAHome
 
       //  return new AmazonS3Client(config.AccessKey, config.SecretKey, s3Config);
       //});
+
+      // add health check for deploy
+      services.AddHealthChecks()
+          .AddNpgSql(Configuration.GetConnectionString("DefaultConnection"));
     }
 
     // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
@@ -79,18 +131,31 @@ namespace KOAHome
       }
       else
       {
-        app.UseExceptionHandler("/Page/MiscError");
+        app.UseExceptionHandler("/Pages/MiscError");
         // The default HSTS value is 30 days. You may want to change this for production scenarios, see https://aka.ms/aspnetcore-hsts.
         app.UseHsts();
       }
-      app.UseHttpsRedirection();
+      if (env.IsDevelopment())
+      {
+        app.UseHttpsRedirection();
+      }
       app.UseStaticFiles();
 
       app.UseRouting();
 
+      app.UseResponseCaching();
+
+        app.UseAuthentication(); // ⚠️ Phải có
       app.UseAuthorization();
 
       app.UseSession();
+
+      app.UseHealthChecks("/health");
+
+      app.UseForwardedHeaders(new ForwardedHeadersOptions
+      {
+        ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto
+      });
 
       app.UseEndpoints(endpoints =>
       {

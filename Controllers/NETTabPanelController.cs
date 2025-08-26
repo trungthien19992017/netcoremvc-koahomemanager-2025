@@ -99,7 +99,7 @@ namespace KOAHome.Controllers
 
         return View();
       }
-      catch (SqlException ex)
+      catch (PostgresException ex)
       {
         // Log the exception
         _logger.LogError(ex, "An error occurred while fetching booking service info.");

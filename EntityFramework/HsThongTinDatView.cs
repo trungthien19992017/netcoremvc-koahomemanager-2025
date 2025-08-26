@@ -3,13 +3,13 @@ using System.Collections.Generic;
 
 namespace KOAHome.EntityFramework;
 
-public partial class HsThongTinDatView
+public partial class HsThongtindatView
 {
-    public int BookingId { get; set; }
+    public int? Bookingid { get; set; }
 
-    public int CustomerId { get; set; }
+    public int? Customerid { get; set; }
 
-    public int RoomId { get; set; }
+    public int? Roomid { get; set; }
 
-    public string CheckInInfo { get; set; } = null!;
+    public string? Checkininfo { get; set; }
 }

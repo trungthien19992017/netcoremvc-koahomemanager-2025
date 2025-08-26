@@ -70,7 +70,7 @@ namespace KOAHome.Controllers
 
         return PartialView("~/Views/Shared/Partial/NETMenu/_MainMenu_Partial.cshtml");
       }
-      catch (SqlException ex)
+      catch (PostgresException ex)
       {
         // Log the exception
         _logger.LogError(ex, "An error occurred while fetching form.");
@@ -81,7 +81,7 @@ namespace KOAHome.Controllers
 
     // danh sach menu theo main menu code (gọi ajxa)
     [HttpGet]
-    public async Task<IActionResult> Menu_List(string currentPage, string MenuCode = "Management_KOA")
+    public async Task<IActionResult> Menu_List(string currentPage, string? MenuCode)
     {
       try
       {
@@ -94,16 +94,16 @@ namespace KOAHome.Controllers
         {
           MenuCode = currentMenuCode;
         }
-        else
-        {
-          HttpContext.Session.SetString("CurrentMenuCode", MenuCode);
-        }
+        //else
+        //{
+        //  HttpContext.Session.SetString("CurrentMenuCode", MenuCode);
+        //}
 
-        // neu không trả về menu code thì chuyển sang link lỗi
-        if (MenuCode == null)
-        {
-          return Json(new { success = false, errorMessage = "Không tồn tại mã menu" });
-        }
+        //// neu không trả về menu code thì chuyển sang link lỗi
+        //if (MenuCode == null)
+        //{
+        //  return Json(new { success = false, errorMessage = "Không tồn tại mã menu" });
+        //}
         ViewData["MenuCode"] = MenuCode;
 
         // Lấy dynamic query parameters
@@ -141,7 +141,7 @@ namespace KOAHome.Controllers
 
         return PartialView("~/Views/Shared/Partial/NETMenu/_Menu_Partial.cshtml");
       }
-      catch (SqlException ex)
+      catch (PostgresException ex)
       {
         // Log the exception
         _logger.LogError(ex, "An error occurred while fetching booking service info.");

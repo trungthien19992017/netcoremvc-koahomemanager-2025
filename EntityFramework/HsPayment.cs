@@ -5,33 +5,33 @@ namespace KOAHome.EntityFramework;
 
 public partial class HsPayment
 {
-    public int PaymentId { get; set; }
+    public int Paymentid { get; set; }
 
-    public int BookingId { get; set; }
+    public int? Bookingid { get; set; }
 
     public double? Amount { get; set; }
 
-    public DateTime? PaymentDate { get; set; }
+    public DateTime? Paymentdate { get; set; }
 
-    public string? PaymentMethod { get; set; }
+    public string? Paymentmethod { get; set; }
 
-    public string? PaymentInformation { get; set; }
+    public string? Paymentinformation { get; set; }
 
-    public bool? IsActive { get; set; }
+    public bool? Isactive { get; set; }
 
-    public bool? IsDeleted { get; set; }
+    public bool? Isdeleted { get; set; }
 
-    public DateTime? CreationTime { get; set; }
+    public DateTime? Creationtime { get; set; }
 
-    public int? CreatorUserId { get; set; }
+    public int? Creatoruserid { get; set; }
 
-    public DateTime? LastModificationTime { get; set; }
+    public DateTime? Lastmodificationtime { get; set; }
 
-    public int? LastModifierUserId { get; set; }
+    public int? Lastmodifieruserid { get; set; }
 
-    public DateTime? DeletionTime { get; set; }
+    public DateTime? Deletiontime { get; set; }
 
-    public int? DeleteUserId { get; set; }
+    public int? Deleteuserid { get; set; }
 
-    public virtual HsBooking Booking { get; set; } = null!;
+    public virtual HsBooking? Booking { get; set; }
 }
