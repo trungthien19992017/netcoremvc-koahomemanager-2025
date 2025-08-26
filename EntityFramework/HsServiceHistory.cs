@@ -19,9 +19,7 @@ public partial class HsServiceHistory
 
     public bool? Isdeleted { get; set; }
 
-    public DateTime? Creationtime { get; set; }
-
-    public int? Creatoruserid { get; set; }
+    public DateTime? CreationTime { get; set; }
 
     public DateTime? Lastmodificationtime { get; set; }
 
@@ -31,5 +29,7 @@ public partial class HsServiceHistory
 
     public int? Deleteuserid { get; set; }
 
-    public bool? Isread { get; set; }
+    public int? DeleteUserId { get; set; }
+
+    public bool? IsRead { get; set; }
 }

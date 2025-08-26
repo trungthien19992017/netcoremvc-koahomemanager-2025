@@ -41,5 +41,9 @@ public partial class NetTabpanelDetail
 
     public string Tabicon { get; set; }
 
-    public string Tabiconcolor { get; set; }
+    public string? HinTabPanelCode { get; set; }
+
+    public string? TabIcon { get; set; }
+
+    public string? TabIconColor { get; set; }
 }

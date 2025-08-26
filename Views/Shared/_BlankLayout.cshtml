@@ -1,3 +1,4 @@
+@await Html.PartialAsync("Sections/_Variables")
 @{
   Layout = "_CommonMasterLayout";
 }
@@ -11,3 +12,11 @@
 @section VendorScripts { @RenderSection("VendorScripts", required: false) }
 
 @section PageScripts { @RenderSection("PageScripts", required: false) }
+
+
+@section success {
+    @RenderSection("Success", required: false)
+}
+@section ErrorMessage {
+    @RenderSection("ErrorMessage", required: false)
+}

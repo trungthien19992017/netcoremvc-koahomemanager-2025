@@ -2,10 +2,15 @@ using KOAHome.EntityFramework;
 using Microsoft.EntityFrameworkCore;
 using KOAHome.Services;
 using System.Data.Common;
+using Amazon.S3;
 using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.AspNetCore.DataProtection;
 using KOAHome.Models;
 using Microsoft.AspNetCore.Http.Features;
+using Microsoft.AspNetCore.Identity;
+using System;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc.Authorization;
 //using KOAHome.Services;
 
 namespace KOAHome
@@ -26,10 +31,19 @@ namespace KOAHome
     {
       services.AddDbContext<QLKCL_NEWContext>(options =>
           options.UseNpgsql(
-              Configuration.GetConnectionString("DefaultConnection")));
+              sqlOptions =>
+              {
+                  Configuration.GetConnectionString("DefaultConnection");
+                  sqlOptions.CommandTimeout(300); // Thiết lập CommandTimeout là 300 giây
+
+              }));
       services.AddDbContext<TttConfigContext>(options =>
           options.UseNpgsql(
-              Configuration.GetConnectionString("ConfigConnection")));
+              sqlOptions =>
+              {
+                  Configuration.GetConnectionString("ConfigConnection");
+                  sqlOptions.CommandTimeout(300); // Thiết lập CommandTimeout là 300 giây
+              }));
       services.AddDistributedMemoryCache();
       services.AddResponseCaching();
       services.AddSession(options => {
@@ -38,7 +52,30 @@ namespace KOAHome
         options.Cookie.IsEssential = true;
       });
 
-      services.AddDataProtection()
+        //// Cấu hình Identity - Cookie based authentication
+        //services.AddIdentity<ApplicationUser, ApplicationRole>()
+        //    .AddEntityFrameworkStores<TttConfigContext>()
+        //    .AddDefaultTokenProviders();
+
+        //services.ConfigureApplicationCookie(options =>
+        //{
+        //    options.LoginPath = "/Account/Login";
+        //    options.AccessDeniedPath = "/Account/AccessDenied";
+        //    options.ExpireTimeSpan = TimeSpan.FromMinutes(30); // tùy chọn RememberMe sẽ ghi đè
+        //    options.SlidingExpiration = true;
+        //    options.Cookie.HttpOnly = true;
+        //    options.Cookie.SecurePolicy = CookieSecurePolicy.Always;
+        //    options.Cookie.SameSite = SameSiteMode.Strict;
+        //});
+
+        //services.AddAuthentication()
+        //.AddGoogle(options =>
+        //{
+        //    options.ClientId = Configuration["Authentication:Google:ClientId"];
+        //    options.ClientSecret = Configuration["Authentication:Google:ClientSecret"];
+        //});
+
+        services.AddDataProtection()
           .PersistKeysToFileSystem(new DirectoryInfo("/app/keys"))
           .SetApplicationName("KOAHome");
 
@@ -108,6 +145,7 @@ namespace KOAHome
 
       app.UseResponseCaching();
 
+        app.UseAuthentication(); // ⚠️ Phải có
       app.UseAuthorization();
 
       app.UseSession();

@@ -5,15 +5,15 @@ namespace KOAHome.EntityFramework;
 
 public partial class Nation
 {
-    public int Nationid { get; set; }
+    public long NationId { get; set; }
 
-    public bool? Isactive { get; set; }
+    public bool IsActive { get; set; }
 
-    public bool? Isdelete { get; set; }
+    public bool IsDelete { get; set; }
 
-    public string? Nationcode { get; set; }
+    public string NationCode { get; set; } = null!;
 
-    public string? Nationname { get; set; }
+    public string NationName { get; set; } = null!;
 
-    public int? Orderid { get; set; }
+    public int OrderId { get; set; }
 }

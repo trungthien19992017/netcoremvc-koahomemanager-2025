@@ -81,7 +81,7 @@ namespace KOAHome.Controllers
 
     // danh sach menu theo main menu code (gọi ajxa)
     [HttpGet]
-    public async Task<IActionResult> Menu_List(string currentPage, string MenuCode = "Management_KOA")
+    public async Task<IActionResult> Menu_List(string currentPage, string? MenuCode)
     {
       try
       {
@@ -94,16 +94,16 @@ namespace KOAHome.Controllers
         {
           MenuCode = currentMenuCode;
         }
-        else
-        {
-          HttpContext.Session.SetString("CurrentMenuCode", MenuCode);
-        }
+        //else
+        //{
+        //  HttpContext.Session.SetString("CurrentMenuCode", MenuCode);
+        //}
 
-        // neu không trả về menu code thì chuyển sang link lỗi
-        if (MenuCode == null)
-        {
-          return Json(new { success = false, errorMessage = "Không tồn tại mã menu" });
-        }
+        //// neu không trả về menu code thì chuyển sang link lỗi
+        //if (MenuCode == null)
+        //{
+        //  return Json(new { success = false, errorMessage = "Không tồn tại mã menu" });
+        //}
         ViewData["MenuCode"] = MenuCode;
 
         // Lấy dynamic query parameters

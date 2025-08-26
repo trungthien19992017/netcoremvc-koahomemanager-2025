@@ -1,0 +1,281 @@
+@model KOAHome.Models.RegisterModel
+@{
+  Layout = "_BlankLayout";
+  ViewData["Title"] = "Đăng ký";
+  // nhan thong tin attachment neu co
+  var fileUrlsDict = ViewData["fileUrls"] as Dictionary<string, List<string>>;
+}
+
+@section PageStyles {
+<link rel="stylesheet" href="~/vendor/css/pages/page-auth.css">
+}
+
+@* ************** Content ************** *@
+
+<div class="position-relative">
+  <div class="authentication-wrapper authentication-basic container-p-y">
+    <div class="authentication-register-inner py-6 mx-4">
+
+      <!-- Register Card -->
+      <div class="card p-7">
+        <!-- Logo -->
+        <div class="app-brand justify-content-center mt-5">
+          <a class="app-brand-link gap-3">
+            <span class="app-brand-logo demo">@await Html.PartialAsync("../_Partials/_OwnMacros")</span>
+          </a>
+        </div>
+        <!-- /Logo -->
+        <div class="card-body mt-1">
+          <h4 class="mb-1">Bắt đầu hành trình tại đây 🚀</h4>
+          <p class="mb-5">Tạo trang quản lý dễ dàng và vui vẻ!</p>
+
+          @using (Html.BeginForm("Register", "Account", FormMethod.Post,new { id = "formAuthentication", @class = "mb-5", @enctype="multipart/form-data"}))
+          { 
+              @Html.ValidationSummary(false, null, new { @class = "text-danger" })
+      
+              <!-- Sử dụng d-flex để chia thành 2 cột -->
+              <div class="row">
+                  <div class="col-md-6">
+                      <div class="form-floating form-floating-outline mb-5">
+                          @Html.TextBoxFor(model => model.Username, new { @class = "form-control", @id="UserName", @autofocus = "autofocus", @name = "Username", @placeholder = "Nhập tên đăng nhập của bạn (viết liền không dấu)", @autocomplete="Username"})
+                          <label for="Username">Tên đăng nhập</label>
+                      </div>
+                  </div>
+
+                  <div class="col-md-6">
+                      <div class="form-floating form-floating-outline mb-5">
+                          @Html.TextBoxFor(model => model.Email, new { @class = "form-control", @id="Email", @name = "Email", @placeholder = "Nhập địa chỉ email" , @autocomplete="Email"})
+                          <label for="Email">Địa chỉ email</label>
+                      </div>
+                  </div>
+              </div>
+
+              <div class="row">
+                  <div class="col-md-6">
+                      <div class="form-floating form-floating-outline mb-5">
+                          @Html.TextBoxFor(model => model.FullName, new { @class = "form-control", @id="FullName", @name = "FullName", @placeholder = "Nhập họ tên" })
+                          <label for="FullName">Họ tên</label>
+                      </div>
+                  </div>
+
+                  <div class="col-md-6">
+                      <div class="form-floating form-floating-outline mb-5">
+                          @Html.TextBoxFor(model => model.PhoneNumber, new { @class = "form-control", @id="PhoneNumber", @name = "PhoneNumber" })
+                          <label for="PhoneNumber">SĐT</label>
+                      </div>
+                  </div>
+              </div>
+
+              <div class="row">
+                  <div class="col-md-12">
+                      <div class="form-floating form-floating-outline mb-5">
+                          <select name="SiteId"
+                                  id="SiteId"
+                                  class="form-select color-dropdown form-select-sm">
+                              <option value="">-- Chọn --</option>
+                              @for (int i = 0; i < Model.AvailableSites.Count; i++)
+                              {
+                                  <option value="@Model.AvailableSites[i].Value">
+                                      @Model.AvailableSites[i].Text
+                                  </option>
+                              }
+                          </select>
+                          <label for="SiteId">Hệ khách hàng</label>
+                      </div>
+                  </div>
+              </div>
+              <div class="row">
+                  <div class="col-md-12">
+                      <div class="form-floating form-floating-outline mb-5">
+                          <div class="selection-container">
+                              <label><span>Vai trò</span> <span class='text-danger'></span></label>
+                              <input type="hidden" name="SelectedRoles" id="SelectedRoles" value="" />
+
+                              <div class="selection-list" data-target="SelectedRoles">
+                                  @for (int i = 0; i < Model.AvailableRoles.Count; i++)
+                                  {
+                                      bool isSelected = "Admin".Contains(Model.AvailableRoles[i].Value);
+                                      <div style="max-width:1000px!important;flex:auto!important" class="selection-item @(isSelected ? "selected" : "")"
+                                      data-value="@Model.AvailableRoles[i].Value">
+                                          @Model.AvailableRoles[i].Text
+                                      </div>
+                                  }
+                              </div>
+                          </div>
+   @*                        @for (int i = 0; i < Model.AvailableRoles.Count; i++)
+                          {
+                              <div class="form-check">
+                                  <input type="checkbox"
+                                         class="form-check-input"
+                                         name="SelectedRoles"
+                                         value="@Model.AvailableRoles[i].Value" />
+                                  <label class="form-check-label">@Model.AvailableRoles[i].Text</label>
+                              </div>
+                          } *@
+                      </div>
+                  </div>
+              </div>
+              <div class="row">
+                  <div class="col-md-6">
+                      <div class="mb-5 form-password-toggle">
+                          <div class="input-group input-group-merge">
+                              <div class="form-floating form-floating-outline">
+                                  @Html.PasswordFor(model => model.Password, new { @class = "form-control", @id="Password", @name = "Password", @placeholder = "****************"})
+                                  <label for="Password">Mật khẩu</label>
+                              </div>
+                          </div>
+                      </div>
+                  </div>
+
+                  <div class="col-md-6">
+                      <div class="mb-5 form-password-toggle">
+                          <div class="input-group input-group-merge">
+                              <div class="form-floating form-floating-outline">
+                                  @Html.PasswordFor(model => model.ConfirmPassword, new { @class = "form-control", @id="ConfirmPassword", @name = "ConfirmPassword", @placeholder = "***************" })
+                                  <label for="ConfirmPassword">Nhập lại mật khẩu</label>
+                              </div>
+                          </div>
+                      </div>
+                  </div>
+              </div>
+              <div class="row">
+                  <div class="col-md-12">
+                      <div class="mb-5 form-password-toggle">
+                          <div class="input-group input-group-merge">
+                              <div class="form-floating form-floating-outline">
+                                  @Html.PasswordFor(model => model.AdminPassword, new { @class = "form-control", @id = "AdminPassword", @name = "AdminPassword", @placeholder = "Nếu không có, liên hệ quản trị qua gmail trungthien19992017@gmail.com" })
+                                  <label for="AdminPassword">Mật khẩu quản trị</label>
+                              </div>
+                          </div>
+                      </div>
+                  </div>
+              </div>
+              string codeUpload = "NET_AspNetUser_Avatar";
+              var fileList = new List<string>();
+              if (fileUrlsDict != null)
+              {
+                  fileList = fileUrlsDict != null && fileUrlsDict.ContainsKey(codeUpload)
+                  ? fileUrlsDict[codeUpload]
+                  : new List<string>();
+              }
+              <div class="row gx-5">
+                  <div class="col-md-4 card-header">
+                      <div class="mb-4">
+                          <label for="UserAvatar" class="form-label"> <span>Ảnh đại diện</span> </label>
+                          <input class="form-control" type="file" id="NET_AspNetUser_Avatar" name="NET_AspNetUser_Avatar" data-target="@("#fileList-"+codeUpload)" data-carousel="@("#carouselSlideImage-"+codeUpload)"/>
+                          @* tao danh sach file rong de xu ly js hiển thị *@
+                          <ul id="@("fileList-"+codeUpload)"></ul>
+                      </div>
+                  </div>
+                  @* Image slide *@
+                  <div class="col-md-8">
+                      <div id="@("carouselSlideImage-"+codeUpload)"
+                      class="carousel slide carousel-fade w-50"
+                      data-bs-ride="carousel">
+                          <div class="carousel-indicators">
+                              @if (fileList != null)
+                              {
+                                  bool isPreviousImg = true;
+                                  for (int i = 0; i < fileList.Count; i++)
+                                  {
+                                      var fileUrl = fileList[i];
+                                      int index = i;
+                                      // kiem tra khong phai la img thi bo qua
+                                      @if (!(fileUrl.EndsWith(".jpg") || fileUrl.EndsWith(".png") || fileUrl.EndsWith(".jpeg") || fileUrl.EndsWith(".gif")))
+                                      {
+                                          isPreviousImg = false;
+                                      }
+                                      else
+                                      {
+                                      // kiem tra file truoc do co phai la img khong? neu khong phai thi img sau phai tru 1
+                                          index = isPreviousImg == true ? index : index - 1;
+                                          <button type="button"
+                                          data-bs-target="@("#carouselSlideImage-"+codeUpload)"
+                                          data-bs-slide-to="@index"
+                                          class="@(index == 0 ? "active" : "")"
+                                          aria-current="@(index == 0 ? "true" : "false")"
+                                          aria-label="Slide @(index + 1)">
+                                          </button>
+                                      }
+                                  }
+                              }
+                          </div>
+                          <div class="carousel-inner">
+                              @if (fileList != null)
+                              {
+                                  bool isPreviousImg = true;
+                                  for (int i = 0; i < fileList.Count; i++)
+                                  {
+                                      var fileUrl = fileList[i];
+                                      string fileName = fileUrl.Substring(fileUrl.LastIndexOf('/') + 1);
+                                      int index = i;
+                                      // kiem tra khong phai la img thi bo qua
+                                      @if (!(fileUrl.EndsWith(".jpg") || fileUrl.EndsWith(".png") || fileUrl.EndsWith(".jpeg") || fileUrl.EndsWith(".gif")))
+                                      {
+                                          isPreviousImg = false;
+                                      }
+                                      else
+                                      {
+                                      // kiem tra file truoc do co phai la img khong? neu khong phai thi img sau phai tru 1
+                                          index = isPreviousImg == true ? index : index - 1;
+                                          <div class="carousel-item @(index == 0 ? "active" : "")">
+                                              <img class="d-block w-100" src="@fileUrl" alt="@fileName" />
+                                              <div class="carousel-caption d-none d-md-block">
+                                                  <h3 style="font-family: 'Shrikhand', cursive;font-weight:bold;"><a class="text-white" href="@fileUrl" target="_blank">@(fileUrl.Substring(fileUrl.LastIndexOf('/') + 1))</a></h3>
+                                              </div>
+                                          </div>
+                                      }
+                                  }
+                              }
+                          </div>
+                          <a class="carousel-control-prev" href="@("#carouselSlideImage-"+codeUpload)" role="button" data-bs-slide="prev">
+                              <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+                              <span class="visually-hidden">Previous</span>
+                          </a>
+                          <a class="carousel-control-next" href="@("#carouselSlideImage-"+codeUpload)" role="button" data-bs-slide="next">
+                              <span class="carousel-control-next-icon" aria-hidden="true"></span>
+                              <span class="visually-hidden">Next</span>
+                          </a>
+                      </div>
+                  </div>
+                  @* end slide *@
+              </div>              
+              <div class="mb-5 py-2">
+                  <div class="form-check mb-0">
+                      <input class="form-check-input" type="checkbox" id="newaccount" name="newaccount">
+                      <label class="form-check-label" for="newaccount">Duy trì đang nhập
+                      </label>
+                  </div>
+              </div>
+
+              <div class="mb-5 py-2">
+                  <div class="form-check mb-0">
+                      <input class="form-check-input" type="checkbox" id="terms-conditions" name="terms">
+                      <label class="form-check-label" for="terms-conditions">
+                          Tôi đồng ý với
+                          <a href="javascript:void(0);">điều khoản và quy định sử dụng</a>
+                      </label>
+                  </div>
+              </div>
+      
+              <button class="btn btn-primary d-grid w-100 mb-5">
+                  Đăng ký
+              </button>
+          }
+
+          <p class="text-center mb-5">
+            <span>Tôi đã có tài khoản?</span>
+            <a href="/Account/Login">
+              <span>Đăng nhập ngay</span>
+            </a>
+          </p>
+        </div>
+
+      </div>
+      <!-- Register Card -->
+      <img src="~/img/icons/koa/loginbg_idea.png" alt="auth-tree" class="authentication-image-object-left d-none d-lg-block w-px-200 h-auto">
+      <img src="~/img/illustrations/auth-basic-mask-light.png" class="authentication-image d-none d-lg-block" height="172" alt="triangle-bg" data-app-light-img="illustrations/auth-basic-mask-light.png" data-app-dark-img="illustrations/auth-basic-mask-dark.png">
+      <img src="~/img/icons/koa/loginbg_software.png" alt="auth-tree" class="authentication-image-object-right d-none d-lg-block w-px-200 h-auto">
+    </div>
+  </div>
+</div>
