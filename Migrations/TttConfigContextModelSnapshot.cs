@@ -3,8 +3,8 @@ using System;
 using KOAHome.EntityFramework;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
-using Microsoft.EntityFrameworkCore.Metadata;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
+using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
 #nullable disable
 
@@ -17,3297 +17,3886 @@ namespace KOAHome.Migrations
         {
 #pragma warning disable 612, 618
             modelBuilder
+                .HasDefaultSchema("dbo")
                 .HasAnnotation("ProductVersion", "9.0.1")
-                .HasAnnotation("Relational:MaxIdentifierLength", 128);
+                .HasAnnotation("Relational:MaxIdentifierLength", 63);
 
-            SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
+            NpgsqlModelBuilderExtensions.HasPostgresExtension(modelBuilder, "dblink");
+            NpgsqlModelBuilderExtensions.HasPostgresExtension(modelBuilder, "postgres_fdw");
+            NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
 
             modelBuilder.Entity("KOAHome.EntityFramework.NetAction", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
+                        .HasColumnType("integer")
+                        .HasColumnName("id");
 
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
                     b.Property<string>("Code")
-                        .HasColumnType("nvarchar(max)")
-                        .UseCollation("SQL_Latin1_General_CP1_CI_AS");
+                        .HasColumnType("text")
+                        .HasColumnName("code");
 
-                    b.Property<string>("ConfirmButtonText")
+                    b.Property<string>("Confirmbuttontext")
                         .HasMaxLength(10)
-                        .HasColumnType("nvarchar(10)")
-                        .UseCollation("SQL_Latin1_General_CP1_CI_AS");
+                        .HasColumnType("character varying(10)")
+                        .HasColumnName("confirmbuttontext");
 
-                    b.Property<string>("ConfirmText")
+                    b.Property<string>("Confirmtext")
                         .HasMaxLength(50)
-                        .HasColumnType("nvarchar(50)")
-                        .UseCollation("SQL_Latin1_General_CP1_CI_AS");
+                        .HasColumnType("character varying(50)")
+                        .HasColumnName("confirmtext");
 
-                    b.Property<string>("ConfirmTitle")
+                    b.Property<string>("Confirmtitle")
                         .HasMaxLength(10)
-                        .HasColumnType("nvarchar(10)")
-                        .UseCollation("SQL_Latin1_General_CP1_CI_AS");
+                        .HasColumnType("character varying(10)")
+                        .HasColumnName("confirmtitle");
 
                     b.Property<string>("Descriptions")
-                        .HasColumnType("nvarchar(max)")
-                        .UseCollation("SQL_Latin1_General_CP1_CI_AS");
+                        .HasColumnType("text")
+                        .HasColumnName("descriptions");
 
                     b.Property<string>("Icon")
-                        .HasColumnType("nvarchar(max)")
-                        .UseCollation("SQL_Latin1_General_CP1_CI_AS");
+                        .HasColumnType("text")
+                        .HasColumnName("icon");
 
-                    b.Property<bool?>("IsActive")
-                        .HasColumnType("bit");
+                    b.Property<bool?>("Isactive")
+                        .HasColumnType("boolean")
+                        .HasColumnName("isactive");
 
-                    b.Property<bool?>("IsDelete")
-                        .HasColumnType("bit");
+                    b.Property<bool?>("Isdelete")
+                        .HasColumnType("boolean")
+                        .HasColumnName("isdelete");
 
-                    b.Property<bool?>("IsPopupConfirm")
-                        .HasColumnType("bit");
+                    b.Property<bool?>("Ispopupconfirm")
+                        .HasColumnType("boolean")
+                        .HasColumnName("ispopupconfirm");
 
                     b.Property<string>("Name")
-                        .HasColumnType("nvarchar(max)")
-                        .UseCollation("SQL_Latin1_General_CP1_CI_AS");
+                        .HasColumnType("text")
+                        .HasColumnName("name");
 
-                    b.Property<string>("SiteCode")
-                        .HasMaxLength(255)
-                        .IsUnicode(false)
-                        .HasColumnType("varchar(255)")
-                        .UseCollation("SQL_Latin1_General_CP1_CI_AS");
+                    b.Property<string>("Sitecode")
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)")
+                        .HasColumnName("sitecode");
 
-                    b.Property<int?>("SiteId")
-                        .HasColumnType("int");
+                    b.Property<int?>("Siteid")
+                        .HasColumnType("integer")
+                        .HasColumnName("siteid");
 
-                    b.HasKey("Id");
+                    b.HasKey("Id")
+                        .HasName("pk_net_action");
 
-                    b.ToTable("NET_Action", (string)null);
+                    b.ToTable("net_action", "dbo");
                 });
 
-            modelBuilder.Entity("KOAHome.EntityFramework.NetActionList", b =>
+            modelBuilder.Entity("KOAHome.EntityFramework.NetActionlist", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("int")
-                        .HasColumnName("ID");
+                        .HasColumnType("integer")
+                        .HasColumnName("id");
 
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
-                    b.Property<string>("ActionListTypeCode")
+                    b.Property<string>("Actionlisttypecode")
                         .HasMaxLength(200)
-                        .HasColumnType("nvarchar(200)")
-                        .UseCollation("SQL_Latin1_General_CP1_CI_AS");
+                        .HasColumnType("character varying(200)")
+                        .HasColumnName("actionlisttypecode");
 
-                    b.Property<int?>("ActionListTypeId")
-                        .HasColumnType("int");
+                    b.Property<int?>("Actionlisttypeid")
+                        .HasColumnType("integer")
+                        .HasColumnName("actionlisttypeid");
 
                     b.Property<string>("Code")
                         .HasMaxLength(200)
-                        .HasColumnType("nvarchar(200)")
-                        .UseCollation("SQL_Latin1_General_CP1_CI_AS");
+                        .HasColumnType("character varying(200)")
+                        .HasColumnName("code");
 
-                    b.Property<DateTime?>("CreationTime")
-                        .HasColumnType("datetime");
+                    b.Property<DateTime?>("Creationtime")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("creationtime");
 
-                    b.Property<int?>("CreatorUserId")
-                        .HasColumnType("int");
+                    b.Property<int?>("Creatoruserid")
+                        .HasColumnType("integer")
+                        .HasColumnName("creatoruserid");
 
-                    b.Property<int?>("DeleteUserId")
-                        .HasColumnType("int");
+                    b.Property<int?>("Deleteuserid")
+                        .HasColumnType("integer")
+                        .HasColumnName("deleteuserid");
 
-                    b.Property<DateTime?>("DeletionTime")
-                        .HasColumnType("datetime");
+                    b.Property<DateTime?>("Deletiontime")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("deletiontime");
 
                     b.Property<string>("Description")
-                        .HasColumnType("nvarchar(max)")
-                        .UseCollation("SQL_Latin1_General_CP1_CI_AS");
+                        .HasColumnType("text")
+                        .HasColumnName("description");
 
-                    b.Property<bool?>("IsActive")
-                        .HasColumnType("bit")
-                        .HasColumnName("isActive");
+                    b.Property<bool?>("Isactive")
+                        .HasColumnType("boolean")
+                        .HasColumnName("isactive");
 
-                    b.Property<bool?>("IsDeleted")
-                        .HasColumnType("bit")
-                        .HasColumnName("isDeleted");
+                    b.Property<bool?>("Isdeleted")
+                        .HasColumnType("boolean")
+                        .HasColumnName("isdeleted");
 
-                    b.Property<DateTime?>("LastModificationTime")
-                        .HasColumnType("datetime");
+                    b.Property<DateTime?>("Lastmodificationtime")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("lastmodificationtime");
 
-                    b.Property<int?>("LastModifierUserId")
-                        .HasColumnType("int");
+                    b.Property<int?>("Lastmodifieruserid")
+                        .HasColumnType("integer")
+                        .HasColumnName("lastmodifieruserid");
 
                     b.Property<string>("Name")
                         .HasMaxLength(1000)
-                        .HasColumnType("nvarchar(1000)")
-                        .UseCollation("SQL_Latin1_General_CP1_CI_AS");
+                        .HasColumnType("character varying(1000)")
+                        .HasColumnName("name");
 
-                    b.Property<string>("ObjectCode")
+                    b.Property<string>("Objectcode")
                         .HasMaxLength(200)
-                        .HasColumnType("nvarchar(200)")
-                        .UseCollation("SQL_Latin1_General_CP1_CI_AS");
+                        .HasColumnType("character varying(200)")
+                        .HasColumnName("objectcode");
 
-                    b.Property<int?>("ObjectId")
-                        .HasColumnType("int");
+                    b.Property<int?>("Objectid")
+                        .HasColumnType("integer")
+                        .HasColumnName("objectid");
 
-                    b.Property<int?>("OrderId")
-                        .HasColumnType("int")
-                        .HasColumnName("OrderID");
+                    b.Property<int?>("Orderid")
+                        .HasColumnType("integer")
+                        .HasColumnName("orderid");
 
-                    b.Property<string>("SiteCode")
+                    b.Property<string>("Sitecode")
                         .HasMaxLength(50)
-                        .HasColumnType("nvarchar(50)")
-                        .UseCollation("SQL_Latin1_General_CP1_CI_AS");
+                        .HasColumnType("character varying(50)")
+                        .HasColumnName("sitecode");
 
-                    b.Property<int?>("SiteId")
-                        .HasColumnType("int");
+                    b.Property<int?>("Siteid")
+                        .HasColumnType("integer")
+                        .HasColumnName("siteid");
 
-                    b.HasKey("Id");
+                    b.HasKey("Id")
+                        .HasName("pk_net_actionlist");
 
-                    b.ToTable("NET_ActionList", (string)null);
+                    b.ToTable("net_actionlist", "dbo");
                 });
 
-            modelBuilder.Entity("KOAHome.EntityFramework.NetActionListDetail", b =>
+            modelBuilder.Entity("KOAHome.EntityFramework.NetActionlistdetail", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("int")
-                        .HasColumnName("ID");
+                        .HasColumnType("integer")
+                        .HasColumnName("id");
 
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
-                    b.Property<int>("ActionId")
-                        .HasColumnType("int");
+                    b.Property<int?>("Actionid")
+                        .HasColumnType("integer")
+                        .HasColumnName("actionid");
 
-                    b.Property<string>("ActionListCode")
-                        .HasColumnType("nvarchar(max)")
-                        .UseCollation("SQL_Latin1_General_CP1_CI_AS");
+                    b.Property<string>("Actionlistcode")
+                        .HasColumnType("text")
+                        .HasColumnName("actionlistcode");
 
-                    b.Property<int>("ActionListId")
-                        .HasColumnType("int");
+                    b.Property<int?>("Actionlistid")
+                        .HasColumnType("integer")
+                        .HasColumnName("actionlistid");
 
-                    b.Property<string>("CheckSamePopupButton")
+                    b.Property<string>("Checksamepopupbutton")
                         .HasMaxLength(20)
-                        .HasColumnType("nvarchar(20)")
-                        .UseCollation("SQL_Latin1_General_CP1_CI_AS");
+                        .HasColumnType("character varying(20)")
+                        .HasColumnName("checksamepopupbutton");
 
-                    b.Property<string>("CheckSamePopupText")
-                        .HasColumnType("nvarchar(max)")
-                        .UseCollation("SQL_Latin1_General_CP1_CI_AS");
+                    b.Property<string>("Checksamepopuptext")
+                        .HasColumnType("text")
+                        .HasColumnName("checksamepopuptext");
 
-                    b.Property<string>("CodeSendRealTime")
-                        .HasColumnType("nvarchar(max)")
-                        .UseCollation("SQL_Latin1_General_CP1_CI_AS");
+                    b.Property<string>("Codesendrealtime")
+                        .HasColumnType("text")
+                        .HasColumnName("codesendrealtime");
 
-                    b.Property<string>("ConfirmButtonText")
-                        .HasColumnType("nvarchar(max)")
-                        .UseCollation("SQL_Latin1_General_CP1_CI_AS");
+                    b.Property<string>("Confirmbuttontext")
+                        .HasColumnType("text")
+                        .HasColumnName("confirmbuttontext");
 
-                    b.Property<string>("ConfirmText")
-                        .HasColumnType("nvarchar(max)")
-                        .UseCollation("SQL_Latin1_General_CP1_CI_AS");
+                    b.Property<string>("Confirmtext")
+                        .HasColumnType("text")
+                        .HasColumnName("confirmtext");
 
-                    b.Property<string>("ConfirmTitle")
-                        .HasColumnType("nvarchar(max)")
-                        .UseCollation("SQL_Latin1_General_CP1_CI_AS");
+                    b.Property<string>("Confirmtitle")
+                        .HasColumnType("text")
+                        .HasColumnName("confirmtitle");
 
-                    b.Property<DateTime?>("CreationTime")
-                        .HasColumnType("datetime");
+                    b.Property<DateTime?>("Creationtime")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("creationtime");
 
-                    b.Property<int?>("CreatorUserId")
-                        .HasColumnType("int");
+                    b.Property<int?>("Creatoruserid")
+                        .HasColumnType("integer")
+                        .HasColumnName("creatoruserid");
 
-                    b.Property<string>("CssButton")
-                        .HasColumnType("nvarchar(max)")
-                        .UseCollation("SQL_Latin1_General_CP1_CI_AS");
+                    b.Property<string>("Cssbutton")
+                        .HasColumnType("text")
+                        .HasColumnName("cssbutton");
 
-                    b.Property<int?>("DataSourceId")
-                        .HasColumnType("int")
-                        .HasColumnName("DataSourceID");
+                    b.Property<int?>("Datasourceid")
+                        .HasColumnType("integer")
+                        .HasColumnName("datasourceid");
 
-                    b.Property<int?>("DeleteUserId")
-                        .HasColumnType("int");
+                    b.Property<int?>("Deleteuserid")
+                        .HasColumnType("integer")
+                        .HasColumnName("deleteuserid");
 
-                    b.Property<DateTime?>("DeletionTime")
-                        .HasColumnType("datetime");
+                    b.Property<DateTime?>("Deletiontime")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("deletiontime");
 
-                    b.Property<string>("DisplayName")
-                        .HasColumnType("nvarchar(max)")
-                        .UseCollation("SQL_Latin1_General_CP1_CI_AS");
+                    b.Property<string>("Displayname")
+                        .HasColumnType("text")
+                        .HasColumnName("displayname");
 
-                    b.Property<string>("ErrorCol")
-                        .HasColumnType("nvarchar(max)")
-                        .UseCollation("SQL_Latin1_General_CP1_CI_AS");
+                    b.Property<string>("Errorcol")
+                        .HasColumnType("text")
+                        .HasColumnName("errorcol");
 
-                    b.Property<string>("FileTemplate")
-                        .HasColumnType("nvarchar(max)")
-                        .UseCollation("SQL_Latin1_General_CP1_CI_AS");
+                    b.Property<string>("Filetemplate")
+                        .HasColumnType("text")
+                        .HasColumnName("filetemplate");
 
-                    b.Property<string>("FileTypeAccept")
+                    b.Property<string>("Filetypeaccept")
                         .HasMaxLength(50)
-                        .HasColumnType("nvarchar(50)")
-                        .UseCollation("SQL_Latin1_General_CP1_CI_AS");
+                        .HasColumnType("character varying(50)")
+                        .HasColumnName("filetypeaccept");
 
                     b.Property<int?>("Height")
-                        .HasColumnType("int");
+                        .HasColumnType("integer")
+                        .HasColumnName("height");
 
                     b.Property<string>("Icon")
-                        .HasMaxLength(255)
-                        .IsUnicode(false)
-                        .HasColumnType("varchar(255)")
-                        .UseCollation("SQL_Latin1_General_CP1_CI_AS");
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)")
+                        .HasColumnName("icon");
 
                     b.Property<string>("Idgroup")
                         .HasMaxLength(50)
-                        .HasColumnType("nvarchar(50)")
-                        .HasColumnName("IDGroup")
-                        .UseCollation("SQL_Latin1_General_CP1_CI_AS");
+                        .HasColumnType("character varying(50)")
+                        .HasColumnName("idgroup");
 
                     b.Property<int?>("Index")
-                        .HasColumnType("int");
+                        .HasColumnType("integer")
+                        .HasColumnName("index");
 
-                    b.Property<bool?>("IsActive")
+                    b.Property<bool?>("Isactive")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("bit")
-                        .HasDefaultValue(true);
+                        .HasColumnType("boolean")
+                        .HasDefaultValue(true)
+                        .HasColumnName("isactive");
 
-                    b.Property<bool?>("IsCheckSamePopup")
-                        .HasColumnType("bit");
+                    b.Property<bool?>("Ischecksamepopup")
+                        .HasColumnType("boolean")
+                        .HasColumnName("ischecksamepopup");
 
-                    b.Property<bool?>("IsChooseData")
-                        .HasColumnType("bit");
+                    b.Property<bool?>("Ischoosedata")
+                        .HasColumnType("boolean")
+                        .HasColumnName("ischoosedata");
 
-                    b.Property<bool?>("IsDeleted")
+                    b.Property<bool?>("Isdeleted")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("bit")
+                        .HasColumnType("boolean")
                         .HasDefaultValue(false)
-                        .HasColumnName("isDeleted");
+                        .HasColumnName("isdeleted");
 
-                    b.Property<bool?>("IsGroup")
-                        .HasColumnType("bit");
+                    b.Property<bool?>("Isgroup")
+                        .HasColumnType("boolean")
+                        .HasColumnName("isgroup");
 
-                    b.Property<bool?>("IsNetActionhowError")
-                        .HasColumnType("bit")
-                        .HasColumnName("IsNET_ActionhowError");
+                    b.Property<bool?>("IsnetActionhowerror")
+                        .HasColumnType("boolean")
+                        .HasColumnName("isnet_actionhowerror");
 
-                    b.Property<bool?>("IsPopupConfirm")
-                        .HasColumnType("bit");
+                    b.Property<bool?>("Ispopupconfirm")
+                        .HasColumnType("boolean")
+                        .HasColumnName("ispopupconfirm");
 
-                    b.Property<bool?>("IsSendRealTime")
+                    b.Property<bool?>("Issendrealtime")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("bit")
-                        .HasDefaultValue(false);
+                        .HasColumnType("boolean")
+                        .HasDefaultValue(false)
+                        .HasColumnName("issendrealtime");
 
-                    b.Property<bool?>("IsTop")
-                        .HasColumnType("bit");
+                    b.Property<bool?>("Istop")
+                        .HasColumnType("boolean")
+                        .HasColumnName("istop");
 
-                    b.Property<bool>("IsZoomPopup")
-                        .HasColumnType("bit");
+                    b.Property<bool?>("Iszoompopup")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("boolean")
+                        .HasDefaultValue(false)
+                        .HasColumnName("iszoompopup");
 
-                    b.Property<DateTime?>("LastModificationTime")
-                        .HasColumnType("datetime");
+                    b.Property<DateTime?>("Lastmodificationtime")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("lastmodificationtime");
 
-                    b.Property<int?>("LastModifierUserId")
-                        .HasColumnType("int");
+                    b.Property<int?>("Lastmodifieruserid")
+                        .HasColumnType("integer")
+                        .HasColumnName("lastmodifieruserid");
 
-                    b.Property<int?>("OrderId")
-                        .HasColumnType("int")
-                        .HasColumnName("OrderID");
+                    b.Property<int?>("Orderid")
+                        .HasColumnType("integer")
+                        .HasColumnName("orderid");
 
-                    b.Property<string>("RoleId")
-                        .HasMaxLength(255)
-                        .IsUnicode(false)
-                        .HasColumnType("varchar(255)")
-                        .UseCollation("SQL_Latin1_General_CP1_CI_AS");
+                    b.Property<string>("Roleid")
+                        .HasColumnType("text")
+                        .HasColumnName("roleid");
 
-                    b.Property<int?>("ServiceFileName")
-                        .HasColumnType("int");
+                    b.Property<int?>("Servicefilename")
+                        .HasColumnType("integer")
+                        .HasColumnName("servicefilename");
 
-                    b.Property<string>("SiteCode")
-                        .HasMaxLength(255)
-                        .IsUnicode(false)
-                        .HasColumnType("varchar(255)")
-                        .UseCollation("SQL_Latin1_General_CP1_CI_AS");
+                    b.Property<string>("Sitecode")
+                        .HasColumnType("text")
+                        .HasColumnName("sitecode");
 
-                    b.Property<int?>("SiteId")
-                        .HasColumnType("int");
+                    b.Property<int?>("Siteid")
+                        .HasColumnType("integer")
+                        .HasColumnName("siteid");
 
                     b.Property<string>("Type")
-                        .HasColumnType("nvarchar(max)")
-                        .UseCollation("SQL_Latin1_General_CP1_CI_AS");
+                        .HasColumnType("text")
+                        .HasColumnName("type");
 
-                    b.Property<string>("TypeNodeDiagram")
-                        .HasMaxLength(255)
-                        .IsUnicode(false)
-                        .HasColumnType("varchar(255)")
-                        .UseCollation("SQL_Latin1_General_CP1_CI_AS");
+                    b.Property<string>("Typenodediagram")
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)")
+                        .HasColumnName("typenodediagram");
 
-                    b.Property<string>("UrlImportFile")
-                        .HasColumnType("nvarchar(max)")
-                        .UseCollation("SQL_Latin1_General_CP1_CI_AS");
+                    b.Property<string>("Urlimportfile")
+                        .HasColumnType("text")
+                        .HasColumnName("urlimportfile");
 
                     b.Property<string>("Value")
-                        .HasColumnType("nvarchar(max)")
-                        .UseCollation("SQL_Latin1_General_CP1_CI_AS");
+                        .HasColumnType("text")
+                        .HasColumnName("value");
 
                     b.Property<int?>("Version")
-                        .HasColumnType("int");
+                        .HasColumnType("integer")
+                        .HasColumnName("version");
 
                     b.Property<int?>("Width")
-                        .HasColumnType("int");
+                        .HasColumnType("integer")
+                        .HasColumnName("width");
 
-                    b.HasKey("Id");
+                    b.HasKey("Id")
+                        .HasName("pk_net_actionlistdetail");
 
-                    b.ToTable("NET_ActionListDetail", (string)null);
+                    b.ToTable("net_actionlistdetail", "dbo");
                 });
 
-            modelBuilder.Entity("KOAHome.EntityFramework.NetActionType", b =>
+            modelBuilder.Entity("KOAHome.EntityFramework.NetActiontype", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
+                        .HasColumnType("integer")
+                        .HasColumnName("id");
 
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
                     b.Property<string>("Code")
-                        .HasColumnType("nvarchar(max)")
-                        .UseCollation("SQL_Latin1_General_CP1_CI_AS");
+                        .HasColumnType("text")
+                        .HasColumnName("code");
 
-                    b.Property<bool?>("IsActive")
-                        .HasColumnType("bit");
+                    b.Property<bool?>("Isactive")
+                        .HasColumnType("boolean")
+                        .HasColumnName("isactive");
 
-                    b.Property<bool?>("IsDelete")
-                        .HasColumnType("bit");
+                    b.Property<bool?>("Isdelete")
+                        .HasColumnType("boolean")
+                        .HasColumnName("isdelete");
 
                     b.Property<string>("Name")
-                        .HasColumnType("nvarchar(max)")
-                        .UseCollation("SQL_Latin1_General_CP1_CI_AS");
+                        .HasColumnType("text")
+                        .HasColumnName("name");
 
-                    b.Property<int?>("OrderId")
-                        .HasColumnType("int");
+                    b.Property<int?>("Orderid")
+                        .HasColumnType("integer")
+                        .HasColumnName("orderid");
 
-                    b.Property<string>("SiteCode")
-                        .HasMaxLength(255)
-                        .IsUnicode(false)
-                        .HasColumnType("varchar(255)")
-                        .UseCollation("SQL_Latin1_General_CP1_CI_AS");
+                    b.Property<string>("Sitecode")
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)")
+                        .HasColumnName("sitecode");
 
-                    b.Property<int?>("SiteId")
-                        .HasColumnType("int");
+                    b.Property<int?>("Siteid")
+                        .HasColumnType("integer")
+                        .HasColumnName("siteid");
 
-                    b.HasKey("Id");
+                    b.HasKey("Id")
+                        .HasName("pk_net_actiontype");
 
-                    b.ToTable("NET_ActionType", (string)null);
+                    b.ToTable("net_actiontype", "dbo");
                 });
 
             modelBuilder.Entity("KOAHome.EntityFramework.NetAttachment", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
+                        .HasColumnType("integer")
+                        .HasColumnName("id");
 
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
-                    b.Property<long?>("AuthorId")
-                        .HasColumnType("bigint");
+                    b.Property<long?>("Authorid")
+                        .HasColumnType("bigint")
+                        .HasColumnName("authorid");
 
-                    b.Property<string>("ContentType")
-                        .HasColumnType("nvarchar(max)")
-                        .UseCollation("SQL_Latin1_General_CP1_CI_AS");
+                    b.Property<string>("Contenttype")
+                        .HasColumnType("text")
+                        .HasColumnName("contenttype");
 
-                    b.Property<string>("ConvertDiskDirectory")
-                        .HasColumnType("nvarchar(max)")
-                        .UseCollation("SQL_Latin1_General_CP1_CI_AS");
+                    b.Property<string>("Convertdiskdirectory")
+                        .HasColumnType("text")
+                        .HasColumnName("convertdiskdirectory");
 
-                    b.Property<string>("ConvertFileName")
-                        .HasColumnType("nvarchar(max)")
-                        .UseCollation("SQL_Latin1_General_CP1_CI_AS");
+                    b.Property<string>("Convertfilename")
+                        .HasColumnType("text")
+                        .HasColumnName("convertfilename");
 
-                    b.Property<DateTime>("CreationTime")
-                        .HasColumnType("datetime2");
+                    b.Property<DateTime?>("Creationtime")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("creationtime");
 
-                    b.Property<long?>("CreatorUserId")
-                        .HasColumnType("bigint");
+                    b.Property<long?>("Creatoruserid")
+                        .HasColumnType("bigint")
+                        .HasColumnName("creatoruserid");
 
-                    b.Property<long?>("DeleterUserId")
-                        .HasColumnType("bigint");
+                    b.Property<long?>("Deleteruserid")
+                        .HasColumnType("bigint")
+                        .HasColumnName("deleteruserid");
 
-                    b.Property<DateTime?>("DeletionTime")
-                        .HasColumnType("datetime2");
+                    b.Property<DateTime?>("Deletiontime")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("deletiontime");
 
-                    b.Property<string>("DiskDirectory")
-                        .HasColumnType("nvarchar(max)");
+                    b.Property<string>("Diskdirectory")
+                        .HasColumnType("text")
+                        .HasColumnName("diskdirectory");
 
-                    b.Property<string>("DiskFileName")
-                        .HasColumnType("nvarchar(max)");
+                    b.Property<string>("Diskfilename")
+                        .HasColumnType("text")
+                        .HasColumnName("diskfilename");
 
-                    b.Property<string>("FileName")
-                        .HasColumnType("nvarchar(max)");
+                    b.Property<string>("Filename")
+                        .HasColumnType("text")
+                        .HasColumnName("filename");
 
-                    b.Property<int?>("FileSize")
-                        .HasColumnType("int");
+                    b.Property<int?>("Filesize")
+                        .HasColumnType("integer")
+                        .HasColumnName("filesize");
 
-                    b.Property<bool>("IsCurrent")
-                        .HasColumnType("bit");
+                    b.Property<bool?>("Iscurrent")
+                        .HasColumnType("boolean")
+                        .HasColumnName("iscurrent");
 
-                    b.Property<bool>("IsDeleted")
-                        .HasColumnType("bit");
+                    b.Property<bool?>("Isdeleted")
+                        .HasColumnType("boolean")
+                        .HasColumnName("isdeleted");
 
-                    b.Property<DateTime?>("LastModificationTime")
-                        .HasColumnType("datetime2");
+                    b.Property<DateTime?>("Lastmodificationtime")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("lastmodificationtime");
 
-                    b.Property<long?>("LastModifierUserId")
-                        .HasColumnType("bigint");
+                    b.Property<long?>("Lastmodifieruserid")
+                        .HasColumnType("bigint")
+                        .HasColumnName("lastmodifieruserid");
 
-                    b.Property<long?>("ObjectId")
-                        .HasColumnType("bigint");
+                    b.Property<long?>("Objectid")
+                        .HasColumnType("bigint")
+                        .HasColumnName("objectid");
 
-                    b.Property<long?>("ObjectTypeId")
-                        .HasColumnType("bigint");
+                    b.Property<long?>("Objecttypeid")
+                        .HasColumnType("bigint")
+                        .HasColumnName("objecttypeid");
 
                     b.Property<int?>("Order")
-                        .HasColumnType("int");
+                        .HasColumnType("integer");
 
-                    b.Property<int?>("TenantId")
-                        .HasColumnType("int");
+                    b.Property<int?>("Tenantid")
+                        .HasColumnType("integer")
+                        .HasColumnName("tenantid");
 
                     b.Property<int?>("Version")
-                        .HasColumnType("int");
+                        .HasColumnType("integer")
+                        .HasColumnName("version");
 
-                    b.HasKey("Id");
+                    b.HasKey("Id")
+                        .HasName("pk_net_attachment");
 
-                    b.HasIndex(new[] { "ObjectTypeId", "ObjectId", "IsDeleted" }, "IX_NET_Attachment_ObjectTypeId_ObjectId_IsDeleted");
+                    b.HasIndex(new[] { "Objecttypeid", "Objectid", "Isdeleted" }, "idx_ix_net_attachment_objecttypeid_objectid_isdeleted");
 
-                    b.ToTable("NET_Attachment", (string)null);
+                    b.ToTable("net_attachment", "dbo");
                 });
 
-            modelBuilder.Entity("KOAHome.EntityFramework.NetAttachmentSyntax", b =>
+            modelBuilder.Entity("KOAHome.EntityFramework.NetAttachmentsyntax", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
+                        .HasColumnType("integer")
+                        .HasColumnName("id");
 
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
                     b.Property<string>("Code")
-                        .HasColumnType("nvarchar(max)")
-                        .UseCollation("SQL_Latin1_General_CP1_CI_AS");
+                        .HasColumnType("text")
+                        .HasColumnName("code");
 
-                    b.Property<DateTime>("CreationTime")
-                        .HasColumnType("datetime2");
+                    b.Property<DateTime?>("Creationtime")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("creationtime");
 
-                    b.Property<long?>("CreatorUserId")
-                        .HasColumnType("bigint");
+                    b.Property<long?>("Creatoruserid")
+                        .HasColumnType("bigint")
+                        .HasColumnName("creatoruserid");
 
-                    b.Property<int?>("DeleteUserId")
-                        .HasColumnType("int");
+                    b.Property<long?>("Deleteruserid")
+                        .HasColumnType("bigint")
+                        .HasColumnName("deleteruserid");
 
-                    b.Property<long?>("DeleterUserId")
-                        .HasColumnType("bigint");
+                    b.Property<int?>("Deleteuserid")
+                        .HasColumnType("integer")
+                        .HasColumnName("deleteuserid");
 
-                    b.Property<DateTime?>("DeletionTime")
-                        .HasColumnType("datetime2");
+                    b.Property<DateTime?>("Deletiontime")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("deletiontime");
 
-                    b.Property<bool?>("IsChangeSyntaxName")
+                    b.Property<bool?>("Ischangesyntaxname")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("bit")
-                        .HasDefaultValue(false);
+                        .HasColumnType("boolean")
+                        .HasDefaultValue(false)
+                        .HasColumnName("ischangesyntaxname");
 
-                    b.Property<bool?>("IsDefault")
+                    b.Property<bool?>("Isdefault")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("bit")
-                        .HasDefaultValue(false);
+                        .HasColumnType("boolean")
+                        .HasDefaultValue(false)
+                        .HasColumnName("isdefault");
 
-                    b.Property<bool>("IsDeleted")
-                        .HasColumnType("bit");
+                    b.Property<bool?>("Isdeleted")
+                        .HasColumnType("boolean")
+                        .HasColumnName("isdeleted");
 
-                    b.Property<DateTime?>("LastModificationTime")
-                        .HasColumnType("datetime2");
+                    b.Property<DateTime?>("Lastmodificationtime")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("lastmodificationtime");
 
-                    b.Property<long?>("LastModifierUserId")
-                        .HasColumnType("bigint");
+                    b.Property<long?>("Lastmodifieruserid")
+                        .HasColumnType("bigint")
+                        .HasColumnName("lastmodifieruserid");
 
                     b.Property<string>("Name")
-                        .HasColumnType("nvarchar(max)")
-                        .UseCollation("SQL_Latin1_General_CP1_CI_AS");
+                        .HasColumnType("text")
+                        .HasColumnName("name");
 
-                    b.Property<int?>("OrderId")
-                        .HasColumnType("int");
+                    b.Property<int?>("Orderid")
+                        .HasColumnType("integer")
+                        .HasColumnName("orderid");
 
-                    b.Property<string>("SyntaxName")
-                        .HasColumnType("nvarchar(max)")
-                        .UseCollation("SQL_Latin1_General_CP1_CI_AS");
+                    b.Property<string>("Syntaxname")
+                        .HasColumnType("text")
+                        .HasColumnName("syntaxname");
 
-                    b.Property<string>("SyntaxPath")
-                        .HasColumnType("nvarchar(max)")
-                        .UseCollation("SQL_Latin1_General_CP1_CI_AS");
+                    b.Property<string>("Syntaxpath")
+                        .HasColumnType("text")
+                        .HasColumnName("syntaxpath");
 
-                    b.Property<int?>("TenantId")
-                        .HasColumnType("int");
+                    b.Property<int?>("Tenantid")
+                        .HasColumnType("integer")
+                        .HasColumnName("tenantid");
 
-                    b.HasKey("Id");
+                    b.HasKey("Id")
+                        .HasName("pk_net_attachmentsyntax");
 
-                    b.ToTable("NET_AttachmentSyntax", (string)null);
+                    b.ToTable("net_attachmentsyntax", "dbo");
                 });
 
             modelBuilder.Entity("KOAHome.EntityFramework.NetDashboard", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
+                        .HasColumnType("integer")
+                        .HasColumnName("id");
 
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
-                    b.Property<bool>("AutoReload")
-                        .HasColumnType("bit");
+                    b.Property<bool?>("Autoreload")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("boolean")
+                        .HasDefaultValue(false)
+                        .HasColumnName("autoreload");
 
-                    b.Property<string>("CodeReceiveRealTime")
-                        .HasColumnType("nvarchar(max)")
-                        .UseCollation("SQL_Latin1_General_CP1_CI_AS");
+                    b.Property<string>("Codereceiverealtime")
+                        .HasColumnType("text")
+                        .HasColumnName("codereceiverealtime");
 
-                    b.Property<DateTime>("CreationTime")
-                        .HasColumnType("datetime2");
+                    b.Property<DateTime?>("Creationtime")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("creationtime");
 
-                    b.Property<long?>("CreatorUserId")
-                        .HasColumnType("bigint");
+                    b.Property<long?>("Creatoruserid")
+                        .HasColumnType("bigint")
+                        .HasColumnName("creatoruserid");
 
-                    b.Property<string>("DashboardCode")
-                        .HasColumnType("nvarchar(max)")
-                        .UseCollation("SQL_Latin1_General_CP1_CI_AS");
+                    b.Property<string>("Dashboardcode")
+                        .HasColumnType("text")
+                        .HasColumnName("dashboardcode");
 
-                    b.Property<int?>("DataSourceId")
-                        .HasColumnType("int");
+                    b.Property<int?>("Datasourceid")
+                        .HasColumnType("integer")
+                        .HasColumnName("datasourceid");
 
-                    b.Property<long?>("DeleterUserId")
-                        .HasColumnType("bigint");
+                    b.Property<long?>("Deleteruserid")
+                        .HasColumnType("bigint")
+                        .HasColumnName("deleteruserid");
 
-                    b.Property<DateTime?>("DeletionTime")
-                        .HasColumnType("datetime2");
+                    b.Property<DateTime?>("Deletiontime")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("deletiontime");
 
                     b.Property<string>("Descriptions")
-                        .HasColumnType("nvarchar(max)")
-                        .UseCollation("SQL_Latin1_General_CP1_CI_AS");
+                        .HasColumnType("text")
+                        .HasColumnName("descriptions");
 
-                    b.Property<bool>("IsDeleted")
-                        .HasColumnType("bit");
+                    b.Property<bool?>("Isdeleted")
+                        .HasColumnType("boolean")
+                        .HasColumnName("isdeleted");
 
-                    b.Property<DateTime?>("LastModificationTime")
-                        .HasColumnType("datetime2");
+                    b.Property<DateTime?>("Lastmodificationtime")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("lastmodificationtime");
 
-                    b.Property<long?>("LastModifierUserId")
-                        .HasColumnType("bigint");
+                    b.Property<long?>("Lastmodifieruserid")
+                        .HasColumnType("bigint")
+                        .HasColumnName("lastmodifieruserid");
 
                     b.Property<string>("Name")
-                        .HasColumnType("nvarchar(max)")
-                        .UseCollation("SQL_Latin1_General_CP1_CI_AS");
+                        .HasColumnType("text")
+                        .HasColumnName("name");
 
                     b.Property<string>("Options")
-                        .HasColumnType("nvarchar(max)")
-                        .UseCollation("SQL_Latin1_General_CP1_CI_AS");
+                        .HasColumnType("text")
+                        .HasColumnName("options");
 
-                    b.Property<bool>("ShowCalendarFilter")
-                        .HasColumnType("bit");
+                    b.Property<bool?>("Showcalendarfilter")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("boolean")
+                        .HasDefaultValue(false)
+                        .HasColumnName("showcalendarfilter");
 
-                    b.Property<string>("StoreDefault")
-                        .HasColumnType("nvarchar(max)")
-                        .UseCollation("SQL_Latin1_General_CP1_CI_AS");
+                    b.Property<string>("Storedefault")
+                        .HasColumnType("text")
+                        .HasColumnName("storedefault");
 
-                    b.Property<string>("TextCalendarColor")
-                        .HasColumnType("nvarchar(max)")
-                        .UseCollation("SQL_Latin1_General_CP1_CI_AS");
+                    b.Property<string>("Textcalendarcolor")
+                        .HasColumnType("text")
+                        .HasColumnName("textcalendarcolor");
 
                     b.HasKey("Id")
-                        .HasName("PK_HIN_Dashboards");
+                        .HasName("pk_hin_dashboards");
 
-                    b.ToTable("NET_Dashboard", (string)null);
+                    b.ToTable("net_dashboard", "dbo");
                 });
 
-            modelBuilder.Entity("KOAHome.EntityFramework.NetDashboardPage", b =>
+            modelBuilder.Entity("KOAHome.EntityFramework.NetDashboardpage", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
+                        .HasColumnType("integer")
+                        .HasColumnName("id");
 
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
-                    b.Property<DateTime>("CreationTime")
-                        .HasColumnType("datetime2");
+                    b.Property<DateTime?>("Creationtime")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("creationtime");
 
-                    b.Property<long?>("CreatorUserId")
-                        .HasColumnType("bigint");
+                    b.Property<long?>("Creatoruserid")
+                        .HasColumnType("bigint")
+                        .HasColumnName("creatoruserid");
 
-                    b.Property<int>("DashboardId")
-                        .HasColumnType("int");
+                    b.Property<int?>("Dashboardid")
+                        .HasColumnType("integer")
+                        .HasColumnName("dashboardid");
 
-                    b.Property<long?>("DeleterUserId")
-                        .HasColumnType("bigint");
+                    b.Property<long?>("Deleteruserid")
+                        .HasColumnType("bigint")
+                        .HasColumnName("deleteruserid");
 
-                    b.Property<DateTime?>("DeletionTime")
-                        .HasColumnType("datetime2");
+                    b.Property<DateTime?>("Deletiontime")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("deletiontime");
 
                     b.Property<string>("Descriptions")
-                        .HasColumnType("nvarchar(max)")
-                        .UseCollation("SQL_Latin1_General_CP1_CI_AS");
+                        .HasColumnType("text")
+                        .HasColumnName("descriptions");
 
-                    b.Property<bool>("IsDeleted")
-                        .HasColumnType("bit");
+                    b.Property<bool?>("Isdeleted")
+                        .HasColumnType("boolean")
+                        .HasColumnName("isdeleted");
 
-                    b.Property<DateTime?>("LastModificationTime")
-                        .HasColumnType("datetime2");
+                    b.Property<DateTime?>("Lastmodificationtime")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("lastmodificationtime");
 
-                    b.Property<long?>("LastModifierUserId")
-                        .HasColumnType("bigint");
+                    b.Property<long?>("Lastmodifieruserid")
+                        .HasColumnType("bigint")
+                        .HasColumnName("lastmodifieruserid");
 
                     b.Property<string>("Name")
-                        .HasColumnType("nvarchar(max)")
-                        .UseCollation("SQL_Latin1_General_CP1_CI_AS");
+                        .HasColumnType("text")
+                        .HasColumnName("name");
 
-                    b.Property<int?>("OrderId")
-                        .HasColumnType("int");
+                    b.Property<int?>("Orderid")
+                        .HasColumnType("integer")
+                        .HasColumnName("orderid");
 
-                    b.Property<string>("PageCode")
-                        .HasColumnType("nvarchar(max)")
-                        .UseCollation("SQL_Latin1_General_CP1_CI_AS");
+                    b.Property<string>("Pagecode")
+                        .HasColumnType("text")
+                        .HasColumnName("pagecode");
 
-                    b.HasKey("Id");
+                    b.HasKey("Id")
+                        .HasName("pk_net_dashboardpage");
 
-                    b.ToTable("NET_DashboardPage", (string)null);
+                    b.ToTable("net_dashboardpage", "dbo");
                 });
 
-            modelBuilder.Entity("KOAHome.EntityFramework.NetDataSource", b =>
+            modelBuilder.Entity("KOAHome.EntityFramework.NetDatasource", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
+                        .HasColumnType("integer")
+                        .HasColumnName("id");
 
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
                     b.Property<string>("Code")
-                        .HasColumnType("nvarchar(max)")
-                        .UseCollation("SQL_Latin1_General_CP1_CI_AS");
+                        .HasColumnType("text")
+                        .HasColumnName("code");
 
-                    b.Property<DateTime>("CreationTime")
-                        .HasColumnType("datetime2");
+                    b.Property<DateTime?>("Creationtime")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("creationtime");
 
-                    b.Property<long?>("CreatorUserId")
-                        .HasColumnType("bigint");
+                    b.Property<long?>("Creatoruserid")
+                        .HasColumnType("bigint")
+                        .HasColumnName("creatoruserid");
 
-                    b.Property<long?>("DeleterUserId")
-                        .HasColumnType("bigint");
+                    b.Property<long?>("Deleteruserid")
+                        .HasColumnType("bigint")
+                        .HasColumnName("deleteruserid");
 
-                    b.Property<DateTime?>("DeletionTime")
-                        .HasColumnType("datetime2");
+                    b.Property<DateTime?>("Deletiontime")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("deletiontime");
 
-                    b.Property<bool>("IsDeleted")
-                        .HasColumnType("bit");
+                    b.Property<bool?>("Isdeleted")
+                        .HasColumnType("boolean")
+                        .HasColumnName("isdeleted");
 
-                    b.Property<DateTime?>("LastModificationTime")
-                        .HasColumnType("datetime2");
+                    b.Property<DateTime?>("Lastmodificationtime")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("lastmodificationtime");
 
-                    b.Property<long?>("LastModifierUserId")
-                        .HasColumnType("bigint");
+                    b.Property<long?>("Lastmodifieruserid")
+                        .HasColumnType("bigint")
+                        .HasColumnName("lastmodifieruserid");
 
                     b.Property<string>("Name")
-                        .HasColumnType("nvarchar(max)")
-                        .UseCollation("SQL_Latin1_General_CP1_CI_AS");
+                        .HasColumnType("text")
+                        .HasColumnName("name");
 
                     b.Property<string>("Password")
-                        .HasColumnType("nvarchar(max)")
-                        .UseCollation("SQL_Latin1_General_CP1_CI_AS");
+                        .HasColumnType("text")
+                        .HasColumnName("password");
 
-                    b.Property<string>("SiteCode")
-                        .HasMaxLength(255)
-                        .IsUnicode(false)
-                        .HasColumnType("varchar(255)")
-                        .UseCollation("SQL_Latin1_General_CP1_CI_AS");
+                    b.Property<string>("Sitecode")
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)")
+                        .HasColumnName("sitecode");
 
-                    b.Property<int?>("SiteId")
-                        .HasColumnType("int");
+                    b.Property<int?>("Siteid")
+                        .HasColumnType("integer")
+                        .HasColumnName("siteid");
 
-                    b.Property<string>("SqlType")
-                        .HasColumnType("nvarchar(max)")
-                        .UseCollation("SQL_Latin1_General_CP1_CI_AS");
+                    b.Property<string>("Sqltype")
+                        .HasColumnType("text")
+                        .HasColumnName("sqltype");
 
-                    b.Property<int>("Type")
-                        .HasColumnType("int");
+                    b.Property<int?>("Type")
+                        .HasColumnType("integer")
+                        .HasColumnName("type");
 
                     b.Property<string>("Username")
-                        .HasMaxLength(255)
-                        .IsUnicode(false)
-                        .HasColumnType("varchar(255)")
-                        .UseCollation("SQL_Latin1_General_CP1_CI_AS");
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)")
+                        .HasColumnName("username");
 
-                    b.HasKey("Id");
+                    b.HasKey("Id")
+                        .HasName("pk_net_datasource");
 
-                    b.ToTable("NET_DataSource", (string)null);
+                    b.ToTable("net_datasource", "dbo");
                 });
 
-            modelBuilder.Entity("KOAHome.EntityFramework.NetDataSourceDetail", b =>
+            modelBuilder.Entity("KOAHome.EntityFramework.NetDatasourcedetail", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
+                        .HasColumnType("integer")
+                        .HasColumnName("id");
 
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
-                    b.Property<long>("ConfigId")
-                        .HasColumnType("bigint");
+                    b.Property<long?>("Configid")
+                        .HasColumnType("bigint")
+                        .HasColumnName("configid");
 
-                    b.Property<DateTime>("CreationTime")
-                        .HasColumnType("datetime2");
+                    b.Property<DateTime?>("Creationtime")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("creationtime");
 
-                    b.Property<long?>("CreatorUserId")
-                        .HasColumnType("bigint");
+                    b.Property<long?>("Creatoruserid")
+                        .HasColumnType("bigint")
+                        .HasColumnName("creatoruserid");
 
                     b.Property<string>("Dbname")
-                        .HasColumnType("nvarchar(max)")
-                        .HasColumnName("DBName")
-                        .UseCollation("SQL_Latin1_General_CP1_CI_AS");
+                        .HasColumnType("text")
+                        .HasColumnName("dbname");
 
-                    b.Property<long?>("DeleterUserId")
-                        .HasColumnType("bigint");
+                    b.Property<long?>("Deleteruserid")
+                        .HasColumnType("bigint")
+                        .HasColumnName("deleteruserid");
 
-                    b.Property<DateTime?>("DeletionTime")
-                        .HasColumnType("datetime2");
+                    b.Property<DateTime?>("Deletiontime")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("deletiontime");
 
                     b.Property<string>("Host")
-                        .HasColumnType("nvarchar(max)")
-                        .UseCollation("SQL_Latin1_General_CP1_CI_AS");
+                        .HasColumnType("text")
+                        .HasColumnName("host");
 
-                    b.Property<bool>("IsDefault")
-                        .HasColumnType("bit");
+                    b.Property<bool?>("Isdefault")
+                        .HasColumnType("boolean")
+                        .HasColumnName("isdefault");
 
-                    b.Property<bool>("IsDeleted")
-                        .HasColumnType("bit");
+                    b.Property<bool?>("Isdeleted")
+                        .HasColumnType("boolean")
+                        .HasColumnName("isdeleted");
 
-                    b.Property<DateTime?>("LastModificationTime")
-                        .HasColumnType("datetime2");
+                    b.Property<DateTime?>("Lastmodificationtime")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("lastmodificationtime");
 
-                    b.Property<long?>("LastModifierUserId")
-                        .HasColumnType("bigint");
+                    b.Property<long?>("Lastmodifieruserid")
+                        .HasColumnType("bigint")
+                        .HasColumnName("lastmodifieruserid");
 
                     b.Property<string>("Password")
-                        .HasColumnType("nvarchar(max)")
-                        .UseCollation("SQL_Latin1_General_CP1_CI_AS");
+                        .HasColumnType("text")
+                        .HasColumnName("password");
 
-                    b.Property<int>("Priority")
-                        .HasColumnType("int");
+                    b.Property<int?>("Priority")
+                        .HasColumnType("integer")
+                        .HasColumnName("priority");
 
-                    b.Property<string>("SiteCode")
-                        .HasMaxLength(255)
-                        .IsUnicode(false)
-                        .HasColumnType("varchar(255)")
-                        .UseCollation("SQL_Latin1_General_CP1_CI_AS");
+                    b.Property<string>("Sitecode")
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)")
+                        .HasColumnName("sitecode");
 
-                    b.Property<int?>("SiteId")
-                        .HasColumnType("int");
+                    b.Property<int?>("Siteid")
+                        .HasColumnType("integer")
+                        .HasColumnName("siteid");
 
                     b.Property<int?>("Timeout")
-                        .HasColumnType("int");
+                        .HasColumnType("integer")
+                        .HasColumnName("timeout");
 
                     b.Property<string>("User")
-                        .HasColumnType("nvarchar(max)")
-                        .UseCollation("SQL_Latin1_General_CP1_CI_AS");
+                        .HasColumnType("text")
+                        .HasColumnName("user");
 
-                    b.HasKey("Id");
+                    b.HasKey("Id")
+                        .HasName("pk_net_datasourcedetail");
 
-                    b.ToTable("NET_DataSourceDetail", (string)null);
+                    b.ToTable("net_datasourcedetail", "dbo");
                 });
 
             modelBuilder.Entity("KOAHome.EntityFramework.NetDisplay", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
+                        .HasColumnType("integer")
+                        .HasColumnName("id");
 
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
-                    b.Property<bool>("AllowMergeCells")
-                        .HasColumnType("bit");
+                    b.Property<bool?>("Allowmergecells")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("boolean")
+                        .HasDefaultValue(false)
+                        .HasColumnName("allowmergecells");
 
                     b.Property<string>("Area")
-                        .HasColumnType("nvarchar(max)")
-                        .UseCollation("SQL_Latin1_General_CP1_CI_AS");
+                        .HasColumnType("text")
+                        .HasColumnName("area");
 
                     b.Property<string>("Code")
-                        .HasColumnType("nvarchar(max)")
-                        .UseCollation("SQL_Latin1_General_CP1_CI_AS");
+                        .HasColumnType("text")
+                        .HasColumnName("code");
 
-                    b.Property<int>("ColNum")
-                        .HasColumnType("int");
+                    b.Property<int?>("Colnum")
+                        .HasColumnType("integer")
+                        .HasColumnName("colnum");
 
-                    b.Property<string>("ColumnSetData")
-                        .HasColumnType("nvarchar(max)")
-                        .UseCollation("SQL_Latin1_General_CP1_CI_AS");
+                    b.Property<string>("Columnsetdata")
+                        .HasColumnType("text")
+                        .HasColumnName("columnsetdata");
 
-                    b.Property<string>("ConfigHeader")
-                        .HasColumnType("nvarchar(max)")
-                        .UseCollation("SQL_Latin1_General_CP1_CI_AS");
+                    b.Property<string>("Configheader")
+                        .HasColumnType("text")
+                        .HasColumnName("configheader");
 
-                    b.Property<string>("ConfigPopup")
-                        .HasColumnType("nvarchar(max)")
-                        .UseCollation("SQL_Latin1_General_CP1_CI_AS");
+                    b.Property<string>("Configpopup")
+                        .HasColumnType("text")
+                        .HasColumnName("configpopup");
 
-                    b.Property<DateTime?>("CreationTime")
-                        .HasColumnType("datetime2");
+                    b.Property<DateTime?>("Creationtime")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("creationtime");
 
-                    b.Property<long?>("CreatorUserId")
-                        .HasColumnType("bigint");
+                    b.Property<long?>("Creatoruserid")
+                        .HasColumnType("bigint")
+                        .HasColumnName("creatoruserid");
 
-                    b.Property<string>("CssHeader")
-                        .HasColumnType("nvarchar(max)")
-                        .UseCollation("SQL_Latin1_General_CP1_CI_AS");
+                    b.Property<string>("Cssheader")
+                        .HasColumnType("text")
+                        .HasColumnName("cssheader");
 
-                    b.Property<string>("CustomSummary")
-                        .HasMaxLength(255)
-                        .IsUnicode(false)
-                        .HasColumnType("varchar(255)")
-                        .UseCollation("SQL_Latin1_General_CP1_CI_AS");
+                    b.Property<string>("Customsummary")
+                        .HasColumnType("text")
+                        .HasColumnName("customsummary");
 
-                    b.Property<long?>("DeleterUserId")
-                        .HasColumnType("bigint");
+                    b.Property<long?>("Deleteruserid")
+                        .HasColumnType("bigint")
+                        .HasColumnName("deleteruserid");
 
-                    b.Property<DateTime?>("DeletionTime")
-                        .HasColumnType("datetime2");
+                    b.Property<DateTime?>("Deletiontime")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("deletiontime");
 
-                    b.Property<string>("EditCellTemplate")
-                        .HasColumnType("nvarchar(max)")
-                        .UseCollation("SQL_Latin1_General_CP1_CI_AS");
+                    b.Property<string>("Editcelltemplate")
+                        .HasColumnType("text")
+                        .HasColumnName("editcelltemplate");
 
-                    b.Property<string>("EditColumns")
-                        .HasColumnType("nvarchar(max)")
-                        .UseCollation("SQL_Latin1_General_CP1_CI_AS");
+                    b.Property<string>("Editcolumns")
+                        .HasColumnType("text")
+                        .HasColumnName("editcolumns");
 
                     b.Property<string>("Format")
-                        .HasColumnType("nvarchar(max)")
-                        .UseCollation("SQL_Latin1_General_CP1_CI_AS");
+                        .HasColumnType("text")
+                        .HasColumnName("format");
 
-                    b.Property<string>("FormulaSyntax")
-                        .HasMaxLength(255)
-                        .IsUnicode(false)
-                        .HasColumnType("varchar(255)")
-                        .UseCollation("SQL_Latin1_General_CP1_CI_AS");
+                    b.Property<string>("Formulasyntax")
+                        .HasColumnType("text")
+                        .HasColumnName("formulasyntax");
 
-                    b.Property<string>("FreePanePosition")
-                        .HasColumnType("nvarchar(max)")
-                        .UseCollation("SQL_Latin1_General_CP1_CI_AS");
+                    b.Property<string>("Freepaneposition")
+                        .HasColumnType("text")
+                        .HasColumnName("freepaneposition");
 
-                    b.Property<int>("GroupLevel")
-                        .HasColumnType("int");
+                    b.Property<int?>("Grouplevel")
+                        .HasColumnType("integer")
+                        .HasColumnName("grouplevel");
 
-                    b.Property<string>("GroupSort")
-                        .HasColumnType("nvarchar(max)")
-                        .UseCollation("SQL_Latin1_General_CP1_CI_AS");
+                    b.Property<string>("Groupsort")
+                        .HasColumnType("text")
+                        .HasColumnName("groupsort");
 
-                    b.Property<bool?>("IsAvg")
+                    b.Property<bool?>("Isavg")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("bit")
-                        .HasDefaultValue(false);
+                        .HasColumnType("boolean")
+                        .HasDefaultValue(false)
+                        .HasColumnName("isavg");
 
-                    b.Property<bool?>("IsCount")
+                    b.Property<bool?>("Iscount")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("bit")
-                        .HasDefaultValue(false);
+                        .HasColumnType("boolean")
+                        .HasDefaultValue(false)
+                        .HasColumnName("iscount");
 
-                    b.Property<bool>("IsDeleted")
-                        .HasColumnType("bit");
+                    b.Property<bool?>("Isdeleted")
+                        .HasColumnType("boolean")
+                        .HasColumnName("isdeleted");
 
-                    b.Property<bool>("IsDisplay")
-                        .HasColumnType("bit");
+                    b.Property<bool?>("Isdisplay")
+                        .HasColumnType("boolean")
+                        .HasColumnName("isdisplay");
 
-                    b.Property<bool?>("IsExpand")
+                    b.Property<bool?>("Isexpand")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("bit")
-                        .HasDefaultValue(false);
+                        .HasColumnType("boolean")
+                        .HasDefaultValue(false)
+                        .HasColumnName("isexpand");
 
-                    b.Property<bool>("IsExport")
-                        .HasColumnType("bit");
-
-                    b.Property<bool?>("IsFreePane")
-                        .HasColumnType("bit");
-
-                    b.Property<bool?>("IsMax")
+                    b.Property<bool?>("Isexport")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("bit")
-                        .HasDefaultValue(false);
+                        .HasColumnType("boolean")
+                        .HasDefaultValue(false)
+                        .HasColumnName("isexport");
 
-                    b.Property<bool?>("IsMin")
+                    b.Property<bool?>("Isfreepane")
+                        .HasColumnType("boolean")
+                        .HasColumnName("isfreepane");
+
+                    b.Property<bool?>("Ismax")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("bit")
-                        .HasDefaultValue(false);
+                        .HasColumnType("boolean")
+                        .HasDefaultValue(false)
+                        .HasColumnName("ismax");
 
-                    b.Property<bool>("IsParent")
-                        .HasColumnType("bit");
-
-                    b.Property<bool>("IsReadOnly")
-                        .HasColumnType("bit");
-
-                    b.Property<bool?>("IsSort")
+                    b.Property<bool?>("Ismin")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("bit")
-                        .HasDefaultValue(false);
+                        .HasColumnType("boolean")
+                        .HasDefaultValue(false)
+                        .HasColumnName("ismin");
 
-                    b.Property<bool>("IsSum")
-                        .HasColumnType("bit");
+                    b.Property<bool?>("Isparent")
+                        .HasColumnType("boolean")
+                        .HasColumnName("isparent");
 
-                    b.Property<DateTime?>("LastModificationTime")
-                        .HasColumnType("datetime2");
+                    b.Property<bool?>("Isreadonly")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("boolean")
+                        .HasDefaultValue(false)
+                        .HasColumnName("isreadonly");
 
-                    b.Property<long?>("LastModifierUserId")
-                        .HasColumnType("bigint");
+                    b.Property<bool?>("Issort")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("boolean")
+                        .HasDefaultValue(false)
+                        .HasColumnName("issort");
+
+                    b.Property<bool?>("Issum")
+                        .HasColumnType("boolean")
+                        .HasColumnName("issum");
+
+                    b.Property<DateTime?>("Lastmodificationtime")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("lastmodificationtime");
+
+                    b.Property<long?>("Lastmodifieruserid")
+                        .HasColumnType("bigint")
+                        .HasColumnName("lastmodifieruserid");
 
                     b.Property<string>("Name")
-                        .HasColumnType("nvarchar(max)")
-                        .UseCollation("SQL_Latin1_General_CP1_CI_AS");
+                        .HasColumnType("text")
+                        .HasColumnName("name");
 
-                    b.Property<int>("Order")
-                        .HasColumnType("int");
+                    b.Property<int?>("Order")
+                        .HasColumnType("integer")
+                        .HasColumnName("order");
 
-                    b.Property<string>("ParentCode")
-                        .HasColumnType("nvarchar(max)")
-                        .UseCollation("SQL_Latin1_General_CP1_CI_AS");
+                    b.Property<string>("Parentcode")
+                        .HasColumnType("text")
+                        .HasColumnName("parentcode");
 
-                    b.Property<string>("PivotField")
-                        .HasColumnType("nvarchar(max)")
-                        .UseCollation("SQL_Latin1_General_CP1_CI_AS");
+                    b.Property<string>("Pivotfield")
+                        .HasColumnType("text")
+                        .HasColumnName("pivotfield");
 
-                    b.Property<string>("PivotOrders")
-                        .HasColumnType("nvarchar(max)")
-                        .UseCollation("SQL_Latin1_General_CP1_CI_AS");
+                    b.Property<string>("Pivotorders")
+                        .HasColumnType("text")
+                        .HasColumnName("pivotorders");
 
-                    b.Property<string>("ReportCode")
-                        .HasMaxLength(255)
-                        .IsUnicode(false)
-                        .HasColumnType("varchar(255)")
-                        .UseCollation("SQL_Latin1_General_CP1_CI_AS");
+                    b.Property<string>("Reportcode")
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)")
+                        .HasColumnName("reportcode");
 
-                    b.Property<long>("ReportId")
-                        .HasColumnType("bigint");
+                    b.Property<long?>("Reportid")
+                        .HasColumnType("bigint")
+                        .HasColumnName("reportid");
 
-                    b.Property<int?>("ServiceId")
-                        .HasColumnType("int");
+                    b.Property<int?>("Serviceid")
+                        .HasColumnType("integer")
+                        .HasColumnName("serviceid");
 
-                    b.Property<bool?>("ShowInGroupFooter")
+                    b.Property<bool?>("Showingroupfooter")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("bit")
-                        .HasDefaultValue(false);
+                        .HasColumnType("boolean")
+                        .HasDefaultValue(false)
+                        .HasColumnName("showingroupfooter");
 
-                    b.Property<string>("SortByColumn")
-                        .HasColumnType("nvarchar(max)")
-                        .UseCollation("SQL_Latin1_General_CP1_CI_AS");
+                    b.Property<string>("Sortbycolumn")
+                        .HasColumnType("text")
+                        .HasColumnName("sortbycolumn");
 
-                    b.Property<string>("SummaryDisplayMode")
-                        .HasColumnType("nvarchar(max)")
-                        .UseCollation("SQL_Latin1_General_CP1_CI_AS");
+                    b.Property<string>("Summarydisplaymode")
+                        .HasColumnType("text")
+                        .HasColumnName("summarydisplaymode");
 
-                    b.Property<string>("TextAlign")
-                        .HasColumnType("nvarchar(max)")
-                        .UseCollation("SQL_Latin1_General_CP1_CI_AS");
+                    b.Property<string>("Textalign")
+                        .HasColumnType("text")
+                        .HasColumnName("textalign");
 
-                    b.Property<string>("TextIsSum")
-                        .HasColumnType("nvarchar(max)")
-                        .UseCollation("SQL_Latin1_General_CP1_CI_AS");
+                    b.Property<string>("Textissum")
+                        .HasColumnType("text")
+                        .HasColumnName("textissum");
 
                     b.Property<string>("Type")
-                        .HasColumnType("nvarchar(max)")
-                        .UseCollation("SQL_Latin1_General_CP1_CI_AS");
+                        .HasColumnType("text")
+                        .HasColumnName("type");
 
-                    b.Property<string>("ValidationRule")
-                        .HasColumnType("nvarchar(max)")
-                        .UseCollation("SQL_Latin1_General_CP1_CI_AS");
+                    b.Property<string>("Validationrule")
+                        .HasColumnType("text")
+                        .HasColumnName("validationrule");
 
                     b.Property<bool?>("Visible")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("bit")
-                        .HasDefaultValue(true);
+                        .HasColumnType("boolean")
+                        .HasDefaultValue(true)
+                        .HasColumnName("visible");
 
                     b.Property<string>("Width")
-                        .HasColumnType("nvarchar(max)")
-                        .UseCollation("SQL_Latin1_General_CP1_CI_AS");
+                        .HasColumnType("text")
+                        .HasColumnName("width");
 
-                    b.HasKey("Id");
+                    b.HasKey("Id")
+                        .HasName("pk_net_display");
 
-                    b.HasIndex(new[] { "ReportId" }, "IX_MissingIndex_61_60");
+                    b.HasIndex(new[] { "Reportid" }, "idx_ix_missingindex_61_60");
 
-                    SqlServerIndexBuilderExtensions.HasFillFactor(b.HasIndex(new[] { "ReportId" }, "IX_MissingIndex_61_60"), 90);
+                    b.HasIndex(new[] { "Isdeleted", "Reportid" }, "idx_ix_missingindex_64_63");
 
-                    b.HasIndex(new[] { "IsDeleted", "ReportId" }, "IX_MissingIndex_64_63");
-
-                    SqlServerIndexBuilderExtensions.HasFillFactor(b.HasIndex(new[] { "IsDeleted", "ReportId" }, "IX_MissingIndex_64_63"), 90);
-
-                    b.ToTable("NET_Display", (string)null);
+                    b.ToTable("net_display", "dbo");
                 });
 
-            modelBuilder.Entity("KOAHome.EntityFramework.NetDynamicField", b =>
+            modelBuilder.Entity("KOAHome.EntityFramework.NetDynamicfield", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
+                        .HasColumnType("integer")
+                        .HasColumnName("id");
 
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
-                    b.Property<DateTime>("CreationTime")
-                        .HasColumnType("datetime2");
+                    b.Property<DateTime?>("Creationtime")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("creationtime");
 
-                    b.Property<long?>("CreatorUserId")
-                        .HasColumnType("bigint");
+                    b.Property<long?>("Creatoruserid")
+                        .HasColumnType("bigint")
+                        .HasColumnName("creatoruserid");
 
-                    b.Property<long?>("DeleterUserId")
-                        .HasColumnType("bigint");
+                    b.Property<long?>("Deleteruserid")
+                        .HasColumnType("bigint")
+                        .HasColumnName("deleteruserid");
 
-                    b.Property<DateTime?>("DeletionTime")
-                        .HasColumnType("datetime2");
+                    b.Property<DateTime?>("Deletiontime")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("deletiontime");
 
-                    b.Property<bool>("IsDeleted")
-                        .HasColumnType("bit");
+                    b.Property<bool?>("Isdeleted")
+                        .HasColumnType("boolean")
+                        .HasColumnName("isdeleted");
 
-                    b.Property<DateTime?>("LastModificationTime")
-                        .HasColumnType("datetime2");
+                    b.Property<DateTime?>("Lastmodificationtime")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("lastmodificationtime");
 
-                    b.Property<long?>("LastModifierUserId")
-                        .HasColumnType("bigint");
+                    b.Property<long?>("Lastmodifieruserid")
+                        .HasColumnType("bigint")
+                        .HasColumnName("lastmodifieruserid");
 
                     b.Property<string>("Name")
-                        .HasColumnType("nvarchar(max)")
-                        .UseCollation("SQL_Latin1_General_CP1_CI_AS");
+                        .HasColumnType("text")
+                        .HasColumnName("name");
 
-                    b.Property<string>("SiteCode")
-                        .HasMaxLength(255)
-                        .IsUnicode(false)
-                        .HasColumnType("varchar(255)")
-                        .UseCollation("SQL_Latin1_General_CP1_CI_AS");
+                    b.Property<string>("Sitecode")
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)")
+                        .HasColumnName("sitecode");
 
-                    b.Property<int?>("SiteId")
-                        .HasColumnType("int");
+                    b.Property<int?>("Siteid")
+                        .HasColumnType("integer")
+                        .HasColumnName("siteid");
 
                     b.Property<string>("Type")
-                        .HasColumnType("nvarchar(max)")
-                        .UseCollation("SQL_Latin1_General_CP1_CI_AS");
+                        .HasColumnType("text")
+                        .HasColumnName("type");
 
                     b.Property<string>("Value")
-                        .HasColumnType("nvarchar(max)")
-                        .UseCollation("SQL_Latin1_General_CP1_CI_AS");
+                        .HasColumnType("text")
+                        .HasColumnName("value");
 
-                    b.HasKey("Id");
+                    b.HasKey("Id")
+                        .HasName("pk_net_dynamicfield");
 
-                    b.ToTable("NET_DynamicField", (string)null);
+                    b.ToTable("net_dynamicfield", "dbo");
                 });
 
             modelBuilder.Entity("KOAHome.EntityFramework.NetFilter", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
+                        .HasColumnType("integer")
+                        .HasColumnName("id");
 
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
                     b.Property<string>("Code")
-                        .HasColumnType("nvarchar(max)");
+                        .HasColumnType("text")
+                        .HasColumnName("code");
 
-                    b.Property<int?>("ColCount")
-                        .HasColumnType("int");
+                    b.Property<int?>("Colcount")
+                        .HasColumnType("integer")
+                        .HasColumnName("colcount");
 
-                    b.Property<int?>("ColSpan")
-                        .HasColumnType("int");
+                    b.Property<int?>("Colspan")
+                        .HasColumnType("integer")
+                        .HasColumnName("colspan");
 
                     b.Property<string>("Columns")
-                        .HasColumnType("nvarchar(max)");
+                        .HasColumnType("text")
+                        .HasColumnName("columns");
 
-                    b.Property<int>("ComboLevel")
-                        .HasColumnType("int");
+                    b.Property<int?>("Combolevel")
+                        .HasColumnType("integer")
+                        .HasColumnName("combolevel");
 
-                    b.Property<DateTime>("CreationTime")
-                        .HasColumnType("datetime2");
+                    b.Property<DateTime?>("Creationtime")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("creationtime");
 
-                    b.Property<long?>("CreatorUserId")
-                        .HasColumnType("bigint");
-
-                    b.Property<bool>("DataType")
-                        .HasColumnType("bit");
-
-                    b.Property<string>("DateDisplayFormat")
-                        .HasMaxLength(50)
-                        .HasColumnType("nvarchar(50)");
-
-                    b.Property<long?>("DeleterUserId")
-                        .HasColumnType("bigint");
-
-                    b.Property<DateTime?>("DeletionTime")
-                        .HasColumnType("datetime2");
-
-                    b.Property<bool>("Disable")
-                        .HasColumnType("bit");
-
-                    b.Property<long>("DynamicFieldId")
+                    b.Property<long?>("Creatoruserid")
                         .HasColumnType("bigint")
-                        .HasColumnName("DynamicFieldID");
+                        .HasColumnName("creatoruserid");
+
+                    b.Property<bool?>("Datatype")
+                        .HasColumnType("boolean")
+                        .HasColumnName("datatype");
+
+                    b.Property<string>("Datedisplayformat")
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)")
+                        .HasColumnName("datedisplayformat");
+
+                    b.Property<long?>("Deleteruserid")
+                        .HasColumnType("bigint")
+                        .HasColumnName("deleteruserid");
+
+                    b.Property<DateTime?>("Deletiontime")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("deletiontime");
+
+                    b.Property<bool?>("Disable")
+                        .HasColumnType("boolean")
+                        .HasColumnName("disable");
+
+                    b.Property<long?>("Dynamicfieldid")
+                        .HasColumnType("bigint")
+                        .HasColumnName("dynamicfieldid");
 
                     b.Property<string>("Format")
-                        .HasColumnType("nvarchar(max)");
+                        .HasColumnType("text")
+                        .HasColumnName("format");
 
-                    b.Property<string>("GroupField")
+                    b.Property<string>("Groupfield")
                         .HasMaxLength(50)
-                        .HasColumnType("nvarchar(50)");
+                        .HasColumnType("character varying(50)")
+                        .HasColumnName("groupfield");
 
-                    b.Property<int?>("GroupId")
-                        .HasColumnType("int");
+                    b.Property<int?>("Groupid")
+                        .HasColumnType("integer")
+                        .HasColumnName("groupid");
 
-                    b.Property<bool>("IsActive")
-                        .HasColumnType("bit");
+                    b.Property<bool?>("Isactive")
+                        .HasColumnType("boolean")
+                        .HasColumnName("isactive");
 
-                    b.Property<bool>("IsDeleted")
-                        .HasColumnType("bit");
+                    b.Property<bool?>("Isdeleted")
+                        .HasColumnType("boolean")
+                        .HasColumnName("isdeleted");
 
-                    b.Property<bool?>("IsFilterToolbar")
+                    b.Property<bool?>("Isfiltertoolbar")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("bit")
-                        .HasDefaultValue(false);
+                        .HasColumnType("boolean")
+                        .HasDefaultValue(false)
+                        .HasColumnName("isfiltertoolbar");
 
-                    b.Property<bool?>("IsGrouped")
+                    b.Property<bool?>("Isgrouped")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("bit")
-                        .HasDefaultValue(false);
+                        .HasColumnType("boolean")
+                        .HasDefaultValue(false)
+                        .HasColumnName("isgrouped");
 
-                    b.Property<bool?>("IsLoadMultipleWay")
-                        .HasColumnType("bit");
+                    b.Property<bool?>("Isloadmultipleway")
+                        .HasColumnType("boolean")
+                        .HasColumnName("isloadmultipleway");
 
-                    b.Property<bool>("IsValue")
-                        .HasColumnType("bit");
+                    b.Property<bool?>("Isvalue")
+                        .HasColumnType("boolean")
+                        .HasColumnName("isvalue");
 
-                    b.Property<DateTime?>("LastModificationTime")
-                        .HasColumnType("datetime2");
+                    b.Property<DateTime?>("Lastmodificationtime")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("lastmodificationtime");
 
-                    b.Property<long?>("LastModifierUserId")
-                        .HasColumnType("bigint");
+                    b.Property<long?>("Lastmodifieruserid")
+                        .HasColumnType("bigint")
+                        .HasColumnName("lastmodifieruserid");
 
-                    b.Property<long?>("LookupId")
-                        .HasColumnType("bigint");
+                    b.Property<long?>("Lookupid")
+                        .HasColumnType("bigint")
+                        .HasColumnName("lookupid");
 
-                    b.Property<string>("MultiControlId")
-                        .HasColumnType("nvarchar(max)");
+                    b.Property<string>("Multicontrolid")
+                        .HasColumnType("text")
+                        .HasColumnName("multicontrolid");
 
                     b.Property<string>("Name")
-                        .HasColumnType("nvarchar(max)");
+                        .HasColumnType("text")
+                        .HasColumnName("name");
 
-                    b.Property<int>("OrderId")
-                        .HasColumnType("int");
+                    b.Property<int?>("Orderid")
+                        .HasColumnType("integer")
+                        .HasColumnName("orderid");
 
-                    b.Property<int?>("ParentComboId")
-                        .HasColumnType("int");
+                    b.Property<int?>("Parentcomboid")
+                        .HasColumnType("integer")
+                        .HasColumnName("parentcomboid");
 
-                    b.Property<string>("ReportCode")
-                        .HasMaxLength(255)
-                        .IsUnicode(false)
-                        .HasColumnType("varchar(255)")
-                        .UseCollation("SQL_Latin1_General_CP1_CI_AS");
+                    b.Property<string>("Reportcode")
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)")
+                        .HasColumnName("reportcode");
 
-                    b.Property<long>("ReportId")
-                        .HasColumnType("bigint");
+                    b.Property<long?>("Reportid")
+                        .HasColumnType("bigint")
+                        .HasColumnName("reportid");
 
-                    b.Property<bool>("Required")
-                        .HasColumnType("bit");
+                    b.Property<bool?>("Required")
+                        .HasColumnType("boolean")
+                        .HasColumnName("required");
 
-                    b.Property<long?>("SeviceId")
-                        .HasColumnType("bigint");
+                    b.Property<long?>("Seviceid")
+                        .HasColumnType("bigint")
+                        .HasColumnName("seviceid");
 
                     b.Property<int?>("Type")
-                        .HasColumnType("int");
+                        .HasColumnType("integer")
+                        .HasColumnName("type");
 
                     b.Property<string>("Value")
-                        .HasColumnType("nvarchar(max)");
+                        .HasColumnType("text")
+                        .HasColumnName("value");
 
-                    b.Property<int>("Version")
-                        .HasColumnType("int");
+                    b.Property<int?>("Version")
+                        .HasColumnType("integer")
+                        .HasColumnName("version");
 
                     b.Property<string>("Width")
-                        .HasColumnType("nvarchar(max)")
+                        .HasColumnType("text")
                         .HasColumnName("width");
 
-                    b.Property<string>("ZoomLevel")
+                    b.Property<string>("Zoomlevel")
                         .HasMaxLength(50)
-                        .HasColumnType("nvarchar(50)");
+                        .HasColumnType("character varying(50)")
+                        .HasColumnName("zoomlevel");
 
-                    b.HasKey("Id");
+                    b.HasKey("Id")
+                        .HasName("pk_net_filter");
 
-                    b.HasIndex(new[] { "IsDeleted", "ReportId", "IsActive" }, "IX_MissingIndex_12_11");
+                    b.HasIndex(new[] { "Isdeleted", "Reportid", "Isactive" }, "idx_ix_missingindex_12_11");
 
-                    SqlServerIndexBuilderExtensions.HasFillFactor(b.HasIndex(new[] { "IsDeleted", "ReportId", "IsActive" }, "IX_MissingIndex_12_11"), 90);
+                    b.HasIndex(new[] { "Isdeleted", "Reportid", "Dynamicfieldid", "Isactive" }, "idx_ix_missingindex_536_535");
 
-                    b.HasIndex(new[] { "IsDeleted", "ReportId", "DynamicFieldId", "IsActive" }, "IX_MissingIndex_536_535");
+                    b.HasIndex(new[] { "Reportid", "Dynamicfieldid" }, "idx_ix_missingindex_568_567");
 
-                    SqlServerIndexBuilderExtensions.HasFillFactor(b.HasIndex(new[] { "IsDeleted", "ReportId", "DynamicFieldId", "IsActive" }, "IX_MissingIndex_536_535"), 90);
+                    b.HasIndex(new[] { "Isdeleted", "Reportid" }, "idx_ix_missingindex_6_5");
 
-                    b.HasIndex(new[] { "ReportId", "DynamicFieldId" }, "IX_MissingIndex_568_567");
+                    b.HasIndex(new[] { "Isdeleted", "Reportid" }, "idx_ix_missingindex_8_7");
 
-                    SqlServerIndexBuilderExtensions.HasFillFactor(b.HasIndex(new[] { "ReportId", "DynamicFieldId" }, "IX_MissingIndex_568_567"), 90);
-
-                    b.HasIndex(new[] { "IsDeleted", "ReportId" }, "IX_MissingIndex_6_5");
-
-                    SqlServerIndexBuilderExtensions.HasFillFactor(b.HasIndex(new[] { "IsDeleted", "ReportId" }, "IX_MissingIndex_6_5"), 90);
-
-                    b.HasIndex(new[] { "IsDeleted", "ReportId" }, "IX_MissingIndex_8_7");
-
-                    SqlServerIndexBuilderExtensions.HasFillFactor(b.HasIndex(new[] { "IsDeleted", "ReportId" }, "IX_MissingIndex_8_7"), 90);
-
-                    b.ToTable("NET_Filter", (string)null);
+                    b.ToTable("net_filter", "dbo");
                 });
 
             modelBuilder.Entity("KOAHome.EntityFramework.NetForm", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
+                        .HasColumnType("integer")
+                        .HasColumnName("id");
 
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
                     b.Property<string>("Code")
-                        .HasColumnType("nvarchar(max)")
-                        .UseCollation("SQL_Latin1_General_CP1_CI_AS");
+                        .HasColumnType("text")
+                        .HasColumnName("code");
 
-                    b.Property<string>("CodeReceiveRealTime")
-                        .HasColumnType("nvarchar(max)")
-                        .UseCollation("SQL_Latin1_General_CP1_CI_AS");
+                    b.Property<string>("Codereceiverealtime")
+                        .HasColumnType("text")
+                        .HasColumnName("codereceiverealtime");
 
-                    b.Property<string>("CodeSendRealTime")
-                        .HasColumnType("nvarchar(max)")
-                        .UseCollation("SQL_Latin1_General_CP1_CI_AS");
+                    b.Property<string>("Codesendrealtime")
+                        .HasColumnType("text")
+                        .HasColumnName("codesendrealtime");
 
-                    b.Property<DateTime>("CreationTime")
-                        .HasColumnType("datetime2");
+                    b.Property<DateTime?>("Creationtime")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("creationtime");
 
-                    b.Property<long?>("CreatorUserId")
-                        .HasColumnType("bigint");
+                    b.Property<long?>("Creatoruserid")
+                        .HasColumnType("bigint")
+                        .HasColumnName("creatoruserid");
 
-                    b.Property<string>("CssOptionHeader")
-                        .HasColumnType("nvarchar(max)")
-                        .UseCollation("SQL_Latin1_General_CP1_CI_AS");
+                    b.Property<string>("Cssoptionheader")
+                        .HasColumnType("text")
+                        .HasColumnName("cssoptionheader");
 
-                    b.Property<long?>("DeleterUserId")
-                        .HasColumnType("bigint");
+                    b.Property<long?>("Deleteruserid")
+                        .HasColumnType("bigint")
+                        .HasColumnName("deleteruserid");
 
-                    b.Property<DateTime?>("DeletionTime")
-                        .HasColumnType("datetime2");
+                    b.Property<DateTime?>("Deletiontime")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("deletiontime");
 
                     b.Property<string>("Description")
-                        .HasColumnType("nvarchar(max)")
-                        .UseCollation("SQL_Latin1_General_CP1_CI_AS");
+                        .HasColumnType("text")
+                        .HasColumnName("description");
 
-                    b.Property<bool?>("IsActive")
-                        .HasColumnType("bit");
+                    b.Property<bool?>("Isactive")
+                        .HasColumnType("boolean")
+                        .HasColumnName("isactive");
 
-                    b.Property<bool>("IsDeleted")
-                        .HasColumnType("bit");
+                    b.Property<bool?>("Isdeleted")
+                        .HasColumnType("boolean")
+                        .HasColumnName("isdeleted");
 
-                    b.Property<bool?>("IsReceiveRealTime")
+                    b.Property<bool?>("Isreceiverealtime")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("bit")
-                        .HasDefaultValue(false);
+                        .HasColumnType("boolean")
+                        .HasDefaultValue(false)
+                        .HasColumnName("isreceiverealtime");
 
-                    b.Property<bool?>("IsSendRealTime")
+                    b.Property<bool?>("Issendrealtime")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("bit")
-                        .HasDefaultValue(false);
+                        .HasColumnType("boolean")
+                        .HasDefaultValue(false)
+                        .HasColumnName("issendrealtime");
 
-                    b.Property<DateTime?>("LastModificationTime")
-                        .HasColumnType("datetime2");
+                    b.Property<DateTime?>("Lastmodificationtime")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("lastmodificationtime");
 
-                    b.Property<long?>("LastModifierUserId")
-                        .HasColumnType("bigint");
+                    b.Property<long?>("Lastmodifieruserid")
+                        .HasColumnType("bigint")
+                        .HasColumnName("lastmodifieruserid");
 
-                    b.Property<int?>("LatestVersion")
-                        .HasColumnType("int");
+                    b.Property<int?>("Latestversion")
+                        .HasColumnType("integer")
+                        .HasColumnName("latestversion");
 
                     b.Property<string>("Name")
-                        .HasColumnType("nvarchar(max)")
-                        .UseCollation("SQL_Latin1_General_CP1_CI_AS");
+                        .HasColumnType("text")
+                        .HasColumnName("name");
 
-                    b.Property<long?>("OrderId")
-                        .HasColumnType("bigint");
+                    b.Property<long?>("Orderid")
+                        .HasColumnType("bigint")
+                        .HasColumnName("orderid");
 
-                    b.Property<string>("SiteCode")
-                        .HasMaxLength(255)
-                        .IsUnicode(false)
-                        .HasColumnType("varchar(255)")
-                        .UseCollation("SQL_Latin1_General_CP1_CI_AS");
+                    b.Property<string>("Sitecode")
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)")
+                        .HasColumnName("sitecode");
 
-                    b.Property<int?>("SiteId")
-                        .HasColumnType("int");
+                    b.Property<int?>("Siteid")
+                        .HasColumnType("integer")
+                        .HasColumnName("siteid");
 
                     b.Property<string>("Title")
-                        .HasColumnType("nvarchar(max)")
-                        .UseCollation("SQL_Latin1_General_CP1_CI_AS");
+                        .HasColumnType("text")
+                        .HasColumnName("title");
 
-                    b.HasKey("Id");
+                    b.HasKey("Id")
+                        .HasName("pk_net_form");
 
-                    b.ToTable("NET_Form", (string)null);
-                });
-
-            modelBuilder.Entity("KOAHome.EntityFramework.NetFormFieldType", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<string>("Code")
-                        .HasColumnType("nvarchar(max)")
-                        .UseCollation("SQL_Latin1_General_CP1_CI_AS");
-
-                    b.Property<DateTime>("CreationTime")
-                        .HasColumnType("datetime2");
-
-                    b.Property<long?>("CreatorUserId")
-                        .HasColumnType("bigint");
-
-                    b.Property<long?>("DeleterUserId")
-                        .HasColumnType("bigint");
-
-                    b.Property<DateTime?>("DeletionTime")
-                        .HasColumnType("datetime2");
-
-                    b.Property<string>("Description")
-                        .HasColumnType("nvarchar(max)")
-                        .UseCollation("SQL_Latin1_General_CP1_CI_AS");
-
-                    b.Property<string>("Icon")
-                        .HasColumnType("nvarchar(max)")
-                        .UseCollation("SQL_Latin1_General_CP1_CI_AS");
-
-                    b.Property<bool?>("IsActive")
-                        .HasColumnType("bit");
-
-                    b.Property<bool>("IsDeleted")
-                        .HasColumnType("bit");
-
-                    b.Property<bool?>("IsRowTemplate")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("bit")
-                        .HasDefaultValue(false);
-
-                    b.Property<DateTime?>("LastModificationTime")
-                        .HasColumnType("datetime2");
-
-                    b.Property<long?>("LastModifierUserId")
-                        .HasColumnType("bigint");
-
-                    b.Property<string>("Name")
-                        .HasColumnType("nvarchar(max)")
-                        .UseCollation("SQL_Latin1_General_CP1_CI_AS");
-
-                    b.Property<long?>("OrderId")
-                        .HasColumnType("bigint");
-
-                    b.HasKey("Id");
-
-                    b.ToTable("NET_FormFieldType", (string)null);
+                    b.ToTable("net_form", "dbo");
                 });
 
             modelBuilder.Entity("KOAHome.EntityFramework.NetFormVersion", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
+                        .HasColumnType("integer")
+                        .HasColumnName("id");
 
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
                     b.Property<string>("Apicontent")
-                        .HasColumnType("nvarchar(max)")
-                        .HasColumnName("APIContent")
-                        .UseCollation("SQL_Latin1_General_CP1_CI_AS");
+                        .HasColumnType("text")
+                        .HasColumnName("apicontent");
 
-                    b.Property<string>("ConditionOfAction")
-                        .HasColumnType("nvarchar(max)")
-                        .UseCollation("SQL_Latin1_General_CP1_CI_AS");
+                    b.Property<string>("Conditionofaction")
+                        .HasColumnType("text")
+                        .HasColumnName("conditionofaction");
 
-                    b.Property<DateTime>("CreationTime")
-                        .HasColumnType("datetime2");
+                    b.Property<DateTime?>("Creationtime")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("creationtime");
 
-                    b.Property<long?>("CreatorUserId")
-                        .HasColumnType("bigint");
+                    b.Property<long?>("Creatoruserid")
+                        .HasColumnType("bigint")
+                        .HasColumnName("creatoruserid");
 
-                    b.Property<int?>("DatasourceId")
-                        .HasColumnType("int");
+                    b.Property<int?>("Datasourceid")
+                        .HasColumnType("integer")
+                        .HasColumnName("datasourceid");
 
-                    b.Property<long?>("DeleterUserId")
-                        .HasColumnType("bigint");
+                    b.Property<long?>("Deleteruserid")
+                        .HasColumnType("bigint")
+                        .HasColumnName("deleteruserid");
 
-                    b.Property<DateTime?>("DeletionTime")
-                        .HasColumnType("datetime2");
+                    b.Property<DateTime?>("Deletiontime")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("deletiontime");
 
-                    b.Property<bool?>("ExportMergeField")
+                    b.Property<bool?>("Exportmergefield")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("bit")
-                        .HasDefaultValue(false);
+                        .HasColumnType("boolean")
+                        .HasDefaultValue(false)
+                        .HasColumnName("exportmergefield");
 
-                    b.Property<long?>("HinFormBookValueId")
-                        .HasColumnType("bigint");
+                    b.Property<long?>("Hinformbookvalueid")
+                        .HasColumnType("bigint")
+                        .HasColumnName("hinformbookvalueid");
 
-                    b.Property<string>("HinFormCode")
-                        .HasMaxLength(255)
-                        .IsUnicode(false)
-                        .HasColumnType("varchar(255)")
-                        .UseCollation("SQL_Latin1_General_CP1_CI_AS");
+                    b.Property<string>("Hinformcode")
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)")
+                        .HasColumnName("hinformcode");
 
-                    b.Property<long?>("HinFormId")
-                        .HasColumnType("bigint");
+                    b.Property<long?>("Hinformid")
+                        .HasColumnType("bigint")
+                        .HasColumnName("hinformid");
 
-                    b.Property<bool?>("IsActive")
-                        .HasColumnType("bit");
+                    b.Property<bool?>("Isactive")
+                        .HasColumnType("boolean")
+                        .HasColumnName("isactive");
 
-                    b.Property<bool?>("IsBack")
-                        .HasColumnType("bit");
+                    b.Property<bool?>("Isback")
+                        .HasColumnType("boolean")
+                        .HasColumnName("isback");
 
-                    b.Property<bool>("IsDeleted")
-                        .HasColumnType("bit");
+                    b.Property<bool?>("Isdeleted")
+                        .HasColumnType("boolean")
+                        .HasColumnName("isdeleted");
 
-                    b.Property<bool?>("IsView")
-                        .HasColumnType("bit");
+                    b.Property<bool?>("Isview")
+                        .HasColumnType("boolean")
+                        .HasColumnName("isview");
 
-                    b.Property<DateTime?>("LastModificationTime")
-                        .HasColumnType("datetime2");
+                    b.Property<DateTime?>("Lastmodificationtime")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("lastmodificationtime");
 
-                    b.Property<long?>("LastModifierUserId")
-                        .HasColumnType("bigint");
+                    b.Property<long?>("Lastmodifieruserid")
+                        .HasColumnType("bigint")
+                        .HasColumnName("lastmodifieruserid");
 
-                    b.Property<string>("ObjectCode")
-                        .HasColumnType("nvarchar(max)");
+                    b.Property<string>("Objectcode")
+                        .HasColumnType("text")
+                        .HasColumnName("objectcode");
 
                     b.Property<string>("Options")
-                        .HasColumnType("nvarchar(max)");
+                        .HasColumnType("text")
+                        .HasColumnName("options");
 
-                    b.Property<long?>("OrderId")
-                        .HasColumnType("bigint");
+                    b.Property<long?>("Orderid")
+                        .HasColumnType("bigint")
+                        .HasColumnName("orderid");
 
-                    b.Property<int?>("PositionButton")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int")
-                        .HasDefaultValue(2);
+                    b.Property<int?>("Positionbutton")
+                        .HasColumnType("integer")
+                        .HasColumnName("positionbutton");
 
-                    b.Property<int?>("SaveEditorType")
-                        .HasColumnType("int");
+                    b.Property<int?>("Saveeditortype")
+                        .HasColumnType("integer")
+                        .HasColumnName("saveeditortype");
 
-                    b.Property<string>("StoreCheckUrl")
-                        .HasColumnType("nvarchar(max)")
-                        .HasColumnName("StoreCheckURL")
-                        .UseCollation("SQL_Latin1_General_CP1_CI_AS");
+                    b.Property<string>("Storecheckurl")
+                        .HasColumnType("text")
+                        .HasColumnName("storecheckurl");
 
-                    b.Property<string>("StoreDefaultData")
-                        .HasColumnType("nvarchar(max)");
+                    b.Property<string>("Storedefaultdata")
+                        .HasColumnType("text")
+                        .HasColumnName("storedefaultdata");
 
-                    b.Property<string>("StoreGetData")
-                        .HasColumnType("nvarchar(max)");
+                    b.Property<string>("Storegetdata")
+                        .HasColumnType("text")
+                        .HasColumnName("storegetdata");
 
-                    b.Property<string>("StoreLabelAction")
-                        .HasColumnType("nvarchar(max)");
+                    b.Property<string>("Storelabelaction")
+                        .HasColumnType("text")
+                        .HasColumnName("storelabelaction");
 
-                    b.Property<string>("StoreSetData")
-                        .HasColumnType("nvarchar(max)");
+                    b.Property<string>("Storesetdata")
+                        .HasColumnType("text")
+                        .HasColumnName("storesetdata");
 
-                    b.Property<string>("StoreSetReadonly")
-                        .HasColumnType("nvarchar(max)");
+                    b.Property<string>("Storesetreadonly")
+                        .HasColumnType("text")
+                        .HasColumnName("storesetreadonly");
 
-                    b.Property<string>("TableName")
-                        .HasColumnType("nvarchar(max)");
+                    b.Property<string>("Tablename")
+                        .HasColumnType("text")
+                        .HasColumnName("tablename");
 
-                    b.Property<int>("Type")
-                        .HasColumnType("int");
+                    b.Property<int?>("Type")
+                        .HasColumnType("integer")
+                        .HasColumnName("type");
 
                     b.Property<int?>("Version")
-                        .HasColumnType("int");
+                        .HasColumnType("integer")
+                        .HasColumnName("version");
 
-                    b.HasKey("Id");
+                    b.HasKey("Id")
+                        .HasName("pk_net_form_version");
 
-                    b.HasIndex(new[] { "IsDeleted", "HinFormId", "IsActive" }, "IX_MissingIndex_18_17");
+                    b.HasIndex(new[] { "Isdeleted", "Hinformid", "Isactive" }, "idx_ix_missingindex_18_17");
 
-                    SqlServerIndexBuilderExtensions.HasFillFactor(b.HasIndex(new[] { "IsDeleted", "HinFormId", "IsActive" }, "IX_MissingIndex_18_17"), 90);
+                    b.HasIndex(new[] { "Hinformid" }, "idx_ix_missingindex_207_206");
 
-                    b.HasIndex(new[] { "HinFormId" }, "IX_MissingIndex_207_206");
+                    b.HasIndex(new[] { "Isdeleted", "Hinformid", "Isactive" }, "idx_ix_missingindex_35_34");
 
-                    SqlServerIndexBuilderExtensions.HasFillFactor(b.HasIndex(new[] { "HinFormId" }, "IX_MissingIndex_207_206"), 90);
+                    b.HasIndex(new[] { "Isdeleted", "Hinformid", "Isactive" }, "idx_ix_missingindex_42_41");
 
-                    b.HasIndex(new[] { "IsDeleted", "HinFormId", "IsActive" }, "IX_MissingIndex_35_34");
+                    b.HasIndex(new[] { "Isdeleted", "Hinformid", "Isactive" }, "idx_ix_missingindex_55_54");
 
-                    SqlServerIndexBuilderExtensions.HasFillFactor(b.HasIndex(new[] { "IsDeleted", "HinFormId", "IsActive" }, "IX_MissingIndex_35_34"), 90);
-
-                    b.HasIndex(new[] { "IsDeleted", "HinFormId", "IsActive" }, "IX_MissingIndex_42_41");
-
-                    SqlServerIndexBuilderExtensions.HasFillFactor(b.HasIndex(new[] { "IsDeleted", "HinFormId", "IsActive" }, "IX_MissingIndex_42_41"), 90);
-
-                    b.HasIndex(new[] { "IsDeleted", "HinFormId", "IsActive" }, "IX_MissingIndex_55_54");
-
-                    SqlServerIndexBuilderExtensions.HasFillFactor(b.HasIndex(new[] { "IsDeleted", "HinFormId", "IsActive" }, "IX_MissingIndex_55_54"), 90);
-
-                    b.ToTable("NET_Form_Version", (string)null);
+                    b.ToTable("net_form_version", "dbo");
                 });
 
-            modelBuilder.Entity("KOAHome.EntityFramework.NetFormVersionField", b =>
+            modelBuilder.Entity("KOAHome.EntityFramework.NetFormVersionfield", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
+                        .HasColumnType("integer")
+                        .HasColumnName("id");
 
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
                     b.Property<string>("Code")
-                        .HasColumnType("nvarchar(max)");
+                        .HasColumnType("text")
+                        .HasColumnName("code");
 
-                    b.Property<DateTime>("CreationTime")
-                        .HasColumnType("datetime2");
+                    b.Property<DateTime?>("Creationtime")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("creationtime");
 
-                    b.Property<long?>("CreatorUserId")
-                        .HasColumnType("bigint");
+                    b.Property<long?>("Creatoruserid")
+                        .HasColumnType("bigint")
+                        .HasColumnName("creatoruserid");
 
                     b.Property<string>("Datasources")
-                        .HasColumnType("nvarchar(max)")
-                        .UseCollation("SQL_Latin1_General_CP1_CI_AS");
+                        .HasColumnType("text")
+                        .HasColumnName("datasources");
 
-                    b.Property<long?>("DeleterUserId")
-                        .HasColumnType("bigint");
+                    b.Property<long?>("Deleteruserid")
+                        .HasColumnType("bigint")
+                        .HasColumnName("deleteruserid");
 
-                    b.Property<DateTime?>("DeletionTime")
-                        .HasColumnType("datetime2");
+                    b.Property<DateTime?>("Deletiontime")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("deletiontime");
 
-                    b.Property<long?>("FieldTypeId")
-                        .HasColumnType("bigint");
+                    b.Property<long?>("Fieldtypeid")
+                        .HasColumnType("bigint")
+                        .HasColumnName("fieldtypeid");
 
-                    b.Property<string>("HinFormCode")
-                        .HasMaxLength(255)
-                        .IsUnicode(false)
-                        .HasColumnType("varchar(255)")
-                        .UseCollation("SQL_Latin1_General_CP1_CI_AS");
+                    b.Property<string>("Hinformcode")
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)")
+                        .HasColumnName("hinformcode");
 
-                    b.Property<long?>("HinFormVersionId")
-                        .HasColumnType("bigint");
+                    b.Property<long?>("Hinformversionid")
+                        .HasColumnType("bigint")
+                        .HasColumnName("hinformversionid");
 
-                    b.Property<bool?>("IsActive")
-                        .HasColumnType("bit");
+                    b.Property<bool?>("Isactive")
+                        .HasColumnType("boolean")
+                        .HasColumnName("isactive");
 
-                    b.Property<bool>("IsDeleted")
-                        .HasColumnType("bit");
+                    b.Property<bool?>("Isdeleted")
+                        .HasColumnType("boolean")
+                        .HasColumnName("isdeleted");
 
-                    b.Property<DateTime?>("LastModificationTime")
-                        .HasColumnType("datetime2");
+                    b.Property<DateTime?>("Lastmodificationtime")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("lastmodificationtime");
 
-                    b.Property<long?>("LastModifierUserId")
-                        .HasColumnType("bigint");
+                    b.Property<long?>("Lastmodifieruserid")
+                        .HasColumnType("bigint")
+                        .HasColumnName("lastmodifieruserid");
 
                     b.Property<string>("Name")
-                        .HasColumnType("nvarchar(max)")
-                        .UseCollation("SQL_Latin1_General_CP1_CI_AS");
+                        .HasColumnType("text")
+                        .HasColumnName("name");
 
                     b.Property<string>("Options")
-                        .HasColumnType("nvarchar(max)")
-                        .UseCollation("SQL_Latin1_General_CP1_CI_AS");
+                        .HasColumnType("text")
+                        .HasColumnName("options");
 
-                    b.Property<long?>("OrderId")
-                        .HasColumnType("bigint");
+                    b.Property<long?>("Orderid")
+                        .HasColumnType("bigint")
+                        .HasColumnName("orderid");
 
-                    b.Property<string>("ParentCode")
-                        .HasColumnType("nvarchar(max)")
-                        .UseCollation("SQL_Latin1_General_CP1_CI_AS");
+                    b.Property<string>("Parentcode")
+                        .HasColumnType("text")
+                        .HasColumnName("parentcode");
 
-                    b.Property<long?>("ParentId")
-                        .HasColumnType("bigint");
+                    b.Property<long?>("Parentid")
+                        .HasColumnType("bigint")
+                        .HasColumnName("parentid");
 
-                    b.Property<int?>("TabIndex")
-                        .HasColumnType("int");
+                    b.Property<int?>("Tabindex")
+                        .HasColumnType("integer")
+                        .HasColumnName("tabindex");
 
                     b.Property<string>("Title")
-                        .HasColumnType("nvarchar(max)")
-                        .UseCollation("SQL_Latin1_General_CP1_CI_AS");
+                        .HasColumnType("text")
+                        .HasColumnName("title");
 
                     b.Property<long?>("Type")
-                        .HasColumnType("bigint");
+                        .HasColumnType("bigint")
+                        .HasColumnName("type");
 
                     b.Property<string>("Validates")
-                        .HasColumnType("nvarchar(max)")
-                        .UseCollation("SQL_Latin1_General_CP1_CI_AS");
+                        .HasColumnType("text")
+                        .HasColumnName("validates");
 
-                    b.HasKey("Id");
+                    b.HasKey("Id")
+                        .HasName("pk_net_form_versionfield");
 
-                    b.HasIndex(new[] { "HinFormVersionId", "IsActive" }, "IX_MissingIndex_209_208");
+                    b.HasIndex(new[] { "Hinformversionid", "Isactive" }, "idx_ix_missingindex_209_208");
 
-                    SqlServerIndexBuilderExtensions.HasFillFactor(b.HasIndex(new[] { "HinFormVersionId", "IsActive" }, "IX_MissingIndex_209_208"), 90);
+                    b.HasIndex(new[] { "Isdeleted", "Hinformversionid", "Isactive" }, "idx_ix_missingindex_86_85");
 
-                    b.HasIndex(new[] { "IsDeleted", "HinFormVersionId", "IsActive" }, "IX_MissingIndex_86_85");
-
-                    SqlServerIndexBuilderExtensions.HasFillFactor(b.HasIndex(new[] { "IsDeleted", "HinFormVersionId", "IsActive" }, "IX_MissingIndex_86_85"), 90);
-
-                    b.ToTable("NET_Form_VersionField", (string)null);
+                    b.ToTable("net_form_versionfield", "dbo");
                 });
 
-            modelBuilder.Entity("KOAHome.EntityFramework.NetMainMenu", b =>
+            modelBuilder.Entity("KOAHome.EntityFramework.NetFormfieldtype", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
+                        .HasColumnType("integer")
+                        .HasColumnName("id");
 
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
                     b.Property<string>("Code")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("nvarchar(max)")
-                        .HasDefaultValue("")
-                        .UseCollation("SQL_Latin1_General_CP1_CI_AS");
+                        .HasColumnType("text")
+                        .HasColumnName("code");
 
-                    b.Property<DateTime>("CreationTime")
-                        .HasColumnType("datetime2");
+                    b.Property<DateTime?>("Creationtime")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("creationtime");
 
-                    b.Property<long?>("CreatorUserId")
-                        .HasColumnType("bigint");
+                    b.Property<long?>("Creatoruserid")
+                        .HasColumnType("bigint")
+                        .HasColumnName("creatoruserid");
 
-                    b.Property<long?>("DeleterUserId")
-                        .HasColumnType("bigint");
+                    b.Property<long?>("Deleteruserid")
+                        .HasColumnType("bigint")
+                        .HasColumnName("deleteruserid");
 
-                    b.Property<DateTime?>("DeletionTime")
-                        .HasColumnType("datetime2");
+                    b.Property<DateTime?>("Deletiontime")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("deletiontime");
 
                     b.Property<string>("Description")
-                        .HasColumnType("nvarchar(max)")
-                        .UseCollation("SQL_Latin1_General_CP1_CI_AS");
-
-                    b.Property<int?>("DeviceType")
-                        .HasColumnType("int");
+                        .HasColumnType("text")
+                        .HasColumnName("description");
 
                     b.Property<string>("Icon")
-                        .HasColumnType("nvarchar(max)")
-                        .UseCollation("SQL_Latin1_General_CP1_CI_AS");
+                        .HasColumnType("text")
+                        .HasColumnName("icon");
 
-                    b.Property<string>("ImageUrl")
-                        .HasColumnType("nvarchar(max)")
-                        .UseCollation("SQL_Latin1_General_CP1_CI_AS");
+                    b.Property<bool?>("Isactive")
+                        .HasColumnType("boolean")
+                        .HasColumnName("isactive");
 
-                    b.Property<int>("Index")
-                        .HasColumnType("int");
+                    b.Property<bool?>("Isdeleted")
+                        .HasColumnType("boolean")
+                        .HasColumnName("isdeleted");
 
-                    b.Property<bool>("IsDeleted")
-                        .HasColumnType("bit");
-
-                    b.Property<bool?>("IsMiniItem")
+                    b.Property<bool?>("Isrowtemplate")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("bit")
-                        .HasDefaultValue(false);
+                        .HasColumnType("boolean")
+                        .HasDefaultValue(false)
+                        .HasColumnName("isrowtemplate");
 
-                    b.Property<bool?>("IsMobile")
-                        .HasColumnType("bit");
+                    b.Property<DateTime?>("Lastmodificationtime")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("lastmodificationtime");
 
-                    b.Property<DateTime?>("LastModificationTime")
-                        .HasColumnType("datetime2");
-
-                    b.Property<long?>("LastModifierUserId")
-                        .HasColumnType("bigint");
-
-                    b.Property<string>("Link")
-                        .HasColumnType("nvarchar(max)")
-                        .UseCollation("SQL_Latin1_General_CP1_CI_AS");
+                    b.Property<long?>("Lastmodifieruserid")
+                        .HasColumnType("bigint")
+                        .HasColumnName("lastmodifieruserid");
 
                     b.Property<string>("Name")
-                        .HasColumnType("nvarchar(max)")
-                        .UseCollation("SQL_Latin1_General_CP1_CI_AS");
+                        .HasColumnType("text")
+                        .HasColumnName("name");
+
+                    b.Property<long?>("Orderid")
+                        .HasColumnType("bigint")
+                        .HasColumnName("orderid");
+
+                    b.HasKey("Id")
+                        .HasName("pk_net_formfieldtype");
+
+                    b.ToTable("net_formfieldtype", "dbo");
+                });
+
+            modelBuilder.Entity("KOAHome.EntityFramework.NetMainmenu", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasColumnName("id");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("Code")
+                        .HasColumnType("text")
+                        .HasColumnName("code");
+
+                    b.Property<DateTime?>("Creationtime")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("creationtime");
+
+                    b.Property<long?>("Creatoruserid")
+                        .HasColumnType("bigint")
+                        .HasColumnName("creatoruserid");
+
+                    b.Property<long?>("Deleteruserid")
+                        .HasColumnType("bigint")
+                        .HasColumnName("deleteruserid");
+
+                    b.Property<DateTime?>("Deletiontime")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("deletiontime");
+
+                    b.Property<string>("Description")
+                        .HasColumnType("text")
+                        .HasColumnName("description");
+
+                    b.Property<int?>("Devicetype")
+                        .HasColumnType("integer")
+                        .HasColumnName("devicetype");
+
+                    b.Property<string>("Icon")
+                        .HasColumnType("text")
+                        .HasColumnName("icon");
+
+                    b.Property<string>("Imageurl")
+                        .HasColumnType("text")
+                        .HasColumnName("imageurl");
+
+                    b.Property<int?>("Index")
+                        .HasColumnType("integer")
+                        .HasColumnName("index");
+
+                    b.Property<bool?>("Isdeleted")
+                        .HasColumnType("boolean")
+                        .HasColumnName("isdeleted");
+
+                    b.Property<bool?>("Isminiitem")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("boolean")
+                        .HasDefaultValue(false)
+                        .HasColumnName("isminiitem");
+
+                    b.Property<bool?>("Ismobile")
+                        .HasColumnType("boolean")
+                        .HasColumnName("ismobile");
+
+                    b.Property<DateTime?>("Lastmodificationtime")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("lastmodificationtime");
+
+                    b.Property<long?>("Lastmodifieruserid")
+                        .HasColumnType("bigint")
+                        .HasColumnName("lastmodifieruserid");
+
+                    b.Property<string>("Link")
+                        .HasColumnType("text")
+                        .HasColumnName("link");
+
+                    b.Property<string>("Name")
+                        .HasColumnType("text")
+                        .HasColumnName("name");
 
                     b.Property<int?>("Parent")
-                        .HasColumnType("int");
+                        .HasColumnType("integer")
+                        .HasColumnName("parent");
 
-                    b.Property<string>("RequiredPermissionName")
-                        .HasColumnType("nvarchar(max)")
-                        .UseCollation("SQL_Latin1_General_CP1_CI_AS");
+                    b.Property<string>("Requiredpermissionname")
+                        .HasColumnType("text")
+                        .HasColumnName("requiredpermissionname");
 
-                    b.Property<string>("SiteCode")
-                        .HasMaxLength(255)
-                        .IsUnicode(false)
-                        .HasColumnType("varchar(255)")
-                        .UseCollation("SQL_Latin1_General_CP1_CI_AS");
+                    b.Property<string>("Sitecode")
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)")
+                        .HasColumnName("sitecode");
 
-                    b.Property<int?>("SiteId")
-                        .HasColumnType("int");
+                    b.Property<int?>("Siteid")
+                        .HasColumnType("integer")
+                        .HasColumnName("siteid");
 
-                    b.Property<int?>("TenantId")
-                        .HasColumnType("int");
+                    b.Property<int?>("Tenantid")
+                        .HasColumnType("integer")
+                        .HasColumnName("tenantid");
 
                     b.Property<string>("Title")
-                        .HasColumnType("nvarchar(max)")
-                        .UseCollation("SQL_Latin1_General_CP1_CI_AS");
+                        .HasColumnType("text")
+                        .HasColumnName("title");
 
-                    b.HasKey("Id");
+                    b.HasKey("Id")
+                        .HasName("pk_net_mainmenu");
 
-                    b.ToTable("NET_MainMenu", (string)null);
+                    b.ToTable("net_mainmenu", "dbo");
                 });
 
             modelBuilder.Entity("KOAHome.EntityFramework.NetMenu", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
+                        .HasColumnType("integer")
+                        .HasColumnName("id");
 
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
                     b.Property<string>("Code")
-                        .HasColumnType("nvarchar(max)")
-                        .UseCollation("SQL_Latin1_General_CP1_CI_AS");
+                        .HasColumnType("text")
+                        .HasColumnName("code");
 
-                    b.Property<int>("CountNum")
-                        .HasColumnType("int");
+                    b.Property<int?>("Countnum")
+                        .HasColumnType("integer")
+                        .HasColumnName("countnum");
 
-                    b.Property<int>("CountOutOfDate")
-                        .HasColumnType("int");
+                    b.Property<int?>("Countoutofdate")
+                        .HasColumnType("integer")
+                        .HasColumnName("countoutofdate");
 
-                    b.Property<int?>("CountType")
-                        .HasColumnType("int");
+                    b.Property<int?>("Counttype")
+                        .HasColumnType("integer")
+                        .HasColumnName("counttype");
 
                     b.Property<string>("Cssformat")
-                        .HasColumnType("nvarchar(max)")
-                        .HasColumnName("CSSFormat")
-                        .UseCollation("SQL_Latin1_General_CP1_CI_AS");
+                        .HasColumnType("text")
+                        .HasColumnName("cssformat");
 
-                    b.Property<string>("CssiconFormat")
-                        .HasColumnType("nvarchar(max)")
-                        .HasColumnName("CSSIconFormat")
-                        .UseCollation("SQL_Latin1_General_CP1_CI_AS");
+                    b.Property<string>("Cssiconformat")
+                        .HasColumnType("text")
+                        .HasColumnName("cssiconformat");
 
                     b.Property<string>("Description")
-                        .HasColumnType("nvarchar(max)")
-                        .UseCollation("SQL_Latin1_General_CP1_CI_AS");
+                        .HasColumnType("text")
+                        .HasColumnName("description");
 
                     b.Property<string>("Icon")
-                        .HasColumnType("nvarchar(max)")
-                        .UseCollation("SQL_Latin1_General_CP1_CI_AS");
+                        .HasColumnType("text")
+                        .HasColumnName("icon");
 
                     b.Property<string>("Iframe")
-                        .HasColumnType("nvarchar(max)")
-                        .UseCollation("SQL_Latin1_General_CP1_CI_AS");
+                        .HasColumnType("text")
+                        .HasColumnName("iframe");
 
-                    b.Property<string>("ImageUrl")
-                        .HasColumnType("nvarchar(max)")
-                        .UseCollation("SQL_Latin1_General_CP1_CI_AS");
+                    b.Property<string>("Imageurl")
+                        .HasColumnType("text")
+                        .HasColumnName("imageurl");
 
-                    b.Property<int>("Index")
-                        .HasColumnType("int");
+                    b.Property<int?>("Index")
+                        .HasColumnType("integer")
+                        .HasColumnName("index");
 
-                    b.Property<bool>("IsCount")
+                    b.Property<bool?>("Iscount")
+                        .HasColumnType("boolean")
+                        .HasColumnName("iscount");
+
+                    b.Property<bool?>("Isdeleted")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("bit")
-                        .HasDefaultValueSql("(CONVERT([bit],(0),(0)))");
+                        .HasColumnType("boolean")
+                        .HasDefaultValue(false)
+                        .HasColumnName("isdeleted");
 
-                    b.Property<bool?>("IsDeleted")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("bit")
-                        .HasDefaultValue(false);
-
-                    b.Property<bool?>("IsRawSql")
-                        .HasColumnType("bit");
+                    b.Property<bool?>("Israwsql")
+                        .HasColumnType("boolean")
+                        .HasColumnName("israwsql");
 
                     b.Property<string>("Link")
-                        .HasColumnType("nvarchar(max)")
-                        .UseCollation("SQL_Latin1_General_CP1_CI_AS");
+                        .HasColumnType("text")
+                        .HasColumnName("link");
 
-                    b.Property<int>("MenuId")
-                        .HasColumnType("int");
+                    b.Property<int?>("Menuid")
+                        .HasColumnType("integer")
+                        .HasColumnName("menuid");
 
-                    b.Property<string>("MobileLink")
-                        .HasColumnType("nvarchar(max)")
-                        .UseCollation("SQL_Latin1_General_CP1_CI_AS");
+                    b.Property<string>("Mobilelink")
+                        .HasColumnType("text")
+                        .HasColumnName("mobilelink");
 
                     b.Property<string>("Name")
-                        .HasColumnType("nvarchar(max)")
-                        .UseCollation("SQL_Latin1_General_CP1_CI_AS");
+                        .HasColumnType("text")
+                        .HasColumnName("name");
 
-                    b.Property<int>("OrganizationId")
-                        .HasColumnType("int");
+                    b.Property<int?>("Organizationid")
+                        .HasColumnType("integer")
+                        .HasColumnName("organizationid");
 
                     b.Property<int?>("Parent")
-                        .HasColumnType("int");
+                        .HasColumnType("integer")
+                        .HasColumnName("parent");
 
-                    b.Property<int>("ParentOrgId")
-                        .HasColumnType("int");
+                    b.Property<int?>("Parentorgid")
+                        .HasColumnType("integer")
+                        .HasColumnName("parentorgid");
 
-                    b.Property<string>("RequiredPermissionName")
-                        .HasColumnType("nvarchar(max)")
-                        .UseCollation("SQL_Latin1_General_CP1_CI_AS");
+                    b.Property<string>("Requiredpermissionname")
+                        .HasColumnType("text")
+                        .HasColumnName("requiredpermissionname");
 
-                    b.Property<string>("SiteCode")
-                        .HasMaxLength(255)
-                        .IsUnicode(false)
-                        .HasColumnType("varchar(255)")
-                        .UseCollation("SQL_Latin1_General_CP1_CI_AS");
+                    b.Property<string>("Sitecode")
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)")
+                        .HasColumnName("sitecode");
 
-                    b.Property<int?>("SiteId")
-                        .HasColumnType("int");
+                    b.Property<int?>("Siteid")
+                        .HasColumnType("integer")
+                        .HasColumnName("siteid");
 
-                    b.Property<string>("SqlCountStore")
-                        .HasColumnType("nvarchar(max)")
-                        .UseCollation("SQL_Latin1_General_CP1_CI_AS");
+                    b.Property<string>("Sqlcountstore")
+                        .HasColumnType("text")
+                        .HasColumnName("sqlcountstore");
 
-                    b.Property<string>("SqlString")
-                        .HasColumnType("nvarchar(max)")
-                        .UseCollation("SQL_Latin1_General_CP1_CI_AS");
+                    b.Property<string>("Sqlstring")
+                        .HasColumnType("text")
+                        .HasColumnName("sqlstring");
 
-                    b.Property<string>("TextColor")
-                        .HasColumnType("nvarchar(max)")
-                        .HasColumnName("textColor")
-                        .UseCollation("SQL_Latin1_General_CP1_CI_AS");
+                    b.Property<string>("Textcolor")
+                        .HasColumnType("text")
+                        .HasColumnName("textcolor");
 
                     b.Property<string>("Title")
-                        .HasColumnType("nvarchar(max)")
-                        .UseCollation("SQL_Latin1_General_CP1_CI_AS");
+                        .HasColumnType("text")
+                        .HasColumnName("title");
 
-                    b.Property<int?>("TypeCheck")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int")
-                        .HasDefaultValue(1)
-                        .HasColumnName("typeCheck");
+                    b.Property<int?>("Typecheck")
+                        .HasColumnType("integer")
+                        .HasColumnName("typecheck");
 
-                    b.Property<long?>("UserId")
-                        .HasColumnType("bigint");
+                    b.Property<long?>("Userid")
+                        .HasColumnType("bigint")
+                        .HasColumnName("userid");
 
-                    b.HasKey("Id");
+                    b.HasKey("Id")
+                        .HasName("pk_net_menu");
 
-                    b.ToTable("NET_Menu", (string)null);
+                    b.ToTable("net_menu", "dbo");
                 });
 
-            modelBuilder.Entity("KOAHome.EntityFramework.NetMenuRole", b =>
+            modelBuilder.Entity("KOAHome.EntityFramework.NetMenurole", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
+                        .HasColumnType("integer")
+                        .HasColumnName("id");
 
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
-                    b.Property<bool>("IsActive")
-                        .HasColumnType("bit");
+                    b.Property<bool?>("Isactive")
+                        .HasColumnType("boolean")
+                        .HasColumnName("isactive");
 
-                    b.Property<int>("LabelId")
-                        .HasColumnType("int");
+                    b.Property<int?>("Labelid")
+                        .HasColumnType("integer")
+                        .HasColumnName("labelid");
 
-                    b.Property<int>("MenuId")
-                        .HasColumnType("int");
+                    b.Property<int?>("Menuid")
+                        .HasColumnType("integer")
+                        .HasColumnName("menuid");
 
                     b.Property<int?>("Order")
-                        .HasColumnType("int");
+                        .HasColumnType("integer");
 
-                    b.Property<int>("RoleId")
-                        .HasColumnType("int");
+                    b.Property<int?>("Roleid")
+                        .HasColumnType("integer")
+                        .HasColumnName("roleid");
 
-                    b.Property<int?>("RoleMapperGroupId")
-                        .HasColumnType("int");
+                    b.Property<int?>("Rolemappergroupid")
+                        .HasColumnType("integer")
+                        .HasColumnName("rolemappergroupid");
 
-                    b.Property<int?>("TenantId")
-                        .HasColumnType("int");
+                    b.Property<int?>("Tenantid")
+                        .HasColumnType("integer")
+                        .HasColumnName("tenantid");
 
-                    b.HasKey("Id");
+                    b.HasKey("Id")
+                        .HasName("pk_net_menurole");
 
-                    b.HasIndex(new[] { "TenantId" }, "IX_NET_MenuRole_TenantId");
+                    b.HasIndex(new[] { "Tenantid" }, "idx_ix_net_menurole_tenantid");
 
-                    b.ToTable("NET_MenuRole", (string)null);
+                    b.ToTable("net_menurole", "dbo");
                 });
 
             modelBuilder.Entity("KOAHome.EntityFramework.NetReport", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
+                        .HasColumnType("integer")
+                        .HasColumnName("id");
 
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
-                    b.Property<string>("AllowedApi")
-                        .HasColumnType("nvarchar(max)")
-                        .HasColumnName("AllowedAPI")
-                        .UseCollation("SQL_Latin1_General_CP1_CI_AS");
+                    b.Property<string>("Allowedapi")
+                        .HasColumnType("text")
+                        .HasColumnName("allowedapi");
 
-                    b.Property<string>("AllowedPageSizes")
-                        .HasColumnType("nvarchar(max)")
-                        .UseCollation("SQL_Latin1_General_CP1_CI_AS");
+                    b.Property<string>("Allowedpagesizes")
+                        .HasColumnType("text")
+                        .HasColumnName("allowedpagesizes");
 
                     b.Property<bool?>("Cache")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("bit")
-                        .HasDefaultValue(false);
+                        .HasColumnType("boolean")
+                        .HasDefaultValue(false)
+                        .HasColumnName("cache");
 
-                    b.Property<int?>("ChartViewDisplay")
-                        .HasColumnType("int");
+                    b.Property<int?>("Chartviewdisplay")
+                        .HasColumnType("integer")
+                        .HasColumnName("chartviewdisplay");
 
                     b.Property<string>("Code")
-                        .HasColumnType("nvarchar(max)")
-                        .UseCollation("SQL_Latin1_General_CP1_CI_AS");
+                        .HasColumnType("text")
+                        .HasColumnName("code");
 
-                    b.Property<int?>("ColCount")
-                        .HasColumnType("int");
+                    b.Property<int?>("Colcount")
+                        .HasColumnType("integer")
+                        .HasColumnName("colcount");
 
-                    b.Property<int?>("ColSpan")
-                        .HasColumnType("int");
+                    b.Property<int?>("Colspan")
+                        .HasColumnType("integer")
+                        .HasColumnName("colspan");
 
-                    b.Property<DateTime?>("CreationTime")
-                        .HasColumnType("datetime2");
+                    b.Property<DateTime?>("Creationtime")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("creationtime");
 
-                    b.Property<long?>("CreatorUserId")
-                        .HasColumnType("bigint");
+                    b.Property<long?>("Creatoruserid")
+                        .HasColumnType("bigint")
+                        .HasColumnName("creatoruserid");
 
-                    b.Property<long?>("DataSourceId")
-                        .HasColumnType("bigint");
+                    b.Property<long?>("Datasourceid")
+                        .HasColumnType("bigint")
+                        .HasColumnName("datasourceid");
 
-                    b.Property<string>("DefaultParam")
-                        .HasColumnType("nvarchar(max)")
-                        .UseCollation("SQL_Latin1_General_CP1_CI_AS");
+                    b.Property<string>("Defaultparam")
+                        .HasColumnType("text")
+                        .HasColumnName("defaultparam");
 
-                    b.Property<long?>("DeleterUserId")
-                        .HasColumnType("bigint");
+                    b.Property<long?>("Deleteruserid")
+                        .HasColumnType("bigint")
+                        .HasColumnName("deleteruserid");
 
-                    b.Property<DateTime?>("DeletionTime")
-                        .HasColumnType("datetime2");
+                    b.Property<DateTime?>("Deletiontime")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("deletiontime");
 
-                    b.Property<bool?>("DisableHandleCollumn")
-                        .HasColumnType("bit");
+                    b.Property<bool?>("Disablehandlecollumn")
+                        .HasColumnType("boolean")
+                        .HasColumnName("disablehandlecollumn");
 
-                    b.Property<bool?>("DisableSearch")
+                    b.Property<bool?>("Disablesearch")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("bit")
-                        .HasDefaultValue(false);
+                        .HasColumnType("boolean")
+                        .HasDefaultValue(false)
+                        .HasColumnName("disablesearch");
 
-                    b.Property<int?>("DisplayType")
-                        .HasColumnType("int");
+                    b.Property<int?>("Displaytype")
+                        .HasColumnType("integer")
+                        .HasColumnName("displaytype");
 
-                    b.Property<string>("EditingMode")
-                        .HasColumnType("nvarchar(max)")
-                        .UseCollation("SQL_Latin1_General_CP1_CI_AS");
+                    b.Property<string>("Editingmode")
+                        .HasColumnType("text")
+                        .HasColumnName("editingmode");
 
-                    b.Property<bool>("EnableMasterDetail")
-                        .HasColumnType("bit");
+                    b.Property<bool?>("Enablemasterdetail")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("boolean")
+                        .HasDefaultValue(false)
+                        .HasColumnName("enablemasterdetail");
 
                     b.Property<string>("Excel")
-                        .HasColumnType("nvarchar(max)")
-                        .UseCollation("SQL_Latin1_General_CP1_CI_AS");
+                        .HasColumnType("text")
+                        .HasColumnName("excel");
 
-                    b.Property<long?>("FormId")
+                    b.Property<long?>("Formid")
                         .HasColumnType("bigint")
-                        .HasColumnName("FormID");
+                        .HasColumnName("formid");
 
-                    b.Property<string>("FunctionCode")
+                    b.Property<string>("Functioncode")
                         .HasMaxLength(100)
-                        .HasColumnType("nvarchar(100)")
-                        .UseCollation("SQL_Latin1_General_CP1_CI_AS");
+                        .HasColumnType("character varying(100)")
+                        .HasColumnName("functioncode");
 
-                    b.Property<int?>("FuntionId")
-                        .HasColumnType("int");
+                    b.Property<int?>("Funtionid")
+                        .HasColumnType("integer")
+                        .HasColumnName("funtionid");
 
-                    b.Property<long?>("GroupLevel")
-                        .HasColumnType("bigint");
+                    b.Property<long?>("Grouplevel")
+                        .HasColumnType("bigint")
+                        .HasColumnName("grouplevel");
 
-                    b.Property<bool?>("IsAutoCollapse")
+                    b.Property<bool?>("Isautocollapse")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("bit")
-                        .HasDefaultValue(false);
+                        .HasColumnType("boolean")
+                        .HasDefaultValue(false)
+                        .HasColumnName("isautocollapse");
 
-                    b.Property<bool?>("IsBackViewer")
+                    b.Property<bool?>("Isbackviewer")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("bit")
-                        .HasDefaultValue(false);
+                        .HasColumnType("boolean")
+                        .HasDefaultValue(false)
+                        .HasColumnName("isbackviewer");
 
-                    b.Property<bool?>("IsBtnHandle")
+                    b.Property<bool?>("Isbtnhandle")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("bit")
-                        .HasDefaultValue(true);
+                        .HasColumnType("boolean")
+                        .HasDefaultValue(true)
+                        .HasColumnName("isbtnhandle");
 
-                    b.Property<bool?>("IsCreateEditor")
+                    b.Property<bool?>("Iscreateeditor")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("bit")
-                        .HasDefaultValue(true);
+                        .HasColumnType("boolean")
+                        .HasDefaultValue(true)
+                        .HasColumnName("iscreateeditor");
 
-                    b.Property<bool?>("IsDeleteEditor")
+                    b.Property<bool?>("Isdeleted")
+                        .HasColumnType("boolean")
+                        .HasColumnName("isdeleted");
+
+                    b.Property<bool?>("Isdeleteeditor")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("bit")
-                        .HasDefaultValue(false);
+                        .HasColumnType("boolean")
+                        .HasDefaultValue(false)
+                        .HasColumnName("isdeleteeditor");
 
-                    b.Property<bool?>("IsDeleted")
-                        .HasColumnType("bit");
+                    b.Property<bool?>("Isdynamiccolumn")
+                        .HasColumnType("boolean")
+                        .HasColumnName("isdynamiccolumn");
 
-                    b.Property<bool?>("IsDynamicColumn")
-                        .HasColumnType("bit");
-
-                    b.Property<bool?>("IsEditEditor")
+                    b.Property<bool?>("Isediteditor")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("bit")
-                        .HasDefaultValue(true);
+                        .HasColumnType("boolean")
+                        .HasDefaultValue(true)
+                        .HasColumnName("isediteditor");
 
-                    b.Property<bool?>("IsExportExcel")
+                    b.Property<bool?>("Isexportexcel")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("bit")
-                        .HasDefaultValue(true);
+                        .HasColumnType("boolean")
+                        .HasDefaultValue(true)
+                        .HasColumnName("isexportexcel");
 
-                    b.Property<bool?>("IsExportWord")
+                    b.Property<bool?>("Isexportword")
+                        .HasColumnType("boolean")
+                        .HasColumnName("isexportword");
+
+                    b.Property<bool?>("Isfreepane")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("bit")
-                        .HasDefaultValue(false);
+                        .HasColumnType("boolean")
+                        .HasDefaultValue(true)
+                        .HasColumnName("isfreepane");
 
-                    b.Property<bool?>("IsFreepane")
+                    b.Property<bool?>("Isrecieverealtime")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("bit")
-                        .HasDefaultValue(true);
+                        .HasColumnType("boolean")
+                        .HasDefaultValue(false)
+                        .HasColumnName("isrecieverealtime");
 
-                    b.Property<bool?>("IsRecieveRealTime")
+                    b.Property<bool?>("Issearchbar")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("bit")
-                        .HasDefaultValue(false);
+                        .HasColumnType("boolean")
+                        .HasDefaultValue(true)
+                        .HasColumnName("issearchbar");
 
-                    b.Property<bool?>("IsSearchbar")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("bit")
-                        .HasDefaultValue(true);
+                    b.Property<DateTime?>("Lastmodificationtime")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("lastmodificationtime");
 
-                    b.Property<DateTime?>("LastModificationTime")
-                        .HasColumnType("datetime2");
+                    b.Property<long?>("Lastmodifieruserid")
+                        .HasColumnType("bigint")
+                        .HasColumnName("lastmodifieruserid");
 
-                    b.Property<long?>("LastModifierUserId")
-                        .HasColumnType("bigint");
+                    b.Property<string>("Layoutpfilter")
+                        .HasColumnType("text")
+                        .HasColumnName("layoutpfilter");
 
-                    b.Property<string>("LayoutpFilter")
-                        .HasColumnType("nvarchar(max)")
-                        .UseCollation("SQL_Latin1_General_CP1_CI_AS");
-
-                    b.Property<string>("MasterDetailReportCode")
-                        .HasMaxLength(255)
-                        .IsUnicode(false)
-                        .HasColumnType("varchar(255)")
-                        .UseCollation("SQL_Latin1_General_CP1_CI_AS");
+                    b.Property<string>("Masterdetailreportcode")
+                        .HasColumnType("text")
+                        .HasColumnName("masterdetailreportcode");
 
                     b.Property<string>("Name")
-                        .HasColumnType("nvarchar(max)")
-                        .UseCollation("SQL_Latin1_General_CP1_CI_AS");
+                        .HasColumnType("text")
+                        .HasColumnName("name");
 
                     b.Property<bool?>("Pagination")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("bit")
-                        .HasDefaultValue(false);
+                        .HasColumnType("boolean")
+                        .HasDefaultValue(false)
+                        .HasColumnName("pagination");
 
-                    b.Property<int?>("PositionButton")
-                        .HasColumnType("int");
+                    b.Property<int?>("Positionbutton")
+                        .HasColumnType("integer")
+                        .HasColumnName("positionbutton");
 
-                    b.Property<string>("ReportCodeRecieveRealTime")
-                        .HasColumnType("nvarchar(max)")
-                        .UseCollation("SQL_Latin1_General_CP1_CI_AS");
+                    b.Property<string>("Reportcoderecieverealtime")
+                        .HasColumnType("text")
+                        .HasColumnName("reportcoderecieverealtime");
 
-                    b.Property<int?>("ReportType")
-                        .HasColumnType("int");
+                    b.Property<int?>("Reporttype")
+                        .HasColumnType("integer")
+                        .HasColumnName("reporttype");
 
-                    b.Property<string>("SelectionType")
-                        .ValueGeneratedOnAdd()
+                    b.Property<string>("Selectiontype")
                         .HasMaxLength(10)
-                        .HasColumnType("nvarchar(10)")
-                        .HasDefaultValue("multiple")
-                        .UseCollation("SQL_Latin1_General_CP1_CI_AS");
+                        .HasColumnType("character varying(10)")
+                        .HasColumnName("selectiontype");
 
-                    b.Property<int?>("ServiceHiddenFilter")
-                        .HasColumnType("int");
+                    b.Property<int?>("Servicehiddenfilter")
+                        .HasColumnType("integer")
+                        .HasColumnName("servicehiddenfilter");
 
-                    b.Property<bool?>("ShowHeaderFilter")
+                    b.Property<bool?>("Showheaderfilter")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("bit")
-                        .HasDefaultValue(false);
+                        .HasColumnType("boolean")
+                        .HasDefaultValue(false)
+                        .HasColumnName("showheaderfilter");
 
-                    b.Property<bool?>("ShowIconFilter")
+                    b.Property<bool?>("Showiconfilter")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("bit")
-                        .HasDefaultValue(false);
+                        .HasColumnType("boolean")
+                        .HasDefaultValue(false)
+                        .HasColumnName("showiconfilter");
 
-                    b.Property<bool?>("ShowPage")
+                    b.Property<bool?>("Showpage")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("bit")
-                        .HasDefaultValue(true);
+                        .HasColumnType("boolean")
+                        .HasDefaultValue(true)
+                        .HasColumnName("showpage");
 
-                    b.Property<bool?>("ShowToolbar")
+                    b.Property<bool?>("Showtoolbar")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("bit")
-                        .HasDefaultValue(true);
+                        .HasColumnType("boolean")
+                        .HasDefaultValue(true)
+                        .HasColumnName("showtoolbar");
 
-                    b.Property<string>("SiteCode")
-                        .HasMaxLength(255)
-                        .IsUnicode(false)
-                        .HasColumnType("varchar(255)")
-                        .UseCollation("SQL_Latin1_General_CP1_CI_AS");
+                    b.Property<string>("Sitecode")
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)")
+                        .HasColumnName("sitecode");
 
-                    b.Property<int?>("SiteId")
-                        .HasColumnType("int");
+                    b.Property<int?>("Siteid")
+                        .HasColumnType("integer")
+                        .HasColumnName("siteid");
 
-                    b.Property<string>("SqlContent")
-                        .HasColumnType("nvarchar(max)")
-                        .UseCollation("SQL_Latin1_General_CP1_CI_AS");
+                    b.Property<string>("Sqlcontent")
+                        .HasColumnType("text")
+                        .HasColumnName("sqlcontent");
 
-                    b.Property<string>("SqlContentM")
+                    b.Property<string>("Sqlcontentm")
+                        .HasColumnType("text")
+                        .HasColumnName("sqlcontentm");
+
+                    b.Property<string>("Sqldefaultcontent")
+                        .HasColumnType("text")
+                        .HasColumnName("sqldefaultcontent");
+
+                    b.Property<string>("Sqleditcontent")
+                        .HasColumnType("text")
+                        .HasColumnName("sqleditcontent");
+
+                    b.Property<string>("Sqledittemplatecontent")
+                        .HasColumnType("text")
+                        .HasColumnName("sqledittemplatecontent");
+
+                    b.Property<string>("Sqlexportdata")
+                        .HasColumnType("text")
+                        .HasColumnName("sqlexportdata");
+
+                    b.Property<string>("Sqlexportfield")
+                        .HasColumnType("text")
+                        .HasColumnName("sqlexportfield");
+
+                    b.Property<string>("Sqlstoredlabelaction")
+                        .HasColumnType("text")
+                        .HasColumnName("sqlstoredlabelaction");
+
+                    b.Property<bool?>("Sqltype")
+                        .HasColumnType("boolean")
+                        .HasColumnName("sqltype");
+
+                    b.Property<bool?>("Sqltypem")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("nvarchar(max)")
-                        .HasDefaultValue("")
-                        .UseCollation("SQL_Latin1_General_CP1_CI_AS");
+                        .HasColumnType("boolean")
+                        .HasDefaultValue(false)
+                        .HasColumnName("sqltypem");
 
-                    b.Property<string>("SqlDefaultContent")
-                        .HasColumnType("nvarchar(max)")
-                        .UseCollation("SQL_Latin1_General_CP1_CI_AS");
+                    b.Property<string>("Storecheckurl")
+                        .HasColumnType("text")
+                        .HasColumnName("storecheckurl");
 
-                    b.Property<string>("SqlEditContent")
-                        .HasColumnType("nvarchar(max)")
-                        .UseCollation("SQL_Latin1_General_CP1_CI_AS");
+                    b.Property<string>("Storedrag")
+                        .HasColumnType("text")
+                        .HasColumnName("storedrag");
 
-                    b.Property<string>("SqlEditTemplateContent")
-                        .HasColumnType("nvarchar(max)")
-                        .UseCollation("SQL_Latin1_General_CP1_CI_AS");
+                    b.Property<string>("Storedrdisplay")
+                        .HasColumnType("text")
+                        .HasColumnName("storedrdisplay");
 
-                    b.Property<string>("SqlExportData")
-                        .HasColumnType("nvarchar(max)")
-                        .UseCollation("SQL_Latin1_General_CP1_CI_AS");
+                    b.Property<string>("Templateids")
+                        .HasColumnType("text")
+                        .HasColumnName("templateids");
 
-                    b.Property<string>("SqlExportField")
-                        .HasColumnType("nvarchar(max)")
-                        .UseCollation("SQL_Latin1_General_CP1_CI_AS");
-
-                    b.Property<string>("SqlStoredLabelAction")
-                        .HasColumnType("nvarchar(max)")
-                        .UseCollation("SQL_Latin1_General_CP1_CI_AS");
-
-                    b.Property<bool?>("SqlType")
-                        .HasColumnType("bit");
-
-                    b.Property<bool?>("SqlTypeM")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("bit")
-                        .HasDefaultValue(false);
-
-                    b.Property<string>("StoreCheckUrl")
-                        .HasColumnType("nvarchar(max)")
-                        .HasColumnName("StoreCheckURL")
-                        .UseCollation("SQL_Latin1_General_CP1_CI_AS");
-
-                    b.Property<string>("StoreDrag")
-                        .HasColumnType("nvarchar(max)")
-                        .UseCollation("SQL_Latin1_General_CP1_CI_AS");
-
-                    b.Property<string>("StoreDrdisplay")
-                        .HasColumnType("nvarchar(max)")
-                        .HasColumnName("StoreDRDisplay")
-                        .UseCollation("SQL_Latin1_General_CP1_CI_AS");
-
-                    b.Property<string>("TemplateIds")
-                        .HasColumnType("nvarchar(max)")
-                        .UseCollation("SQL_Latin1_General_CP1_CI_AS");
-
-                    b.Property<int?>("TypeGetColumn")
-                        .HasColumnType("int");
+                    b.Property<int?>("Typegetcolumn")
+                        .HasColumnType("integer")
+                        .HasColumnName("typegetcolumn");
 
                     b.Property<string>("Word")
-                        .HasColumnType("nvarchar(max)")
-                        .UseCollation("SQL_Latin1_General_CP1_CI_AS");
+                        .HasColumnType("text")
+                        .HasColumnName("word");
 
-                    b.HasKey("Id");
+                    b.HasKey("Id")
+                        .HasName("pk_net_report");
 
-                    b.ToTable("NET_Report", (string)null);
+                    b.ToTable("net_report", "dbo");
                 });
 
             modelBuilder.Entity("KOAHome.EntityFramework.NetService", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
+                        .HasColumnType("integer")
+                        .HasColumnName("id");
 
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
                     b.Property<bool?>("Cache")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("bit")
-                        .HasDefaultValue(true);
+                        .HasColumnType("boolean")
+                        .HasDefaultValue(true)
+                        .HasColumnName("cache");
 
                     b.Property<string>("Code")
-                        .HasColumnType("nvarchar(max)")
-                        .UseCollation("SQL_Latin1_General_CP1_CI_AS");
+                        .HasColumnType("text")
+                        .HasColumnName("code");
 
-                    b.Property<string>("ColDisplay")
-                        .HasColumnType("nvarchar(max)")
-                        .UseCollation("SQL_Latin1_General_CP1_CI_AS");
+                    b.Property<string>("Coldisplay")
+                        .HasColumnType("text")
+                        .HasColumnName("coldisplay");
 
-                    b.Property<string>("ColParent")
-                        .HasColumnType("nvarchar(max)")
-                        .UseCollation("SQL_Latin1_General_CP1_CI_AS");
+                    b.Property<string>("Colparent")
+                        .HasColumnType("text")
+                        .HasColumnName("colparent");
 
-                    b.Property<string>("ColValue")
-                        .HasColumnType("nvarchar(max)")
-                        .UseCollation("SQL_Latin1_General_CP1_CI_AS");
+                    b.Property<string>("Colvalue")
+                        .HasColumnType("text")
+                        .HasColumnName("colvalue");
 
-                    b.Property<DateTime>("CreationTime")
-                        .HasColumnType("datetime2");
+                    b.Property<DateTime?>("Creationtime")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("creationtime");
 
-                    b.Property<long?>("CreatorUserId")
-                        .HasColumnType("bigint");
+                    b.Property<long?>("Creatoruserid")
+                        .HasColumnType("bigint")
+                        .HasColumnName("creatoruserid");
 
-                    b.Property<long>("DataSourceId")
-                        .HasColumnType("bigint");
+                    b.Property<long?>("Datasourceid")
+                        .HasColumnType("bigint")
+                        .HasColumnName("datasourceid");
 
-                    b.Property<long?>("DeleterUserId")
-                        .HasColumnType("bigint");
+                    b.Property<long?>("Deleteruserid")
+                        .HasColumnType("bigint")
+                        .HasColumnName("deleteruserid");
 
-                    b.Property<DateTime?>("DeletionTime")
-                        .HasColumnType("datetime2");
+                    b.Property<DateTime?>("Deletiontime")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("deletiontime");
 
-                    b.Property<bool>("IsDeleted")
-                        .HasColumnType("bit");
+                    b.Property<bool?>("Isdeleted")
+                        .HasColumnType("boolean")
+                        .HasColumnName("isdeleted");
 
-                    b.Property<DateTime?>("LastModificationTime")
-                        .HasColumnType("datetime2");
+                    b.Property<DateTime?>("Lastmodificationtime")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("lastmodificationtime");
 
-                    b.Property<long?>("LastModifierUserId")
-                        .HasColumnType("bigint");
+                    b.Property<long?>("Lastmodifieruserid")
+                        .HasColumnType("bigint")
+                        .HasColumnName("lastmodifieruserid");
 
                     b.Property<string>("Name")
-                        .HasColumnType("nvarchar(max)")
-                        .UseCollation("SQL_Latin1_General_CP1_CI_AS");
+                        .HasColumnType("text")
+                        .HasColumnName("name");
 
-                    b.Property<string>("SiteCode")
-                        .HasMaxLength(255)
-                        .IsUnicode(false)
-                        .HasColumnType("varchar(255)")
-                        .UseCollation("SQL_Latin1_General_CP1_CI_AS");
+                    b.Property<string>("Sitecode")
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)")
+                        .HasColumnName("sitecode");
 
-                    b.Property<int?>("SiteId")
-                        .HasColumnType("int");
+                    b.Property<int?>("Siteid")
+                        .HasColumnType("integer")
+                        .HasColumnName("siteid");
 
-                    b.Property<string>("SqlContent")
-                        .HasColumnType("nvarchar(max)")
-                        .UseCollation("SQL_Latin1_General_CP1_CI_AS");
+                    b.Property<string>("Sqlcontent")
+                        .HasColumnType("text")
+                        .HasColumnName("sqlcontent");
 
-                    b.Property<bool>("SqlType")
-                        .HasColumnType("bit");
+                    b.Property<bool?>("Sqltype")
+                        .HasColumnType("boolean")
+                        .HasColumnName("sqltype");
 
-                    b.Property<string>("StoredDefaultParam")
-                        .HasColumnType("nvarchar(max)")
-                        .UseCollation("SQL_Latin1_General_CP1_CI_AS");
+                    b.Property<string>("Storeddefaultparam")
+                        .HasColumnType("text")
+                        .HasColumnName("storeddefaultparam");
 
-                    b.HasKey("Id");
+                    b.HasKey("Id")
+                        .HasName("pk_net_service");
 
-                    b.ToTable("NET_Service", (string)null);
+                    b.ToTable("net_service", "dbo");
                 });
 
             modelBuilder.Entity("KOAHome.EntityFramework.NetStepper", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
+                        .HasColumnType("integer")
+                        .HasColumnName("id");
 
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
                     b.Property<string>("Code")
-                        .HasColumnType("nvarchar(max)")
-                        .UseCollation("SQL_Latin1_General_CP1_CI_AS");
+                        .HasColumnType("text")
+                        .HasColumnName("code");
 
-                    b.Property<DateTime>("CreationTime")
-                        .HasColumnType("datetime2");
+                    b.Property<DateTime?>("Creationtime")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("creationtime");
 
-                    b.Property<long?>("CreatorUserId")
-                        .HasColumnType("bigint");
+                    b.Property<long?>("Creatoruserid")
+                        .HasColumnType("bigint")
+                        .HasColumnName("creatoruserid");
 
-                    b.Property<int?>("DatasourceId")
-                        .HasColumnType("int");
+                    b.Property<int?>("Datasourceid")
+                        .HasColumnType("integer")
+                        .HasColumnName("datasourceid");
 
-                    b.Property<long?>("DeleterUserId")
-                        .HasColumnType("bigint");
+                    b.Property<long?>("Deleteruserid")
+                        .HasColumnType("bigint")
+                        .HasColumnName("deleteruserid");
 
-                    b.Property<DateTime?>("DeletionTime")
-                        .HasColumnType("datetime2");
+                    b.Property<DateTime?>("Deletiontime")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("deletiontime");
 
-                    b.Property<bool?>("IsActive")
-                        .HasColumnType("bit");
+                    b.Property<bool?>("Isactive")
+                        .HasColumnType("boolean")
+                        .HasColumnName("isactive");
 
-                    b.Property<bool?>("IsActiveEventHeader")
-                        .HasColumnType("bit");
+                    b.Property<bool?>("Isactiveeventheader")
+                        .HasColumnType("boolean")
+                        .HasColumnName("isactiveeventheader");
 
-                    b.Property<bool>("IsDeleted")
-                        .HasColumnType("bit");
+                    b.Property<bool?>("Isdeleted")
+                        .HasColumnType("boolean")
+                        .HasColumnName("isdeleted");
 
-                    b.Property<bool?>("IsDynamicData")
-                        .HasColumnType("bit");
+                    b.Property<bool?>("Isdynamicdata")
+                        .HasColumnType("boolean")
+                        .HasColumnName("isdynamicdata");
 
-                    b.Property<bool?>("IsSaveEachForm")
-                        .HasColumnType("bit");
+                    b.Property<bool?>("Issaveeachform")
+                        .HasColumnType("boolean")
+                        .HasColumnName("issaveeachform");
 
-                    b.Property<bool?>("IsViewOnly")
+                    b.Property<bool?>("Isviewonly")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("bit")
-                        .HasDefaultValue(false);
+                        .HasColumnType("boolean")
+                        .HasDefaultValue(false)
+                        .HasColumnName("isviewonly");
 
-                    b.Property<DateTime?>("LastModificationTime")
-                        .HasColumnType("datetime2");
+                    b.Property<DateTime?>("Lastmodificationtime")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("lastmodificationtime");
 
-                    b.Property<long?>("LastModifierUserId")
-                        .HasColumnType("bigint");
+                    b.Property<long?>("Lastmodifieruserid")
+                        .HasColumnType("bigint")
+                        .HasColumnName("lastmodifieruserid");
 
                     b.Property<string>("Name")
-                        .HasColumnType("nvarchar(max)")
-                        .UseCollation("SQL_Latin1_General_CP1_CI_AS");
+                        .HasColumnType("text")
+                        .HasColumnName("name");
 
-                    b.Property<long?>("OrderId")
-                        .HasColumnType("bigint");
+                    b.Property<long?>("Orderid")
+                        .HasColumnType("bigint")
+                        .HasColumnName("orderid");
 
-                    b.Property<string>("SiteCode")
+                    b.Property<string>("Sitecode")
                         .HasMaxLength(255)
-                        .IsUnicode(false)
-                        .HasColumnType("varchar(255)")
-                        .UseCollation("SQL_Latin1_General_CP1_CI_AS");
+                        .HasColumnType("character varying(255)")
+                        .HasColumnName("sitecode");
 
-                    b.Property<int?>("SiteId")
-                        .HasColumnType("int");
+                    b.Property<int?>("Siteid")
+                        .HasColumnType("integer")
+                        .HasColumnName("siteid");
 
-                    b.Property<string>("StoreDefaultData")
-                        .HasColumnType("nvarchar(max)")
-                        .UseCollation("SQL_Latin1_General_CP1_CI_AS");
+                    b.Property<string>("Storedefaultdata")
+                        .HasColumnType("text")
+                        .HasColumnName("storedefaultdata");
 
-                    b.Property<string>("StoreGetData")
-                        .HasColumnType("nvarchar(max)")
-                        .UseCollation("SQL_Latin1_General_CP1_CI_AS");
+                    b.Property<string>("Storegetdata")
+                        .HasColumnType("text")
+                        .HasColumnName("storegetdata");
 
-                    b.Property<string>("StoreLoadDynamicData")
-                        .HasColumnType("nvarchar(max)")
-                        .UseCollation("SQL_Latin1_General_CP1_CI_AS");
+                    b.Property<string>("Storeloaddynamicdata")
+                        .HasColumnType("text")
+                        .HasColumnName("storeloaddynamicdata");
 
-                    b.Property<string>("StoreSetData")
-                        .HasColumnType("nvarchar(max)")
-                        .UseCollation("SQL_Latin1_General_CP1_CI_AS");
+                    b.Property<string>("Storesetdata")
+                        .HasColumnType("text")
+                        .HasColumnName("storesetdata");
 
                     b.Property<bool?>("Vertical")
-                        .HasColumnType("bit");
+                        .HasColumnType("boolean")
+                        .HasColumnName("vertical");
 
-                    b.HasKey("Id");
+                    b.HasKey("Id")
+                        .HasName("pk_net_stepper");
 
-                    b.ToTable("NET_Stepper", (string)null);
+                    b.ToTable("net_stepper", "dbo");
                 });
 
             modelBuilder.Entity("KOAHome.EntityFramework.NetStepperDetail", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
+                        .HasColumnType("integer")
+                        .HasColumnName("id");
 
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
-                    b.Property<DateTime>("CreationTime")
-                        .HasColumnType("datetime2");
+                    b.Property<DateTime?>("Creationtime")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("creationtime");
 
-                    b.Property<long?>("CreatorUserId")
-                        .HasColumnType("bigint");
+                    b.Property<long?>("Creatoruserid")
+                        .HasColumnType("bigint")
+                        .HasColumnName("creatoruserid");
 
-                    b.Property<long?>("DeleterUserId")
-                        .HasColumnType("bigint");
+                    b.Property<long?>("Deleteruserid")
+                        .HasColumnType("bigint")
+                        .HasColumnName("deleteruserid");
 
-                    b.Property<DateTime?>("DeletionTime")
-                        .HasColumnType("datetime2");
+                    b.Property<DateTime?>("Deletiontime")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("deletiontime");
 
-                    b.Property<long?>("FormId")
-                        .HasColumnType("bigint");
+                    b.Property<long?>("Formid")
+                        .HasColumnType("bigint")
+                        .HasColumnName("formid");
 
-                    b.Property<string>("HinWorkflowCode")
+                    b.Property<string>("Hinworkflowcode")
                         .HasMaxLength(255)
-                        .IsUnicode(false)
-                        .HasColumnType("varchar(255)")
-                        .UseCollation("SQL_Latin1_General_CP1_CI_AS");
+                        .HasColumnType("character varying(255)")
+                        .HasColumnName("hinworkflowcode");
 
-                    b.Property<bool?>("IsActive")
-                        .HasColumnType("bit");
+                    b.Property<bool?>("Isactive")
+                        .HasColumnType("boolean")
+                        .HasColumnName("isactive");
 
-                    b.Property<bool>("IsDeleted")
-                        .HasColumnType("bit");
+                    b.Property<bool?>("Isdeleted")
+                        .HasColumnType("boolean")
+                        .HasColumnName("isdeleted");
 
-                    b.Property<string>("LabelActionCode")
-                        .HasColumnType("nvarchar(max)")
-                        .UseCollation("SQL_Latin1_General_CP1_CI_AS");
+                    b.Property<string>("Labelactioncode")
+                        .HasColumnType("text")
+                        .HasColumnName("labelactioncode");
 
-                    b.Property<DateTime?>("LastModificationTime")
-                        .HasColumnType("datetime2");
+                    b.Property<DateTime?>("Lastmodificationtime")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("lastmodificationtime");
 
-                    b.Property<long?>("LastModifierUserId")
-                        .HasColumnType("bigint");
+                    b.Property<long?>("Lastmodifieruserid")
+                        .HasColumnType("bigint")
+                        .HasColumnName("lastmodifieruserid");
 
-                    b.Property<long?>("OrderId")
-                        .HasColumnType("bigint");
+                    b.Property<long?>("Orderid")
+                        .HasColumnType("bigint")
+                        .HasColumnName("orderid");
 
-                    b.Property<string>("SiteCode")
+                    b.Property<string>("Sitecode")
                         .HasMaxLength(255)
-                        .IsUnicode(false)
-                        .HasColumnType("varchar(255)")
-                        .UseCollation("SQL_Latin1_General_CP1_CI_AS");
+                        .HasColumnType("character varying(255)")
+                        .HasColumnName("sitecode");
 
-                    b.Property<int?>("SiteId")
-                        .HasColumnType("int");
+                    b.Property<int?>("Siteid")
+                        .HasColumnType("integer")
+                        .HasColumnName("siteid");
 
-                    b.Property<long?>("StepperId")
-                        .HasColumnType("bigint");
+                    b.Property<long?>("Stepperid")
+                        .HasColumnType("bigint")
+                        .HasColumnName("stepperid");
 
-                    b.HasKey("Id");
+                    b.HasKey("Id")
+                        .HasName("pk_net_stepper_detail");
 
-                    b.ToTable("NET_Stepper_Detail", (string)null);
+                    b.ToTable("net_stepper_detail", "dbo");
                 });
 
-            modelBuilder.Entity("KOAHome.EntityFramework.NetTabPanel", b =>
+            modelBuilder.Entity("KOAHome.EntityFramework.NetTabpanel", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
+                        .HasColumnType("integer")
+                        .HasColumnName("id");
 
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
-                    b.Property<string>("AfterEffectIcon")
+                    b.Property<string>("Aftereffecticon")
                         .HasMaxLength(100)
-                        .HasColumnType("nvarchar(100)")
-                        .UseCollation("SQL_Latin1_General_CP1_CI_AS");
+                        .HasColumnType("character varying(100)")
+                        .HasColumnName("aftereffecticon");
 
-                    b.Property<string>("AfterEffectIconColor")
+                    b.Property<string>("Aftereffecticoncolor")
                         .HasMaxLength(100)
-                        .HasColumnType("nvarchar(100)")
-                        .UseCollation("SQL_Latin1_General_CP1_CI_AS");
+                        .HasColumnType("character varying(100)")
+                        .HasColumnName("aftereffecticoncolor");
 
-                    b.Property<string>("BeforeEffectIcon")
+                    b.Property<string>("Beforeeffecticon")
                         .HasMaxLength(100)
-                        .HasColumnType("nvarchar(100)")
-                        .UseCollation("SQL_Latin1_General_CP1_CI_AS");
+                        .HasColumnType("character varying(100)")
+                        .HasColumnName("beforeeffecticon");
 
-                    b.Property<string>("BeforeEffectIconColor")
+                    b.Property<string>("Beforeeffecticoncolor")
                         .HasMaxLength(100)
-                        .HasColumnType("nvarchar(100)")
-                        .UseCollation("SQL_Latin1_General_CP1_CI_AS");
+                        .HasColumnType("character varying(100)")
+                        .HasColumnName("beforeeffecticoncolor");
 
                     b.Property<string>("Code")
-                        .HasColumnType("nvarchar(max)")
-                        .UseCollation("SQL_Latin1_General_CP1_CI_AS");
+                        .HasColumnType("text")
+                        .HasColumnName("code");
 
-                    b.Property<DateTime>("CreationTime")
-                        .HasColumnType("datetime2");
+                    b.Property<DateTime?>("Creationtime")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("creationtime");
 
-                    b.Property<long?>("CreatorUserId")
-                        .HasColumnType("bigint");
+                    b.Property<long?>("Creatoruserid")
+                        .HasColumnType("bigint")
+                        .HasColumnName("creatoruserid");
 
-                    b.Property<int?>("DatasourceId")
-                        .HasColumnType("int");
+                    b.Property<int?>("Datasourceid")
+                        .HasColumnType("integer")
+                        .HasColumnName("datasourceid");
 
-                    b.Property<long?>("DeleterUserId")
-                        .HasColumnType("bigint");
+                    b.Property<long?>("Deleteruserid")
+                        .HasColumnType("bigint")
+                        .HasColumnName("deleteruserid");
 
-                    b.Property<DateTime?>("DeletionTime")
-                        .HasColumnType("datetime2");
+                    b.Property<DateTime?>("Deletiontime")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("deletiontime");
 
-                    b.Property<string>("FileTemplate")
-                        .HasColumnType("nvarchar(max)")
-                        .UseCollation("SQL_Latin1_General_CP1_CI_AS");
+                    b.Property<string>("Filetemplate")
+                        .HasColumnType("text")
+                        .HasColumnName("filetemplate");
 
-                    b.Property<bool?>("IsActive")
-                        .HasColumnType("bit");
+                    b.Property<bool?>("Isactive")
+                        .HasColumnType("boolean")
+                        .HasColumnName("isactive");
 
-                    b.Property<bool>("IsDeleted")
-                        .HasColumnType("bit");
+                    b.Property<bool?>("Isdeleted")
+                        .HasColumnType("boolean")
+                        .HasColumnName("isdeleted");
 
-                    b.Property<bool?>("IsEffectIcon")
-                        .HasColumnType("bit");
+                    b.Property<bool?>("Iseffecticon")
+                        .HasColumnType("boolean")
+                        .HasColumnName("iseffecticon");
 
-                    b.Property<bool?>("IsExportExcel")
-                        .HasColumnType("bit");
+                    b.Property<bool?>("Isexportexcel")
+                        .HasColumnType("boolean")
+                        .HasColumnName("isexportexcel");
 
-                    b.Property<bool?>("IsExportWordTemplate")
-                        .HasColumnType("bit");
+                    b.Property<bool?>("Isexportwordtemplate")
+                        .HasColumnType("boolean")
+                        .HasColumnName("isexportwordtemplate");
 
-                    b.Property<bool?>("IsPermission")
-                        .HasColumnType("bit");
+                    b.Property<bool?>("Ispermission")
+                        .HasColumnType("boolean")
+                        .HasColumnName("ispermission");
 
-                    b.Property<bool?>("IsPermissionByRecord")
-                        .HasColumnType("bit");
+                    b.Property<bool?>("Ispermissionbyrecord")
+                        .HasColumnType("boolean")
+                        .HasColumnName("ispermissionbyrecord");
 
-                    b.Property<DateTime?>("LastModificationTime")
-                        .HasColumnType("datetime2");
+                    b.Property<DateTime?>("Lastmodificationtime")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("lastmodificationtime");
 
-                    b.Property<long?>("LastModifierUserId")
-                        .HasColumnType("bigint");
+                    b.Property<long?>("Lastmodifieruserid")
+                        .HasColumnType("bigint")
+                        .HasColumnName("lastmodifieruserid");
 
                     b.Property<string>("Name")
-                        .HasColumnType("nvarchar(max)")
-                        .UseCollation("SQL_Latin1_General_CP1_CI_AS");
+                        .HasColumnType("text")
+                        .HasColumnName("name");
 
-                    b.Property<long?>("OrderId")
-                        .HasColumnType("bigint");
+                    b.Property<long?>("Orderid")
+                        .HasColumnType("bigint")
+                        .HasColumnName("orderid");
 
-                    b.Property<int?>("SelectedIndex")
-                        .HasColumnType("int");
+                    b.Property<int?>("Selectedindex")
+                        .HasColumnType("integer")
+                        .HasColumnName("selectedindex");
 
-                    b.Property<int?>("ServiceGetFileName")
-                        .HasColumnType("int");
+                    b.Property<int?>("Servicegetfilename")
+                        .HasColumnType("integer")
+                        .HasColumnName("servicegetfilename");
 
-                    b.Property<string>("SiteCode")
-                        .HasMaxLength(255)
-                        .IsUnicode(false)
-                        .HasColumnType("varchar(255)")
-                        .UseCollation("SQL_Latin1_General_CP1_CI_AS");
-
-                    b.Property<int?>("SiteId")
-                        .HasColumnType("int");
-
-                    b.Property<string>("StoreCheckTabDetail")
+                    b.Property<string>("Sitecode")
                         .HasMaxLength(100)
-                        .HasColumnType("nvarchar(100)")
-                        .UseCollation("SQL_Latin1_General_CP1_CI_AS");
+                        .HasColumnType("character varying(100)")
+                        .HasColumnName("sitecode");
 
-                    b.Property<string>("StoreCheckUrl")
-                        .HasColumnType("nvarchar(max)")
-                        .HasColumnName("StoreCheckURL")
-                        .UseCollation("SQL_Latin1_General_CP1_CI_AS");
+                    b.Property<int?>("Siteid")
+                        .HasColumnType("integer")
+                        .HasColumnName("siteid");
 
-                    b.Property<string>("StoreCountNotify")
-                        .HasColumnType("nvarchar(max)")
-                        .UseCollation("SQL_Latin1_General_CP1_CI_AS");
-
-                    b.Property<string>("StoreExportFile")
-                        .HasColumnType("nvarchar(max)")
-                        .UseCollation("SQL_Latin1_General_CP1_CI_AS");
-
-                    b.Property<string>("StoreGetData")
-                        .HasColumnType("nvarchar(max)")
-                        .UseCollation("SQL_Latin1_General_CP1_CI_AS");
-
-                    b.Property<string>("StoreGetFieldExportDatagrid")
-                        .HasColumnType("nvarchar(max)")
-                        .UseCollation("SQL_Latin1_General_CP1_CI_AS");
-
-                    b.Property<string>("StoreGetFieldExportForm")
-                        .HasColumnType("nvarchar(max)")
-                        .UseCollation("SQL_Latin1_General_CP1_CI_AS");
-
-                    b.Property<string>("StorePermissionByRecord")
+                    b.Property<string>("Storechecktabdetail")
                         .HasMaxLength(100)
-                        .HasColumnType("nvarchar(100)")
-                        .UseCollation("SQL_Latin1_General_CP1_CI_AS");
+                        .HasColumnType("character varying(100)")
+                        .HasColumnName("storechecktabdetail");
 
-                    b.Property<string>("StoreTabPermission")
-                        .HasColumnType("nvarchar(max)")
-                        .UseCollation("SQL_Latin1_General_CP1_CI_AS");
+                    b.Property<string>("Storecheckurl")
+                        .HasColumnType("text")
+                        .HasColumnName("storecheckurl");
 
-                    b.HasKey("Id");
+                    b.Property<string>("Storecountnotify")
+                        .HasColumnType("text")
+                        .HasColumnName("storecountnotify");
 
-                    b.ToTable("NET_TabPanel", (string)null);
+                    b.Property<string>("Storeexportfile")
+                        .HasColumnType("text")
+                        .HasColumnName("storeexportfile");
+
+                    b.Property<string>("Storegetdata")
+                        .HasColumnType("text")
+                        .HasColumnName("storegetdata");
+
+                    b.Property<string>("Storegetfieldexportdatagrid")
+                        .HasColumnType("text")
+                        .HasColumnName("storegetfieldexportdatagrid");
+
+                    b.Property<string>("Storegetfieldexportform")
+                        .HasColumnType("text")
+                        .HasColumnName("storegetfieldexportform");
+
+                    b.Property<string>("Storepermissionbyrecord")
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)")
+                        .HasColumnName("storepermissionbyrecord");
+
+                    b.Property<string>("Storetabpermission")
+                        .HasColumnType("text")
+                        .HasColumnName("storetabpermission");
+
+                    b.HasKey("Id")
+                        .HasName("pk_net_tabpanel");
+
+                    b.ToTable("net_tabpanel", "dbo");
                 });
 
-            modelBuilder.Entity("KOAHome.EntityFramework.NetTabPanelDetail", b =>
+            modelBuilder.Entity("KOAHome.EntityFramework.NetTabpanelDetail", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
+                        .HasColumnType("integer")
+                        .HasColumnName("id");
 
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
-                    b.Property<DateTime>("CreationTime")
-                        .HasColumnType("datetime2");
+                    b.Property<DateTime?>("Creationtime")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("creationtime");
 
-                    b.Property<long?>("CreatorUserId")
-                        .HasColumnType("bigint");
-
-                    b.Property<long?>("DeleterUserId")
-                        .HasColumnType("bigint");
-
-                    b.Property<DateTime?>("DeletionTime")
-                        .HasColumnType("datetime2");
-
-                    b.Property<string>("HinTabPanelCode")
-                        .HasMaxLength(255)
-                        .IsUnicode(false)
-                        .HasColumnType("varchar(255)")
-                        .UseCollation("SQL_Latin1_General_CP1_CI_AS");
-
-                    b.Property<long?>("HinTabPanelId")
+                    b.Property<long?>("Creatoruserid")
                         .HasColumnType("bigint")
-                        .HasColumnName("HinTabPanelID");
+                        .HasColumnName("creatoruserid");
 
-                    b.Property<bool?>("IsActive")
-                        .HasColumnType("bit");
+                    b.Property<long?>("Deleteruserid")
+                        .HasColumnType("bigint")
+                        .HasColumnName("deleteruserid");
 
-                    b.Property<bool>("IsDeleted")
-                        .HasColumnType("bit");
+                    b.Property<DateTime?>("Deletiontime")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("deletiontime");
 
-                    b.Property<bool?>("IsLoop")
+                    b.Property<string>("Hintabpanelcode")
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)")
+                        .HasColumnName("hintabpanelcode");
+
+                    b.Property<long?>("Hintabpanelid")
+                        .HasColumnType("bigint")
+                        .HasColumnName("hintabpanelid");
+
+                    b.Property<bool?>("Isactive")
+                        .HasColumnType("boolean")
+                        .HasColumnName("isactive");
+
+                    b.Property<bool?>("Isdeleted")
+                        .HasColumnType("boolean")
+                        .HasColumnName("isdeleted");
+
+                    b.Property<bool?>("Isloop")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("bit")
-                        .HasDefaultValue(false);
+                        .HasColumnType("boolean")
+                        .HasDefaultValue(false)
+                        .HasColumnName("isloop");
 
-                    b.Property<DateTime?>("LastModificationTime")
-                        .HasColumnType("datetime2");
+                    b.Property<DateTime?>("Lastmodificationtime")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("lastmodificationtime");
 
-                    b.Property<long?>("LastModifierUserId")
-                        .HasColumnType("bigint");
+                    b.Property<long?>("Lastmodifieruserid")
+                        .HasColumnType("bigint")
+                        .HasColumnName("lastmodifieruserid");
 
                     b.Property<string>("Options")
-                        .HasColumnType("nvarchar(max)")
-                        .UseCollation("SQL_Latin1_General_CP1_CI_AS");
+                        .HasColumnType("text")
+                        .HasColumnName("options");
 
-                    b.Property<long?>("OrderId")
-                        .HasColumnType("bigint");
+                    b.Property<long?>("Orderid")
+                        .HasColumnType("bigint")
+                        .HasColumnName("orderid");
 
-                    b.Property<string>("StoreLoop")
-                        .HasColumnType("nvarchar(max)")
-                        .UseCollation("SQL_Latin1_General_CP1_CI_AS");
+                    b.Property<string>("Storeloop")
+                        .HasColumnType("text")
+                        .HasColumnName("storeloop");
 
-                    b.Property<string>("TabIcon")
+                    b.Property<string>("Tabicon")
                         .HasMaxLength(50)
-                        .HasColumnType("nvarchar(50)")
-                        .UseCollation("SQL_Latin1_General_CP1_CI_AS");
+                        .HasColumnType("character varying(50)")
+                        .HasColumnName("tabicon");
 
-                    b.Property<string>("TabIconColor")
-                        .HasMaxLength(20)
-                        .HasColumnType("nvarchar(20)")
-                        .UseCollation("SQL_Latin1_General_CP1_CI_AS");
+                    b.Property<string>("Tabiconcolor")
+                        .HasMaxLength(30)
+                        .HasColumnType("character varying(30)")
+                        .HasColumnName("tabiconcolor");
 
                     b.Property<string>("Template")
-                        .HasColumnType("nvarchar(max)")
-                        .UseCollation("SQL_Latin1_General_CP1_CI_AS");
+                        .HasColumnType("text")
+                        .HasColumnName("template");
 
                     b.Property<string>("Title")
-                        .HasColumnType("nvarchar(max)")
-                        .UseCollation("SQL_Latin1_General_CP1_CI_AS");
+                        .HasColumnType("text")
+                        .HasColumnName("title");
 
-                    b.HasKey("Id");
+                    b.HasKey("Id")
+                        .HasName("pk_net_tabpanel_detail");
 
-                    b.ToTable("NET_TabPanel_Detail", (string)null);
+                    b.ToTable("net_tabpanel_detail", "dbo");
                 });
 
             modelBuilder.Entity("KOAHome.EntityFramework.NetTenant", b =>
                 {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
                     b.Property<string>("Code")
                         .HasMaxLength(200)
-                        .HasColumnType("nvarchar(200)");
+                        .HasColumnType("character varying(200)")
+                        .HasColumnName("code");
 
-                    b.Property<DateTime?>("CreationTime")
-                        .HasColumnType("datetime");
+                    b.Property<DateTime?>("Creationtime")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("creationtime");
 
-                    b.Property<int?>("CreatorUserId")
-                        .HasColumnType("int");
+                    b.Property<int?>("Creatoruserid")
+                        .HasColumnType("integer")
+                        .HasColumnName("creatoruserid");
 
-                    b.Property<int?>("DeleteUserId")
-                        .HasColumnType("int");
+                    b.Property<int?>("Deleteuserid")
+                        .HasColumnType("integer")
+                        .HasColumnName("deleteuserid");
 
-                    b.Property<DateTime?>("DeletionTime")
-                        .HasColumnType("datetime");
+                    b.Property<DateTime?>("Deletiontime")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("deletiontime");
 
                     b.Property<string>("Description")
-                        .HasColumnType("nvarchar(max)");
+                        .HasColumnType("text")
+                        .HasColumnName("description");
 
-                    b.Property<bool?>("IsActive")
+                    b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("bit")
+                        .HasColumnType("integer")
+                        .HasColumnName("id");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<bool?>("Isactive")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("boolean")
                         .HasDefaultValue(true)
-                        .HasColumnName("isActive");
+                        .HasColumnName("isactive");
 
-                    b.Property<bool?>("IsDeleted")
+                    b.Property<bool?>("Isdeleted")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("bit")
+                        .HasColumnType("boolean")
                         .HasDefaultValue(false)
-                        .HasColumnName("isDeleted");
+                        .HasColumnName("isdeleted");
 
-                    b.Property<DateTime?>("LastModificationTime")
-                        .HasColumnType("datetime");
+                    b.Property<DateTime?>("Lastmodificationtime")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("lastmodificationtime");
 
-                    b.Property<int?>("LastModifierUserId")
-                        .HasColumnType("int");
+                    b.Property<int?>("Lastmodifieruserid")
+                        .HasColumnType("integer")
+                        .HasColumnName("lastmodifieruserid");
 
                     b.Property<string>("Name")
-                        .HasColumnType("nvarchar(max)");
+                        .HasColumnType("text")
+                        .HasColumnName("name");
 
-                    b.Property<int?>("OrderId")
-                        .HasColumnType("int");
+                    b.Property<int?>("Orderid")
+                        .HasColumnType("integer")
+                        .HasColumnName("orderid");
 
-                    b.Property<int?>("StartNumberProd")
-                        .HasColumnType("int")
-                        .HasColumnName("StartNumberPROD");
+                    b.Property<string>("Shortname")
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)")
+                        .HasColumnName("shortname");
 
-                    b.HasKey("Id")
-                        .HasName("PK__NET_Tena__3214EC0723FE04EA");
+                    b.Property<int?>("Startnumberprod")
+                        .HasColumnType("integer")
+                        .HasColumnName("startnumberprod");
 
-                    b.ToTable("NET_Tenant", (string)null);
+                    b.Property<string>("Tenanticourl")
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)")
+                        .HasColumnName("tenanticourl");
+
+                    b.Property<string>("Tenantlogotexturl")
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)")
+                        .HasColumnName("tenantlogotexturl");
+
+                    b.Property<string>("Tenantlogourl")
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)")
+                        .HasColumnName("tenantlogourl");
+
+                    b.ToTable("net_tenant", "dbo");
+                });
+
+            modelBuilder.Entity("KOAHome.EntityFramework.NetUnit", b =>
+                {
+                    b.Property<DateTime?>("Creationtime")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("creationtime");
+
+                    b.Property<int?>("Creatoruserid")
+                        .HasColumnType("integer")
+                        .HasColumnName("creatoruserid");
+
+                    b.Property<int?>("Deleteuserid")
+                        .HasColumnType("integer")
+                        .HasColumnName("deleteuserid");
+
+                    b.Property<DateTime?>("Deletiontime")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("deletiontime");
+
+                    b.Property<string>("Description")
+                        .HasColumnType("text")
+                        .HasColumnName("description");
+
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasColumnName("id");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<bool?>("Isactive")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("boolean")
+                        .HasDefaultValue(true)
+                        .HasColumnName("isactive");
+
+                    b.Property<bool?>("Isdelete")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("boolean")
+                        .HasDefaultValue(false)
+                        .HasColumnName("isdelete");
+
+                    b.Property<bool?>("Isparent")
+                        .HasColumnType("boolean")
+                        .HasColumnName("isparent");
+
+                    b.Property<DateTime?>("Lastmodificationtime")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("lastmodificationtime");
+
+                    b.Property<int?>("Lastmodifieruserid")
+                        .HasColumnType("integer")
+                        .HasColumnName("lastmodifieruserid");
+
+                    b.Property<int?>("Leaduserid")
+                        .HasColumnType("integer")
+                        .HasColumnName("leaduserid");
+
+                    b.Property<int?>("Orderid")
+                        .HasColumnType("integer")
+                        .HasColumnName("orderid");
+
+                    b.Property<long?>("Parentid")
+                        .HasColumnType("bigint")
+                        .HasColumnName("parentid");
+
+                    b.Property<long?>("Rootid")
+                        .HasColumnType("bigint")
+                        .HasColumnName("rootid");
+
+                    b.Property<string>("Shortname")
+                        .HasColumnType("text")
+                        .HasColumnName("shortname");
+
+                    b.Property<string>("Unitcode")
+                        .HasColumnType("text")
+                        .HasColumnName("unitcode");
+
+                    b.Property<int?>("Unitgroup")
+                        .HasColumnType("integer")
+                        .HasColumnName("unitgroup");
+
+                    b.Property<string>("Unitname")
+                        .HasMaxLength(1024)
+                        .HasColumnType("character varying(1024)")
+                        .HasColumnName("unitname");
+
+                    b.Property<string>("Unittype")
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)")
+                        .HasColumnName("unittype");
+
+                    b.ToTable("net_unit", "dbo");
                 });
 
             modelBuilder.Entity("KOAHome.EntityFramework.NetValidation", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
+                        .HasColumnType("integer")
+                        .HasColumnName("id");
 
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
                     b.Property<string>("Code")
                         .HasMaxLength(100)
-                        .HasColumnType("nvarchar(100)")
-                        .UseCollation("SQL_Latin1_General_CP1_CI_AS");
+                        .HasColumnType("character varying(100)")
+                        .HasColumnName("code");
 
-                    b.Property<DateTime?>("CreationTime")
-                        .HasColumnType("datetime");
+                    b.Property<DateTime?>("Creationtime")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("creationtime");
 
-                    b.Property<int?>("CreatorUserId")
-                        .HasColumnType("int");
+                    b.Property<int?>("Creatoruserid")
+                        .HasColumnType("integer")
+                        .HasColumnName("creatoruserid");
 
-                    b.Property<int?>("DatasourceId")
-                        .HasColumnType("int");
+                    b.Property<int?>("Datasourceid")
+                        .HasColumnType("integer")
+                        .HasColumnName("datasourceid");
 
-                    b.Property<int?>("DeleterUserId")
-                        .HasColumnType("int");
+                    b.Property<int?>("Deleteruserid")
+                        .HasColumnType("integer")
+                        .HasColumnName("deleteruserid");
 
-                    b.Property<DateTime?>("DeletionTime")
-                        .HasColumnType("datetime");
+                    b.Property<DateTime?>("Deletiontime")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("deletiontime");
 
-                    b.Property<int?>("IsActive")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int")
-                        .HasDefaultValue(1)
-                        .HasColumnName("isActive");
+                    b.Property<int?>("Isactive")
+                        .HasColumnType("integer")
+                        .HasColumnName("isactive");
 
-                    b.Property<int?>("IsDeleted")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int")
-                        .HasDefaultValue(0)
-                        .HasColumnName("isDeleted");
+                    b.Property<int?>("Isdeleted")
+                        .HasColumnType("integer")
+                        .HasColumnName("isdeleted");
 
                     b.Property<string>("Key")
-                        .HasMaxLength(20)
-                        .HasColumnType("nvarchar(20)")
-                        .UseCollation("SQL_Latin1_General_CP1_CI_AS");
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)")
+                        .HasColumnName("key");
 
-                    b.Property<DateTime?>("LastModificationTime")
-                        .HasColumnType("datetime");
+                    b.Property<DateTime?>("Lastmodificationtime")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("lastmodificationtime");
 
-                    b.Property<int?>("LastModifierUserId")
-                        .HasColumnType("int");
+                    b.Property<int?>("Lastmodifieruserid")
+                        .HasColumnType("integer")
+                        .HasColumnName("lastmodifieruserid");
 
                     b.Property<int?>("Max")
-                        .HasColumnType("int");
+                        .HasColumnType("integer")
+                        .HasColumnName("max");
 
                     b.Property<string>("Message")
                         .HasMaxLength(50)
-                        .HasColumnType("nvarchar(50)")
-                        .UseCollation("SQL_Latin1_General_CP1_CI_AS");
+                        .HasColumnType("character varying(50)")
+                        .HasColumnName("message");
 
                     b.Property<int?>("Min")
-                        .HasColumnType("int");
+                        .HasColumnType("integer")
+                        .HasColumnName("min");
 
                     b.Property<string>("Name")
                         .HasMaxLength(100)
-                        .HasColumnType("nvarchar(100)")
-                        .UseCollation("SQL_Latin1_General_CP1_CI_AS");
+                        .HasColumnType("character varying(100)")
+                        .HasColumnName("name");
 
                     b.Property<string>("Pattern")
                         .HasMaxLength(50)
-                        .HasColumnType("nvarchar(50)")
-                        .UseCollation("SQL_Latin1_General_CP1_CI_AS");
+                        .HasColumnType("character varying(50)")
+                        .HasColumnName("pattern");
 
-                    b.Property<string>("SiteCode")
-                        .HasMaxLength(255)
-                        .IsUnicode(false)
-                        .HasColumnType("varchar(255)")
-                        .UseCollation("SQL_Latin1_General_CP1_CI_AS");
+                    b.Property<string>("Sitecode")
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)")
+                        .HasColumnName("sitecode");
 
-                    b.Property<int?>("SiteId")
-                        .HasColumnType("int");
+                    b.Property<int?>("Siteid")
+                        .HasColumnType("integer")
+                        .HasColumnName("siteid");
 
                     b.Property<string>("Store")
                         .HasMaxLength(100)
-                        .HasColumnType("nvarchar(100)")
-                        .UseCollation("SQL_Latin1_General_CP1_CI_AS");
+                        .HasColumnType("character varying(100)")
+                        .HasColumnName("store");
 
                     b.Property<int?>("Type")
-                        .HasColumnType("int");
+                        .HasColumnType("integer")
+                        .HasColumnName("type");
 
                     b.HasKey("Id")
-                        .HasName("PK__DRValida__3214EC07C8D7F405");
+                        .HasName("pk__drvalida__3214ec07c8d7f405");
 
-                    b.ToTable("NET_Validation", (string)null);
+                    b.ToTable("net_validation", "dbo");
                 });
 
             modelBuilder.Entity("KOAHome.EntityFramework.NetWidget", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
+                        .HasColumnType("integer")
+                        .HasColumnName("id");
 
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
-                    b.Property<DateTime>("CreationTime")
-                        .HasColumnType("datetime2");
+                    b.Property<DateTime?>("Creationtime")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("creationtime");
 
-                    b.Property<long?>("CreatorUserId")
-                        .HasColumnType("bigint");
+                    b.Property<long?>("Creatoruserid")
+                        .HasColumnType("bigint")
+                        .HasColumnName("creatoruserid");
 
-                    b.Property<long?>("DeleterUserId")
-                        .HasColumnType("bigint");
+                    b.Property<long?>("Deleteruserid")
+                        .HasColumnType("bigint")
+                        .HasColumnName("deleteruserid");
 
-                    b.Property<DateTime?>("DeletionTime")
-                        .HasColumnType("datetime2");
+                    b.Property<DateTime?>("Deletiontime")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("deletiontime");
 
                     b.Property<string>("Descriptions")
-                        .HasColumnType("nvarchar(max)")
-                        .UseCollation("SQL_Latin1_General_CP1_CI_AS");
+                        .HasColumnType("text")
+                        .HasColumnName("descriptions");
 
-                    b.Property<string>("DisplayTypeCode")
-                        .HasColumnType("nvarchar(max)")
-                        .UseCollation("SQL_Latin1_General_CP1_CI_AS");
+                    b.Property<string>("Displaytypecode")
+                        .HasColumnType("text")
+                        .HasColumnName("displaytypecode");
 
-                    b.Property<bool>("IsDeleted")
-                        .HasColumnType("bit");
+                    b.Property<bool?>("Isdeleted")
+                        .HasColumnType("boolean")
+                        .HasColumnName("isdeleted");
 
-                    b.Property<DateTime?>("LastModificationTime")
-                        .HasColumnType("datetime2");
+                    b.Property<DateTime?>("Lastmodificationtime")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("lastmodificationtime");
 
-                    b.Property<long?>("LastModifierUserId")
-                        .HasColumnType("bigint");
+                    b.Property<long?>("Lastmodifieruserid")
+                        .HasColumnType("bigint")
+                        .HasColumnName("lastmodifieruserid");
 
                     b.Property<string>("Name")
-                        .HasColumnType("nvarchar(max)")
-                        .UseCollation("SQL_Latin1_General_CP1_CI_AS");
-
-                    b.Property<string>("WidgetCode")
-                        .HasColumnType("nvarchar(max)")
-                        .UseCollation("SQL_Latin1_General_CP1_CI_AS");
-
-                    b.HasKey("Id");
-
-                    b.ToTable("NET_Widget", (string)null);
-                });
-
-            modelBuilder.Entity("KOAHome.EntityFramework.NetWidgetDefaultConfig", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<string>("DefaultValue")
-                        .HasColumnType("nvarchar(max)")
-                        .UseCollation("SQL_Latin1_General_CP1_CI_AS");
-
-                    b.Property<string>("Descriptions")
-                        .HasColumnType("nvarchar(max)")
-                        .UseCollation("SQL_Latin1_General_CP1_CI_AS");
-
-                    b.Property<int>("Index")
-                        .HasColumnType("int");
-
-                    b.Property<int?>("IndexNumber")
-                        .HasColumnType("int");
-
-                    b.Property<bool>("IsDelete")
-                        .HasColumnType("bit");
-
-                    b.Property<string>("Key")
-                        .HasColumnType("nvarchar(max)")
-                        .UseCollation("SQL_Latin1_General_CP1_CI_AS");
-
-                    b.Property<string>("Name")
-                        .HasColumnType("nvarchar(max)")
-                        .UseCollation("SQL_Latin1_General_CP1_CI_AS");
-
-                    b.Property<int>("WidgetLayoutId")
-                        .HasColumnType("int");
-
-                    b.HasKey("Id");
-
-                    b.ToTable("NET_WidgetDefaultConfig", (string)null);
-                });
-
-            modelBuilder.Entity("KOAHome.EntityFramework.NetWidgetGroup", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<string>("Descriptions")
-                        .HasColumnType("nvarchar(max)")
-                        .UseCollation("SQL_Latin1_General_CP1_CI_AS");
-
-                    b.Property<string>("GroupName")
-                        .HasColumnType("nvarchar(max)")
-                        .UseCollation("SQL_Latin1_General_CP1_CI_AS");
-
-                    b.Property<bool>("IsDeleted")
-                        .HasColumnType("bit");
-
-                    b.HasKey("Id");
-
-                    b.ToTable("NET_WidgetGroup", (string)null);
-                });
-
-            modelBuilder.Entity("KOAHome.EntityFramework.NetWidgetItem", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<DateTime>("CreationTime")
-                        .HasColumnType("datetime2");
-
-                    b.Property<long?>("CreatorUserId")
-                        .HasColumnType("bigint");
-
-                    b.Property<int?>("DataSourceId")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int")
-                        .HasDefaultValue(0)
-                        .HasColumnName("DataSourceID");
-
-                    b.Property<long?>("DeleterUserId")
-                        .HasColumnType("bigint");
-
-                    b.Property<DateTime?>("DeletionTime")
-                        .HasColumnType("datetime2");
-
-                    b.Property<string>("Descriptions")
-                        .HasColumnType("nvarchar(max)")
-                        .UseCollation("SQL_Latin1_General_CP1_CI_AS");
-
-                    b.Property<int>("GroupWidgetId")
-                        .HasColumnType("int");
-
-                    b.Property<string>("ImgReview")
-                        .HasColumnType("nvarchar(max)")
-                        .UseCollation("SQL_Latin1_General_CP1_CI_AS");
-
-                    b.Property<bool>("IsDeleted")
-                        .HasColumnType("bit");
-
-                    b.Property<DateTime?>("LastModificationTime")
-                        .HasColumnType("datetime2");
-
-                    b.Property<long?>("LastModifierUserId")
-                        .HasColumnType("bigint");
-
-                    b.Property<string>("Name")
-                        .HasColumnType("nvarchar(max)")
-                        .UseCollation("SQL_Latin1_General_CP1_CI_AS");
-
-                    b.Property<string>("TemplateIds")
-                        .HasColumnType("nvarchar(max)")
-                        .UseCollation("SQL_Latin1_General_CP1_CI_AS");
-
-                    b.Property<int>("WidgetLayoutId")
-                        .HasColumnType("int");
-
-                    b.HasKey("Id");
-
-                    b.ToTable("NET_WidgetItem", (string)null);
-                });
-
-            modelBuilder.Entity("KOAHome.EntityFramework.NetWidgetMap", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<DateTime>("CreationTime")
-                        .HasColumnType("datetime2");
-
-                    b.Property<long?>("CreatorUserId")
-                        .HasColumnType("bigint");
-
-                    b.Property<long?>("DeleterUserId")
-                        .HasColumnType("bigint");
-
-                    b.Property<DateTime?>("DeletionTime")
-                        .HasColumnType("datetime2");
-
-                    b.Property<string>("Descriptions")
-                        .HasColumnType("nvarchar(max)")
-                        .UseCollation("SQL_Latin1_General_CP1_CI_AS");
-
-                    b.Property<int>("Height")
-                        .HasColumnType("int");
-
-                    b.Property<int?>("IndexNumber")
-                        .HasColumnType("int");
-
-                    b.Property<bool>("IsDeleted")
-                        .HasColumnType("bit");
-
-                    b.Property<DateTime?>("LastModificationTime")
-                        .HasColumnType("datetime2");
-
-                    b.Property<long?>("LastModifierUserId")
-                        .HasColumnType("bigint");
-
-                    b.Property<string>("Name")
-                        .HasColumnType("nvarchar(max)")
-                        .UseCollation("SQL_Latin1_General_CP1_CI_AS");
-
-                    b.Property<int>("PageId")
-                        .HasColumnType("int");
-
-                    b.Property<int>("PositionX")
-                        .HasColumnType("int");
-
-                    b.Property<int>("PositionY")
-                        .HasColumnType("int");
-
-                    b.Property<int>("WidgetItemId")
-                        .HasColumnType("int");
-
-                    b.Property<int>("Width")
-                        .HasColumnType("int");
-
-                    b.HasKey("Id");
-
-                    b.ToTable("NET_WidgetMap", (string)null);
-                });
-
-            modelBuilder.Entity("KOAHome.EntityFramework.NetWidgetValueConfig", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<string>("Descriptions")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<int>("Index")
-                        .HasColumnType("int");
-
-                    b.Property<bool>("IsDelete")
-                        .HasColumnType("bit");
-
-                    b.Property<string>("Key")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("Name")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("Value")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<int>("WidgetItemId")
-                        .HasColumnType("int");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex(new[] { "WidgetItemId", "IsDelete" }, "IX_MissingIndex_4_3");
-
-                    SqlServerIndexBuilderExtensions.HasFillFactor(b.HasIndex(new[] { "WidgetItemId", "IsDelete" }, "IX_MissingIndex_4_3"), 90);
-
-                    b.ToTable("NET_WidgetValueConfig", (string)null);
-                });
-
-            modelBuilder.Entity("KOAHome.EntityFramework.WidgetLayoutTest", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<DateTime?>("CreatedAt")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("datetime")
-                        .HasDefaultValueSql("(getdate())");
-
-                    b.Property<string>("DashboardId")
-                        .HasMaxLength(50)
-                        .HasColumnType("nvarchar(50)")
-                        .UseCollation("SQL_Latin1_General_CP1_CI_AS");
-
-                    b.Property<int?>("Height")
-                        .HasColumnType("int");
-
-                    b.Property<int?>("Order")
-                        .HasColumnType("int");
-
-                    b.Property<string>("UserId")
-                        .HasMaxLength(50)
-                        .HasColumnType("nvarchar(50)")
-                        .UseCollation("SQL_Latin1_General_CP1_CI_AS");
-
-                    b.Property<string>("WidgetId")
-                        .HasMaxLength(100)
-                        .HasColumnType("nvarchar(100)")
-                        .UseCollation("SQL_Latin1_General_CP1_CI_AS");
-
-                    b.Property<int?>("Width")
-                        .HasColumnType("int");
+                        .HasColumnType("text")
+                        .HasColumnName("name");
+
+                    b.Property<string>("Widgetcode")
+                        .HasColumnType("text")
+                        .HasColumnName("widgetcode");
 
                     b.HasKey("Id")
-                        .HasName("PK__WidgetLa__3214EC07B34C3338");
+                        .HasName("pk_net_widget");
 
-                    b.ToTable("WidgetLayout_Test", (string)null);
+                    b.ToTable("net_widget", "dbo");
+                });
+
+            modelBuilder.Entity("KOAHome.EntityFramework.NetWidgetdefaultconfig", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasColumnName("id");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("Defaultvalue")
+                        .HasColumnType("text")
+                        .HasColumnName("defaultvalue");
+
+                    b.Property<string>("Descriptions")
+                        .HasColumnType("text")
+                        .HasColumnName("descriptions");
+
+                    b.Property<int?>("Index")
+                        .HasColumnType("integer")
+                        .HasColumnName("index");
+
+                    b.Property<int?>("Indexnumber")
+                        .HasColumnType("integer")
+                        .HasColumnName("indexnumber");
+
+                    b.Property<bool?>("Isdelete")
+                        .HasColumnType("boolean")
+                        .HasColumnName("isdelete");
+
+                    b.Property<string>("Key")
+                        .HasColumnType("text")
+                        .HasColumnName("key");
+
+                    b.Property<string>("Name")
+                        .HasColumnType("text")
+                        .HasColumnName("name");
+
+                    b.Property<int?>("Widgetlayoutid")
+                        .HasColumnType("integer")
+                        .HasColumnName("widgetlayoutid");
+
+                    b.HasKey("Id")
+                        .HasName("pk_net_widgetdefaultconfig");
+
+                    b.ToTable("net_widgetdefaultconfig", "dbo");
+                });
+
+            modelBuilder.Entity("KOAHome.EntityFramework.NetWidgetgroup", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasColumnName("id");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("Descriptions")
+                        .HasColumnType("text")
+                        .HasColumnName("descriptions");
+
+                    b.Property<string>("Groupname")
+                        .HasColumnType("text")
+                        .HasColumnName("groupname");
+
+                    b.Property<bool?>("Isdeleted")
+                        .HasColumnType("boolean")
+                        .HasColumnName("isdeleted");
+
+                    b.HasKey("Id")
+                        .HasName("pk_net_widgetgroup");
+
+                    b.ToTable("net_widgetgroup", "dbo");
+                });
+
+            modelBuilder.Entity("KOAHome.EntityFramework.NetWidgetitem", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasColumnName("id");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<DateTime?>("Creationtime")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("creationtime");
+
+                    b.Property<long?>("Creatoruserid")
+                        .HasColumnType("bigint")
+                        .HasColumnName("creatoruserid");
+
+                    b.Property<int?>("Datasourceid")
+                        .HasColumnType("integer")
+                        .HasColumnName("datasourceid");
+
+                    b.Property<long?>("Deleteruserid")
+                        .HasColumnType("bigint")
+                        .HasColumnName("deleteruserid");
+
+                    b.Property<DateTime?>("Deletiontime")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("deletiontime");
+
+                    b.Property<string>("Descriptions")
+                        .HasColumnType("text")
+                        .HasColumnName("descriptions");
+
+                    b.Property<int?>("Groupwidgetid")
+                        .HasColumnType("integer")
+                        .HasColumnName("groupwidgetid");
+
+                    b.Property<string>("Imgreview")
+                        .HasColumnType("text")
+                        .HasColumnName("imgreview");
+
+                    b.Property<bool?>("Isdeleted")
+                        .HasColumnType("boolean")
+                        .HasColumnName("isdeleted");
+
+                    b.Property<DateTime?>("Lastmodificationtime")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("lastmodificationtime");
+
+                    b.Property<long?>("Lastmodifieruserid")
+                        .HasColumnType("bigint")
+                        .HasColumnName("lastmodifieruserid");
+
+                    b.Property<string>("Name")
+                        .HasColumnType("text")
+                        .HasColumnName("name");
+
+                    b.Property<string>("Templateids")
+                        .HasColumnType("text")
+                        .HasColumnName("templateids");
+
+                    b.Property<int?>("Widgetlayoutid")
+                        .HasColumnType("integer")
+                        .HasColumnName("widgetlayoutid");
+
+                    b.HasKey("Id")
+                        .HasName("pk_net_widgetitem");
+
+                    b.ToTable("net_widgetitem", "dbo");
+                });
+
+            modelBuilder.Entity("KOAHome.EntityFramework.NetWidgetmap", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasColumnName("id");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<DateTime?>("Creationtime")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("creationtime");
+
+                    b.Property<long?>("Creatoruserid")
+                        .HasColumnType("bigint")
+                        .HasColumnName("creatoruserid");
+
+                    b.Property<long?>("Deleteruserid")
+                        .HasColumnType("bigint")
+                        .HasColumnName("deleteruserid");
+
+                    b.Property<DateTime?>("Deletiontime")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("deletiontime");
+
+                    b.Property<string>("Descriptions")
+                        .HasColumnType("text")
+                        .HasColumnName("descriptions");
+
+                    b.Property<int?>("Height")
+                        .HasColumnType("integer")
+                        .HasColumnName("height");
+
+                    b.Property<int?>("Indexnumber")
+                        .HasColumnType("integer")
+                        .HasColumnName("indexnumber");
+
+                    b.Property<bool?>("Isdeleted")
+                        .HasColumnType("boolean")
+                        .HasColumnName("isdeleted");
+
+                    b.Property<DateTime?>("Lastmodificationtime")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("lastmodificationtime");
+
+                    b.Property<long?>("Lastmodifieruserid")
+                        .HasColumnType("bigint")
+                        .HasColumnName("lastmodifieruserid");
+
+                    b.Property<string>("Name")
+                        .HasColumnType("text")
+                        .HasColumnName("name");
+
+                    b.Property<int?>("Pageid")
+                        .HasColumnType("integer")
+                        .HasColumnName("pageid");
+
+                    b.Property<int?>("Positionx")
+                        .HasColumnType("integer")
+                        .HasColumnName("positionx");
+
+                    b.Property<int?>("Positiony")
+                        .HasColumnType("integer")
+                        .HasColumnName("positiony");
+
+                    b.Property<int?>("Widgetitemid")
+                        .HasColumnType("integer")
+                        .HasColumnName("widgetitemid");
+
+                    b.Property<int?>("Width")
+                        .HasColumnType("integer")
+                        .HasColumnName("width");
+
+                    b.HasKey("Id")
+                        .HasName("pk_net_widgetmap");
+
+                    b.ToTable("net_widgetmap", "dbo");
+                });
+
+            modelBuilder.Entity("KOAHome.EntityFramework.NetWidgetvalueconfig", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasColumnName("id");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("Descriptions")
+                        .HasColumnType("text")
+                        .HasColumnName("descriptions");
+
+                    b.Property<int?>("Index")
+                        .HasColumnType("integer")
+                        .HasColumnName("index");
+
+                    b.Property<bool?>("Isdelete")
+                        .HasColumnType("boolean")
+                        .HasColumnName("isdelete");
+
+                    b.Property<string>("Key")
+                        .HasColumnType("text")
+                        .HasColumnName("key");
+
+                    b.Property<string>("Name")
+                        .HasColumnType("text")
+                        .HasColumnName("name");
+
+                    b.Property<string>("Value")
+                        .HasColumnType("text")
+                        .HasColumnName("value");
+
+                    b.Property<int?>("Widgetitemid")
+                        .HasColumnType("integer")
+                        .HasColumnName("widgetitemid");
+
+                    b.HasKey("Id")
+                        .HasName("pk_net_widgetvalueconfig");
+
+                    b.HasIndex(new[] { "Widgetitemid", "Isdelete" }, "idx_ix_missingindex_4_3");
+
+                    b.ToTable("net_widgetvalueconfig", "dbo");
+                });
+
+            modelBuilder.Entity("KOAHome.EntityFramework.Tempqueriescopy", b =>
+                {
+                    b.Property<string>("Col1")
+                        .HasMaxLength(376)
+                        .HasColumnType("character varying(376)")
+                        .HasColumnName("col1");
+
+                    b.Property<string>("Col2")
+                        .HasColumnType("text")
+                        .HasColumnName("col2");
+
+                    b.Property<string>("Col3")
+                        .HasMaxLength(259)
+                        .HasColumnType("character varying(259)")
+                        .HasColumnName("col3");
+
+                    b.Property<long?>("Rownum")
+                        .HasColumnType("bigint")
+                        .HasColumnName("rownum");
+
+                    b.ToTable("tempqueriescopy", "dbo");
+                });
+
+            modelBuilder.Entity("KOAHome.EntityFramework.Tempquery", b =>
+                {
+                    b.Property<string>("Col1")
+                        .HasMaxLength(376)
+                        .HasColumnType("character varying(376)")
+                        .HasColumnName("col1");
+
+                    b.Property<string>("Col2")
+                        .HasColumnType("text")
+                        .HasColumnName("col2");
+
+                    b.Property<string>("Col3")
+                        .HasMaxLength(259)
+                        .HasColumnType("character varying(259)")
+                        .HasColumnName("col3");
+
+                    b.Property<long?>("Rownum")
+                        .HasColumnType("bigint")
+                        .HasColumnName("rownum");
+
+                    b.ToTable("tempqueries", "dbo");
+                });
+
+            modelBuilder.Entity("KOAHome.EntityFramework.WidgetlayoutTest", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasColumnName("id");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<DateTime?>("Createdat")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("createdat");
+
+                    b.Property<string>("Dashboardid")
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)")
+                        .HasColumnName("dashboardid");
+
+                    b.Property<int?>("Height")
+                        .HasColumnType("integer")
+                        .HasColumnName("height");
+
+                    b.Property<int?>("Order")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("Userid")
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)")
+                        .HasColumnName("userid");
+
+                    b.Property<string>("Widgetid")
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)")
+                        .HasColumnName("widgetid");
+
+                    b.Property<int?>("Width")
+                        .HasColumnType("integer")
+                        .HasColumnName("width");
+
+                    b.HasKey("Id")
+                        .HasName("pk__widgetla__3214ec07b34c3338");
+
+                    b.ToTable("widgetlayout_test", "dbo");
                 });
 
             modelBuilder.Entity("KOAHome.Models.ApplicationRole", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
+                        .HasColumnType("integer");
 
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
                     b.Property<string>("Code")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                        .HasColumnType("text");
 
                     b.Property<string>("ConcurrencyStamp")
                         .IsConcurrencyToken()
-                        .HasColumnType("nvarchar(max)");
+                        .HasColumnType("text");
 
                     b.Property<DateTime?>("CreationTime")
-                        .HasColumnType("datetime2");
+                        .HasColumnType("timestamp with time zone");
 
                     b.Property<int?>("CreatorUserId")
-                        .HasColumnType("int");
+                        .HasColumnType("integer");
 
                     b.Property<int?>("DefaultMenuId")
-                        .HasColumnType("int");
+                        .HasColumnType("integer");
 
                     b.Property<string>("Description")
-                        .HasColumnType("nvarchar(max)");
+                        .HasColumnType("text");
 
                     b.Property<string>("DisplayName")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                        .HasColumnType("text");
 
                     b.Property<bool?>("IsActive")
-                        .HasColumnType("bit");
+                        .HasColumnType("boolean");
 
                     b.Property<bool?>("IsDeleted")
-                        .HasColumnType("bit");
+                        .HasColumnType("boolean");
 
                     b.Property<DateTime?>("LastModificationTime")
-                        .HasColumnType("datetime2");
+                        .HasColumnType("timestamp with time zone");
 
                     b.Property<int?>("LastModifierUserId")
-                        .HasColumnType("int");
+                        .HasColumnType("integer");
 
                     b.Property<string>("Name")
                         .HasMaxLength(256)
-                        .HasColumnType("nvarchar(256)");
+                        .HasColumnType("character varying(256)");
 
                     b.Property<string>("NormalizedName")
                         .HasMaxLength(256)
-                        .HasColumnType("nvarchar(256)");
+                        .HasColumnType("character varying(256)");
 
                     b.Property<int?>("OrderId")
-                        .HasColumnType("int");
+                        .HasColumnType("integer");
 
                     b.Property<string>("PageRedirect")
-                        .HasColumnType("nvarchar(max)");
+                        .HasColumnType("text");
 
                     b.Property<string>("SiteCode")
-                        .HasColumnType("nvarchar(max)");
+                        .HasColumnType("text");
 
                     b.Property<int?>("SiteId")
-                        .HasColumnType("int");
+                        .HasColumnType("integer");
 
                     b.HasKey("Id");
 
                     b.HasIndex("NormalizedName")
                         .IsUnique()
-                        .HasDatabaseName("RoleNameIndex")
-                        .HasFilter("[NormalizedName] IS NOT NULL");
+                        .HasDatabaseName("RoleNameIndex");
 
-                    b.ToTable("AspNetRoles", (string)null);
+                    b.ToTable("AspNetRoles", "dbo");
                 });
 
             modelBuilder.Entity("KOAHome.Models.ApplicationUser", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
+                        .HasColumnType("integer");
 
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
                     b.Property<int>("AccessFailedCount")
-                        .HasColumnType("int");
+                        .HasColumnType("integer");
 
                     b.Property<string>("AvatarImgUrl")
-                        .HasColumnType("nvarchar(max)");
+                        .HasColumnType("text");
 
                     b.Property<string>("ConcurrencyStamp")
                         .IsConcurrencyToken()
-                        .HasColumnType("nvarchar(max)");
+                        .HasColumnType("text");
 
                     b.Property<DateTime>("CreationTime")
-                        .HasColumnType("datetime2");
+                        .HasColumnType("timestamp with time zone");
 
                     b.Property<int>("CreatorUserId")
-                        .HasColumnType("int");
+                        .HasColumnType("integer");
 
                     b.Property<string>("Email")
                         .HasMaxLength(256)
-                        .HasColumnType("nvarchar(256)");
+                        .HasColumnType("character varying(256)");
 
                     b.Property<bool>("EmailConfirmed")
-                        .HasColumnType("bit");
+                        .HasColumnType("boolean");
 
                     b.Property<string>("FullName")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                        .HasColumnType("text");
 
                     b.Property<bool>("IsActive")
-                        .HasColumnType("bit");
+                        .HasColumnType("boolean");
 
                     b.Property<bool>("IsDeleted")
-                        .HasColumnType("bit");
+                        .HasColumnType("boolean");
 
                     b.Property<DateTime?>("LastModificationTime")
-                        .HasColumnType("datetime2");
+                        .HasColumnType("timestamp with time zone");
 
                     b.Property<int?>("LastModifierUserId")
-                        .HasColumnType("int");
+                        .HasColumnType("integer");
 
                     b.Property<bool>("LockoutEnabled")
-                        .HasColumnType("bit");
+                        .HasColumnType("boolean");
 
                     b.Property<DateTimeOffset?>("LockoutEnd")
-                        .HasColumnType("datetimeoffset");
+                        .HasColumnType("timestamp with time zone");
 
                     b.Property<string>("NormalizedEmail")
                         .HasMaxLength(256)
-                        .HasColumnType("nvarchar(256)");
+                        .HasColumnType("character varying(256)");
 
                     b.Property<string>("NormalizedUserName")
                         .HasMaxLength(256)
-                        .HasColumnType("nvarchar(256)");
+                        .HasColumnType("character varying(256)");
 
                     b.Property<string>("PasswordHash")
-                        .HasColumnType("nvarchar(max)");
+                        .HasColumnType("text");
 
                     b.Property<string>("PhoneNumber")
-                        .HasColumnType("nvarchar(max)");
+                        .HasColumnType("text");
 
                     b.Property<bool>("PhoneNumberConfirmed")
-                        .HasColumnType("bit");
+                        .HasColumnType("boolean");
 
                     b.Property<string>("Position")
-                        .HasColumnType("nvarchar(max)");
+                        .HasColumnType("text");
 
                     b.Property<string>("Roles")
-                        .HasColumnType("nvarchar(max)");
+                        .HasColumnType("text");
 
                     b.Property<string>("SecurityStamp")
-                        .HasColumnType("nvarchar(max)");
+                        .HasColumnType("text");
 
                     b.Property<int?>("SiteId")
-                        .HasColumnType("int");
+                        .HasColumnType("integer");
 
                     b.Property<string>("SiteName")
-                        .HasColumnType("nvarchar(max)");
+                        .HasColumnType("text");
 
                     b.Property<bool>("TwoFactorEnabled")
-                        .HasColumnType("bit");
+                        .HasColumnType("boolean");
 
                     b.Property<int>("UnitId")
-                        .HasColumnType("int");
+                        .HasColumnType("integer");
 
                     b.Property<string>("UserName")
                         .HasMaxLength(256)
-                        .HasColumnType("nvarchar(256)");
+                        .HasColumnType("character varying(256)");
 
                     b.HasKey("Id");
 
@@ -3316,113 +3905,112 @@ namespace KOAHome.Migrations
 
                     b.HasIndex("NormalizedUserName")
                         .IsUnique()
-                        .HasDatabaseName("UserNameIndex")
-                        .HasFilter("[NormalizedUserName] IS NOT NULL");
+                        .HasDatabaseName("UserNameIndex");
 
-                    b.ToTable("AspNetUsers", (string)null);
+                    b.ToTable("AspNetUsers", "dbo");
                 });
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRoleClaim<int>", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
+                        .HasColumnType("integer");
 
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
                     b.Property<string>("ClaimType")
-                        .HasColumnType("nvarchar(max)");
+                        .HasColumnType("text");
 
                     b.Property<string>("ClaimValue")
-                        .HasColumnType("nvarchar(max)");
+                        .HasColumnType("text");
 
                     b.Property<int>("RoleId")
-                        .HasColumnType("int");
+                        .HasColumnType("integer");
 
                     b.HasKey("Id");
 
                     b.HasIndex("RoleId");
 
-                    b.ToTable("AspNetRoleClaims", (string)null);
+                    b.ToTable("AspNetRoleClaims", "dbo");
                 });
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserClaim<int>", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
+                        .HasColumnType("integer");
 
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
                     b.Property<string>("ClaimType")
-                        .HasColumnType("nvarchar(max)");
+                        .HasColumnType("text");
 
                     b.Property<string>("ClaimValue")
-                        .HasColumnType("nvarchar(max)");
+                        .HasColumnType("text");
 
                     b.Property<int>("UserId")
-                        .HasColumnType("int");
+                        .HasColumnType("integer");
 
                     b.HasKey("Id");
 
                     b.HasIndex("UserId");
 
-                    b.ToTable("AspNetUserClaims", (string)null);
+                    b.ToTable("AspNetUserClaims", "dbo");
                 });
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserLogin<int>", b =>
                 {
                     b.Property<string>("LoginProvider")
-                        .HasColumnType("nvarchar(450)");
+                        .HasColumnType("text");
 
                     b.Property<string>("ProviderKey")
-                        .HasColumnType("nvarchar(450)");
+                        .HasColumnType("text");
 
                     b.Property<string>("ProviderDisplayName")
-                        .HasColumnType("nvarchar(max)");
+                        .HasColumnType("text");
 
                     b.Property<int>("UserId")
-                        .HasColumnType("int");
+                        .HasColumnType("integer");
 
                     b.HasKey("LoginProvider", "ProviderKey");
 
                     b.HasIndex("UserId");
 
-                    b.ToTable("AspNetUserLogins", (string)null);
+                    b.ToTable("AspNetUserLogins", "dbo");
                 });
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserRole<int>", b =>
                 {
                     b.Property<int>("UserId")
-                        .HasColumnType("int");
+                        .HasColumnType("integer");
 
                     b.Property<int>("RoleId")
-                        .HasColumnType("int");
+                        .HasColumnType("integer");
 
                     b.HasKey("UserId", "RoleId");
 
                     b.HasIndex("RoleId");
 
-                    b.ToTable("AspNetUserRoles", (string)null);
+                    b.ToTable("AspNetUserRoles", "dbo");
                 });
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserToken<int>", b =>
                 {
                     b.Property<int>("UserId")
-                        .HasColumnType("int");
+                        .HasColumnType("integer");
 
                     b.Property<string>("LoginProvider")
-                        .HasColumnType("nvarchar(450)");
+                        .HasColumnType("text");
 
                     b.Property<string>("Name")
-                        .HasColumnType("nvarchar(450)");
+                        .HasColumnType("text");
 
                     b.Property<string>("Value")
-                        .HasColumnType("nvarchar(max)");
+                        .HasColumnType("text");
 
                     b.HasKey("UserId", "LoginProvider", "Name");
 
-                    b.ToTable("AspNetUserTokens", (string)null);
+                    b.ToTable("AspNetUserTokens", "dbo");
                 });
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRoleClaim<int>", b =>

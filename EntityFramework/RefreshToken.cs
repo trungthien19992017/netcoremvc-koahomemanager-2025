@@ -3,21 +3,21 @@ using System.Collections.Generic;
 
 namespace KOAHome.EntityFramework;
 
-public partial class RefreshToken
+public partial class Refreshtoken
 {
-    public long Id { get; set; }
+    public int Id { get; set; }
 
-    public long UserId { get; set; }
+    public long? Userid { get; set; }
 
     public string? Token { get; set; }
 
-    public string? JwtId { get; set; }
+    public string? Jwtid { get; set; }
 
-    public bool? IsUsed { get; set; }
+    public bool? Isused { get; set; }
 
-    public bool? IsRevoked { get; set; }
+    public bool? Isrevoked { get; set; }
 
-    public DateTime? IssuedAt { get; set; }
+    public DateTime? Issuedat { get; set; }
 
-    public DateTime? ExpiredAt { get; set; }
+    public DateTime? Expiredat { get; set; }
 }

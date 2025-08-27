@@ -39,11 +39,7 @@ public partial class HsRoom
 
     public string? Roomimage { get; set; }
 
-    public string? RoomImage { get; set; }
-
-    public int? OrderId { get; set; }
-
-    public virtual HsHomestay Homestay { get; set; } = null!;
+    public virtual HsHomestay? Homestay { get; set; }
 
     public virtual ICollection<HsBooking> HsBookings { get; set; } = new List<HsBooking>();
 

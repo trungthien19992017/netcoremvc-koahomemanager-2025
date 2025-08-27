@@ -33,16 +33,16 @@ namespace KOAHome
           options.UseNpgsql(
               sqlOptions =>
               {
-                  Configuration.GetConnectionString("DefaultConnection");
-                  sqlOptions.CommandTimeout(300); // Thiết lập CommandTimeout là 300 giây
+                Configuration.GetConnectionString("DefaultConnection");
+                sqlOptions.CommandTimeout(300); // Thiết lập CommandTimeout là 300 giây
 
               }));
       services.AddDbContext<TttConfigContext>(options =>
           options.UseNpgsql(
               sqlOptions =>
               {
-                  Configuration.GetConnectionString("ConfigConnection");
-                  sqlOptions.CommandTimeout(300); // Thiết lập CommandTimeout là 300 giây
+                Configuration.GetConnectionString("ConfigConnection");
+                sqlOptions.CommandTimeout(300); // Thiết lập CommandTimeout là 300 giây
               }));
       services.AddDistributedMemoryCache();
       services.AddResponseCaching();
@@ -52,30 +52,30 @@ namespace KOAHome
         options.Cookie.IsEssential = true;
       });
 
-        //// Cấu hình Identity - Cookie based authentication
-        //services.AddIdentity<ApplicationUser, ApplicationRole>()
-        //    .AddEntityFrameworkStores<TttConfigContext>()
-        //    .AddDefaultTokenProviders();
+      // Cấu hình Identity - Cookie based authentication
+      services.AddIdentity<ApplicationUser, ApplicationRole>()
+          .AddEntityFrameworkStores<TttConfigContext>()
+          .AddDefaultTokenProviders();
 
-        //services.ConfigureApplicationCookie(options =>
-        //{
-        //    options.LoginPath = "/Account/Login";
-        //    options.AccessDeniedPath = "/Account/AccessDenied";
-        //    options.ExpireTimeSpan = TimeSpan.FromMinutes(30); // tùy chọn RememberMe sẽ ghi đè
-        //    options.SlidingExpiration = true;
-        //    options.Cookie.HttpOnly = true;
-        //    options.Cookie.SecurePolicy = CookieSecurePolicy.Always;
-        //    options.Cookie.SameSite = SameSiteMode.Strict;
-        //});
+      services.ConfigureApplicationCookie(options =>
+      {
+        options.LoginPath = "/Account/Login";
+        options.AccessDeniedPath = "/Account/AccessDenied";
+        options.ExpireTimeSpan = TimeSpan.FromMinutes(30); // tùy chọn RememberMe sẽ ghi đè
+        options.SlidingExpiration = true;
+        options.Cookie.HttpOnly = true;
+        options.Cookie.SecurePolicy = CookieSecurePolicy.Always;
+        options.Cookie.SameSite = SameSiteMode.Strict;
+      });
 
-        //services.AddAuthentication()
-        //.AddGoogle(options =>
-        //{
-        //    options.ClientId = Configuration["Authentication:Google:ClientId"];
-        //    options.ClientSecret = Configuration["Authentication:Google:ClientSecret"];
-        //});
+      services.AddAuthentication()
+      .AddGoogle(options =>
+      {
+        options.ClientId = Configuration["Authentication:Google:ClientId"];
+        options.ClientSecret = Configuration["Authentication:Google:ClientSecret"];
+      });
 
-        services.AddDataProtection()
+      services.AddDataProtection()
           .PersistKeysToFileSystem(new DirectoryInfo("/app/keys"))
           .SetApplicationName("KOAHome");
 
@@ -85,7 +85,17 @@ namespace KOAHome
       });
 
       services.AddHttpContextAccessor();
-      services.AddControllersWithViews();
+
+      services.AddControllersWithViews(options =>
+      {
+        // Áp dụng AuthorizeAttribute cho toàn bộ controller/action
+        var policy = new AuthorizationPolicyBuilder()
+                        .RequireAuthenticatedUser()
+                        .Build();
+        options.Filters.Add(new AuthorizeFilter(policy));
+      })
+          .AddViewOptions(options => options.HtmlHelperOptions.ClientValidationEnabled = false);
+
       services.AddScoped<IReportEditorService, ReportEditorService>();
       services.AddScoped<IAttachmentService, AttachmentService>();
       services.AddScoped<IReportService, ReportService>();
@@ -139,13 +149,14 @@ namespace KOAHome
       {
         app.UseHttpsRedirection();
       }
+      app.UseHttpsRedirection();
       app.UseStaticFiles();
 
       app.UseRouting();
 
-      app.UseResponseCaching();
+      //app.UseResponseCaching();
 
-        app.UseAuthentication(); // ⚠️ Phải có
+      app.UseAuthentication(); // ⚠️ Phải có
       app.UseAuthorization();
 
       app.UseSession();
@@ -179,7 +190,7 @@ namespace KOAHome
         endpoints.MapControllerRoute(
               name: "form/viewer",
               pattern: "form/viewer/{formCode}/{id?}",
-              defaults: new { controller = "NETForm", action = "Viewer"}
+              defaults: new { controller = "NETForm", action = "Viewer" }
           );
         // route cho form popup
         endpoints.MapControllerRoute(

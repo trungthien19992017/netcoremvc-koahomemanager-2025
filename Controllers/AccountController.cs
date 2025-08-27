@@ -80,11 +80,11 @@ namespace KOAHome.Controllers
                     {
                       TenantCode = t.Code,
                       TenantName = t.Name,
-                      TenantShortName = t.ShortName,
+                      TenantShortName = t.Shortname,
                       TenantDescription = t.Description,
-                      TenantLogoUrl = t.TenantLogoUrl,
-                      TenantIcoUrl = t.TenantIcoUrl,
-                      TenantLogoTextUrl = t.TenantLogoTextUrl
+                      TenantLogoUrl = t.Tenantlogourl,
+                      TenantIcoUrl = t.Tenanticourl,
+                      TenantLogoTextUrl = t.Tenantlogotexturl
                     })
               .FirstOrDefault();
 
@@ -101,7 +101,7 @@ namespace KOAHome.Controllers
           identity.AddClaim(new Claim("SiteShortName", tenantInfo.TenantShortName ?? ""));
           identity.AddClaim(new Claim("TenantLogoUrl", tenantInfo.TenantLogoUrl ?? ""));
           identity.AddClaim(new Claim("TenantIcoUrl", tenantInfo.TenantIcoUrl ?? ""));
-          identity.AddClaim(new Claim("TenantLogoTextUrl", tenantInfo.TenantLogoTextUrl?? ""));
+          identity.AddClaim(new Claim("TenantLogoTextUrl", tenantInfo.TenantLogoTextUrl ?? ""));
 
           var principal = new ClaimsPrincipal(identity);
           await HttpContext.SignInAsync(
@@ -194,8 +194,18 @@ namespace KOAHome.Controllers
         return View(model);
       }
 
-      var user = new ApplicationUser { UserName = model.Username, Email = model.Email, FullName = model.FullName, PhoneNumber = model.PhoneNumber, AvatarImgUrl = model.AvatarImgUrl
-                                          , SiteId = model.SiteId, SiteName = model.SiteName, Position = model.Position, Roles = model.SelectedRoles[0].ToString()
+      var user = new ApplicationUser
+      {
+        UserName = model.Username,
+        Email = model.Email,
+        FullName = model.FullName,
+        PhoneNumber = model.PhoneNumber,
+        AvatarImgUrl = model.AvatarImgUrl
+                                          ,
+        SiteId = model.SiteId,
+        SiteName = model.SiteName,
+        Position = model.Position,
+        Roles = model.SelectedRoles[0].ToString()
       };
       var result = await _userManager.CreateAsync(user, model.Password);
       if (result.Succeeded)
@@ -203,11 +213,11 @@ namespace KOAHome.Controllers
         // ✅ Gán nhiều role
         if (model.SelectedRoles != null && model.SelectedRoles.Any())
         {
-            var roles = model.SelectedRoles[0].ToString().Split(',', StringSplitOptions.RemoveEmptyEntries)
-                        .Select(r => r.Trim())
-                        .ToList();
+          var roles = model.SelectedRoles[0].ToString().Split(',', StringSplitOptions.RemoveEmptyEntries)
+                      .Select(r => r.Trim())
+                      .ToList();
 
-            await _userManager.AddToRolesAsync(user, roles);
+          await _userManager.AddToRolesAsync(user, roles);
         }
         //// Gán role mặc định
         //if (!await _roleManager.RoleExistsAsync("Admin")){
@@ -235,8 +245,8 @@ namespace KOAHome.Controllers
         // ✅ Lưu AvatarImgUrl vào AspNetUsers
         if (attResult.TryGetValue("NET_AspNetUser_Avatar", out var urls) && urls.Any())
         {
-            user.AvatarImgUrl = urls.First();
-            await _userManager.UpdateAsync(user);
+          user.AvatarImgUrl = urls.First();
+          await _userManager.UpdateAsync(user);
         }
         // xu ly luu bang attachment
         var saveAttachmentResult = await _att.SaveAttachmentTable(form, user.Id);

@@ -45,7 +45,5 @@ public partial class NetValidation
 
     public int? Datasourceid { get; set; }
 
-    public int? DatasourceId { get; set; }
-
-    public string? Key { get; set; }
+    public string Key { get; set; }
 }

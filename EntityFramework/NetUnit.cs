@@ -5,43 +5,43 @@ namespace KOAHome.EntityFramework;
 
 public partial class NetUnit
 {
-    public long Id { get; set; }
+    public int Id { get; set; }
 
-    public string? ShortName { get; set; }
+    public string Shortname { get; set; }
 
-    public string? UnitCode { get; set; }
+    public string Unitcode { get; set; }
 
-    public string? UnitName { get; set; }
+    public string Unitname { get; set; }
 
-    public int? UnitGroup { get; set; }
+    public int? Unitgroup { get; set; }
 
-    public long? ParentId { get; set; }
+    public long? Parentid { get; set; }
 
-    public int? OrderId { get; set; }
+    public int? Orderid { get; set; }
 
-    public int? LeadUserId { get; set; }
+    public int? Leaduserid { get; set; }
 
-    public string? UnitType { get; set; }
+    public string Unittype { get; set; }
 
-    public string? Description { get; set; }
+    public string Description { get; set; }
 
-    public bool? IsParent { get; set; }
+    public bool? Isparent { get; set; }
 
-    public bool? IsActive { get; set; }
+    public bool? Isactive { get; set; }
 
-    public bool? IsDelete { get; set; }
+    public bool? Isdelete { get; set; }
 
-    public DateTime? CreationTime { get; set; }
+    public DateTime? Creationtime { get; set; }
 
-    public int? CreatorUserId { get; set; }
+    public int? Creatoruserid { get; set; }
 
-    public DateTime? LastModificationTime { get; set; }
+    public DateTime? Lastmodificationtime { get; set; }
 
-    public int? LastModifierUserId { get; set; }
+    public int? Lastmodifieruserid { get; set; }
 
-    public DateTime? DeletionTime { get; set; }
+    public DateTime? Deletiontime { get; set; }
 
-    public int? DeleteUserId { get; set; }
+    public int? Deleteuserid { get; set; }
 
-    public long? RootId { get; set; }
+    public long? Rootid { get; set; }
 }

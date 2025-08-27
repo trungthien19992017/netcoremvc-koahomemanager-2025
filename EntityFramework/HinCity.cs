@@ -5,15 +5,15 @@ namespace KOAHome.EntityFramework;
 
 public partial class HinCity
 {
-    public long CityId { get; set; }
+    public int? Cityid { get; set; }
 
-    public string? CityCode { get; set; }
+    public string? Citycode { get; set; }
 
-    public string? CityName { get; set; }
+    public string? Cityname { get; set; }
 
-    public string? IndexId { get; set; }
+    public string? Indexid { get; set; }
 
-    public bool? IsActive { get; set; }
+    public bool? Isactive { get; set; }
 
-    public bool IsDelete { get; set; }
+    public bool? Isdelete { get; set; }
 }

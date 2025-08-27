@@ -65,7 +65,5 @@ public partial class NetMenu
 
     public string Sitecode { get; set; }
 
-    public string? SiteCode { get; set; }
-
-    public bool? IsDeleted { get; set; }
+    public bool? Isdeleted { get; set; }
 }

@@ -9,20 +9,23 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
 #nullable disable
 
-namespace KOAHome.Migrations.TttConfig
+namespace KOAHome.Migrations
 {
     [DbContext(typeof(TttConfigContext))]
-    [Migration("20250618130857_InitialCreate")]
-    partial class InitialCreate
+    [Migration("20250822034533_InitIdentitySchema")]
+    partial class InitIdentitySchema
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
+                .HasDefaultSchema("dbo")
                 .HasAnnotation("ProductVersion", "9.0.1")
                 .HasAnnotation("Relational:MaxIdentifierLength", 63);
 
+            NpgsqlModelBuilderExtensions.HasPostgresExtension(modelBuilder, "dblink");
+            NpgsqlModelBuilderExtensions.HasPostgresExtension(modelBuilder, "postgres_fdw");
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
 
             modelBuilder.Entity("KOAHome.EntityFramework.NetAction", b =>
@@ -2588,6 +2591,193 @@ namespace KOAHome.Migrations.TttConfig
                     b.ToTable("net_service", "dbo");
                 });
 
+            modelBuilder.Entity("KOAHome.EntityFramework.NetStepper", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasColumnName("id");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("Code")
+                        .HasColumnType("text")
+                        .HasColumnName("code");
+
+                    b.Property<DateTime?>("Creationtime")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("creationtime");
+
+                    b.Property<long?>("Creatoruserid")
+                        .HasColumnType("bigint")
+                        .HasColumnName("creatoruserid");
+
+                    b.Property<int?>("Datasourceid")
+                        .HasColumnType("integer")
+                        .HasColumnName("datasourceid");
+
+                    b.Property<long?>("Deleteruserid")
+                        .HasColumnType("bigint")
+                        .HasColumnName("deleteruserid");
+
+                    b.Property<DateTime?>("Deletiontime")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("deletiontime");
+
+                    b.Property<bool?>("Isactive")
+                        .HasColumnType("boolean")
+                        .HasColumnName("isactive");
+
+                    b.Property<bool?>("Isactiveeventheader")
+                        .HasColumnType("boolean")
+                        .HasColumnName("isactiveeventheader");
+
+                    b.Property<bool?>("Isdeleted")
+                        .HasColumnType("boolean")
+                        .HasColumnName("isdeleted");
+
+                    b.Property<bool?>("Isdynamicdata")
+                        .HasColumnType("boolean")
+                        .HasColumnName("isdynamicdata");
+
+                    b.Property<bool?>("Issaveeachform")
+                        .HasColumnType("boolean")
+                        .HasColumnName("issaveeachform");
+
+                    b.Property<bool?>("Isviewonly")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("boolean")
+                        .HasDefaultValue(false)
+                        .HasColumnName("isviewonly");
+
+                    b.Property<DateTime?>("Lastmodificationtime")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("lastmodificationtime");
+
+                    b.Property<long?>("Lastmodifieruserid")
+                        .HasColumnType("bigint")
+                        .HasColumnName("lastmodifieruserid");
+
+                    b.Property<string>("Name")
+                        .HasColumnType("text")
+                        .HasColumnName("name");
+
+                    b.Property<long?>("Orderid")
+                        .HasColumnType("bigint")
+                        .HasColumnName("orderid");
+
+                    b.Property<string>("Sitecode")
+                        .HasMaxLength(255)
+                        .HasColumnType("character varying(255)")
+                        .HasColumnName("sitecode");
+
+                    b.Property<int?>("Siteid")
+                        .HasColumnType("integer")
+                        .HasColumnName("siteid");
+
+                    b.Property<string>("Storedefaultdata")
+                        .HasColumnType("text")
+                        .HasColumnName("storedefaultdata");
+
+                    b.Property<string>("Storegetdata")
+                        .HasColumnType("text")
+                        .HasColumnName("storegetdata");
+
+                    b.Property<string>("Storeloaddynamicdata")
+                        .HasColumnType("text")
+                        .HasColumnName("storeloaddynamicdata");
+
+                    b.Property<string>("Storesetdata")
+                        .HasColumnType("text")
+                        .HasColumnName("storesetdata");
+
+                    b.Property<bool?>("Vertical")
+                        .HasColumnType("boolean")
+                        .HasColumnName("vertical");
+
+                    b.HasKey("Id")
+                        .HasName("pk_net_stepper");
+
+                    b.ToTable("net_stepper", "dbo");
+                });
+
+            modelBuilder.Entity("KOAHome.EntityFramework.NetStepperDetail", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasColumnName("id");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<DateTime?>("Creationtime")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("creationtime");
+
+                    b.Property<long?>("Creatoruserid")
+                        .HasColumnType("bigint")
+                        .HasColumnName("creatoruserid");
+
+                    b.Property<long?>("Deleteruserid")
+                        .HasColumnType("bigint")
+                        .HasColumnName("deleteruserid");
+
+                    b.Property<DateTime?>("Deletiontime")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("deletiontime");
+
+                    b.Property<long?>("Formid")
+                        .HasColumnType("bigint")
+                        .HasColumnName("formid");
+
+                    b.Property<string>("Hinworkflowcode")
+                        .HasMaxLength(255)
+                        .HasColumnType("character varying(255)")
+                        .HasColumnName("hinworkflowcode");
+
+                    b.Property<bool?>("Isactive")
+                        .HasColumnType("boolean")
+                        .HasColumnName("isactive");
+
+                    b.Property<bool?>("Isdeleted")
+                        .HasColumnType("boolean")
+                        .HasColumnName("isdeleted");
+
+                    b.Property<string>("Labelactioncode")
+                        .HasColumnType("text")
+                        .HasColumnName("labelactioncode");
+
+                    b.Property<DateTime?>("Lastmodificationtime")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("lastmodificationtime");
+
+                    b.Property<long?>("Lastmodifieruserid")
+                        .HasColumnType("bigint")
+                        .HasColumnName("lastmodifieruserid");
+
+                    b.Property<long?>("Orderid")
+                        .HasColumnType("bigint")
+                        .HasColumnName("orderid");
+
+                    b.Property<string>("Sitecode")
+                        .HasMaxLength(255)
+                        .HasColumnType("character varying(255)")
+                        .HasColumnName("sitecode");
+
+                    b.Property<int?>("Siteid")
+                        .HasColumnType("integer")
+                        .HasColumnName("siteid");
+
+                    b.Property<long?>("Stepperid")
+                        .HasColumnType("bigint")
+                        .HasColumnName("stepperid");
+
+                    b.HasKey("Id")
+                        .HasName("pk_net_stepper_detail");
+
+                    b.ToTable("net_stepper_detail", "dbo");
+                });
+
             modelBuilder.Entity("KOAHome.EntityFramework.NetTabpanel", b =>
                 {
                     b.Property<int>("Id")
@@ -2823,6 +3013,11 @@ namespace KOAHome.Migrations.TttConfig
                         .HasColumnType("character varying(50)")
                         .HasColumnName("tabicon");
 
+                    b.Property<string>("Tabiconcolor")
+                        .HasMaxLength(30)
+                        .HasColumnType("character varying(30)")
+                        .HasColumnName("tabiconcolor");
+
                     b.Property<string>("Template")
                         .HasColumnType("text")
                         .HasColumnName("template");
@@ -2835,6 +3030,189 @@ namespace KOAHome.Migrations.TttConfig
                         .HasName("pk_net_tabpanel_detail");
 
                     b.ToTable("net_tabpanel_detail", "dbo");
+                });
+
+            modelBuilder.Entity("KOAHome.EntityFramework.NetTenant", b =>
+                {
+                    b.Property<string>("Code")
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)")
+                        .HasColumnName("code");
+
+                    b.Property<DateTime?>("Creationtime")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("creationtime");
+
+                    b.Property<int?>("Creatoruserid")
+                        .HasColumnType("integer")
+                        .HasColumnName("creatoruserid");
+
+                    b.Property<int?>("Deleteuserid")
+                        .HasColumnType("integer")
+                        .HasColumnName("deleteuserid");
+
+                    b.Property<DateTime?>("Deletiontime")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("deletiontime");
+
+                    b.Property<string>("Description")
+                        .HasColumnType("text")
+                        .HasColumnName("description");
+
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasColumnName("id");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<bool?>("Isactive")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("boolean")
+                        .HasDefaultValue(true)
+                        .HasColumnName("isactive");
+
+                    b.Property<bool?>("Isdeleted")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("boolean")
+                        .HasDefaultValue(false)
+                        .HasColumnName("isdeleted");
+
+                    b.Property<DateTime?>("Lastmodificationtime")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("lastmodificationtime");
+
+                    b.Property<int?>("Lastmodifieruserid")
+                        .HasColumnType("integer")
+                        .HasColumnName("lastmodifieruserid");
+
+                    b.Property<string>("Name")
+                        .HasColumnType("text")
+                        .HasColumnName("name");
+
+                    b.Property<int?>("Orderid")
+                        .HasColumnType("integer")
+                        .HasColumnName("orderid");
+
+                    b.Property<string>("Shortname")
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)")
+                        .HasColumnName("shortname");
+
+                    b.Property<int?>("Startnumberprod")
+                        .HasColumnType("integer")
+                        .HasColumnName("startnumberprod");
+
+                    b.Property<string>("Tenanticourl")
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)")
+                        .HasColumnName("tenanticourl");
+
+                    b.Property<string>("Tenantlogotexturl")
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)")
+                        .HasColumnName("tenantlogotexturl");
+
+                    b.Property<string>("Tenantlogourl")
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)")
+                        .HasColumnName("tenantlogourl");
+
+                    b.ToTable("net_tenant", "dbo");
+                });
+
+            modelBuilder.Entity("KOAHome.EntityFramework.NetUnit", b =>
+                {
+                    b.Property<DateTime?>("Creationtime")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("creationtime");
+
+                    b.Property<int?>("Creatoruserid")
+                        .HasColumnType("integer")
+                        .HasColumnName("creatoruserid");
+
+                    b.Property<int?>("Deleteuserid")
+                        .HasColumnType("integer")
+                        .HasColumnName("deleteuserid");
+
+                    b.Property<DateTime?>("Deletiontime")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("deletiontime");
+
+                    b.Property<string>("Description")
+                        .HasColumnType("text")
+                        .HasColumnName("description");
+
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasColumnName("id");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<bool?>("Isactive")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("boolean")
+                        .HasDefaultValue(true)
+                        .HasColumnName("isactive");
+
+                    b.Property<bool?>("Isdelete")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("boolean")
+                        .HasDefaultValue(false)
+                        .HasColumnName("isdelete");
+
+                    b.Property<bool?>("Isparent")
+                        .HasColumnType("boolean")
+                        .HasColumnName("isparent");
+
+                    b.Property<DateTime?>("Lastmodificationtime")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("lastmodificationtime");
+
+                    b.Property<int?>("Lastmodifieruserid")
+                        .HasColumnType("integer")
+                        .HasColumnName("lastmodifieruserid");
+
+                    b.Property<int?>("Leaduserid")
+                        .HasColumnType("integer")
+                        .HasColumnName("leaduserid");
+
+                    b.Property<int?>("Orderid")
+                        .HasColumnType("integer")
+                        .HasColumnName("orderid");
+
+                    b.Property<long?>("Parentid")
+                        .HasColumnType("bigint")
+                        .HasColumnName("parentid");
+
+                    b.Property<long?>("Rootid")
+                        .HasColumnType("bigint")
+                        .HasColumnName("rootid");
+
+                    b.Property<string>("Shortname")
+                        .HasColumnType("text")
+                        .HasColumnName("shortname");
+
+                    b.Property<string>("Unitcode")
+                        .HasColumnType("text")
+                        .HasColumnName("unitcode");
+
+                    b.Property<int?>("Unitgroup")
+                        .HasColumnType("integer")
+                        .HasColumnName("unitgroup");
+
+                    b.Property<string>("Unitname")
+                        .HasMaxLength(1024)
+                        .HasColumnType("character varying(1024)")
+                        .HasColumnName("unitname");
+
+                    b.Property<string>("Unittype")
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)")
+                        .HasColumnName("unittype");
+
+                    b.ToTable("net_unit", "dbo");
                 });
 
             modelBuilder.Entity("KOAHome.EntityFramework.NetValidation", b =>
@@ -2878,6 +3256,11 @@ namespace KOAHome.Migrations.TttConfig
                     b.Property<int?>("Isdeleted")
                         .HasColumnType("integer")
                         .HasColumnName("isdeleted");
+
+                    b.Property<string>("Key")
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)")
+                        .HasColumnName("key");
 
                     b.Property<DateTime?>("Lastmodificationtime")
                         .HasColumnType("timestamp with time zone")
@@ -3351,6 +3734,337 @@ namespace KOAHome.Migrations.TttConfig
                         .HasName("pk__widgetla__3214ec07b34c3338");
 
                     b.ToTable("widgetlayout_test", "dbo");
+                });
+
+            modelBuilder.Entity("KOAHome.Models.ApplicationRole", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("Code")
+                        .HasColumnType("text");
+
+                    b.Property<string>("ConcurrencyStamp")
+                        .IsConcurrencyToken()
+                        .HasColumnType("text");
+
+                    b.Property<DateTime?>("CreationTime")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<int?>("CreatorUserId")
+                        .HasColumnType("integer");
+
+                    b.Property<int?>("DefaultMenuId")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("Description")
+                        .HasColumnType("text");
+
+                    b.Property<string>("DisplayName")
+                        .HasColumnType("text");
+
+                    b.Property<bool?>("IsActive")
+                        .HasColumnType("boolean");
+
+                    b.Property<bool?>("IsDeleted")
+                        .HasColumnType("boolean");
+
+                    b.Property<DateTime?>("LastModificationTime")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<int?>("LastModifierUserId")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("Name")
+                        .HasMaxLength(256)
+                        .HasColumnType("character varying(256)");
+
+                    b.Property<string>("NormalizedName")
+                        .HasMaxLength(256)
+                        .HasColumnType("character varying(256)");
+
+                    b.Property<int?>("OrderId")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("PageRedirect")
+                        .HasColumnType("text");
+
+                    b.Property<string>("SiteCode")
+                        .HasColumnType("text");
+
+                    b.Property<int?>("SiteId")
+                        .HasColumnType("integer");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("NormalizedName")
+                        .IsUnique()
+                        .HasDatabaseName("RoleNameIndex");
+
+                    b.ToTable("AspNetRoles", "dbo");
+                });
+
+            modelBuilder.Entity("KOAHome.Models.ApplicationUser", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("AccessFailedCount")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("AvatarImgUrl")
+                        .HasColumnType("text");
+
+                    b.Property<string>("ConcurrencyStamp")
+                        .IsConcurrencyToken()
+                        .HasColumnType("text");
+
+                    b.Property<DateTime>("CreationTime")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<int>("CreatorUserId")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("Email")
+                        .HasMaxLength(256)
+                        .HasColumnType("character varying(256)");
+
+                    b.Property<bool>("EmailConfirmed")
+                        .HasColumnType("boolean");
+
+                    b.Property<string>("FullName")
+                        .HasColumnType("text");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("boolean");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("boolean");
+
+                    b.Property<DateTime?>("LastModificationTime")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<int?>("LastModifierUserId")
+                        .HasColumnType("integer");
+
+                    b.Property<bool>("LockoutEnabled")
+                        .HasColumnType("boolean");
+
+                    b.Property<DateTimeOffset?>("LockoutEnd")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("NormalizedEmail")
+                        .HasMaxLength(256)
+                        .HasColumnType("character varying(256)");
+
+                    b.Property<string>("NormalizedUserName")
+                        .HasMaxLength(256)
+                        .HasColumnType("character varying(256)");
+
+                    b.Property<string>("PasswordHash")
+                        .HasColumnType("text");
+
+                    b.Property<string>("PhoneNumber")
+                        .HasColumnType("text");
+
+                    b.Property<bool>("PhoneNumberConfirmed")
+                        .HasColumnType("boolean");
+
+                    b.Property<string>("Position")
+                        .HasColumnType("text");
+
+                    b.Property<string>("Roles")
+                        .HasColumnType("text");
+
+                    b.Property<string>("SecurityStamp")
+                        .HasColumnType("text");
+
+                    b.Property<int?>("SiteId")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("SiteName")
+                        .HasColumnType("text");
+
+                    b.Property<bool>("TwoFactorEnabled")
+                        .HasColumnType("boolean");
+
+                    b.Property<int>("UnitId")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("UserName")
+                        .HasMaxLength(256)
+                        .HasColumnType("character varying(256)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("NormalizedEmail")
+                        .HasDatabaseName("EmailIndex");
+
+                    b.HasIndex("NormalizedUserName")
+                        .IsUnique()
+                        .HasDatabaseName("UserNameIndex");
+
+                    b.ToTable("AspNetUsers", "dbo");
+                });
+
+            modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRoleClaim<int>", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("ClaimType")
+                        .HasColumnType("text");
+
+                    b.Property<string>("ClaimValue")
+                        .HasColumnType("text");
+
+                    b.Property<int>("RoleId")
+                        .HasColumnType("integer");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("RoleId");
+
+                    b.ToTable("AspNetRoleClaims", "dbo");
+                });
+
+            modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserClaim<int>", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("ClaimType")
+                        .HasColumnType("text");
+
+                    b.Property<string>("ClaimValue")
+                        .HasColumnType("text");
+
+                    b.Property<int>("UserId")
+                        .HasColumnType("integer");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("UserId");
+
+                    b.ToTable("AspNetUserClaims", "dbo");
+                });
+
+            modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserLogin<int>", b =>
+                {
+                    b.Property<string>("LoginProvider")
+                        .HasColumnType("text");
+
+                    b.Property<string>("ProviderKey")
+                        .HasColumnType("text");
+
+                    b.Property<string>("ProviderDisplayName")
+                        .HasColumnType("text");
+
+                    b.Property<int>("UserId")
+                        .HasColumnType("integer");
+
+                    b.HasKey("LoginProvider", "ProviderKey");
+
+                    b.HasIndex("UserId");
+
+                    b.ToTable("AspNetUserLogins", "dbo");
+                });
+
+            modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserRole<int>", b =>
+                {
+                    b.Property<int>("UserId")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("RoleId")
+                        .HasColumnType("integer");
+
+                    b.HasKey("UserId", "RoleId");
+
+                    b.HasIndex("RoleId");
+
+                    b.ToTable("AspNetUserRoles", "dbo");
+                });
+
+            modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserToken<int>", b =>
+                {
+                    b.Property<int>("UserId")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("LoginProvider")
+                        .HasColumnType("text");
+
+                    b.Property<string>("Name")
+                        .HasColumnType("text");
+
+                    b.Property<string>("Value")
+                        .HasColumnType("text");
+
+                    b.HasKey("UserId", "LoginProvider", "Name");
+
+                    b.ToTable("AspNetUserTokens", "dbo");
+                });
+
+            modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRoleClaim<int>", b =>
+                {
+                    b.HasOne("KOAHome.Models.ApplicationRole", null)
+                        .WithMany()
+                        .HasForeignKey("RoleId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserClaim<int>", b =>
+                {
+                    b.HasOne("KOAHome.Models.ApplicationUser", null)
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserLogin<int>", b =>
+                {
+                    b.HasOne("KOAHome.Models.ApplicationUser", null)
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserRole<int>", b =>
+                {
+                    b.HasOne("KOAHome.Models.ApplicationRole", null)
+                        .WithMany()
+                        .HasForeignKey("RoleId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("KOAHome.Models.ApplicationUser", null)
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserToken<int>", b =>
+                {
+                    b.HasOne("KOAHome.Models.ApplicationUser", null)
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
                 });
 #pragma warning restore 612, 618
         }

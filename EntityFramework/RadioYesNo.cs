@@ -3,7 +3,7 @@ using System.Collections.Generic;
 
 namespace KOAHome.EntityFramework;
 
-public partial class RadioYesNo
+public partial class Radioyesno
 {
     public int Id { get; set; }
 
@@ -11,7 +11,7 @@ public partial class RadioYesNo
 
     public string? Name { get; set; }
 
-    public bool? IsActive { get; set; }
+    public bool? Isactive { get; set; }
 
-    public bool? IsDeleted { get; set; }
+    public bool? Isdeleted { get; set; }
 }

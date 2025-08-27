@@ -49,14 +49,5 @@ public partial class HsService
 
     public string? Applydate { get; set; }
 
-    public int? InTimeRange { get; set; }
-
-    public bool? IsAddOn { get; set; }
-
-    /// <summary>
-    /// Áp dụng cho thứ mấy?
-    /// </summary>
-    public string? ApplyDate { get; set; }
-
-    public virtual ICollection<HsBookingService> HsBookingServices { get; set; } = new List<HsBookingService>();
+    public virtual ICollection<HsBookingservice> HsBookingservices { get; set; } = new List<HsBookingservice>();
 }

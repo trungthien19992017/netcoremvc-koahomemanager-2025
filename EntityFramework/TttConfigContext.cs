@@ -1,9 +1,9 @@
+using KOAHome.Models;
+using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
-using KOAHome.Models;
-using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
-using Microsoft.AspNetCore.Identity;
-using Microsoft.EntityFrameworkCore;
 
 namespace KOAHome.EntityFramework;
 
@@ -29,43 +29,43 @@ public partial class TttConfigContext : IdentityDbContext<
 
     public virtual DbSet<NetAction> NetActions { get; set; }
 
-    public virtual DbSet<NetActionList> NetActionLists { get; set; }
+    public virtual DbSet<NetActionlist> NetActionlists { get; set; }
 
-    public virtual DbSet<NetActionListDetail> NetActionListDetails { get; set; }
+    public virtual DbSet<NetActionlistdetail> NetActionlistdetails { get; set; }
 
-    public virtual DbSet<NetActionType> NetActionTypes { get; set; }
+    public virtual DbSet<NetActiontype> NetActiontypes { get; set; }
 
     public virtual DbSet<NetAttachment> NetAttachments { get; set; }
 
-    public virtual DbSet<NetAttachmentSyntax> NetAttachmentSyntaxes { get; set; }
+    public virtual DbSet<NetAttachmentsyntax> NetAttachmentsyntaxes { get; set; }
 
     public virtual DbSet<NetDashboard> NetDashboards { get; set; }
 
-    public virtual DbSet<NetDashboardPage> NetDashboardPages { get; set; }
+    public virtual DbSet<NetDashboardpage> NetDashboardpages { get; set; }
 
-    public virtual DbSet<NetDataSource> NetDataSources { get; set; }
+    public virtual DbSet<NetDatasource> NetDatasources { get; set; }
 
-    public virtual DbSet<NetDataSourceDetail> NetDataSourceDetails { get; set; }
+    public virtual DbSet<NetDatasourcedetail> NetDatasourcedetails { get; set; }
 
     public virtual DbSet<NetDisplay> NetDisplays { get; set; }
 
-    public virtual DbSet<NetDynamicField> NetDynamicFields { get; set; }
+    public virtual DbSet<NetDynamicfield> NetDynamicfields { get; set; }
 
     public virtual DbSet<NetFilter> NetFilters { get; set; }
 
     public virtual DbSet<NetForm> NetForms { get; set; }
 
-    public virtual DbSet<NetFormFieldType> NetFormFieldTypes { get; set; }
-
     public virtual DbSet<NetFormVersion> NetFormVersions { get; set; }
 
-    public virtual DbSet<NetFormVersionField> NetFormVersionFields { get; set; }
+    public virtual DbSet<NetFormVersionfield> NetFormVersionfields { get; set; }
 
-    public virtual DbSet<NetMainMenu> NetMainMenus { get; set; }
+    public virtual DbSet<NetFormfieldtype> NetFormfieldtypes { get; set; }
+
+    public virtual DbSet<NetMainmenu> NetMainmenus { get; set; }
 
     public virtual DbSet<NetMenu> NetMenus { get; set; }
 
-    public virtual DbSet<NetMenuRole> NetMenuRoles { get; set; }
+    public virtual DbSet<NetMenurole> NetMenuroles { get; set; }
 
     public virtual DbSet<NetReport> NetReports { get; set; }
 
@@ -75,9 +75,9 @@ public partial class TttConfigContext : IdentityDbContext<
 
     public virtual DbSet<NetStepperDetail> NetStepperDetails { get; set; }
 
-    public virtual DbSet<NetTabPanel> NetTabPanels { get; set; }
+    public virtual DbSet<NetTabpanel> NetTabpanels { get; set; }
 
-    public virtual DbSet<NetTabPanelDetail> NetTabPanelDetails { get; set; }
+    public virtual DbSet<NetTabpanelDetail> NetTabpanelDetails { get; set; }
 
     public virtual DbSet<NetTenant> NetTenants { get; set; }
 
@@ -87,807 +87,1429 @@ public partial class TttConfigContext : IdentityDbContext<
 
     public virtual DbSet<NetWidget> NetWidgets { get; set; }
 
-    public virtual DbSet<NetWidgetDefaultConfig> NetWidgetDefaultConfigs { get; set; }
+    public virtual DbSet<NetWidgetdefaultconfig> NetWidgetdefaultconfigs { get; set; }
 
-    public virtual DbSet<NetWidgetGroup> NetWidgetGroups { get; set; }
+    public virtual DbSet<NetWidgetgroup> NetWidgetgroups { get; set; }
 
-    public virtual DbSet<NetWidgetItem> NetWidgetItems { get; set; }
+    public virtual DbSet<NetWidgetitem> NetWidgetitems { get; set; }
 
-    public virtual DbSet<NetWidgetMap> NetWidgetMaps { get; set; }
+    public virtual DbSet<NetWidgetmap> NetWidgetmaps { get; set; }
 
-    public virtual DbSet<NetWidgetValueConfig> NetWidgetValueConfigs { get; set; }
+    public virtual DbSet<NetWidgetvalueconfig> NetWidgetvalueconfigs { get; set; }
 
-    public virtual DbSet<WidgetLayoutTest> WidgetLayoutTests { get; set; }
+    public virtual DbSet<Tempqueriescopy> Tempqueriescopies { get; set; }
+
+    public virtual DbSet<Tempquery> Tempqueries { get; set; }
+
+    public virtual DbSet<WidgetlayoutTest> WidgetlayoutTests { get; set; }
 
     protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
-        => optionsBuilder.UseSqlServer("Name=ConnectionStrings:ConfigConnection");
+        => optionsBuilder.UseNpgsql("Name=ConnectionStrings:ConfigConnection");
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
+    
+        //// Set schema mặc định là "dbo"
+        modelBuilder.HasDefaultSchema("dbo");
+    
+        // Cuối cùng phải có dòng này:
+        base.OnModelCreating(modelBuilder); // ⚠️ Quan trọng
+
+        modelBuilder
+            .HasPostgresExtension("dblink")
+            .HasPostgresExtension("postgres_fdw");
+
         modelBuilder.Entity<NetAction>(entity =>
         {
-            entity.ToTable("NET_Action");
+            entity.HasKey(e => e.Id).HasName("pk_net_action");
 
-            entity.Property(e => e.Code).UseCollation("SQL_Latin1_General_CP1_CI_AS");
-            entity.Property(e => e.ConfirmButtonText)
+            entity.ToTable("net_action", "dbo");
+
+            entity.Property(e => e.Id).HasColumnName("id");
+            entity.Property(e => e.Code).HasColumnName("code");
+            entity.Property(e => e.Confirmbuttontext)
                 .HasMaxLength(10)
-                .UseCollation("SQL_Latin1_General_CP1_CI_AS");
-            entity.Property(e => e.ConfirmText)
+                .HasColumnName("confirmbuttontext");
+            entity.Property(e => e.Confirmtext)
                 .HasMaxLength(50)
-                .UseCollation("SQL_Latin1_General_CP1_CI_AS");
-            entity.Property(e => e.ConfirmTitle)
+                .HasColumnName("confirmtext");
+            entity.Property(e => e.Confirmtitle)
                 .HasMaxLength(10)
-                .UseCollation("SQL_Latin1_General_CP1_CI_AS");
-            entity.Property(e => e.Descriptions).UseCollation("SQL_Latin1_General_CP1_CI_AS");
-            entity.Property(e => e.Icon).UseCollation("SQL_Latin1_General_CP1_CI_AS");
-            entity.Property(e => e.Name).UseCollation("SQL_Latin1_General_CP1_CI_AS");
-            entity.Property(e => e.SiteCode)
-                .HasMaxLength(255)
-                .IsUnicode(false)
-                .UseCollation("SQL_Latin1_General_CP1_CI_AS");
+                .HasColumnName("confirmtitle");
+            entity.Property(e => e.Descriptions).HasColumnName("descriptions");
+            entity.Property(e => e.Icon).HasColumnName("icon");
+            entity.Property(e => e.Isactive).HasColumnName("isactive");
+            entity.Property(e => e.Isdelete).HasColumnName("isdelete");
+            entity.Property(e => e.Ispopupconfirm).HasColumnName("ispopupconfirm");
+            entity.Property(e => e.Name).HasColumnName("name");
+            entity.Property(e => e.Sitecode)
+                .HasMaxLength(100)
+                .HasColumnName("sitecode");
+            entity.Property(e => e.Siteid).HasColumnName("siteid");
         });
 
-        modelBuilder.Entity<NetActionList>(entity =>
+        modelBuilder.Entity<NetActionlist>(entity =>
         {
-            entity.ToTable("NET_ActionList");
+            entity.HasKey(e => e.Id).HasName("pk_net_actionlist");
 
-            entity.Property(e => e.Id).HasColumnName("ID");
-            entity.Property(e => e.ActionListTypeCode)
+            entity.ToTable("net_actionlist", "dbo");
+
+            entity.Property(e => e.Id).HasColumnName("id");
+            entity.Property(e => e.Actionlisttypecode)
                 .HasMaxLength(200)
-                .UseCollation("SQL_Latin1_General_CP1_CI_AS");
+                .HasColumnName("actionlisttypecode");
+            entity.Property(e => e.Actionlisttypeid).HasColumnName("actionlisttypeid");
             entity.Property(e => e.Code)
                 .HasMaxLength(200)
-                .UseCollation("SQL_Latin1_General_CP1_CI_AS");
-            entity.Property(e => e.CreationTime).HasColumnType("datetime");
-            entity.Property(e => e.DeletionTime).HasColumnType("datetime");
-            entity.Property(e => e.Description).UseCollation("SQL_Latin1_General_CP1_CI_AS");
-            entity.Property(e => e.IsActive).HasColumnName("isActive");
-            entity.Property(e => e.IsDeleted).HasColumnName("isDeleted");
-            entity.Property(e => e.LastModificationTime).HasColumnType("datetime");
+                .HasColumnName("code");
+            entity.Property(e => e.Creationtime).HasColumnName("creationtime");
+            entity.Property(e => e.Creatoruserid).HasColumnName("creatoruserid");
+            entity.Property(e => e.Deleteuserid).HasColumnName("deleteuserid");
+            entity.Property(e => e.Deletiontime).HasColumnName("deletiontime");
+            entity.Property(e => e.Description).HasColumnName("description");
+            entity.Property(e => e.Isactive).HasColumnName("isactive");
+            entity.Property(e => e.Isdeleted).HasColumnName("isdeleted");
+            entity.Property(e => e.Lastmodificationtime).HasColumnName("lastmodificationtime");
+            entity.Property(e => e.Lastmodifieruserid).HasColumnName("lastmodifieruserid");
             entity.Property(e => e.Name)
                 .HasMaxLength(1000)
-                .UseCollation("SQL_Latin1_General_CP1_CI_AS");
-            entity.Property(e => e.ObjectCode)
+                .HasColumnName("name");
+            entity.Property(e => e.Objectcode)
                 .HasMaxLength(200)
-                .UseCollation("SQL_Latin1_General_CP1_CI_AS");
-            entity.Property(e => e.OrderId).HasColumnName("OrderID");
-            entity.Property(e => e.SiteCode)
+                .HasColumnName("objectcode");
+            entity.Property(e => e.Objectid).HasColumnName("objectid");
+            entity.Property(e => e.Orderid).HasColumnName("orderid");
+            entity.Property(e => e.Sitecode)
                 .HasMaxLength(50)
-                .UseCollation("SQL_Latin1_General_CP1_CI_AS");
+                .HasColumnName("sitecode");
+            entity.Property(e => e.Siteid).HasColumnName("siteid");
         });
 
-        modelBuilder.Entity<NetActionListDetail>(entity =>
+        modelBuilder.Entity<NetActionlistdetail>(entity =>
         {
-            entity.ToTable("NET_ActionListDetail");
+            entity.HasKey(e => e.Id).HasName("pk_net_actionlistdetail");
 
-            entity.Property(e => e.Id).HasColumnName("ID");
-            entity.Property(e => e.ActionListCode).UseCollation("SQL_Latin1_General_CP1_CI_AS");
-            entity.Property(e => e.CheckSamePopupButton)
+            entity.ToTable("net_actionlistdetail", "dbo");
+
+            entity.Property(e => e.Id).HasColumnName("id");
+            entity.Property(e => e.Actionid).HasColumnName("actionid");
+            entity.Property(e => e.Actionlistcode).HasColumnName("actionlistcode");
+            entity.Property(e => e.Actionlistid).HasColumnName("actionlistid");
+            entity.Property(e => e.Checksamepopupbutton)
                 .HasMaxLength(20)
-                .UseCollation("SQL_Latin1_General_CP1_CI_AS");
-            entity.Property(e => e.CheckSamePopupText).UseCollation("SQL_Latin1_General_CP1_CI_AS");
-            entity.Property(e => e.CodeSendRealTime).UseCollation("SQL_Latin1_General_CP1_CI_AS");
-            entity.Property(e => e.ConfirmButtonText).UseCollation("SQL_Latin1_General_CP1_CI_AS");
-            entity.Property(e => e.ConfirmText).UseCollation("SQL_Latin1_General_CP1_CI_AS");
-            entity.Property(e => e.ConfirmTitle).UseCollation("SQL_Latin1_General_CP1_CI_AS");
-            entity.Property(e => e.CreationTime).HasColumnType("datetime");
-            entity.Property(e => e.CssButton).UseCollation("SQL_Latin1_General_CP1_CI_AS");
-            entity.Property(e => e.DataSourceId).HasColumnName("DataSourceID");
-            entity.Property(e => e.DeletionTime).HasColumnType("datetime");
-            entity.Property(e => e.DisplayName).UseCollation("SQL_Latin1_General_CP1_CI_AS");
-            entity.Property(e => e.ErrorCol).UseCollation("SQL_Latin1_General_CP1_CI_AS");
-            entity.Property(e => e.FileTemplate).UseCollation("SQL_Latin1_General_CP1_CI_AS");
-            entity.Property(e => e.FileTypeAccept)
+                .HasColumnName("checksamepopupbutton");
+            entity.Property(e => e.Checksamepopuptext).HasColumnName("checksamepopuptext");
+            entity.Property(e => e.Codesendrealtime).HasColumnName("codesendrealtime");
+            entity.Property(e => e.Confirmbuttontext).HasColumnName("confirmbuttontext");
+            entity.Property(e => e.Confirmtext).HasColumnName("confirmtext");
+            entity.Property(e => e.Confirmtitle).HasColumnName("confirmtitle");
+            entity.Property(e => e.Creationtime).HasColumnName("creationtime");
+            entity.Property(e => e.Creatoruserid).HasColumnName("creatoruserid");
+            entity.Property(e => e.Cssbutton).HasColumnName("cssbutton");
+            entity.Property(e => e.Datasourceid).HasColumnName("datasourceid");
+            entity.Property(e => e.Deleteuserid).HasColumnName("deleteuserid");
+            entity.Property(e => e.Deletiontime).HasColumnName("deletiontime");
+            entity.Property(e => e.Displayname).HasColumnName("displayname");
+            entity.Property(e => e.Errorcol).HasColumnName("errorcol");
+            entity.Property(e => e.Filetemplate).HasColumnName("filetemplate");
+            entity.Property(e => e.Filetypeaccept)
                 .HasMaxLength(50)
-                .UseCollation("SQL_Latin1_General_CP1_CI_AS");
+                .HasColumnName("filetypeaccept");
+            entity.Property(e => e.Height).HasColumnName("height");
             entity.Property(e => e.Icon)
-                .HasMaxLength(255)
-                .IsUnicode(false)
-                .UseCollation("SQL_Latin1_General_CP1_CI_AS");
+                .HasMaxLength(100)
+                .HasColumnName("icon");
             entity.Property(e => e.Idgroup)
                 .HasMaxLength(50)
-                .UseCollation("SQL_Latin1_General_CP1_CI_AS")
-                .HasColumnName("IDGroup");
-            entity.Property(e => e.IsActive).HasDefaultValue(true);
-            entity.Property(e => e.IsDeleted)
+                .HasColumnName("idgroup");
+            entity.Property(e => e.Index).HasColumnName("index");
+            entity.Property(e => e.Isactive)
+                .HasDefaultValue(true)
+                .HasColumnName("isactive");
+            entity.Property(e => e.Ischecksamepopup).HasColumnName("ischecksamepopup");
+            entity.Property(e => e.Ischoosedata).HasColumnName("ischoosedata");
+            entity.Property(e => e.Isdeleted)
                 .HasDefaultValue(false)
-                .HasColumnName("isDeleted");
-            entity.Property(e => e.IsNetActionhowError).HasColumnName("IsNET_ActionhowError");
-            entity.Property(e => e.IsSendRealTime).HasDefaultValue(false);
-            entity.Property(e => e.LastModificationTime).HasColumnType("datetime");
-            entity.Property(e => e.OrderId).HasColumnName("OrderID");
-            entity.Property(e => e.RoleId)
-                .HasMaxLength(255)
-                .IsUnicode(false)
-                .UseCollation("SQL_Latin1_General_CP1_CI_AS");
-            entity.Property(e => e.SiteCode)
-                .HasMaxLength(255)
-                .IsUnicode(false)
-                .UseCollation("SQL_Latin1_General_CP1_CI_AS");
-            entity.Property(e => e.Type).UseCollation("SQL_Latin1_General_CP1_CI_AS");
-            entity.Property(e => e.TypeNodeDiagram)
-                .HasMaxLength(255)
-                .IsUnicode(false)
-                .UseCollation("SQL_Latin1_General_CP1_CI_AS");
-            entity.Property(e => e.UrlImportFile).UseCollation("SQL_Latin1_General_CP1_CI_AS");
-            entity.Property(e => e.Value).UseCollation("SQL_Latin1_General_CP1_CI_AS");
+                .HasColumnName("isdeleted");
+            entity.Property(e => e.Isgroup).HasColumnName("isgroup");
+            entity.Property(e => e.IsnetActionhowerror).HasColumnName("isnet_actionhowerror");
+            entity.Property(e => e.Ispopupconfirm).HasColumnName("ispopupconfirm");
+            entity.Property(e => e.Issendrealtime)
+                .HasDefaultValue(false)
+                .HasColumnName("issendrealtime");
+            entity.Property(e => e.Istop).HasColumnName("istop");
+            entity.Property(e => e.Iszoompopup)
+                .HasDefaultValue(false)
+                .HasColumnName("iszoompopup");
+            entity.Property(e => e.Lastmodificationtime).HasColumnName("lastmodificationtime");
+            entity.Property(e => e.Lastmodifieruserid).HasColumnName("lastmodifieruserid");
+            entity.Property(e => e.Orderid).HasColumnName("orderid");
+            entity.Property(e => e.Roleid).HasColumnName("roleid");
+            entity.Property(e => e.Servicefilename).HasColumnName("servicefilename");
+            entity.Property(e => e.Sitecode).HasColumnName("sitecode");
+            entity.Property(e => e.Siteid).HasColumnName("siteid");
+            entity.Property(e => e.Type).HasColumnName("type");
+            entity.Property(e => e.Typenodediagram)
+                .HasMaxLength(100)
+                .HasColumnName("typenodediagram");
+            entity.Property(e => e.Urlimportfile).HasColumnName("urlimportfile");
+            entity.Property(e => e.Value).HasColumnName("value");
+            entity.Property(e => e.Version).HasColumnName("version");
+            entity.Property(e => e.Width).HasColumnName("width");
         });
 
-        modelBuilder.Entity<NetActionType>(entity =>
+        modelBuilder.Entity<NetActiontype>(entity =>
         {
-            entity.ToTable("NET_ActionType");
+            entity.HasKey(e => e.Id).HasName("pk_net_actiontype");
 
-            entity.Property(e => e.Code).UseCollation("SQL_Latin1_General_CP1_CI_AS");
-            entity.Property(e => e.Name).UseCollation("SQL_Latin1_General_CP1_CI_AS");
-            entity.Property(e => e.SiteCode)
-                .HasMaxLength(255)
-                .IsUnicode(false)
-                .UseCollation("SQL_Latin1_General_CP1_CI_AS");
+            entity.ToTable("net_actiontype", "dbo");
+
+            entity.Property(e => e.Id).HasColumnName("id");
+            entity.Property(e => e.Code).HasColumnName("code");
+            entity.Property(e => e.Isactive).HasColumnName("isactive");
+            entity.Property(e => e.Isdelete).HasColumnName("isdelete");
+            entity.Property(e => e.Name).HasColumnName("name");
+            entity.Property(e => e.Orderid).HasColumnName("orderid");
+            entity.Property(e => e.Sitecode)
+                .HasMaxLength(100)
+                .HasColumnName("sitecode");
+            entity.Property(e => e.Siteid).HasColumnName("siteid");
         });
 
         modelBuilder.Entity<NetAttachment>(entity =>
         {
             entity.HasKey(e => e.Id).HasName("pk_net_attachment");
 
-            entity.HasIndex(e => new { e.ObjectTypeId, e.ObjectId, e.IsDeleted }, "IX_NET_Attachment_ObjectTypeId_ObjectId_IsDeleted");
+            entity.ToTable("net_attachment", "dbo");
 
-            entity.Property(e => e.ContentType).UseCollation("SQL_Latin1_General_CP1_CI_AS");
-            entity.Property(e => e.ConvertDiskDirectory).UseCollation("SQL_Latin1_General_CP1_CI_AS");
-            entity.Property(e => e.ConvertFileName).UseCollation("SQL_Latin1_General_CP1_CI_AS");
+            entity.HasIndex(e => new { e.Objecttypeid, e.Objectid, e.Isdeleted }, "idx_ix_net_attachment_objecttypeid_objectid_isdeleted");
+
+            entity.Property(e => e.Id).HasColumnName("id");
+            entity.Property(e => e.Authorid).HasColumnName("authorid");
+            entity.Property(e => e.Contenttype).HasColumnName("contenttype");
+            entity.Property(e => e.Convertdiskdirectory).HasColumnName("convertdiskdirectory");
+            entity.Property(e => e.Convertfilename).HasColumnName("convertfilename");
+            entity.Property(e => e.Creationtime).HasColumnName("creationtime");
+            entity.Property(e => e.Creatoruserid).HasColumnName("creatoruserid");
+            entity.Property(e => e.Deleteruserid).HasColumnName("deleteruserid");
+            entity.Property(e => e.Deletiontime).HasColumnName("deletiontime");
+            entity.Property(e => e.Diskdirectory).HasColumnName("diskdirectory");
+            entity.Property(e => e.Diskfilename).HasColumnName("diskfilename");
+            entity.Property(e => e.Filename).HasColumnName("filename");
+            entity.Property(e => e.Filesize).HasColumnName("filesize");
+            entity.Property(e => e.Iscurrent).HasColumnName("iscurrent");
+            entity.Property(e => e.Isdeleted).HasColumnName("isdeleted");
+            entity.Property(e => e.Lastmodificationtime).HasColumnName("lastmodificationtime");
+            entity.Property(e => e.Lastmodifieruserid).HasColumnName("lastmodifieruserid");
+            entity.Property(e => e.Objectid).HasColumnName("objectid");
+            entity.Property(e => e.Objecttypeid).HasColumnName("objecttypeid");
+            entity.Property(e => e.Tenantid).HasColumnName("tenantid");
+            entity.Property(e => e.Version).HasColumnName("version");
         });
 
-        modelBuilder.Entity<NetAttachmentSyntax>(entity =>
+        modelBuilder.Entity<NetAttachmentsyntax>(entity =>
         {
-            entity.ToTable("NET_AttachmentSyntax");
+            entity.HasKey(e => e.Id).HasName("pk_net_attachmentsyntax");
 
-            entity.Property(e => e.Code).UseCollation("SQL_Latin1_General_CP1_CI_AS");
-            entity.Property(e => e.IsChangeSyntaxName).HasDefaultValue(false);
-            entity.Property(e => e.IsDefault).HasDefaultValue(false);
-            entity.Property(e => e.Name).UseCollation("SQL_Latin1_General_CP1_CI_AS");
-            entity.Property(e => e.SyntaxName).UseCollation("SQL_Latin1_General_CP1_CI_AS");
-            entity.Property(e => e.SyntaxPath).UseCollation("SQL_Latin1_General_CP1_CI_AS");
+            entity.ToTable("net_attachmentsyntax", "dbo");
+
+            entity.Property(e => e.Id).HasColumnName("id");
+            entity.Property(e => e.Code).HasColumnName("code");
+            entity.Property(e => e.Creationtime).HasColumnName("creationtime");
+            entity.Property(e => e.Creatoruserid).HasColumnName("creatoruserid");
+            entity.Property(e => e.Deleteruserid).HasColumnName("deleteruserid");
+            entity.Property(e => e.Deleteuserid).HasColumnName("deleteuserid");
+            entity.Property(e => e.Deletiontime).HasColumnName("deletiontime");
+            entity.Property(e => e.Ischangesyntaxname)
+                .HasDefaultValue(false)
+                .HasColumnName("ischangesyntaxname");
+            entity.Property(e => e.Isdefault)
+                .HasDefaultValue(false)
+                .HasColumnName("isdefault");
+            entity.Property(e => e.Isdeleted).HasColumnName("isdeleted");
+            entity.Property(e => e.Lastmodificationtime).HasColumnName("lastmodificationtime");
+            entity.Property(e => e.Lastmodifieruserid).HasColumnName("lastmodifieruserid");
+            entity.Property(e => e.Name).HasColumnName("name");
+            entity.Property(e => e.Orderid).HasColumnName("orderid");
+            entity.Property(e => e.Syntaxname).HasColumnName("syntaxname");
+            entity.Property(e => e.Syntaxpath).HasColumnName("syntaxpath");
+            entity.Property(e => e.Tenantid).HasColumnName("tenantid");
         });
 
         modelBuilder.Entity<NetDashboard>(entity =>
         {
-            entity.HasKey(e => e.Id).HasName("PK_HIN_Dashboards");
+            entity.HasKey(e => e.Id).HasName("pk_hin_dashboards");
 
-            entity.ToTable("NET_Dashboard");
+            entity.ToTable("net_dashboard", "dbo");
 
-            entity.Property(e => e.CodeReceiveRealTime).UseCollation("SQL_Latin1_General_CP1_CI_AS");
-            entity.Property(e => e.DashboardCode).UseCollation("SQL_Latin1_General_CP1_CI_AS");
-            entity.Property(e => e.Descriptions).UseCollation("SQL_Latin1_General_CP1_CI_AS");
-            entity.Property(e => e.Name).UseCollation("SQL_Latin1_General_CP1_CI_AS");
-            entity.Property(e => e.Options).UseCollation("SQL_Latin1_General_CP1_CI_AS");
-            entity.Property(e => e.StoreDefault).UseCollation("SQL_Latin1_General_CP1_CI_AS");
-            entity.Property(e => e.TextCalendarColor).UseCollation("SQL_Latin1_General_CP1_CI_AS");
+            entity.Property(e => e.Id).HasColumnName("id");
+            entity.Property(e => e.Autoreload)
+                .HasDefaultValue(false)
+                .HasColumnName("autoreload");
+            entity.Property(e => e.Codereceiverealtime).HasColumnName("codereceiverealtime");
+            entity.Property(e => e.Creationtime).HasColumnName("creationtime");
+            entity.Property(e => e.Creatoruserid).HasColumnName("creatoruserid");
+            entity.Property(e => e.Dashboardcode).HasColumnName("dashboardcode");
+            entity.Property(e => e.Datasourceid).HasColumnName("datasourceid");
+            entity.Property(e => e.Deleteruserid).HasColumnName("deleteruserid");
+            entity.Property(e => e.Deletiontime).HasColumnName("deletiontime");
+            entity.Property(e => e.Descriptions).HasColumnName("descriptions");
+            entity.Property(e => e.Isdeleted).HasColumnName("isdeleted");
+            entity.Property(e => e.Lastmodificationtime).HasColumnName("lastmodificationtime");
+            entity.Property(e => e.Lastmodifieruserid).HasColumnName("lastmodifieruserid");
+            entity.Property(e => e.Name).HasColumnName("name");
+            entity.Property(e => e.Options).HasColumnName("options");
+            entity.Property(e => e.Showcalendarfilter)
+                .HasDefaultValue(false)
+                .HasColumnName("showcalendarfilter");
+            entity.Property(e => e.Storedefault).HasColumnName("storedefault");
+            entity.Property(e => e.Textcalendarcolor).HasColumnName("textcalendarcolor");
         });
 
-        modelBuilder.Entity<NetDashboardPage>(entity =>
+        modelBuilder.Entity<NetDashboardpage>(entity =>
         {
-            entity.ToTable("NET_DashboardPage");
+            entity.HasKey(e => e.Id).HasName("pk_net_dashboardpage");
 
-            entity.Property(e => e.Descriptions).UseCollation("SQL_Latin1_General_CP1_CI_AS");
-            entity.Property(e => e.Name).UseCollation("SQL_Latin1_General_CP1_CI_AS");
-            entity.Property(e => e.PageCode).UseCollation("SQL_Latin1_General_CP1_CI_AS");
+            entity.ToTable("net_dashboardpage", "dbo");
+
+            entity.Property(e => e.Id).HasColumnName("id");
+            entity.Property(e => e.Creationtime).HasColumnName("creationtime");
+            entity.Property(e => e.Creatoruserid).HasColumnName("creatoruserid");
+            entity.Property(e => e.Dashboardid).HasColumnName("dashboardid");
+            entity.Property(e => e.Deleteruserid).HasColumnName("deleteruserid");
+            entity.Property(e => e.Deletiontime).HasColumnName("deletiontime");
+            entity.Property(e => e.Descriptions).HasColumnName("descriptions");
+            entity.Property(e => e.Isdeleted).HasColumnName("isdeleted");
+            entity.Property(e => e.Lastmodificationtime).HasColumnName("lastmodificationtime");
+            entity.Property(e => e.Lastmodifieruserid).HasColumnName("lastmodifieruserid");
+            entity.Property(e => e.Name).HasColumnName("name");
+            entity.Property(e => e.Orderid).HasColumnName("orderid");
+            entity.Property(e => e.Pagecode).HasColumnName("pagecode");
         });
 
-        modelBuilder.Entity<NetDataSource>(entity =>
+        modelBuilder.Entity<NetDatasource>(entity =>
         {
-            entity.ToTable("NET_DataSource");
+            entity.HasKey(e => e.Id).HasName("pk_net_datasource");
 
-            entity.Property(e => e.Code).UseCollation("SQL_Latin1_General_CP1_CI_AS");
-            entity.Property(e => e.Name).UseCollation("SQL_Latin1_General_CP1_CI_AS");
-            entity.Property(e => e.Password).UseCollation("SQL_Latin1_General_CP1_CI_AS");
-            entity.Property(e => e.SiteCode)
-                .HasMaxLength(255)
-                .IsUnicode(false)
-                .UseCollation("SQL_Latin1_General_CP1_CI_AS");
-            entity.Property(e => e.SqlType).UseCollation("SQL_Latin1_General_CP1_CI_AS");
+            entity.ToTable("net_datasource", "dbo");
+
+            entity.Property(e => e.Id).HasColumnName("id");
+            entity.Property(e => e.Code).HasColumnName("code");
+            entity.Property(e => e.Creationtime).HasColumnName("creationtime");
+            entity.Property(e => e.Creatoruserid).HasColumnName("creatoruserid");
+            entity.Property(e => e.Deleteruserid).HasColumnName("deleteruserid");
+            entity.Property(e => e.Deletiontime).HasColumnName("deletiontime");
+            entity.Property(e => e.Isdeleted).HasColumnName("isdeleted");
+            entity.Property(e => e.Lastmodificationtime).HasColumnName("lastmodificationtime");
+            entity.Property(e => e.Lastmodifieruserid).HasColumnName("lastmodifieruserid");
+            entity.Property(e => e.Name).HasColumnName("name");
+            entity.Property(e => e.Password).HasColumnName("password");
+            entity.Property(e => e.Sitecode)
+                .HasMaxLength(100)
+                .HasColumnName("sitecode");
+            entity.Property(e => e.Siteid).HasColumnName("siteid");
+            entity.Property(e => e.Sqltype).HasColumnName("sqltype");
+            entity.Property(e => e.Type).HasColumnName("type");
             entity.Property(e => e.Username)
-                .HasMaxLength(255)
-                .IsUnicode(false)
-                .UseCollation("SQL_Latin1_General_CP1_CI_AS");
+                .HasMaxLength(100)
+                .HasColumnName("username");
         });
 
-        modelBuilder.Entity<NetDataSourceDetail>(entity =>
+        modelBuilder.Entity<NetDatasourcedetail>(entity =>
         {
-            entity.ToTable("NET_DataSourceDetail");
+            entity.HasKey(e => e.Id).HasName("pk_net_datasourcedetail");
 
-            entity.Property(e => e.Dbname)
-                .UseCollation("SQL_Latin1_General_CP1_CI_AS")
-                .HasColumnName("DBName");
-            entity.Property(e => e.Host).UseCollation("SQL_Latin1_General_CP1_CI_AS");
-            entity.Property(e => e.Password).UseCollation("SQL_Latin1_General_CP1_CI_AS");
-            entity.Property(e => e.SiteCode)
-                .HasMaxLength(255)
-                .IsUnicode(false)
-                .UseCollation("SQL_Latin1_General_CP1_CI_AS");
-            entity.Property(e => e.User).UseCollation("SQL_Latin1_General_CP1_CI_AS");
+            entity.ToTable("net_datasourcedetail", "dbo");
+
+            entity.Property(e => e.Id).HasColumnName("id");
+            entity.Property(e => e.Configid).HasColumnName("configid");
+            entity.Property(e => e.Creationtime).HasColumnName("creationtime");
+            entity.Property(e => e.Creatoruserid).HasColumnName("creatoruserid");
+            entity.Property(e => e.Dbname).HasColumnName("dbname");
+            entity.Property(e => e.Deleteruserid).HasColumnName("deleteruserid");
+            entity.Property(e => e.Deletiontime).HasColumnName("deletiontime");
+            entity.Property(e => e.Host).HasColumnName("host");
+            entity.Property(e => e.Isdefault).HasColumnName("isdefault");
+            entity.Property(e => e.Isdeleted).HasColumnName("isdeleted");
+            entity.Property(e => e.Lastmodificationtime).HasColumnName("lastmodificationtime");
+            entity.Property(e => e.Lastmodifieruserid).HasColumnName("lastmodifieruserid");
+            entity.Property(e => e.Password).HasColumnName("password");
+            entity.Property(e => e.Priority).HasColumnName("priority");
+            entity.Property(e => e.Sitecode)
+                .HasMaxLength(100)
+                .HasColumnName("sitecode");
+            entity.Property(e => e.Siteid).HasColumnName("siteid");
+            entity.Property(e => e.Timeout).HasColumnName("timeout");
+            entity.Property(e => e.User).HasColumnName("user");
         });
 
         modelBuilder.Entity<NetDisplay>(entity =>
         {
-            entity.ToTable("NET_Display");
+            entity.HasKey(e => e.Id).HasName("pk_net_display");
 
-            entity.HasIndex(e => e.ReportId, "IX_MissingIndex_61_60").HasFillFactor(90);
+            entity.ToTable("net_display", "dbo");
 
-            entity.HasIndex(e => new { e.IsDeleted, e.ReportId }, "IX_MissingIndex_64_63").HasFillFactor(90);
+            entity.HasIndex(e => e.Reportid, "idx_ix_missingindex_61_60");
 
-            entity.Property(e => e.Area).UseCollation("SQL_Latin1_General_CP1_CI_AS");
-            entity.Property(e => e.Code).UseCollation("SQL_Latin1_General_CP1_CI_AS");
-            entity.Property(e => e.ColumnSetData).UseCollation("SQL_Latin1_General_CP1_CI_AS");
-            entity.Property(e => e.ConfigHeader).UseCollation("SQL_Latin1_General_CP1_CI_AS");
-            entity.Property(e => e.ConfigPopup).UseCollation("SQL_Latin1_General_CP1_CI_AS");
-            entity.Property(e => e.CssHeader).UseCollation("SQL_Latin1_General_CP1_CI_AS");
-            entity.Property(e => e.CustomSummary)
-                .HasMaxLength(255)
-                .IsUnicode(false)
-                .UseCollation("SQL_Latin1_General_CP1_CI_AS");
-            entity.Property(e => e.EditCellTemplate).UseCollation("SQL_Latin1_General_CP1_CI_AS");
-            entity.Property(e => e.EditColumns).UseCollation("SQL_Latin1_General_CP1_CI_AS");
-            entity.Property(e => e.Format).UseCollation("SQL_Latin1_General_CP1_CI_AS");
-            entity.Property(e => e.FormulaSyntax)
-                .HasMaxLength(255)
-                .IsUnicode(false)
-                .UseCollation("SQL_Latin1_General_CP1_CI_AS");
-            entity.Property(e => e.FreePanePosition).UseCollation("SQL_Latin1_General_CP1_CI_AS");
-            entity.Property(e => e.GroupSort).UseCollation("SQL_Latin1_General_CP1_CI_AS");
-            entity.Property(e => e.IsAvg).HasDefaultValue(false);
-            entity.Property(e => e.IsCount).HasDefaultValue(false);
-            entity.Property(e => e.IsExpand).HasDefaultValue(false);
-            entity.Property(e => e.IsMax).HasDefaultValue(false);
-            entity.Property(e => e.IsMin).HasDefaultValue(false);
-            entity.Property(e => e.IsSort).HasDefaultValue(false);
-            entity.Property(e => e.Name).UseCollation("SQL_Latin1_General_CP1_CI_AS");
-            entity.Property(e => e.ParentCode).UseCollation("SQL_Latin1_General_CP1_CI_AS");
-            entity.Property(e => e.PivotField).UseCollation("SQL_Latin1_General_CP1_CI_AS");
-            entity.Property(e => e.PivotOrders).UseCollation("SQL_Latin1_General_CP1_CI_AS");
-            entity.Property(e => e.ReportCode)
-                .HasMaxLength(255)
-                .IsUnicode(false)
-                .UseCollation("SQL_Latin1_General_CP1_CI_AS");
-            entity.Property(e => e.ShowInGroupFooter).HasDefaultValue(false);
-            entity.Property(e => e.SortByColumn).UseCollation("SQL_Latin1_General_CP1_CI_AS");
-            entity.Property(e => e.SummaryDisplayMode).UseCollation("SQL_Latin1_General_CP1_CI_AS");
-            entity.Property(e => e.TextAlign).UseCollation("SQL_Latin1_General_CP1_CI_AS");
-            entity.Property(e => e.TextIsSum).UseCollation("SQL_Latin1_General_CP1_CI_AS");
-            entity.Property(e => e.Type).UseCollation("SQL_Latin1_General_CP1_CI_AS");
-            entity.Property(e => e.ValidationRule).UseCollation("SQL_Latin1_General_CP1_CI_AS");
-            entity.Property(e => e.Visible).HasDefaultValue(true);
-            entity.Property(e => e.Width).UseCollation("SQL_Latin1_General_CP1_CI_AS");
+            entity.HasIndex(e => new { e.Isdeleted, e.Reportid }, "idx_ix_missingindex_64_63");
+
+            entity.Property(e => e.Id).HasColumnName("id");
+            entity.Property(e => e.Allowmergecells)
+                .HasDefaultValue(false)
+                .HasColumnName("allowmergecells");
+            entity.Property(e => e.Area).HasColumnName("area");
+            entity.Property(e => e.Code).HasColumnName("code");
+            entity.Property(e => e.Colnum).HasColumnName("colnum");
+            entity.Property(e => e.Columnsetdata).HasColumnName("columnsetdata");
+            entity.Property(e => e.Configheader).HasColumnName("configheader");
+            entity.Property(e => e.Configpopup).HasColumnName("configpopup");
+            entity.Property(e => e.Creationtime).HasColumnName("creationtime");
+            entity.Property(e => e.Creatoruserid).HasColumnName("creatoruserid");
+            entity.Property(e => e.Cssheader).HasColumnName("cssheader");
+            entity.Property(e => e.Customsummary).HasColumnName("customsummary");
+            entity.Property(e => e.Deleteruserid).HasColumnName("deleteruserid");
+            entity.Property(e => e.Deletiontime).HasColumnName("deletiontime");
+            entity.Property(e => e.Editcelltemplate).HasColumnName("editcelltemplate");
+            entity.Property(e => e.Editcolumns).HasColumnName("editcolumns");
+            entity.Property(e => e.Format).HasColumnName("format");
+            entity.Property(e => e.Formulasyntax).HasColumnName("formulasyntax");
+            entity.Property(e => e.Freepaneposition).HasColumnName("freepaneposition");
+            entity.Property(e => e.Grouplevel).HasColumnName("grouplevel");
+            entity.Property(e => e.Groupsort).HasColumnName("groupsort");
+            entity.Property(e => e.Isavg)
+                .HasDefaultValue(false)
+                .HasColumnName("isavg");
+            entity.Property(e => e.Iscount)
+                .HasDefaultValue(false)
+                .HasColumnName("iscount");
+            entity.Property(e => e.Isdeleted).HasColumnName("isdeleted");
+            entity.Property(e => e.Isdisplay).HasColumnName("isdisplay");
+            entity.Property(e => e.Isexpand)
+                .HasDefaultValue(false)
+                .HasColumnName("isexpand");
+            entity.Property(e => e.Isexport)
+                .HasDefaultValue(false)
+                .HasColumnName("isexport");
+            entity.Property(e => e.Isfreepane).HasColumnName("isfreepane");
+            entity.Property(e => e.Ismax)
+                .HasDefaultValue(false)
+                .HasColumnName("ismax");
+            entity.Property(e => e.Ismin)
+                .HasDefaultValue(false)
+                .HasColumnName("ismin");
+            entity.Property(e => e.Isparent).HasColumnName("isparent");
+            entity.Property(e => e.Isreadonly)
+                .HasDefaultValue(false)
+                .HasColumnName("isreadonly");
+            entity.Property(e => e.Issort)
+                .HasDefaultValue(false)
+                .HasColumnName("issort");
+            entity.Property(e => e.Issum).HasColumnName("issum");
+            entity.Property(e => e.Lastmodificationtime).HasColumnName("lastmodificationtime");
+            entity.Property(e => e.Lastmodifieruserid).HasColumnName("lastmodifieruserid");
+            entity.Property(e => e.Name).HasColumnName("name");
+            entity.Property(e => e.Order).HasColumnName("order");
+            entity.Property(e => e.Parentcode).HasColumnName("parentcode");
+            entity.Property(e => e.Pivotfield).HasColumnName("pivotfield");
+            entity.Property(e => e.Pivotorders).HasColumnName("pivotorders");
+            entity.Property(e => e.Reportcode)
+                .HasMaxLength(200)
+                .HasColumnName("reportcode");
+            entity.Property(e => e.Reportid).HasColumnName("reportid");
+            entity.Property(e => e.Serviceid).HasColumnName("serviceid");
+            entity.Property(e => e.Showingroupfooter)
+                .HasDefaultValue(false)
+                .HasColumnName("showingroupfooter");
+            entity.Property(e => e.Sortbycolumn).HasColumnName("sortbycolumn");
+            entity.Property(e => e.Summarydisplaymode).HasColumnName("summarydisplaymode");
+            entity.Property(e => e.Textalign).HasColumnName("textalign");
+            entity.Property(e => e.Textissum).HasColumnName("textissum");
+            entity.Property(e => e.Type).HasColumnName("type");
+            entity.Property(e => e.Validationrule).HasColumnName("validationrule");
+            entity.Property(e => e.Visible)
+                .HasDefaultValue(true)
+                .HasColumnName("visible");
+            entity.Property(e => e.Width).HasColumnName("width");
         });
 
-        modelBuilder.Entity<NetDynamicField>(entity =>
+        modelBuilder.Entity<NetDynamicfield>(entity =>
         {
-            entity.ToTable("NET_DynamicField");
+            entity.HasKey(e => e.Id).HasName("pk_net_dynamicfield");
 
-            entity.Property(e => e.Name).UseCollation("SQL_Latin1_General_CP1_CI_AS");
-            entity.Property(e => e.SiteCode)
-                .HasMaxLength(255)
-                .IsUnicode(false)
-                .UseCollation("SQL_Latin1_General_CP1_CI_AS");
-            entity.Property(e => e.Type).UseCollation("SQL_Latin1_General_CP1_CI_AS");
-            entity.Property(e => e.Value).UseCollation("SQL_Latin1_General_CP1_CI_AS");
+            entity.ToTable("net_dynamicfield", "dbo");
+
+            entity.Property(e => e.Id).HasColumnName("id");
+            entity.Property(e => e.Creationtime).HasColumnName("creationtime");
+            entity.Property(e => e.Creatoruserid).HasColumnName("creatoruserid");
+            entity.Property(e => e.Deleteruserid).HasColumnName("deleteruserid");
+            entity.Property(e => e.Deletiontime).HasColumnName("deletiontime");
+            entity.Property(e => e.Isdeleted).HasColumnName("isdeleted");
+            entity.Property(e => e.Lastmodificationtime).HasColumnName("lastmodificationtime");
+            entity.Property(e => e.Lastmodifieruserid).HasColumnName("lastmodifieruserid");
+            entity.Property(e => e.Name).HasColumnName("name");
+            entity.Property(e => e.Sitecode)
+                .HasMaxLength(100)
+                .HasColumnName("sitecode");
+            entity.Property(e => e.Siteid).HasColumnName("siteid");
+            entity.Property(e => e.Type).HasColumnName("type");
+            entity.Property(e => e.Value).HasColumnName("value");
         });
 
         modelBuilder.Entity<NetFilter>(entity =>
         {
-            entity.ToTable("NET_Filter");
+            entity.HasKey(e => e.Id).HasName("pk_net_filter");
 
-            entity.HasIndex(e => new { e.IsDeleted, e.ReportId, e.IsActive }, "IX_MissingIndex_12_11").HasFillFactor(90);
+            entity.ToTable("net_filter", "dbo");
 
-            entity.HasIndex(e => new { e.IsDeleted, e.ReportId, e.DynamicFieldId, e.IsActive }, "IX_MissingIndex_536_535").HasFillFactor(90);
+            entity.HasIndex(e => new { e.Isdeleted, e.Reportid, e.Isactive }, "idx_ix_missingindex_12_11");
 
-            entity.HasIndex(e => new { e.ReportId, e.DynamicFieldId }, "IX_MissingIndex_568_567").HasFillFactor(90);
+            entity.HasIndex(e => new { e.Isdeleted, e.Reportid, e.Dynamicfieldid, e.Isactive }, "idx_ix_missingindex_536_535");
 
-            entity.HasIndex(e => new { e.IsDeleted, e.ReportId }, "IX_MissingIndex_6_5").HasFillFactor(90);
+            entity.HasIndex(e => new { e.Reportid, e.Dynamicfieldid }, "idx_ix_missingindex_568_567");
 
-            entity.HasIndex(e => new { e.IsDeleted, e.ReportId }, "IX_MissingIndex_8_7").HasFillFactor(90);
+            entity.HasIndex(e => new { e.Isdeleted, e.Reportid }, "idx_ix_missingindex_6_5");
 
-            entity.Property(e => e.DateDisplayFormat).HasMaxLength(50);
-            entity.Property(e => e.DynamicFieldId).HasColumnName("DynamicFieldID");
-            entity.Property(e => e.GroupField).HasMaxLength(50);
-            entity.Property(e => e.IsFilterToolbar).HasDefaultValue(false);
-            entity.Property(e => e.IsGrouped).HasDefaultValue(false);
-            entity.Property(e => e.ReportCode)
-                .HasMaxLength(255)
-                .IsUnicode(false)
-                .UseCollation("SQL_Latin1_General_CP1_CI_AS");
+            entity.HasIndex(e => new { e.Isdeleted, e.Reportid }, "idx_ix_missingindex_8_7");
+
+            entity.Property(e => e.Id).HasColumnName("id");
+            entity.Property(e => e.Code).HasColumnName("code");
+            entity.Property(e => e.Colcount).HasColumnName("colcount");
+            entity.Property(e => e.Colspan).HasColumnName("colspan");
+            entity.Property(e => e.Columns).HasColumnName("columns");
+            entity.Property(e => e.Combolevel).HasColumnName("combolevel");
+            entity.Property(e => e.Creationtime).HasColumnName("creationtime");
+            entity.Property(e => e.Creatoruserid).HasColumnName("creatoruserid");
+            entity.Property(e => e.Datatype).HasColumnName("datatype");
+            entity.Property(e => e.Datedisplayformat)
+                .HasMaxLength(50)
+                .HasColumnName("datedisplayformat");
+            entity.Property(e => e.Deleteruserid).HasColumnName("deleteruserid");
+            entity.Property(e => e.Deletiontime).HasColumnName("deletiontime");
+            entity.Property(e => e.Disable).HasColumnName("disable");
+            entity.Property(e => e.Dynamicfieldid).HasColumnName("dynamicfieldid");
+            entity.Property(e => e.Format).HasColumnName("format");
+            entity.Property(e => e.Groupfield)
+                .HasMaxLength(50)
+                .HasColumnName("groupfield");
+            entity.Property(e => e.Groupid).HasColumnName("groupid");
+            entity.Property(e => e.Isactive).HasColumnName("isactive");
+            entity.Property(e => e.Isdeleted).HasColumnName("isdeleted");
+            entity.Property(e => e.Isfiltertoolbar)
+                .HasDefaultValue(false)
+                .HasColumnName("isfiltertoolbar");
+            entity.Property(e => e.Isgrouped)
+                .HasDefaultValue(false)
+                .HasColumnName("isgrouped");
+            entity.Property(e => e.Isloadmultipleway).HasColumnName("isloadmultipleway");
+            entity.Property(e => e.Isvalue).HasColumnName("isvalue");
+            entity.Property(e => e.Lastmodificationtime).HasColumnName("lastmodificationtime");
+            entity.Property(e => e.Lastmodifieruserid).HasColumnName("lastmodifieruserid");
+            entity.Property(e => e.Lookupid).HasColumnName("lookupid");
+            entity.Property(e => e.Multicontrolid).HasColumnName("multicontrolid");
+            entity.Property(e => e.Name).HasColumnName("name");
+            entity.Property(e => e.Orderid).HasColumnName("orderid");
+            entity.Property(e => e.Parentcomboid).HasColumnName("parentcomboid");
+            entity.Property(e => e.Reportcode)
+                .HasMaxLength(200)
+                .HasColumnName("reportcode");
+            entity.Property(e => e.Reportid).HasColumnName("reportid");
+            entity.Property(e => e.Required).HasColumnName("required");
+            entity.Property(e => e.Seviceid).HasColumnName("seviceid");
+            entity.Property(e => e.Type).HasColumnName("type");
+            entity.Property(e => e.Value).HasColumnName("value");
+            entity.Property(e => e.Version).HasColumnName("version");
             entity.Property(e => e.Width).HasColumnName("width");
-            entity.Property(e => e.ZoomLevel).HasMaxLength(50);
+            entity.Property(e => e.Zoomlevel)
+                .HasMaxLength(50)
+                .HasColumnName("zoomlevel");
         });
 
         modelBuilder.Entity<NetForm>(entity =>
         {
-            entity.ToTable("NET_Form");
+            entity.HasKey(e => e.Id).HasName("pk_net_form");
 
-            entity.Property(e => e.Code).UseCollation("SQL_Latin1_General_CP1_CI_AS");
-            entity.Property(e => e.CodeReceiveRealTime).UseCollation("SQL_Latin1_General_CP1_CI_AS");
-            entity.Property(e => e.CodeSendRealTime).UseCollation("SQL_Latin1_General_CP1_CI_AS");
-            entity.Property(e => e.CssOptionHeader).UseCollation("SQL_Latin1_General_CP1_CI_AS");
-            entity.Property(e => e.Description).UseCollation("SQL_Latin1_General_CP1_CI_AS");
-            entity.Property(e => e.IsReceiveRealTime).HasDefaultValue(false);
-            entity.Property(e => e.IsSendRealTime).HasDefaultValue(false);
-            entity.Property(e => e.Name).UseCollation("SQL_Latin1_General_CP1_CI_AS");
-            entity.Property(e => e.SiteCode)
-                .HasMaxLength(255)
-                .IsUnicode(false)
-                .UseCollation("SQL_Latin1_General_CP1_CI_AS");
-            entity.Property(e => e.Title).UseCollation("SQL_Latin1_General_CP1_CI_AS");
-        });
+            entity.ToTable("net_form", "dbo");
 
-        modelBuilder.Entity<NetFormFieldType>(entity =>
-        {
-            entity.ToTable("NET_FormFieldType");
-
-            entity.Property(e => e.Code).UseCollation("SQL_Latin1_General_CP1_CI_AS");
-            entity.Property(e => e.Description).UseCollation("SQL_Latin1_General_CP1_CI_AS");
-            entity.Property(e => e.Icon).UseCollation("SQL_Latin1_General_CP1_CI_AS");
-            entity.Property(e => e.IsRowTemplate).HasDefaultValue(false);
-            entity.Property(e => e.Name).UseCollation("SQL_Latin1_General_CP1_CI_AS");
+            entity.Property(e => e.Id).HasColumnName("id");
+            entity.Property(e => e.Code).HasColumnName("code");
+            entity.Property(e => e.Codereceiverealtime).HasColumnName("codereceiverealtime");
+            entity.Property(e => e.Codesendrealtime).HasColumnName("codesendrealtime");
+            entity.Property(e => e.Creationtime).HasColumnName("creationtime");
+            entity.Property(e => e.Creatoruserid).HasColumnName("creatoruserid");
+            entity.Property(e => e.Cssoptionheader).HasColumnName("cssoptionheader");
+            entity.Property(e => e.Deleteruserid).HasColumnName("deleteruserid");
+            entity.Property(e => e.Deletiontime).HasColumnName("deletiontime");
+            entity.Property(e => e.Description).HasColumnName("description");
+            entity.Property(e => e.Isactive).HasColumnName("isactive");
+            entity.Property(e => e.Isdeleted).HasColumnName("isdeleted");
+            entity.Property(e => e.Isreceiverealtime)
+                .HasDefaultValue(false)
+                .HasColumnName("isreceiverealtime");
+            entity.Property(e => e.Issendrealtime)
+                .HasDefaultValue(false)
+                .HasColumnName("issendrealtime");
+            entity.Property(e => e.Lastmodificationtime).HasColumnName("lastmodificationtime");
+            entity.Property(e => e.Lastmodifieruserid).HasColumnName("lastmodifieruserid");
+            entity.Property(e => e.Latestversion).HasColumnName("latestversion");
+            entity.Property(e => e.Name).HasColumnName("name");
+            entity.Property(e => e.Orderid).HasColumnName("orderid");
+            entity.Property(e => e.Sitecode)
+                .HasMaxLength(100)
+                .HasColumnName("sitecode");
+            entity.Property(e => e.Siteid).HasColumnName("siteid");
+            entity.Property(e => e.Title).HasColumnName("title");
         });
 
         modelBuilder.Entity<NetFormVersion>(entity =>
         {
-            entity.ToTable("NET_Form_Version");
+            entity.HasKey(e => e.Id).HasName("pk_net_form_version");
 
-            entity.HasIndex(e => new { e.IsDeleted, e.HinFormId, e.IsActive }, "IX_MissingIndex_18_17").HasFillFactor(90);
+            entity.ToTable("net_form_version", "dbo");
 
-            entity.HasIndex(e => e.HinFormId, "IX_MissingIndex_207_206").HasFillFactor(90);
+            entity.HasIndex(e => new { e.Isdeleted, e.Hinformid, e.Isactive }, "idx_ix_missingindex_18_17");
 
-            entity.HasIndex(e => new { e.IsDeleted, e.HinFormId, e.IsActive }, "IX_MissingIndex_35_34").HasFillFactor(90);
+            entity.HasIndex(e => e.Hinformid, "idx_ix_missingindex_207_206");
 
-            entity.HasIndex(e => new { e.IsDeleted, e.HinFormId, e.IsActive }, "IX_MissingIndex_42_41").HasFillFactor(90);
+            entity.HasIndex(e => new { e.Isdeleted, e.Hinformid, e.Isactive }, "idx_ix_missingindex_35_34");
 
-            entity.HasIndex(e => new { e.IsDeleted, e.HinFormId, e.IsActive }, "IX_MissingIndex_55_54").HasFillFactor(90);
+            entity.HasIndex(e => new { e.Isdeleted, e.Hinformid, e.Isactive }, "idx_ix_missingindex_42_41");
 
-            entity.Property(e => e.Apicontent)
-                .UseCollation("SQL_Latin1_General_CP1_CI_AS")
-                .HasColumnName("APIContent");
-            entity.Property(e => e.ConditionOfAction).UseCollation("SQL_Latin1_General_CP1_CI_AS");
-            entity.Property(e => e.ExportMergeField).HasDefaultValue(false);
-            entity.Property(e => e.HinFormCode)
-                .HasMaxLength(255)
-                .IsUnicode(false)
-                .UseCollation("SQL_Latin1_General_CP1_CI_AS");
-            entity.Property(e => e.PositionButton).HasDefaultValue(2);
-            entity.Property(e => e.StoreCheckUrl)
-                .UseCollation("SQL_Latin1_General_CP1_CI_AS")
-                .HasColumnName("StoreCheckURL");
+            entity.HasIndex(e => new { e.Isdeleted, e.Hinformid, e.Isactive }, "idx_ix_missingindex_55_54");
+
+            entity.Property(e => e.Id).HasColumnName("id");
+            entity.Property(e => e.Apicontent).HasColumnName("apicontent");
+            entity.Property(e => e.Conditionofaction).HasColumnName("conditionofaction");
+            entity.Property(e => e.Creationtime).HasColumnName("creationtime");
+            entity.Property(e => e.Creatoruserid).HasColumnName("creatoruserid");
+            entity.Property(e => e.Datasourceid).HasColumnName("datasourceid");
+            entity.Property(e => e.Deleteruserid).HasColumnName("deleteruserid");
+            entity.Property(e => e.Deletiontime).HasColumnName("deletiontime");
+            entity.Property(e => e.Exportmergefield)
+                .HasDefaultValue(false)
+                .HasColumnName("exportmergefield");
+            entity.Property(e => e.Hinformbookvalueid).HasColumnName("hinformbookvalueid");
+            entity.Property(e => e.Hinformcode)
+                .HasMaxLength(200)
+                .HasColumnName("hinformcode");
+            entity.Property(e => e.Hinformid).HasColumnName("hinformid");
+            entity.Property(e => e.Isactive).HasColumnName("isactive");
+            entity.Property(e => e.Isback).HasColumnName("isback");
+            entity.Property(e => e.Isdeleted).HasColumnName("isdeleted");
+            entity.Property(e => e.Isview).HasColumnName("isview");
+            entity.Property(e => e.Lastmodificationtime).HasColumnName("lastmodificationtime");
+            entity.Property(e => e.Lastmodifieruserid).HasColumnName("lastmodifieruserid");
+            entity.Property(e => e.Objectcode).HasColumnName("objectcode");
+            entity.Property(e => e.Options).HasColumnName("options");
+            entity.Property(e => e.Orderid).HasColumnName("orderid");
+            entity.Property(e => e.Positionbutton).HasColumnName("positionbutton");
+            entity.Property(e => e.Saveeditortype).HasColumnName("saveeditortype");
+            entity.Property(e => e.Storecheckurl).HasColumnName("storecheckurl");
+            entity.Property(e => e.Storedefaultdata).HasColumnName("storedefaultdata");
+            entity.Property(e => e.Storegetdata).HasColumnName("storegetdata");
+            entity.Property(e => e.Storelabelaction).HasColumnName("storelabelaction");
+            entity.Property(e => e.Storesetdata).HasColumnName("storesetdata");
+            entity.Property(e => e.Storesetreadonly).HasColumnName("storesetreadonly");
+            entity.Property(e => e.Tablename).HasColumnName("tablename");
+            entity.Property(e => e.Type).HasColumnName("type");
+            entity.Property(e => e.Version).HasColumnName("version");
         });
 
-        modelBuilder.Entity<NetFormVersionField>(entity =>
+        modelBuilder.Entity<NetFormVersionfield>(entity =>
         {
-            entity.ToTable("NET_Form_VersionField");
+            entity.HasKey(e => e.Id).HasName("pk_net_form_versionfield");
 
-            entity.HasIndex(e => new { e.HinFormVersionId, e.IsActive }, "IX_MissingIndex_209_208").HasFillFactor(90);
+            entity.ToTable("net_form_versionfield", "dbo");
 
-            entity.HasIndex(e => new { e.IsDeleted, e.HinFormVersionId, e.IsActive }, "IX_MissingIndex_86_85").HasFillFactor(90);
+            entity.HasIndex(e => new { e.Hinformversionid, e.Isactive }, "idx_ix_missingindex_209_208");
 
-            entity.Property(e => e.Datasources).UseCollation("SQL_Latin1_General_CP1_CI_AS");
-            entity.Property(e => e.HinFormCode)
-                .HasMaxLength(255)
-                .IsUnicode(false)
-                .UseCollation("SQL_Latin1_General_CP1_CI_AS");
-            entity.Property(e => e.Name).UseCollation("SQL_Latin1_General_CP1_CI_AS");
-            entity.Property(e => e.Options).UseCollation("SQL_Latin1_General_CP1_CI_AS");
-            entity.Property(e => e.ParentCode).UseCollation("SQL_Latin1_General_CP1_CI_AS");
-            entity.Property(e => e.Title).UseCollation("SQL_Latin1_General_CP1_CI_AS");
-            entity.Property(e => e.Validates).UseCollation("SQL_Latin1_General_CP1_CI_AS");
+            entity.HasIndex(e => new { e.Isdeleted, e.Hinformversionid, e.Isactive }, "idx_ix_missingindex_86_85");
+
+            entity.Property(e => e.Id).HasColumnName("id");
+            entity.Property(e => e.Code).HasColumnName("code");
+            entity.Property(e => e.Creationtime).HasColumnName("creationtime");
+            entity.Property(e => e.Creatoruserid).HasColumnName("creatoruserid");
+            entity.Property(e => e.Datasources).HasColumnName("datasources");
+            entity.Property(e => e.Deleteruserid).HasColumnName("deleteruserid");
+            entity.Property(e => e.Deletiontime).HasColumnName("deletiontime");
+            entity.Property(e => e.Fieldtypeid).HasColumnName("fieldtypeid");
+            entity.Property(e => e.Hinformcode)
+                .HasMaxLength(200)
+                .HasColumnName("hinformcode");
+            entity.Property(e => e.Hinformversionid).HasColumnName("hinformversionid");
+            entity.Property(e => e.Isactive).HasColumnName("isactive");
+            entity.Property(e => e.Isdeleted).HasColumnName("isdeleted");
+            entity.Property(e => e.Lastmodificationtime).HasColumnName("lastmodificationtime");
+            entity.Property(e => e.Lastmodifieruserid).HasColumnName("lastmodifieruserid");
+            entity.Property(e => e.Name).HasColumnName("name");
+            entity.Property(e => e.Options).HasColumnName("options");
+            entity.Property(e => e.Orderid).HasColumnName("orderid");
+            entity.Property(e => e.Parentcode).HasColumnName("parentcode");
+            entity.Property(e => e.Parentid).HasColumnName("parentid");
+            entity.Property(e => e.Tabindex).HasColumnName("tabindex");
+            entity.Property(e => e.Title).HasColumnName("title");
+            entity.Property(e => e.Type).HasColumnName("type");
+            entity.Property(e => e.Validates).HasColumnName("validates");
         });
 
-        modelBuilder.Entity<NetMainMenu>(entity =>
+        modelBuilder.Entity<NetFormfieldtype>(entity =>
         {
-            entity.ToTable("NET_MainMenu");
+            entity.HasKey(e => e.Id).HasName("pk_net_formfieldtype");
 
-            entity.Property(e => e.Code)
-                .HasDefaultValue("")
-                .UseCollation("SQL_Latin1_General_CP1_CI_AS");
-            entity.Property(e => e.Description).UseCollation("SQL_Latin1_General_CP1_CI_AS");
-            entity.Property(e => e.Icon).UseCollation("SQL_Latin1_General_CP1_CI_AS");
-            entity.Property(e => e.ImageUrl).UseCollation("SQL_Latin1_General_CP1_CI_AS");
-            entity.Property(e => e.IsMiniItem).HasDefaultValue(false);
-            entity.Property(e => e.Link).UseCollation("SQL_Latin1_General_CP1_CI_AS");
-            entity.Property(e => e.Name).UseCollation("SQL_Latin1_General_CP1_CI_AS");
-            entity.Property(e => e.RequiredPermissionName).UseCollation("SQL_Latin1_General_CP1_CI_AS");
-            entity.Property(e => e.SiteCode)
-                .HasMaxLength(255)
-                .IsUnicode(false)
-                .UseCollation("SQL_Latin1_General_CP1_CI_AS");
-            entity.Property(e => e.Title).UseCollation("SQL_Latin1_General_CP1_CI_AS");
+            entity.ToTable("net_formfieldtype", "dbo");
+
+            entity.Property(e => e.Id).HasColumnName("id");
+            entity.Property(e => e.Code).HasColumnName("code");
+            entity.Property(e => e.Creationtime).HasColumnName("creationtime");
+            entity.Property(e => e.Creatoruserid).HasColumnName("creatoruserid");
+            entity.Property(e => e.Deleteruserid).HasColumnName("deleteruserid");
+            entity.Property(e => e.Deletiontime).HasColumnName("deletiontime");
+            entity.Property(e => e.Description).HasColumnName("description");
+            entity.Property(e => e.Icon).HasColumnName("icon");
+            entity.Property(e => e.Isactive).HasColumnName("isactive");
+            entity.Property(e => e.Isdeleted).HasColumnName("isdeleted");
+            entity.Property(e => e.Isrowtemplate)
+                .HasDefaultValue(false)
+                .HasColumnName("isrowtemplate");
+            entity.Property(e => e.Lastmodificationtime).HasColumnName("lastmodificationtime");
+            entity.Property(e => e.Lastmodifieruserid).HasColumnName("lastmodifieruserid");
+            entity.Property(e => e.Name).HasColumnName("name");
+            entity.Property(e => e.Orderid).HasColumnName("orderid");
+        });
+
+        modelBuilder.Entity<NetMainmenu>(entity =>
+        {
+            entity.HasKey(e => e.Id).HasName("pk_net_mainmenu");
+
+            entity.ToTable("net_mainmenu", "dbo");
+
+            entity.Property(e => e.Id).HasColumnName("id");
+            entity.Property(e => e.Code).HasColumnName("code");
+            entity.Property(e => e.Creationtime).HasColumnName("creationtime");
+            entity.Property(e => e.Creatoruserid).HasColumnName("creatoruserid");
+            entity.Property(e => e.Deleteruserid).HasColumnName("deleteruserid");
+            entity.Property(e => e.Deletiontime).HasColumnName("deletiontime");
+            entity.Property(e => e.Description).HasColumnName("description");
+            entity.Property(e => e.Devicetype).HasColumnName("devicetype");
+            entity.Property(e => e.Icon).HasColumnName("icon");
+            entity.Property(e => e.Imageurl).HasColumnName("imageurl");
+            entity.Property(e => e.Index).HasColumnName("index");
+            entity.Property(e => e.Isdeleted).HasColumnName("isdeleted");
+            entity.Property(e => e.Isminiitem)
+                .HasDefaultValue(false)
+                .HasColumnName("isminiitem");
+            entity.Property(e => e.Ismobile).HasColumnName("ismobile");
+            entity.Property(e => e.Lastmodificationtime).HasColumnName("lastmodificationtime");
+            entity.Property(e => e.Lastmodifieruserid).HasColumnName("lastmodifieruserid");
+            entity.Property(e => e.Link).HasColumnName("link");
+            entity.Property(e => e.Name).HasColumnName("name");
+            entity.Property(e => e.Parent).HasColumnName("parent");
+            entity.Property(e => e.Requiredpermissionname).HasColumnName("requiredpermissionname");
+            entity.Property(e => e.Sitecode)
+                .HasMaxLength(100)
+                .HasColumnName("sitecode");
+            entity.Property(e => e.Siteid).HasColumnName("siteid");
+            entity.Property(e => e.Tenantid).HasColumnName("tenantid");
+            entity.Property(e => e.Title).HasColumnName("title");
         });
 
         modelBuilder.Entity<NetMenu>(entity =>
         {
-            entity.ToTable("NET_Menu");
+            entity.HasKey(e => e.Id).HasName("pk_net_menu");
 
-            entity.Property(e => e.Code).UseCollation("SQL_Latin1_General_CP1_CI_AS");
-            entity.Property(e => e.Cssformat)
-                .UseCollation("SQL_Latin1_General_CP1_CI_AS")
-                .HasColumnName("CSSFormat");
-            entity.Property(e => e.CssiconFormat)
-                .UseCollation("SQL_Latin1_General_CP1_CI_AS")
-                .HasColumnName("CSSIconFormat");
-            entity.Property(e => e.Description).UseCollation("SQL_Latin1_General_CP1_CI_AS");
-            entity.Property(e => e.Icon).UseCollation("SQL_Latin1_General_CP1_CI_AS");
-            entity.Property(e => e.Iframe).UseCollation("SQL_Latin1_General_CP1_CI_AS");
-            entity.Property(e => e.ImageUrl).UseCollation("SQL_Latin1_General_CP1_CI_AS");
-            entity.Property(e => e.IsCount)
-                .IsRequired()
-                .HasDefaultValueSql("(CONVERT([bit],(0),(0)))");
-            entity.Property(e => e.IsDeleted).HasDefaultValue(false);
-            entity.Property(e => e.Link).UseCollation("SQL_Latin1_General_CP1_CI_AS");
-            entity.Property(e => e.MobileLink).UseCollation("SQL_Latin1_General_CP1_CI_AS");
-            entity.Property(e => e.Name).UseCollation("SQL_Latin1_General_CP1_CI_AS");
-            entity.Property(e => e.RequiredPermissionName).UseCollation("SQL_Latin1_General_CP1_CI_AS");
-            entity.Property(e => e.SiteCode)
-                .HasMaxLength(255)
-                .IsUnicode(false)
-                .UseCollation("SQL_Latin1_General_CP1_CI_AS");
-            entity.Property(e => e.SqlCountStore).UseCollation("SQL_Latin1_General_CP1_CI_AS");
-            entity.Property(e => e.SqlString).UseCollation("SQL_Latin1_General_CP1_CI_AS");
-            entity.Property(e => e.TextColor)
-                .UseCollation("SQL_Latin1_General_CP1_CI_AS")
-                .HasColumnName("textColor");
-            entity.Property(e => e.Title).UseCollation("SQL_Latin1_General_CP1_CI_AS");
-            entity.Property(e => e.TypeCheck)
-                .HasDefaultValue(1)
-                .HasColumnName("typeCheck");
+            entity.ToTable("net_menu", "dbo");
+
+            entity.Property(e => e.Id).HasColumnName("id");
+            entity.Property(e => e.Code).HasColumnName("code");
+            entity.Property(e => e.Countnum).HasColumnName("countnum");
+            entity.Property(e => e.Countoutofdate).HasColumnName("countoutofdate");
+            entity.Property(e => e.Counttype).HasColumnName("counttype");
+            entity.Property(e => e.Cssformat).HasColumnName("cssformat");
+            entity.Property(e => e.Cssiconformat).HasColumnName("cssiconformat");
+            entity.Property(e => e.Description).HasColumnName("description");
+            entity.Property(e => e.Icon).HasColumnName("icon");
+            entity.Property(e => e.Iframe).HasColumnName("iframe");
+            entity.Property(e => e.Imageurl).HasColumnName("imageurl");
+            entity.Property(e => e.Index).HasColumnName("index");
+            entity.Property(e => e.Iscount).HasColumnName("iscount");
+            entity.Property(e => e.Isdeleted)
+                .HasDefaultValue(false)
+                .HasColumnName("isdeleted");
+            entity.Property(e => e.Israwsql).HasColumnName("israwsql");
+            entity.Property(e => e.Link).HasColumnName("link");
+            entity.Property(e => e.Menuid).HasColumnName("menuid");
+            entity.Property(e => e.Mobilelink).HasColumnName("mobilelink");
+            entity.Property(e => e.Name).HasColumnName("name");
+            entity.Property(e => e.Organizationid).HasColumnName("organizationid");
+            entity.Property(e => e.Parent).HasColumnName("parent");
+            entity.Property(e => e.Parentorgid).HasColumnName("parentorgid");
+            entity.Property(e => e.Requiredpermissionname).HasColumnName("requiredpermissionname");
+            entity.Property(e => e.Sitecode)
+                .HasMaxLength(100)
+                .HasColumnName("sitecode");
+            entity.Property(e => e.Siteid).HasColumnName("siteid");
+            entity.Property(e => e.Sqlcountstore).HasColumnName("sqlcountstore");
+            entity.Property(e => e.Sqlstring).HasColumnName("sqlstring");
+            entity.Property(e => e.Textcolor).HasColumnName("textcolor");
+            entity.Property(e => e.Title).HasColumnName("title");
+            entity.Property(e => e.Typecheck).HasColumnName("typecheck");
+            entity.Property(e => e.Userid).HasColumnName("userid");
         });
 
-        modelBuilder.Entity<NetMenuRole>(entity =>
+        modelBuilder.Entity<NetMenurole>(entity =>
         {
-            entity.ToTable("NET_MenuRole");
+            entity.HasKey(e => e.Id).HasName("pk_net_menurole");
 
-            entity.HasIndex(e => e.TenantId, "IX_NET_MenuRole_TenantId");
+            entity.ToTable("net_menurole", "dbo");
+
+            entity.HasIndex(e => e.Tenantid, "idx_ix_net_menurole_tenantid");
+
+            entity.Property(e => e.Id).HasColumnName("id");
+            entity.Property(e => e.Isactive).HasColumnName("isactive");
+            entity.Property(e => e.Labelid).HasColumnName("labelid");
+            entity.Property(e => e.Menuid).HasColumnName("menuid");
+            entity.Property(e => e.Roleid).HasColumnName("roleid");
+            entity.Property(e => e.Rolemappergroupid).HasColumnName("rolemappergroupid");
+            entity.Property(e => e.Tenantid).HasColumnName("tenantid");
         });
 
         modelBuilder.Entity<NetReport>(entity =>
         {
-            entity.ToTable("NET_Report");
+            entity.HasKey(e => e.Id).HasName("pk_net_report");
 
-            entity.Property(e => e.AllowedApi)
-                .UseCollation("SQL_Latin1_General_CP1_CI_AS")
-                .HasColumnName("AllowedAPI");
-            entity.Property(e => e.AllowedPageSizes).UseCollation("SQL_Latin1_General_CP1_CI_AS");
-            entity.Property(e => e.Cache).HasDefaultValue(false);
-            entity.Property(e => e.Code).UseCollation("SQL_Latin1_General_CP1_CI_AS");
-            entity.Property(e => e.DefaultParam).UseCollation("SQL_Latin1_General_CP1_CI_AS");
-            entity.Property(e => e.DisableSearch).HasDefaultValue(false);
-            entity.Property(e => e.EditingMode).UseCollation("SQL_Latin1_General_CP1_CI_AS");
-            entity.Property(e => e.Excel).UseCollation("SQL_Latin1_General_CP1_CI_AS");
-            entity.Property(e => e.FormId).HasColumnName("FormID");
-            entity.Property(e => e.FunctionCode)
+            entity.ToTable("net_report", "dbo");
+
+            entity.Property(e => e.Id).HasColumnName("id");
+            entity.Property(e => e.Allowedapi).HasColumnName("allowedapi");
+            entity.Property(e => e.Allowedpagesizes).HasColumnName("allowedpagesizes");
+            entity.Property(e => e.Cache)
+                .HasDefaultValue(false)
+                .HasColumnName("cache");
+            entity.Property(e => e.Chartviewdisplay).HasColumnName("chartviewdisplay");
+            entity.Property(e => e.Code).HasColumnName("code");
+            entity.Property(e => e.Colcount).HasColumnName("colcount");
+            entity.Property(e => e.Colspan).HasColumnName("colspan");
+            entity.Property(e => e.Creationtime).HasColumnName("creationtime");
+            entity.Property(e => e.Creatoruserid).HasColumnName("creatoruserid");
+            entity.Property(e => e.Datasourceid).HasColumnName("datasourceid");
+            entity.Property(e => e.Defaultparam).HasColumnName("defaultparam");
+            entity.Property(e => e.Deleteruserid).HasColumnName("deleteruserid");
+            entity.Property(e => e.Deletiontime).HasColumnName("deletiontime");
+            entity.Property(e => e.Disablehandlecollumn).HasColumnName("disablehandlecollumn");
+            entity.Property(e => e.Disablesearch)
+                .HasDefaultValue(false)
+                .HasColumnName("disablesearch");
+            entity.Property(e => e.Displaytype).HasColumnName("displaytype");
+            entity.Property(e => e.Editingmode).HasColumnName("editingmode");
+            entity.Property(e => e.Enablemasterdetail)
+                .HasDefaultValue(false)
+                .HasColumnName("enablemasterdetail");
+            entity.Property(e => e.Excel).HasColumnName("excel");
+            entity.Property(e => e.Formid).HasColumnName("formid");
+            entity.Property(e => e.Functioncode)
                 .HasMaxLength(100)
-                .UseCollation("SQL_Latin1_General_CP1_CI_AS");
-            entity.Property(e => e.IsAutoCollapse).HasDefaultValue(false);
-            entity.Property(e => e.IsBackViewer).HasDefaultValue(false);
-            entity.Property(e => e.IsBtnHandle).HasDefaultValue(true);
-            entity.Property(e => e.IsCreateEditor).HasDefaultValue(true);
-            entity.Property(e => e.IsDeleteEditor).HasDefaultValue(false);
-            entity.Property(e => e.IsEditEditor).HasDefaultValue(true);
-            entity.Property(e => e.IsExportExcel).HasDefaultValue(true);
-            entity.Property(e => e.IsExportWord).HasDefaultValue(false);
-            entity.Property(e => e.IsFreepane).HasDefaultValue(true);
-            entity.Property(e => e.IsRecieveRealTime).HasDefaultValue(false);
-            entity.Property(e => e.IsSearchbar).HasDefaultValue(true);
-            entity.Property(e => e.LayoutpFilter).UseCollation("SQL_Latin1_General_CP1_CI_AS");
-            entity.Property(e => e.MasterDetailReportCode)
-                .HasMaxLength(255)
-                .IsUnicode(false)
-                .UseCollation("SQL_Latin1_General_CP1_CI_AS");
-            entity.Property(e => e.Name).UseCollation("SQL_Latin1_General_CP1_CI_AS");
-            entity.Property(e => e.Pagination).HasDefaultValue(false);
-            entity.Property(e => e.ReportCodeRecieveRealTime).UseCollation("SQL_Latin1_General_CP1_CI_AS");
-            entity.Property(e => e.SelectionType)
+                .HasColumnName("functioncode");
+            entity.Property(e => e.Funtionid).HasColumnName("funtionid");
+            entity.Property(e => e.Grouplevel).HasColumnName("grouplevel");
+            entity.Property(e => e.Isautocollapse)
+                .HasDefaultValue(false)
+                .HasColumnName("isautocollapse");
+            entity.Property(e => e.Isbackviewer)
+                .HasDefaultValue(false)
+                .HasColumnName("isbackviewer");
+            entity.Property(e => e.Isbtnhandle)
+                .HasDefaultValue(true)
+                .HasColumnName("isbtnhandle");
+            entity.Property(e => e.Iscreateeditor)
+                .HasDefaultValue(true)
+                .HasColumnName("iscreateeditor");
+            entity.Property(e => e.Isdeleted).HasColumnName("isdeleted");
+            entity.Property(e => e.Isdeleteeditor)
+                .HasDefaultValue(false)
+                .HasColumnName("isdeleteeditor");
+            entity.Property(e => e.Isdynamiccolumn).HasColumnName("isdynamiccolumn");
+            entity.Property(e => e.Isediteditor)
+                .HasDefaultValue(true)
+                .HasColumnName("isediteditor");
+            entity.Property(e => e.Isexportexcel)
+                .HasDefaultValue(true)
+                .HasColumnName("isexportexcel");
+            entity.Property(e => e.Isexportword).HasColumnName("isexportword");
+            entity.Property(e => e.Isfreepane)
+                .HasDefaultValue(true)
+                .HasColumnName("isfreepane");
+            entity.Property(e => e.Isrecieverealtime)
+                .HasDefaultValue(false)
+                .HasColumnName("isrecieverealtime");
+            entity.Property(e => e.Issearchbar)
+                .HasDefaultValue(true)
+                .HasColumnName("issearchbar");
+            entity.Property(e => e.Lastmodificationtime).HasColumnName("lastmodificationtime");
+            entity.Property(e => e.Lastmodifieruserid).HasColumnName("lastmodifieruserid");
+            entity.Property(e => e.Layoutpfilter).HasColumnName("layoutpfilter");
+            entity.Property(e => e.Masterdetailreportcode).HasColumnName("masterdetailreportcode");
+            entity.Property(e => e.Name).HasColumnName("name");
+            entity.Property(e => e.Pagination)
+                .HasDefaultValue(false)
+                .HasColumnName("pagination");
+            entity.Property(e => e.Positionbutton).HasColumnName("positionbutton");
+            entity.Property(e => e.Reportcoderecieverealtime).HasColumnName("reportcoderecieverealtime");
+            entity.Property(e => e.Reporttype).HasColumnName("reporttype");
+            entity.Property(e => e.Selectiontype)
                 .HasMaxLength(10)
-                .HasDefaultValue("multiple")
-                .UseCollation("SQL_Latin1_General_CP1_CI_AS");
-            entity.Property(e => e.ShowHeaderFilter).HasDefaultValue(false);
-            entity.Property(e => e.ShowIconFilter).HasDefaultValue(false);
-            entity.Property(e => e.ShowPage).HasDefaultValue(true);
-            entity.Property(e => e.ShowToolbar).HasDefaultValue(true);
-            entity.Property(e => e.SiteCode)
-                .HasMaxLength(255)
-                .IsUnicode(false)
-                .UseCollation("SQL_Latin1_General_CP1_CI_AS");
-            entity.Property(e => e.SqlContent).UseCollation("SQL_Latin1_General_CP1_CI_AS");
-            entity.Property(e => e.SqlContentM)
-                .HasDefaultValue("")
-                .UseCollation("SQL_Latin1_General_CP1_CI_AS");
-            entity.Property(e => e.SqlDefaultContent).UseCollation("SQL_Latin1_General_CP1_CI_AS");
-            entity.Property(e => e.SqlEditContent).UseCollation("SQL_Latin1_General_CP1_CI_AS");
-            entity.Property(e => e.SqlEditTemplateContent).UseCollation("SQL_Latin1_General_CP1_CI_AS");
-            entity.Property(e => e.SqlExportData).UseCollation("SQL_Latin1_General_CP1_CI_AS");
-            entity.Property(e => e.SqlExportField).UseCollation("SQL_Latin1_General_CP1_CI_AS");
-            entity.Property(e => e.SqlStoredLabelAction).UseCollation("SQL_Latin1_General_CP1_CI_AS");
-            entity.Property(e => e.SqlTypeM).HasDefaultValue(false);
-            entity.Property(e => e.StoreCheckUrl)
-                .UseCollation("SQL_Latin1_General_CP1_CI_AS")
-                .HasColumnName("StoreCheckURL");
-            entity.Property(e => e.StoreDrag).UseCollation("SQL_Latin1_General_CP1_CI_AS");
-            entity.Property(e => e.StoreDrdisplay)
-                .UseCollation("SQL_Latin1_General_CP1_CI_AS")
-                .HasColumnName("StoreDRDisplay");
-            entity.Property(e => e.TemplateIds).UseCollation("SQL_Latin1_General_CP1_CI_AS");
-            entity.Property(e => e.Word).UseCollation("SQL_Latin1_General_CP1_CI_AS");
+                .HasColumnName("selectiontype");
+            entity.Property(e => e.Servicehiddenfilter).HasColumnName("servicehiddenfilter");
+            entity.Property(e => e.Showheaderfilter)
+                .HasDefaultValue(false)
+                .HasColumnName("showheaderfilter");
+            entity.Property(e => e.Showiconfilter)
+                .HasDefaultValue(false)
+                .HasColumnName("showiconfilter");
+            entity.Property(e => e.Showpage)
+                .HasDefaultValue(true)
+                .HasColumnName("showpage");
+            entity.Property(e => e.Showtoolbar)
+                .HasDefaultValue(true)
+                .HasColumnName("showtoolbar");
+            entity.Property(e => e.Sitecode)
+                .HasMaxLength(100)
+                .HasColumnName("sitecode");
+            entity.Property(e => e.Siteid).HasColumnName("siteid");
+            entity.Property(e => e.Sqlcontent).HasColumnName("sqlcontent");
+            entity.Property(e => e.Sqlcontentm).HasColumnName("sqlcontentm");
+            entity.Property(e => e.Sqldefaultcontent).HasColumnName("sqldefaultcontent");
+            entity.Property(e => e.Sqleditcontent).HasColumnName("sqleditcontent");
+            entity.Property(e => e.Sqledittemplatecontent).HasColumnName("sqledittemplatecontent");
+            entity.Property(e => e.Sqlexportdata).HasColumnName("sqlexportdata");
+            entity.Property(e => e.Sqlexportfield).HasColumnName("sqlexportfield");
+            entity.Property(e => e.Sqlstoredlabelaction).HasColumnName("sqlstoredlabelaction");
+            entity.Property(e => e.Sqltype).HasColumnName("sqltype");
+            entity.Property(e => e.Sqltypem)
+                .HasDefaultValue(false)
+                .HasColumnName("sqltypem");
+            entity.Property(e => e.Storecheckurl).HasColumnName("storecheckurl");
+            entity.Property(e => e.Storedrag).HasColumnName("storedrag");
+            entity.Property(e => e.Storedrdisplay).HasColumnName("storedrdisplay");
+            entity.Property(e => e.Templateids).HasColumnName("templateids");
+            entity.Property(e => e.Typegetcolumn).HasColumnName("typegetcolumn");
+            entity.Property(e => e.Word).HasColumnName("word");
         });
 
         modelBuilder.Entity<NetService>(entity =>
         {
-            entity.ToTable("NET_Service");
+            entity.HasKey(e => e.Id).HasName("pk_net_service");
 
-            entity.Property(e => e.Cache).HasDefaultValue(true);
-            entity.Property(e => e.Code).UseCollation("SQL_Latin1_General_CP1_CI_AS");
-            entity.Property(e => e.ColDisplay).UseCollation("SQL_Latin1_General_CP1_CI_AS");
-            entity.Property(e => e.ColParent).UseCollation("SQL_Latin1_General_CP1_CI_AS");
-            entity.Property(e => e.ColValue).UseCollation("SQL_Latin1_General_CP1_CI_AS");
-            entity.Property(e => e.Name).UseCollation("SQL_Latin1_General_CP1_CI_AS");
-            entity.Property(e => e.SiteCode)
-                .HasMaxLength(255)
-                .IsUnicode(false)
-                .UseCollation("SQL_Latin1_General_CP1_CI_AS");
-            entity.Property(e => e.SqlContent).UseCollation("SQL_Latin1_General_CP1_CI_AS");
-            entity.Property(e => e.StoredDefaultParam).UseCollation("SQL_Latin1_General_CP1_CI_AS");
+            entity.ToTable("net_service", "dbo");
+
+            entity.Property(e => e.Id).HasColumnName("id");
+            entity.Property(e => e.Cache)
+                .HasDefaultValue(true)
+                .HasColumnName("cache");
+            entity.Property(e => e.Code).HasColumnName("code");
+            entity.Property(e => e.Coldisplay).HasColumnName("coldisplay");
+            entity.Property(e => e.Colparent).HasColumnName("colparent");
+            entity.Property(e => e.Colvalue).HasColumnName("colvalue");
+            entity.Property(e => e.Creationtime).HasColumnName("creationtime");
+            entity.Property(e => e.Creatoruserid).HasColumnName("creatoruserid");
+            entity.Property(e => e.Datasourceid).HasColumnName("datasourceid");
+            entity.Property(e => e.Deleteruserid).HasColumnName("deleteruserid");
+            entity.Property(e => e.Deletiontime).HasColumnName("deletiontime");
+            entity.Property(e => e.Isdeleted).HasColumnName("isdeleted");
+            entity.Property(e => e.Lastmodificationtime).HasColumnName("lastmodificationtime");
+            entity.Property(e => e.Lastmodifieruserid).HasColumnName("lastmodifieruserid");
+            entity.Property(e => e.Name).HasColumnName("name");
+            entity.Property(e => e.Sitecode)
+                .HasMaxLength(100)
+                .HasColumnName("sitecode");
+            entity.Property(e => e.Siteid).HasColumnName("siteid");
+            entity.Property(e => e.Sqlcontent).HasColumnName("sqlcontent");
+            entity.Property(e => e.Sqltype).HasColumnName("sqltype");
+            entity.Property(e => e.Storeddefaultparam).HasColumnName("storeddefaultparam");
         });
 
         modelBuilder.Entity<NetStepper>(entity =>
         {
-            entity.ToTable("NET_Stepper");
+            entity.HasKey(e => e.Id).HasName("pk_net_stepper");
 
-            entity.Property(e => e.Code).UseCollation("SQL_Latin1_General_CP1_CI_AS");
-            entity.Property(e => e.IsViewOnly).HasDefaultValue(false);
-            entity.Property(e => e.Name).UseCollation("SQL_Latin1_General_CP1_CI_AS");
-            entity.Property(e => e.SiteCode)
+            entity.ToTable("net_stepper", "dbo");
+
+            entity.Property(e => e.Id).HasColumnName("id");
+            entity.Property(e => e.Code).HasColumnName("code");
+            entity.Property(e => e.Creationtime).HasColumnName("creationtime");
+            entity.Property(e => e.Creatoruserid).HasColumnName("creatoruserid");
+            entity.Property(e => e.Datasourceid).HasColumnName("datasourceid");
+            entity.Property(e => e.Deleteruserid).HasColumnName("deleteruserid");
+            entity.Property(e => e.Deletiontime).HasColumnName("deletiontime");
+            entity.Property(e => e.Isactive).HasColumnName("isactive");
+            entity.Property(e => e.Isactiveeventheader).HasColumnName("isactiveeventheader");
+            entity.Property(e => e.Isdeleted).HasColumnName("isdeleted");
+            entity.Property(e => e.Isdynamicdata).HasColumnName("isdynamicdata");
+            entity.Property(e => e.Issaveeachform).HasColumnName("issaveeachform");
+            entity.Property(e => e.Isviewonly)
+                .HasDefaultValue(false)
+                .HasColumnName("isviewonly");
+            entity.Property(e => e.Lastmodificationtime).HasColumnName("lastmodificationtime");
+            entity.Property(e => e.Lastmodifieruserid).HasColumnName("lastmodifieruserid");
+            entity.Property(e => e.Name).HasColumnName("name");
+            entity.Property(e => e.Orderid).HasColumnName("orderid");
+            entity.Property(e => e.Sitecode)
                 .HasMaxLength(255)
-                .IsUnicode(false)
-                .UseCollation("SQL_Latin1_General_CP1_CI_AS");
-            entity.Property(e => e.StoreDefaultData).UseCollation("SQL_Latin1_General_CP1_CI_AS");
-            entity.Property(e => e.StoreGetData).UseCollation("SQL_Latin1_General_CP1_CI_AS");
-            entity.Property(e => e.StoreLoadDynamicData).UseCollation("SQL_Latin1_General_CP1_CI_AS");
-            entity.Property(e => e.StoreSetData).UseCollation("SQL_Latin1_General_CP1_CI_AS");
+                .HasColumnName("sitecode");
+            entity.Property(e => e.Siteid).HasColumnName("siteid");
+            entity.Property(e => e.Storedefaultdata).HasColumnName("storedefaultdata");
+            entity.Property(e => e.Storegetdata).HasColumnName("storegetdata");
+            entity.Property(e => e.Storeloaddynamicdata).HasColumnName("storeloaddynamicdata");
+            entity.Property(e => e.Storesetdata).HasColumnName("storesetdata");
+            entity.Property(e => e.Vertical).HasColumnName("vertical");
         });
 
         modelBuilder.Entity<NetStepperDetail>(entity =>
         {
-            entity.ToTable("NET_Stepper_Detail");
+            entity.HasKey(e => e.Id).HasName("pk_net_stepper_detail");
 
-            entity.Property(e => e.HinWorkflowCode)
+            entity.ToTable("net_stepper_detail", "dbo");
+
+            entity.Property(e => e.Id).HasColumnName("id");
+            entity.Property(e => e.Creationtime).HasColumnName("creationtime");
+            entity.Property(e => e.Creatoruserid).HasColumnName("creatoruserid");
+            entity.Property(e => e.Deleteruserid).HasColumnName("deleteruserid");
+            entity.Property(e => e.Deletiontime).HasColumnName("deletiontime");
+            entity.Property(e => e.Formid).HasColumnName("formid");
+            entity.Property(e => e.Hinworkflowcode)
                 .HasMaxLength(255)
-                .IsUnicode(false)
-                .UseCollation("SQL_Latin1_General_CP1_CI_AS");
-            entity.Property(e => e.LabelActionCode).UseCollation("SQL_Latin1_General_CP1_CI_AS");
-            entity.Property(e => e.SiteCode)
+                .HasColumnName("hinworkflowcode");
+            entity.Property(e => e.Isactive).HasColumnName("isactive");
+            entity.Property(e => e.Isdeleted).HasColumnName("isdeleted");
+            entity.Property(e => e.Labelactioncode).HasColumnName("labelactioncode");
+            entity.Property(e => e.Lastmodificationtime).HasColumnName("lastmodificationtime");
+            entity.Property(e => e.Lastmodifieruserid).HasColumnName("lastmodifieruserid");
+            entity.Property(e => e.Orderid).HasColumnName("orderid");
+            entity.Property(e => e.Sitecode)
                 .HasMaxLength(255)
-                .IsUnicode(false)
-                .UseCollation("SQL_Latin1_General_CP1_CI_AS");
+                .HasColumnName("sitecode");
+            entity.Property(e => e.Siteid).HasColumnName("siteid");
+            entity.Property(e => e.Stepperid).HasColumnName("stepperid");
         });
 
-        modelBuilder.Entity<NetTabPanel>(entity =>
+        modelBuilder.Entity<NetTabpanel>(entity =>
         {
-            entity.ToTable("NET_TabPanel");
+            entity.HasKey(e => e.Id).HasName("pk_net_tabpanel");
 
-            entity.Property(e => e.AfterEffectIcon)
-                .HasMaxLength(100)
-                .UseCollation("SQL_Latin1_General_CP1_CI_AS");
-            entity.Property(e => e.AfterEffectIconColor)
-                .HasMaxLength(100)
-                .UseCollation("SQL_Latin1_General_CP1_CI_AS");
-            entity.Property(e => e.BeforeEffectIcon)
-                .HasMaxLength(100)
-                .UseCollation("SQL_Latin1_General_CP1_CI_AS");
-            entity.Property(e => e.BeforeEffectIconColor)
-                .HasMaxLength(100)
-                .UseCollation("SQL_Latin1_General_CP1_CI_AS");
-            entity.Property(e => e.Code).UseCollation("SQL_Latin1_General_CP1_CI_AS");
-            entity.Property(e => e.FileTemplate).UseCollation("SQL_Latin1_General_CP1_CI_AS");
-            entity.Property(e => e.Name).UseCollation("SQL_Latin1_General_CP1_CI_AS");
-            entity.Property(e => e.SiteCode)
-                .HasMaxLength(255)
-                .IsUnicode(false)
-                .UseCollation("SQL_Latin1_General_CP1_CI_AS");
-            entity.Property(e => e.StoreCheckTabDetail)
-                .HasMaxLength(100)
-                .UseCollation("SQL_Latin1_General_CP1_CI_AS");
-            entity.Property(e => e.StoreCheckUrl)
-                .UseCollation("SQL_Latin1_General_CP1_CI_AS")
-                .HasColumnName("StoreCheckURL");
-            entity.Property(e => e.StoreCountNotify).UseCollation("SQL_Latin1_General_CP1_CI_AS");
-            entity.Property(e => e.StoreExportFile).UseCollation("SQL_Latin1_General_CP1_CI_AS");
-            entity.Property(e => e.StoreGetData).UseCollation("SQL_Latin1_General_CP1_CI_AS");
-            entity.Property(e => e.StoreGetFieldExportDatagrid).UseCollation("SQL_Latin1_General_CP1_CI_AS");
-            entity.Property(e => e.StoreGetFieldExportForm).UseCollation("SQL_Latin1_General_CP1_CI_AS");
-            entity.Property(e => e.StorePermissionByRecord)
-                .HasMaxLength(100)
-                .UseCollation("SQL_Latin1_General_CP1_CI_AS");
-            entity.Property(e => e.StoreTabPermission).UseCollation("SQL_Latin1_General_CP1_CI_AS");
-            entity.Property(e => e.StoreCheckUrl).HasColumnName("StoreCheckURL");
-            entity.Property(e => e.StorePermissionByRecord).HasMaxLength(100);
-        modelBuilder.Entity<NetTabPanelDetail>(entity =>
+            entity.ToTable("net_tabpanel", "dbo");
 
-            entity.ToTable("NET_TabPanel_Detail");
+            entity.Property(e => e.Id).HasColumnName("id");
+            entity.Property(e => e.Aftereffecticon)
+                .HasMaxLength(100)
+                .HasColumnName("aftereffecticon");
+            entity.Property(e => e.Aftereffecticoncolor)
+                .HasMaxLength(100)
+                .HasColumnName("aftereffecticoncolor");
+            entity.Property(e => e.Beforeeffecticon)
+                .HasMaxLength(100)
+                .HasColumnName("beforeeffecticon");
+            entity.Property(e => e.Beforeeffecticoncolor)
+                .HasMaxLength(100)
+                .HasColumnName("beforeeffecticoncolor");
+            entity.Property(e => e.Code).HasColumnName("code");
+            entity.Property(e => e.Creationtime).HasColumnName("creationtime");
+            entity.Property(e => e.Creatoruserid).HasColumnName("creatoruserid");
+            entity.Property(e => e.Datasourceid).HasColumnName("datasourceid");
+            entity.Property(e => e.Deleteruserid).HasColumnName("deleteruserid");
+            entity.Property(e => e.Deletiontime).HasColumnName("deletiontime");
+            entity.Property(e => e.Filetemplate).HasColumnName("filetemplate");
+            entity.Property(e => e.Isactive).HasColumnName("isactive");
+            entity.Property(e => e.Isdeleted).HasColumnName("isdeleted");
+            entity.Property(e => e.Iseffecticon).HasColumnName("iseffecticon");
+            entity.Property(e => e.Isexportexcel).HasColumnName("isexportexcel");
+            entity.Property(e => e.Isexportwordtemplate).HasColumnName("isexportwordtemplate");
+            entity.Property(e => e.Ispermission).HasColumnName("ispermission");
+            entity.Property(e => e.Ispermissionbyrecord).HasColumnName("ispermissionbyrecord");
+            entity.Property(e => e.Lastmodificationtime).HasColumnName("lastmodificationtime");
+            entity.Property(e => e.Lastmodifieruserid).HasColumnName("lastmodifieruserid");
+            entity.Property(e => e.Name).HasColumnName("name");
+            entity.Property(e => e.Orderid).HasColumnName("orderid");
+            entity.Property(e => e.Selectedindex).HasColumnName("selectedindex");
+            entity.Property(e => e.Servicegetfilename).HasColumnName("servicegetfilename");
+            entity.Property(e => e.Sitecode)
+                .HasMaxLength(100)
+                .HasColumnName("sitecode");
+            entity.Property(e => e.Siteid).HasColumnName("siteid");
+            entity.Property(e => e.Storechecktabdetail)
+                .HasMaxLength(100)
+                .HasColumnName("storechecktabdetail");
+            entity.Property(e => e.Storecheckurl).HasColumnName("storecheckurl");
+            entity.Property(e => e.Storecountnotify).HasColumnName("storecountnotify");
+            entity.Property(e => e.Storeexportfile).HasColumnName("storeexportfile");
+            entity.Property(e => e.Storegetdata).HasColumnName("storegetdata");
+            entity.Property(e => e.Storegetfieldexportdatagrid).HasColumnName("storegetfieldexportdatagrid");
+            entity.Property(e => e.Storegetfieldexportform).HasColumnName("storegetfieldexportform");
+            entity.Property(e => e.Storepermissionbyrecord)
+                .HasMaxLength(100)
+                .HasColumnName("storepermissionbyrecord");
+            entity.Property(e => e.Storetabpermission).HasColumnName("storetabpermission");
+        });
 
-            entity.Property(e => e.HinTabPanelCode)
-                .HasMaxLength(255)
-                .IsUnicode(false)
-                .UseCollation("SQL_Latin1_General_CP1_CI_AS");
-            entity.Property(e => e.HinTabPanelId).HasColumnName("HinTabPanelID");
-            entity.Property(e => e.IsLoop).HasDefaultValue(false);
-            entity.Property(e => e.Options).UseCollation("SQL_Latin1_General_CP1_CI_AS");
-            entity.Property(e => e.StoreLoop).UseCollation("SQL_Latin1_General_CP1_CI_AS");
-            entity.Property(e => e.TabIcon)
+        modelBuilder.Entity<NetTabpanelDetail>(entity =>
+        {
+            entity.HasKey(e => e.Id).HasName("pk_net_tabpanel_detail");
+
+            entity.ToTable("net_tabpanel_detail", "dbo");
+
+            entity.Property(e => e.Id).HasColumnName("id");
+            entity.Property(e => e.Creationtime).HasColumnName("creationtime");
+            entity.Property(e => e.Creatoruserid).HasColumnName("creatoruserid");
+            entity.Property(e => e.Deleteruserid).HasColumnName("deleteruserid");
+            entity.Property(e => e.Deletiontime).HasColumnName("deletiontime");
+            entity.Property(e => e.Hintabpanelcode)
+                .HasMaxLength(100)
+                .HasColumnName("hintabpanelcode");
+            entity.Property(e => e.Hintabpanelid).HasColumnName("hintabpanelid");
+            entity.Property(e => e.Isactive).HasColumnName("isactive");
+            entity.Property(e => e.Isdeleted).HasColumnName("isdeleted");
+            entity.Property(e => e.Isloop)
+                .HasDefaultValue(false)
+                .HasColumnName("isloop");
+            entity.Property(e => e.Lastmodificationtime).HasColumnName("lastmodificationtime");
+            entity.Property(e => e.Lastmodifieruserid).HasColumnName("lastmodifieruserid");
+            entity.Property(e => e.Options).HasColumnName("options");
+            entity.Property(e => e.Orderid).HasColumnName("orderid");
+            entity.Property(e => e.Storeloop).HasColumnName("storeloop");
+            entity.Property(e => e.Tabicon)
                 .HasMaxLength(50)
-                .UseCollation("SQL_Latin1_General_CP1_CI_AS");
-            entity.Property(e => e.TabIconColor)
-                .HasMaxLength(20)
-                .UseCollation("SQL_Latin1_General_CP1_CI_AS");
-            entity.Property(e => e.Template).UseCollation("SQL_Latin1_General_CP1_CI_AS");
-            entity.Property(e => e.Title).UseCollation("SQL_Latin1_General_CP1_CI_AS");
+                .HasColumnName("tabicon");
+            entity.Property(e => e.Tabiconcolor)
+                .HasMaxLength(30)
+                .HasColumnName("tabiconcolor");
+            entity.Property(e => e.Template).HasColumnName("template");
+            entity.Property(e => e.Title).HasColumnName("title");
         });
 
         modelBuilder.Entity<NetTenant>(entity =>
         {
-            entity.HasKey(e => e.Id).HasName("PK__NET_Tena__3214EC075157A3F7");
+            entity
+                .HasNoKey()
+                .ToTable("net_tenant", "dbo");
 
-            entity.ToTable("NET_Tenant");
-
-            entity.Property(e => e.Code).HasMaxLength(200);
-            entity.Property(e => e.CreationTime).HasColumnType("datetime");
-            entity.Property(e => e.DeletionTime).HasColumnType("datetime");
-            entity.Property(e => e.IsActive)
+            entity.Property(e => e.Code)
+                .HasMaxLength(200)
+                .HasColumnName("code");
+            entity.Property(e => e.Creationtime).HasColumnName("creationtime");
+            entity.Property(e => e.Creatoruserid).HasColumnName("creatoruserid");
+            entity.Property(e => e.Deleteuserid).HasColumnName("deleteuserid");
+            entity.Property(e => e.Deletiontime).HasColumnName("deletiontime");
+            entity.Property(e => e.Description).HasColumnName("description");
+            entity.Property(e => e.Id)
+                .ValueGeneratedOnAdd()
+                .HasColumnName("id");
+            entity.Property(e => e.Isactive)
                 .HasDefaultValue(true)
-                .HasColumnName("isActive");
-            entity.Property(e => e.IsDeleted)
+                .HasColumnName("isactive");
+            entity.Property(e => e.Isdeleted)
                 .HasDefaultValue(false)
-                .HasColumnName("isDeleted");
-            entity.Property(e => e.LastModificationTime).HasColumnType("datetime");
-            entity.Property(e => e.ShortName).HasMaxLength(50);
-            entity.Property(e => e.StartNumberProd).HasColumnName("StartNumberPROD");
-            entity.Property(e => e.TenantIcoUrl).HasMaxLength(500);
-            entity.Property(e => e.TenantLogoTextUrl).HasMaxLength(500);
-            entity.Property(e => e.TenantLogoUrl).HasMaxLength(500);
+                .HasColumnName("isdeleted");
+            entity.Property(e => e.Lastmodificationtime).HasColumnName("lastmodificationtime");
+            entity.Property(e => e.Lastmodifieruserid).HasColumnName("lastmodifieruserid");
+            entity.Property(e => e.Name).HasColumnName("name");
+            entity.Property(e => e.Orderid).HasColumnName("orderid");
+            entity.Property(e => e.Shortname)
+                .HasMaxLength(50)
+                .HasColumnName("shortname");
+            entity.Property(e => e.Startnumberprod).HasColumnName("startnumberprod");
+            entity.Property(e => e.Tenanticourl)
+                .HasMaxLength(500)
+                .HasColumnName("tenanticourl");
+            entity.Property(e => e.Tenantlogotexturl)
+                .HasMaxLength(500)
+                .HasColumnName("tenantlogotexturl");
+            entity.Property(e => e.Tenantlogourl)
+                .HasMaxLength(500)
+                .HasColumnName("tenantlogourl");
         });
 
         modelBuilder.Entity<NetUnit>(entity =>
         {
-            entity.HasKey(e => e.Id).HasName("PK__NET_Unit__3214EC074D0A0272");
+            entity
+                .HasNoKey()
+                .ToTable("net_unit", "dbo");
 
-            entity.ToTable("NET_Unit");
-
-            entity.Property(e => e.CreationTime).HasColumnType("datetime");
-            entity.Property(e => e.DeletionTime).HasColumnType("datetime");
-            entity.Property(e => e.IsActive).HasDefaultValue(true);
-            entity.Property(e => e.IsDelete).HasDefaultValue(false);
-            entity.Property(e => e.IsParent).HasColumnName("isParent");
-            entity.Property(e => e.LastModificationTime).HasColumnType("datetime");
-            entity.Property(e => e.LeadUserId).HasColumnName("LeadUserID");
-            entity.Property(e => e.OrderId).HasColumnName("OrderID");
-            entity.Property(e => e.UnitName).HasMaxLength(1024);
-            entity.Property(e => e.UnitType)
+            entity.Property(e => e.Creationtime).HasColumnName("creationtime");
+            entity.Property(e => e.Creatoruserid).HasColumnName("creatoruserid");
+            entity.Property(e => e.Deleteuserid).HasColumnName("deleteuserid");
+            entity.Property(e => e.Deletiontime).HasColumnName("deletiontime");
+            entity.Property(e => e.Description).HasColumnName("description");
+            entity.Property(e => e.Id)
+                .ValueGeneratedOnAdd()
+                .HasColumnName("id");
+            entity.Property(e => e.Isactive)
+                .HasDefaultValue(true)
+                .HasColumnName("isactive");
+            entity.Property(e => e.Isdelete)
+                .HasDefaultValue(false)
+                .HasColumnName("isdelete");
+            entity.Property(e => e.Isparent).HasColumnName("isparent");
+            entity.Property(e => e.Lastmodificationtime).HasColumnName("lastmodificationtime");
+            entity.Property(e => e.Lastmodifieruserid).HasColumnName("lastmodifieruserid");
+            entity.Property(e => e.Leaduserid).HasColumnName("leaduserid");
+            entity.Property(e => e.Orderid).HasColumnName("orderid");
+            entity.Property(e => e.Parentid).HasColumnName("parentid");
+            entity.Property(e => e.Rootid).HasColumnName("rootid");
+            entity.Property(e => e.Shortname).HasColumnName("shortname");
+            entity.Property(e => e.Unitcode).HasColumnName("unitcode");
+            entity.Property(e => e.Unitgroup).HasColumnName("unitgroup");
+            entity.Property(e => e.Unitname)
+                .HasMaxLength(1024)
+                .HasColumnName("unitname");
+            entity.Property(e => e.Unittype)
                 .HasMaxLength(50)
-                .IsUnicode(false);
-            entity.Property(e => e.HinTabPanelId).HasColumnName("HinTabPanelID");
-            entity.Property(e => e.IsLoop).HasDefaultValue(false);
+                .HasColumnName("unittype");
         });
 
-            entity.HasKey(e => e.Id).HasName("PK__DRValida__3214EC07C8D7F405");
+        modelBuilder.Entity<NetValidation>(entity =>
         {
-            entity.ToTable("NET_Validation");
+            entity.HasKey(e => e.Id).HasName("pk__drvalida__3214ec07c8d7f405");
 
+            entity.ToTable("net_validation", "dbo");
+
+            entity.Property(e => e.Id).HasColumnName("id");
             entity.Property(e => e.Code)
                 .HasMaxLength(100)
-                .UseCollation("SQL_Latin1_General_CP1_CI_AS");
-            entity.Property(e => e.CreationTime).HasColumnType("datetime");
-            entity.Property(e => e.DeletionTime).HasColumnType("datetime");
-            entity.Property(e => e.IsActive)
-                .HasDefaultValue(1)
-                .HasColumnName("isActive");
-            entity.Property(e => e.IsDeleted)
-                .HasDefaultValue(0)
-                .HasColumnName("isDeleted");
+                .HasColumnName("code");
+            entity.Property(e => e.Creationtime).HasColumnName("creationtime");
+            entity.Property(e => e.Creatoruserid).HasColumnName("creatoruserid");
+            entity.Property(e => e.Datasourceid).HasColumnName("datasourceid");
+            entity.Property(e => e.Deleteruserid).HasColumnName("deleteruserid");
+            entity.Property(e => e.Deletiontime).HasColumnName("deletiontime");
+            entity.Property(e => e.Isactive).HasColumnName("isactive");
+            entity.Property(e => e.Isdeleted).HasColumnName("isdeleted");
             entity.Property(e => e.Key)
-                .HasMaxLength(20)
-                .UseCollation("SQL_Latin1_General_CP1_CI_AS");
-            entity.Property(e => e.LastModificationTime).HasColumnType("datetime");
+                .HasMaxLength(50)
+                .HasColumnName("key");
+            entity.Property(e => e.Lastmodificationtime).HasColumnName("lastmodificationtime");
+            entity.Property(e => e.Lastmodifieruserid).HasColumnName("lastmodifieruserid");
+            entity.Property(e => e.Max).HasColumnName("max");
             entity.Property(e => e.Message)
                 .HasMaxLength(50)
-                .UseCollation("SQL_Latin1_General_CP1_CI_AS");
+                .HasColumnName("message");
+            entity.Property(e => e.Min).HasColumnName("min");
             entity.Property(e => e.Name)
                 .HasMaxLength(100)
-                .UseCollation("SQL_Latin1_General_CP1_CI_AS");
+                .HasColumnName("name");
             entity.Property(e => e.Pattern)
                 .HasMaxLength(50)
-                .UseCollation("SQL_Latin1_General_CP1_CI_AS");
-            entity.Property(e => e.SiteCode)
-                .HasMaxLength(255)
-                .IsUnicode(false)
-                .UseCollation("SQL_Latin1_General_CP1_CI_AS");
+                .HasColumnName("pattern");
+            entity.Property(e => e.Sitecode)
+                .HasMaxLength(100)
+                .HasColumnName("sitecode");
+            entity.Property(e => e.Siteid).HasColumnName("siteid");
             entity.Property(e => e.Store)
-            entity.Property(e => e.Pattern).HasMaxLength(50);
-                .UseCollation("SQL_Latin1_General_CP1_CI_AS");
-                .IsUnicode(false);
-            entity.Property(e => e.Store).HasMaxLength(100);
+                .HasMaxLength(100)
+                .HasColumnName("store");
+            entity.Property(e => e.Type).HasColumnName("type");
         });
 
-            entity.ToTable("NET_Widget");
-
-            entity.Property(e => e.Descriptions).UseCollation("SQL_Latin1_General_CP1_CI_AS");
-            entity.Property(e => e.DisplayTypeCode).UseCollation("SQL_Latin1_General_CP1_CI_AS");
-            entity.Property(e => e.Name).UseCollation("SQL_Latin1_General_CP1_CI_AS");
-            entity.Property(e => e.WidgetCode).UseCollation("SQL_Latin1_General_CP1_CI_AS");
+        modelBuilder.Entity<NetWidget>(entity =>
         {
-            entity.ToTable("NET_Widget");
-        modelBuilder.Entity<NetWidgetDefaultConfig>(entity =>
+            entity.HasKey(e => e.Id).HasName("pk_net_widget");
 
-            entity.ToTable("NET_WidgetDefaultConfig");
+            entity.ToTable("net_widget", "dbo");
 
-            entity.Property(e => e.DefaultValue).UseCollation("SQL_Latin1_General_CP1_CI_AS");
-            entity.Property(e => e.Descriptions).UseCollation("SQL_Latin1_General_CP1_CI_AS");
-            entity.Property(e => e.Key).UseCollation("SQL_Latin1_General_CP1_CI_AS");
-            entity.Property(e => e.Name).UseCollation("SQL_Latin1_General_CP1_CI_AS");
+            entity.Property(e => e.Id).HasColumnName("id");
+            entity.Property(e => e.Creationtime).HasColumnName("creationtime");
+            entity.Property(e => e.Creatoruserid).HasColumnName("creatoruserid");
+            entity.Property(e => e.Deleteruserid).HasColumnName("deleteruserid");
+            entity.Property(e => e.Deletiontime).HasColumnName("deletiontime");
+            entity.Property(e => e.Descriptions).HasColumnName("descriptions");
+            entity.Property(e => e.Displaytypecode).HasColumnName("displaytypecode");
+            entity.Property(e => e.Isdeleted).HasColumnName("isdeleted");
+            entity.Property(e => e.Lastmodificationtime).HasColumnName("lastmodificationtime");
+            entity.Property(e => e.Lastmodifieruserid).HasColumnName("lastmodifieruserid");
+            entity.Property(e => e.Name).HasColumnName("name");
+            entity.Property(e => e.Widgetcode).HasColumnName("widgetcode");
+        });
+
+        modelBuilder.Entity<NetWidgetdefaultconfig>(entity =>
         {
-            entity.ToTable("NET_WidgetDefaultConfig");
-        modelBuilder.Entity<NetWidgetGroup>(entity =>
+            entity.HasKey(e => e.Id).HasName("pk_net_widgetdefaultconfig");
 
-            entity.ToTable("NET_WidgetGroup");
+            entity.ToTable("net_widgetdefaultconfig", "dbo");
 
-            entity.Property(e => e.Descriptions).UseCollation("SQL_Latin1_General_CP1_CI_AS");
-            entity.Property(e => e.GroupName).UseCollation("SQL_Latin1_General_CP1_CI_AS");
+            entity.Property(e => e.Id).HasColumnName("id");
+            entity.Property(e => e.Defaultvalue).HasColumnName("defaultvalue");
+            entity.Property(e => e.Descriptions).HasColumnName("descriptions");
+            entity.Property(e => e.Index).HasColumnName("index");
+            entity.Property(e => e.Indexnumber).HasColumnName("indexnumber");
+            entity.Property(e => e.Isdelete).HasColumnName("isdelete");
+            entity.Property(e => e.Key).HasColumnName("key");
+            entity.Property(e => e.Name).HasColumnName("name");
+            entity.Property(e => e.Widgetlayoutid).HasColumnName("widgetlayoutid");
+        });
+
+        modelBuilder.Entity<NetWidgetgroup>(entity =>
         {
-            entity.ToTable("NET_WidgetGroup");
-        modelBuilder.Entity<NetWidgetItem>(entity =>
+            entity.HasKey(e => e.Id).HasName("pk_net_widgetgroup");
 
-            entity.ToTable("NET_WidgetItem");
+            entity.ToTable("net_widgetgroup", "dbo");
+
+            entity.Property(e => e.Id).HasColumnName("id");
+            entity.Property(e => e.Descriptions).HasColumnName("descriptions");
+            entity.Property(e => e.Groupname).HasColumnName("groupname");
+            entity.Property(e => e.Isdeleted).HasColumnName("isdeleted");
+        });
+
+        modelBuilder.Entity<NetWidgetitem>(entity =>
+        {
+            entity.HasKey(e => e.Id).HasName("pk_net_widgetitem");
+
+            entity.ToTable("net_widgetitem", "dbo");
+
+            entity.Property(e => e.Id).HasColumnName("id");
+            entity.Property(e => e.Creationtime).HasColumnName("creationtime");
+            entity.Property(e => e.Creatoruserid).HasColumnName("creatoruserid");
+            entity.Property(e => e.Datasourceid).HasColumnName("datasourceid");
+            entity.Property(e => e.Deleteruserid).HasColumnName("deleteruserid");
+            entity.Property(e => e.Deletiontime).HasColumnName("deletiontime");
+            entity.Property(e => e.Descriptions).HasColumnName("descriptions");
+            entity.Property(e => e.Groupwidgetid).HasColumnName("groupwidgetid");
+            entity.Property(e => e.Imgreview).HasColumnName("imgreview");
+            entity.Property(e => e.Isdeleted).HasColumnName("isdeleted");
+            entity.Property(e => e.Lastmodificationtime).HasColumnName("lastmodificationtime");
+            entity.Property(e => e.Lastmodifieruserid).HasColumnName("lastmodifieruserid");
+            entity.Property(e => e.Name).HasColumnName("name");
+            entity.Property(e => e.Templateids).HasColumnName("templateids");
+            entity.Property(e => e.Widgetlayoutid).HasColumnName("widgetlayoutid");
+        });
+
+        modelBuilder.Entity<NetWidgetmap>(entity =>
+        {
+            entity.HasKey(e => e.Id).HasName("pk_net_widgetmap");
+
+            entity.ToTable("net_widgetmap", "dbo");
+
+            entity.Property(e => e.Id).HasColumnName("id");
+            entity.Property(e => e.Creationtime).HasColumnName("creationtime");
+            entity.Property(e => e.Creatoruserid).HasColumnName("creatoruserid");
+            entity.Property(e => e.Deleteruserid).HasColumnName("deleteruserid");
+            entity.Property(e => e.Deletiontime).HasColumnName("deletiontime");
+            entity.Property(e => e.Descriptions).HasColumnName("descriptions");
+            entity.Property(e => e.Height).HasColumnName("height");
+            entity.Property(e => e.Indexnumber).HasColumnName("indexnumber");
+            entity.Property(e => e.Isdeleted).HasColumnName("isdeleted");
+            entity.Property(e => e.Lastmodificationtime).HasColumnName("lastmodificationtime");
+            entity.Property(e => e.Lastmodifieruserid).HasColumnName("lastmodifieruserid");
+            entity.Property(e => e.Name).HasColumnName("name");
+            entity.Property(e => e.Pageid).HasColumnName("pageid");
+            entity.Property(e => e.Positionx).HasColumnName("positionx");
+            entity.Property(e => e.Positiony).HasColumnName("positiony");
+            entity.Property(e => e.Widgetitemid).HasColumnName("widgetitemid");
+            entity.Property(e => e.Width).HasColumnName("width");
+        });
+
+        modelBuilder.Entity<NetWidgetvalueconfig>(entity =>
+        {
+            entity.HasKey(e => e.Id).HasName("pk_net_widgetvalueconfig");
+
+            entity.ToTable("net_widgetvalueconfig", "dbo");
+
+            entity.HasIndex(e => new { e.Widgetitemid, e.Isdelete }, "idx_ix_missingindex_4_3");
+
+            entity.Property(e => e.Id).HasColumnName("id");
+            entity.Property(e => e.Descriptions).HasColumnName("descriptions");
+            entity.Property(e => e.Index).HasColumnName("index");
+            entity.Property(e => e.Isdelete).HasColumnName("isdelete");
+            entity.Property(e => e.Key).HasColumnName("key");
+            entity.Property(e => e.Name).HasColumnName("name");
+            entity.Property(e => e.Value).HasColumnName("value");
+            entity.Property(e => e.Widgetitemid).HasColumnName("widgetitemid");
+        });
+
+        modelBuilder.Entity<Tempqueriescopy>(entity =>
+        {
+            entity
                 .HasNoKey()
-            entity.Property(e => e.DataSourceId)
-                .HasDefaultValue(0)
-                .HasColumnName("DataSourceID");
-            entity.Property(e => e.Descriptions).UseCollation("SQL_Latin1_General_CP1_CI_AS");
-            entity.Property(e => e.ImgReview).UseCollation("SQL_Latin1_General_CP1_CI_AS");
-            entity.Property(e => e.Name).UseCollation("SQL_Latin1_General_CP1_CI_AS");
-            entity.Property(e => e.TemplateIds).UseCollation("SQL_Latin1_General_CP1_CI_AS");
-                .HasDefaultValue(0)
-                .HasColumnName("DataSourceID");
-        modelBuilder.Entity<NetWidgetMap>(entity =>
+                .ToTable("tempqueriescopy", "dbo");
 
-            entity.ToTable("NET_WidgetMap");
+            entity.Property(e => e.Col1)
+                .HasMaxLength(376)
+                .HasColumnName("col1");
+            entity.Property(e => e.Col2).HasColumnName("col2");
+            entity.Property(e => e.Col3)
+                .HasMaxLength(259)
+                .HasColumnName("col3");
+            entity.Property(e => e.Rownum).HasColumnName("rownum");
+        });
 
-            entity.Property(e => e.Descriptions).UseCollation("SQL_Latin1_General_CP1_CI_AS");
-            entity.Property(e => e.Name).UseCollation("SQL_Latin1_General_CP1_CI_AS");
+        modelBuilder.Entity<Tempquery>(entity =>
         {
-            entity.ToTable("NET_WidgetMap");
-        modelBuilder.Entity<NetWidgetValueConfig>(entity =>
+            entity
+                .HasNoKey()
+                .ToTable("tempqueries", "dbo");
 
-            entity.ToTable("NET_WidgetValueConfig");
+            entity.Property(e => e.Col1)
+                .HasMaxLength(376)
+                .HasColumnName("col1");
+            entity.Property(e => e.Col2).HasColumnName("col2");
+            entity.Property(e => e.Col3)
+                .HasMaxLength(259)
+                .HasColumnName("col3");
+            entity.Property(e => e.Rownum).HasColumnName("rownum");
+        });
 
-            entity.HasIndex(e => new { e.WidgetItemId, e.IsDelete }, "IX_MissingIndex_4_3").HasFillFactor(90);
+        modelBuilder.Entity<WidgetlayoutTest>(entity =>
+        {
+            entity.HasKey(e => e.Id).HasName("pk__widgetla__3214ec07b34c3338");
+
+            entity.ToTable("widgetlayout_test", "dbo");
+
+            entity.Property(e => e.Id).HasColumnName("id");
+            entity.Property(e => e.Createdat).HasColumnName("createdat");
+            entity.Property(e => e.Dashboardid)
+                .HasMaxLength(50)
+                .HasColumnName("dashboardid");
+            entity.Property(e => e.Height).HasColumnName("height");
+            entity.Property(e => e.Userid)
+                .HasMaxLength(50)
+                .HasColumnName("userid");
+            entity.Property(e => e.Widgetid)
+                .HasMaxLength(100)
                 .HasColumnName("widgetid");
             entity.Property(e => e.Width).HasColumnName("width");
         });
 
-        modelBuilder.Entity<WidgetLayoutTest>(entity =>
-        {
-            entity.HasKey(e => e.Id).HasName("PK__WidgetLa__3214EC07C50AE4CF");
 
-            entity.ToTable("WidgetLayout_Test");
+          //// Nếu muốn rename bảng Identity cho đúng chuẩn SQL Server
+          //modelBuilder.Entity<ApplicationUser>(b =>
+          //{
+          //    b.ToTable("aspnetusers", "dbo");
+          //});
 
-            entity.Property(e => e.CreatedAt)
-                .HasDefaultValueSql("(getdate())")
-                .HasColumnType("datetime");
-            entity.Property(e => e.DashboardId)
-                .HasMaxLength(50)
-                .UseCollation("SQL_Latin1_General_CP1_CI_AS");
-            entity.Property(e => e.UserId)
-                .HasMaxLength(50)
-                .UseCollation("SQL_Latin1_General_CP1_CI_AS");
-            entity.Property(e => e.WidgetId)
-                .HasMaxLength(100)
-                .UseCollation("SQL_Latin1_General_CP1_CI_AS");
-        });
+          //modelBuilder.Entity<ApplicationRole>(b =>
+          //{
+          //    b.ToTable("aspnetroles", "dbo");
+          //});
 
-        // Cuối cùng phải có dòng này:
-        base.OnModelCreating(modelBuilder); // ⚠️ Quan trọng
+          //modelBuilder.Entity<IdentityUserRole<int>>(b =>
+          //{
+          //    b.ToTable("aspnetuserroles", "dbo");
+          //});
+
+          //modelBuilder.Entity<IdentityUserClaim<int>>(b =>
+          //{
+          //    b.ToTable("aspnetuserCcaims", "dbo");
+          //});
+
+          //modelBuilder.Entity<IdentityUserLogin<int>>(b =>
+          //{
+          //    b.ToTable("aspnetuserlogins", "dbo");
+          //});
+
+          //modelBuilder.Entity<IdentityRoleClaim<int>>(b =>
+          //{
+          //    b.ToTable("aspnetroleclaims", "dbo");
+          //});
+
+          //modelBuilder.Entity<IdentityUserToken<int>>(b =>
+          //{
+          //    b.ToTable("aspnetusertokens", "dbo");
+          //});
         OnModelCreatingPartial(modelBuilder);
     }
 
