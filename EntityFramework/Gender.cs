@@ -5,13 +5,13 @@ namespace KOAHome.EntityFramework;
 
 public partial class Gender
 {
-    public int Id { get; set; }
+    public long Id { get; set; }
 
     public string? Code { get; set; }
 
     public string? Name { get; set; }
 
-    public bool? Isactive { get; set; }
+    public bool? IsActive { get; set; }
 
-    public bool? Isdeleted { get; set; }
+    public bool? IsDeleted { get; set; }
 }

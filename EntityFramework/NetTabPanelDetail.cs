@@ -23,11 +23,11 @@ public partial class NetTabpanelDetail
 
     public long? Hintabpanelid { get; set; }
 
-    public string? Title { get; set; }
+    public string Title { get; set; }
 
-    public string? Template { get; set; }
+    public string Template { get; set; }
 
-    public string? Options { get; set; }
+    public string Options { get; set; }
 
     public long? Orderid { get; set; }
 
@@ -35,9 +35,15 @@ public partial class NetTabpanelDetail
 
     public bool? Isloop { get; set; }
 
-    public string? Storeloop { get; set; }
+    public string Storeloop { get; set; }
 
-    public string? Hintabpanelcode { get; set; }
+    public string Hintabpanelcode { get; set; }
 
-    public string? Tabicon { get; set; }
+    public string Tabicon { get; set; }
+
+    public string? HinTabPanelCode { get; set; }
+
+    public string? TabIcon { get; set; }
+
+    public string? TabIconColor { get; set; }
 }

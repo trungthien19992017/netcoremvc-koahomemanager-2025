@@ -5,19 +5,19 @@ namespace KOAHome.EntityFramework;
 
 public partial class HinDistrict
 {
-    public int? Districtid { get; set; }
+    public long DistrictId { get; set; }
 
-    public long? Cityid { get; set; }
+    public long? CityId { get; set; }
 
-    public string? Districtcode { get; set; }
+    public string? DistrictCode { get; set; }
 
-    public string? Districtname { get; set; }
+    public string? DistrictName { get; set; }
 
-    public bool? Isactive { get; set; }
+    public bool? IsActive { get; set; }
 
-    public bool? Isdelete { get; set; }
+    public bool? IsDelete { get; set; }
 
-    public int? Orderid { get; set; }
+    public int? OrderId { get; set; }
 
-    public int? Danso { get; set; }
+    public int? DanSo { get; set; }
 }

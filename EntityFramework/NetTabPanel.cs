@@ -21,59 +21,59 @@ public partial class NetTabpanel
 
     public DateTime? Deletiontime { get; set; }
 
-    public string? Code { get; set; }
+    public string Code { get; set; }
 
-    public string? Name { get; set; }
+    public string Name { get; set; }
 
     public long? Orderid { get; set; }
 
     public bool? Isactive { get; set; }
 
-    public string? Storegetdata { get; set; }
+    public string Storegetdata { get; set; }
 
     public int? Datasourceid { get; set; }
 
-    public string? Filetemplate { get; set; }
+    public string Filetemplate { get; set; }
 
-    public string? Storeexportfile { get; set; }
+    public string Storeexportfile { get; set; }
 
     public int? Selectedindex { get; set; }
 
     public bool? Iseffecticon { get; set; }
 
-    public string? Storechecktabdetail { get; set; }
+    public string Storechecktabdetail { get; set; }
 
-    public string? Beforeeffecticon { get; set; }
+    public string Beforeeffecticon { get; set; }
 
-    public string? Beforeeffecticoncolor { get; set; }
+    public string Beforeeffecticoncolor { get; set; }
 
-    public string? Aftereffecticon { get; set; }
+    public string Aftereffecticon { get; set; }
 
-    public string? Aftereffecticoncolor { get; set; }
+    public string Aftereffecticoncolor { get; set; }
 
     public bool? Ispermission { get; set; }
 
     public bool? Ispermissionbyrecord { get; set; }
 
-    public string? Storepermissionbyrecord { get; set; }
+    public string Storepermissionbyrecord { get; set; }
 
-    public string? Storecheckurl { get; set; }
+    public string Storecheckurl { get; set; }
 
     public int? Siteid { get; set; }
 
-    public string? Sitecode { get; set; }
+    public string Sitecode { get; set; }
 
-    public string? Storegetfieldexportform { get; set; }
+    public string Storegetfieldexportform { get; set; }
 
-    public string? Storegetfieldexportdatagrid { get; set; }
+    public string Storegetfieldexportdatagrid { get; set; }
 
     public bool? Isexportexcel { get; set; }
 
     public bool? Isexportwordtemplate { get; set; }
 
-    public string? Storecountnotify { get; set; }
+    public string Storecountnotify { get; set; }
 
-    public string? Storetabpermission { get; set; }
+    public string Storetabpermission { get; set; }
 
     public int? Servicegetfilename { get; set; }
 }

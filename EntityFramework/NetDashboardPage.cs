@@ -7,11 +7,11 @@ public partial class NetDashboardpage
 {
     public int Id { get; set; }
 
-    public string? Pagecode { get; set; }
+    public string Pagecode { get; set; }
 
-    public string? Name { get; set; }
+    public string Name { get; set; }
 
-    public string? Descriptions { get; set; }
+    public string Descriptions { get; set; }
 
     public int? Orderid { get; set; }
 

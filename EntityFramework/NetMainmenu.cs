@@ -9,17 +9,17 @@ public partial class NetMainmenu
 
     public int? Tenantid { get; set; }
 
-    public string? Name { get; set; }
+    public string Name { get; set; }
 
-    public string? Title { get; set; }
+    public string Title { get; set; }
 
-    public string? Icon { get; set; }
+    public string Icon { get; set; }
 
-    public string? Description { get; set; }
+    public string Description { get; set; }
 
     public int? Parent { get; set; }
 
-    public string? Link { get; set; }
+    public string Link { get; set; }
 
     public DateTime? Creationtime { get; set; }
 
@@ -31,7 +31,7 @@ public partial class NetMainmenu
 
     public int? Index { get; set; }
 
-    public string? Requiredpermissionname { get; set; }
+    public string Requiredpermissionname { get; set; }
 
     public long? Creatoruserid { get; set; }
 
@@ -43,13 +43,13 @@ public partial class NetMainmenu
 
     public bool? Ismobile { get; set; }
 
-    public string? Code { get; set; }
+    public string Code { get; set; }
 
     public int? Siteid { get; set; }
 
-    public string? Sitecode { get; set; }
+    public string Sitecode { get; set; }
 
     public bool? Isminiitem { get; set; }
 
-    public string? Imageurl { get; set; }
+    public string Imageurl { get; set; }
 }

@@ -6,6 +6,7 @@ namespace KOAHome.Models
     public string SecretKey { get; set; }
     public string Bucket { get; set; }
     public string AccountId { get; set; }
+    public string PublicKey { get; set; }
     public string Region { get; set; } = "auto";
   }
 }

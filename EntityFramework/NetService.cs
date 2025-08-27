@@ -21,27 +21,27 @@ public partial class NetService
 
     public DateTime? Deletiontime { get; set; }
 
-    public string? Code { get; set; }
+    public string Code { get; set; }
 
-    public string? Name { get; set; }
+    public string Name { get; set; }
 
     public long? Datasourceid { get; set; }
 
     public bool? Sqltype { get; set; }
 
-    public string? Sqlcontent { get; set; }
+    public string Sqlcontent { get; set; }
 
-    public string? Colvalue { get; set; }
+    public string Colvalue { get; set; }
 
-    public string? Coldisplay { get; set; }
+    public string Coldisplay { get; set; }
 
-    public string? Colparent { get; set; }
+    public string Colparent { get; set; }
 
     public bool? Cache { get; set; }
 
-    public string? Storeddefaultparam { get; set; }
+    public string Storeddefaultparam { get; set; }
 
     public int? Siteid { get; set; }
 
-    public string? Sitecode { get; set; }
+    public string Sitecode { get; set; }
 }

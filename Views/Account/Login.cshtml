@@ -1,0 +1,88 @@
+@model KOAHome.Models.LoginModel
+@{
+    Layout = "_BlankLayout";
+    ViewData["Title"] = "Đăng nhập";
+}
+
+@section PageStyles {
+    <link rel="stylesheet" href="~/vendor/css/pages/page-auth.css">
+}
+
+@* ************** Content ************** *@
+
+<div class="position-relative">
+    <div class="authentication-wrapper authentication-basic container-p-y">
+        <div class="authentication-inner py-6 mx-4">
+
+            <!-- Login -->
+            <div class="card p-7">
+                <!-- Logo -->
+                <div class="app-brand justify-content-center mt-5">
+                    <a  class="app-brand-link gap-3">
+                        <span class="app-brand-logo demo">@await Html.PartialAsync("../_Partials/_OwnMacros")</span>
+                    </a>
+                </div>
+                <!-- /Logo -->
+
+                <div class="card-body mt-1">
+                    <h4 class="mb-1">@TempData.Peek("ownName") xin chào 👋🏻</h4>
+                    <p class="mb-5">Hãy đăng nhập vào tài khoản và bắt đầu trải nghiệm giải pháp kinh doanh dành riêng cho bạn</p>
+
+                    @using (Html.BeginForm("Login", "Account", FormMethod.Post,new { id = "formAuthentication", @class = "mb-5"}))
+                    {
+                        @Html.ValidationSummary(false, null, new { @class = "text-danger" })
+                        <input type="hidden" name="ReturnUrl" value="@ViewData["ReturnUrl"]" />
+                        <div class="form-floating form-floating-outline mb-5">
+                            @Html.TextBoxFor(model => model.Username, new { @class = "form-control", @id="Username", @autofocus = "autofocus", @name = "Username", @placeholder = "Nhập tên đăng nhập của bạn (viết liền không dấu)", @autocomplete="Username"})
+                            <label for="Username">Tên đăng nhập</label>
+                        </div>
+                        <div class="mb-5">
+                            <div class="form-password-toggle form-control-validation fv-plugins-icon-container fv-plugins-bootstrap5-row-valid">
+                                <div class="input-group input-group-merge">
+                                    <div class="form-floating form-floating-outline">
+                                        @Html.PasswordFor(model => model.Password, new { @class = "form-control", @id = "Password", @name = "Password", @placeholder = "****************" })
+                                        <label for="Password">Mật khẩu</label>
+                                    </div>
+                                    <span class="input-group-text cursor-pointer"><i class="icon-base ri ri-eye-off-line icon-20px"></i></span>
+                                </div>
+                                <div class="fv-plugins-message-container fv-plugins-message-container--enabled invalid-feedback"></div>
+                            </div>
+                        </div>
+                        <div class="mb-5 pb-2 d-flex justify-content-between pt-2 align-items-center">
+                            <div class="form-check mb-0">
+                                <input class="form-check-input" type="checkbox" id="RememberMe" asp-for="RememberMe">
+                                <label class="form-check-label" for="RememberMe">
+                                    Ghi nhớ
+                                </label>
+                            </div>
+                            <a href="/Auth/ForgotPasswordBasic" class="float-end mb-1">
+                                <span>Quên mật khẩu?</span>
+                            </a>
+                        </div>
+                        <div class="mb-5">
+                            <button class="btn btn-primary d-grid w-100" type="submit">Đăng nhập</button>
+                        </div>
+                    }
+                    <div class="divider my-5">
+                        <div class="divider-text">or</div>
+                    </div>
+                    <div class="d-flex justify-content-center gap-2">
+                        <a asp-action="ExternalLogin" asp-route-provider="Google" class="btn btn-icon btn-lg rounded-pill btn-text-google-plus waves-effect">
+                            <i class="icon-base ri  ri-google-fill icon-24px"></i>
+                        </a>
+                    </div>
+                    <p class="text-center mb-5">
+                        <span>Cần tài khoản mới?</span>
+                        <a href="/Account/Register">
+                            <span>Tạo tài khoản</span>
+                        </a>
+                    </p>
+                </div>
+            </div>
+            <!-- /Login -->
+            <img src="~/img/icons/koa/loginbg_idea.png" alt="auth-tree" class="authentication-image-object-left d-none d-lg-block w-px-200 h-auto">
+            <img src="~/img/illustrations/auth-basic-mask-light.png" class="authentication-image d-none d-lg-block" height="172" alt="triangle-bg" data-app-light-img="illustrations/auth-basic-mask-light.png" data-app-dark-img="illustrations/auth-basic-mask-dark.png">
+            <img src="~/img/icons/koa/loginbg_software.png" alt="auth-tree" class="authentication-image-object-right d-none d-lg-block w-px-200 h-auto">
+        </div>
+    </div>
+</div>

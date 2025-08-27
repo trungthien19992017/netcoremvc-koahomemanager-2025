@@ -7,11 +7,11 @@ public partial class NetDashboard
 {
     public int Id { get; set; }
 
-    public string? Name { get; set; }
+    public string Name { get; set; }
 
-    public string? Descriptions { get; set; }
+    public string Descriptions { get; set; }
 
-    public string? Dashboardcode { get; set; }
+    public string Dashboardcode { get; set; }
 
     public bool? Isdeleted { get; set; }
 
@@ -27,17 +27,17 @@ public partial class NetDashboard
 
     public DateTime? Deletiontime { get; set; }
 
-    public string? Options { get; set; }
+    public string Options { get; set; }
 
-    public string? Storedefault { get; set; }
+    public string Storedefault { get; set; }
 
     public bool? Showcalendarfilter { get; set; }
 
-    public string? Textcalendarcolor { get; set; }
+    public string Textcalendarcolor { get; set; }
 
     public bool? Autoreload { get; set; }
 
     public int? Datasourceid { get; set; }
 
-    public string? Codereceiverealtime { get; set; }
+    public string Codereceiverealtime { get; set; }
 }

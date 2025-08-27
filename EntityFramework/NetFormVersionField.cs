@@ -23,23 +23,23 @@ public partial class NetFormVersionfield
 
     public long? Hinformversionid { get; set; }
 
-    public string? Code { get; set; }
+    public string Code { get; set; }
 
-    public string? Name { get; set; }
+    public string Name { get; set; }
 
-    public string? Title { get; set; }
+    public string Title { get; set; }
 
     public long? Parentid { get; set; }
 
-    public string? Parentcode { get; set; }
+    public string Parentcode { get; set; }
 
     public long? Fieldtypeid { get; set; }
 
-    public string? Options { get; set; }
+    public string Options { get; set; }
 
-    public string? Validates { get; set; }
+    public string Validates { get; set; }
 
-    public string? Datasources { get; set; }
+    public string Datasources { get; set; }
 
     public long? Orderid { get; set; }
 
@@ -47,7 +47,7 @@ public partial class NetFormVersionfield
 
     public int? Tabindex { get; set; }
 
-    public string? Hinformcode { get; set; }
+    public string Hinformcode { get; set; }
 
     public long? Type { get; set; }
 }
