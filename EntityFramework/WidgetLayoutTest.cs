@@ -3,11 +3,11 @@ using System.Collections.Generic;
 
 namespace KOAHome.EntityFramework;
 
-public partial class WidgetLayoutTest
+public partial class WidgetlayoutTest
 {
     public int Id { get; set; }
 
-    public string? WidgetId { get; set; }
+    public string Widgetid { get; set; }
 
     public int? Order { get; set; }
 
@@ -15,9 +15,9 @@ public partial class WidgetLayoutTest
 
     public int? Height { get; set; }
 
-    public string? UserId { get; set; }
+    public string Userid { get; set; }
 
-    public string? DashboardId { get; set; }
+    public string Dashboardid { get; set; }
 
-    public DateTime? CreatedAt { get; set; }
+    public DateTime? Createdat { get; set; }
 }
