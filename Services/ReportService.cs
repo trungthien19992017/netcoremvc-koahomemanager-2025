@@ -847,7 +847,7 @@ namespace KOAHome.Services
                       sb.AppendLine("<div class='d-flex flex-wrap gap-1'>");
                       foreach (var file in fileList)
                       {
-                        var fileName = file.GetProperty("fileName").GetString();
+                        var fileName = file.GetProperty("filename").GetString();
                         var url = file.GetProperty("url").GetString();
                         var displayName = fileName?.Length > 50 ? fileName.Substring(0, 50) + "..." : fileName;
                         sb.AppendLine($"<a href='{url}' download class='btn btn-sm btn-outline-primary file-download-link' title='{fileName}'><i class='ri-download-2-fill'></i> {displayName}</a>");
