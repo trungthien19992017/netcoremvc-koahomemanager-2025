@@ -1,15 +1,10 @@
-using System.Diagnostics;
-using Microsoft.AspNetCore.Mvc;
 using AspnetCoreMvcFull.Models;
+using Google.Apis.Sheets.v4.Data;
 using KOAHome.EntityFramework;
-using KOAHome.Services;
-using Newtonsoft.Json.Linq;
-using OfficeOpenXml.FormulaParsing.Excel.Functions.Database;
-using System;
-using Humanizer;
-using System.Collections.Generic;
-using Microsoft.SqlServer.Server;
 using KOAHome.Models;
+using KOAHome.Services;
+using Microsoft.AspNetCore.Mvc;
+using System.Diagnostics;
 using System.Text.Json;
 
 namespace AspnetCoreMvcFull.Controllers;
@@ -18,13 +13,17 @@ public class DashboardsController : Controller
 {
   private readonly ILogger<DashboardsController> _logger;
   private readonly QLKCL_NEWContext _db;
-  private readonly IWidgetService _widget; 
+  private readonly IWidgetService _widget;
+  private readonly IReportService _reportService;
+  private readonly IGoogleSheetService _googleSheetService;
 
 
-  public DashboardsController(ILogger<DashboardsController> logger, IWidgetService widget)
+  public DashboardsController(ILogger<DashboardsController> logger, IWidgetService widget, IReportService reportService, IGoogleSheetService googleSheetService)
   {
     _logger = logger;
     _widget = widget;
+    _reportService = reportService;
+    _googleSheetService = googleSheetService;
   }
 
   public async Task<IActionResult> Index()
@@ -179,5 +178,85 @@ public class DashboardsController : Controller
   public IActionResult Error()
   {
     return View(new ErrorViewModel { RequestId = Activity.Current?.Id ?? HttpContext.TraceIdentifier });
+  }
+  [HttpPost]
+  public async Task<IActionResult> SyncGoogleSheet()
+  {
+    try
+    {
+      // 1. Lấy dữ liệu từ DB
+      var today = DateTime.Today;
+
+      // ISO week: Monday = 1, Sunday = 7
+      int diffToMonday = today.DayOfWeek == DayOfWeek.Sunday
+          ? -6
+          : DayOfWeek.Monday - today.DayOfWeek;
+
+      DateTime startOfWeek = today.AddDays(diffToMonday);
+      DateTime endOfWeek = startOfWeek.AddDays(6);
+
+      string tuNgay = startOfWeek.ToString("yyyy-MM-dd");
+      string denNgay = endOfWeek.ToString("yyyy-MM-dd");
+
+      var parameters = new Dictionary<string, object>
+      {
+        ["tungay"] = tuNgay,
+        ["denngay"] = denNgay,
+        ["param"] = $"tungay={tuNgay};denngay={denNgay}"
+      };
+
+      // 2️⃣ GỌI STORE / SQL
+      var result = await _reportService.Report_search(
+          parameters,
+          sqlStore: "HS_LichBookingThang_GoogleSheet",
+          connectionString: "Server=aws-0-ap-southeast-1.pooler.supabase.com;Port=5432;Database=TTT_Bus_KOAHome;User Id=postgres.degfqiahqjcmvgdkcjmm;Password=15976325Vn.;SSL Mode=Require;Trust Server Certificate=true;Pooling=true;Minimum Pool Size=1;Maximum Pool Size=20;"
+      );
+
+      // 3️⃣ CHUYỂN dynamic → Dictionary<string, object>
+      var data = ConvertDynamicToDictionary(result);
+      var headers = data.First().Keys.ToList();
+      int totalColumns = headers.Count;
+
+      string spreadsheetId = "1VgUes_otZNcWHm_UOErhDjPkYs2sWWhz94lvIKDIx9Q";
+      var sheetId = await _googleSheetService.GetSheetIdByName(
+          spreadsheetId,
+          "Sheet1"
+      );
+
+      // 2. Ghi lên Google Sheet
+      _googleSheetService.WriteDictionaryToSheet(
+          spreadsheetId: spreadsheetId,
+          sheetName: "Sheet1",
+          data: data
+      );
+      await _googleSheetService.FormatSheet(
+          spreadsheetId,
+          sheetId,
+          totalColumns: totalColumns,
+          totalRows: data.Count + 1
+      );
+
+      return Json(new
+      {
+        success = true,
+        message = "Đồng bộ Google Sheet thành công"
+      });
+    }
+    catch (Exception ex)
+    {
+      return Json(new
+      {
+        success = false,
+        message = ex.Message
+      });
+    }
+  }
+  private List<Dictionary<string, object>> ConvertDynamicToDictionary(
+      List<dynamic> rows)
+  {
+    return rows.Select(r =>
+        ((IDictionary<string, object>)r)
+        .ToDictionary(x => x.Key, x => x.Value)
+    ).ToList();
   }
 }

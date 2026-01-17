@@ -19,6 +19,8 @@ namespace KOAHome.Services
     public Task<IDictionary<string, object>?> Connection_GetSingleDataFromQuery(Dictionary<string, object> parameters, string sqlStore, string? connectionString, StringBuilder sqlQuery, List<NpgsqlParameter> sqlParams);
     public bool CheckForErrors(List<dynamic> resultList, out string errorMessage);
 
+    List<Dictionary<string, object>> GetReportData();
+
   }
   public class ConnectionService : IConnectionService
   {
@@ -725,6 +727,27 @@ namespace KOAHome.Services
 
       errorMessage = null;
       return false;
+    }
+    public List<Dictionary<string, object>> GetReportData()
+    {
+      // Ví dụ giả lập, thực tế là query SQL
+      return new List<Dictionary<string, object>>
+        {
+            new()
+            {
+                ["OrderId"] = 1001,
+                ["Customer"] = "Nguyễn Văn A",
+                ["Total"] = 250000,
+                ["CreatedDate"] = DateTime.Now
+            },
+            new()
+            {
+                ["OrderId"] = 1002,
+                ["Customer"] = "Trần Văn B",
+                ["Total"] = 430000,
+                ["CreatedDate"] = DateTime.Now.AddDays(-1)
+            }
+        };
     }
   }
 }

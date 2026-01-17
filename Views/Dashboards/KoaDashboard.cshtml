@@ -27,9 +27,47 @@
     <script src="~/js/dashboards-analytics.js"></script>
     <script src="~/js/dashboards-crm.js"></script>
     <script src="~/js/apexcharts.js"></script>
+    <script>
+        document.getElementById("btnSync").addEventListener("click", function () {
+            fetch('/Dashboards/SyncGoogleSheet', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            })
+            .then(res => res.json())
+            .then(data => {
+                rplm({
+                      title: "Xử lý thành công!",
+                      text: data.message,
+                      type: "success",
+                      timer: 2000,
+                      confirmButtonText: 'Xác nhận',
+                      html: true
+                  }, function () {
+                      // reload lại sau khi đóng popup
+                      location.reload();
+                  });
+            })
+            .catch(err => {
+                rplm({
+                    title: "Lỗi!",
+                    text: err || "Có vấn đề xảy ra.",
+                    type: "error",
+                    timer: 2000,
+                    confirmButtonText: 'Xác nhận',
+                    html: true
+                });
+            });
+        });
+    </script>
 }
 
 @* ************** Content ************** *@
+<button id="btnSync" class="btn btn-primary">
+    Đồng bộ Google Sheet
+</button>
+<div id="result"></div>
 <div class="row gy-6">
     <!--/ ------------------------------------------------------------------------------------ -->
     <!-- Thu chuc mung -->

@@ -61,6 +61,7 @@ namespace KOAHome
       services.AddScoped<INetMenuService, NetMenuService>();
       services.AddScoped<INetTabPanelService, NetTabPanelService>();
       services.AddScoped<INetFormWizardService, NetFormWizardService>();
+      services.AddScoped<IGoogleSheetService, GoogleSheetService>();
       services.Configure<CloudflareR2Config>(Configuration.GetSection("CloudflareR2"));
       services.Configure<FormOptions>(options =>
       {
