@@ -3,15 +3,7 @@ using Google.Apis.Auth.OAuth2;
 using Google.Apis.Services;
 using Google.Apis.Sheets.v4;
 using Google.Apis.Sheets.v4.Data;
-using KOAHome.EntityFramework;
-using Microsoft.Data.SqlClient;
-using Microsoft.EntityFrameworkCore;
-using Microsoft.IdentityModel.Tokens;
-using Npgsql;
-using NpgsqlTypes;
 using System.Data;
-using System.Dynamic;
-using System.IO;
 using System.Text;
 using System.Text.RegularExpressions;
 
@@ -19,21 +11,13 @@ namespace KOAHome.Services
 {
   public interface IGoogleSheetService
   {
-    void WriteDictionaryToSheet(
-        string spreadsheetId,
-        string sheetName,
-        List<Dictionary<string, object>> data);
+    public Task WriteDictionaryToSheet(string spreadsheetId, string sheetName, List<Dictionary<string, object>> data);
 
-    public Task FormatSheet(
-      string spreadsheetId,
-      int sheetId,
-      int totalColumns,
-      int totalRows);
+    public Task FormatSheet(string spreadsheetId, int sheetId, int totalColumns, int totalRows);
 
-    public Task<int> GetSheetIdByName(
-        string spreadsheetId,
-        string sheetName);
+    public Task<int> GetSheetIdByName(string spreadsheetId, string sheetName);
 
+    public Task ApplyRichTextFromHtml(string spreadsheetId, int sheetId, int startRowIndex, int totalRows, int totalColumns);
   }
   public class GoogleSheetService : IGoogleSheetService
   {
@@ -64,7 +48,7 @@ namespace KOAHome.Services
       });
     }
 
-    public void WriteDictionaryToSheet(
+    public async Task WriteDictionaryToSheet(
         string spreadsheetId,
         string sheetName,
         List<Dictionary<string, object>> data)
@@ -349,5 +333,368 @@ namespace KOAHome.Services
       return sheet.Properties.SheetId.Value;
     }
 
+    //public async Task ApplyRichTextFromHtml(string spreadsheetId, int sheetId, int startRowIndex, int totalRows, int totalColumns)
+    //{
+    //  var meta = await _service.Spreadsheets.Get(spreadsheetId).ExecuteAsync();
+    //  var sheetMeta = meta.Sheets
+    //      .First(s => s.Properties.SheetId == sheetId);
+
+    //  var sheetName = sheetMeta.Properties.Title;
+
+    //  // 2. Load grid data bằng SheetName (A1 notation)
+    //  var getRequest = _service.Spreadsheets.Get(spreadsheetId);
+    //  getRequest.Ranges = new[] { sheetName };
+    //  getRequest.IncludeGridData = true;
+
+    //  var sheet = (await getRequest.ExecuteAsync())
+    //      .Sheets.First(s => s.Properties.SheetId == sheetId);
+
+    //  var requests = new List<Request>();
+    //  var rows = sheet.Data[0].RowData;
+
+    //  for (int r = startRowIndex; r < rows.Count; r++)
+    //  {
+    //    var row = rows[r];
+    //    if (row.Values == null) continue;
+
+    //    for (int c = 0; c < Math.Min(row.Values.Count, totalColumns); c++)
+    //    {
+    //      var cell = row.Values[c];
+    //      var text = cell.FormattedValue;
+    //if (string.IsNullOrEmpty(text) || !text.Contains("{b}"))
+    //  continue;
+
+    //var richCell = BuildRichCellFromHtml(text);
+
+    //      requests.Add(new Request
+    //      {
+    //        UpdateCells = new UpdateCellsRequest
+    //        {
+    //          Rows = new List<RowData>
+    //                {
+    //                    new RowData
+    //                    {
+    //                        Values = new List<CellData> { richCell }
+    //                    }
+    //                },
+    //          Fields = "userEnteredValue,textFormatRuns",
+    //          Start = new GridCoordinate
+    //          {
+    //            SheetId = sheetId,
+    //            RowIndex = r,
+    //            ColumnIndex = c
+    //          }
+    //        }
+    //      });
+    //    }
+    //  }
+
+    //  if (!requests.Any()) return;
+
+    //  var batch = new BatchUpdateSpreadsheetRequest
+    //  {
+    //    Requests = requests
+    //  };
+
+    //  await _service.Spreadsheets.BatchUpdate(batch, spreadsheetId).ExecuteAsync();
+    //}
+
+    //private CellData BuildRichCellFromHtml(string htmlText)
+    //{
+    //  var parsed = ParseBoldHtml(htmlText);
+
+    //  var runs = new List<TextFormatRun>
+    //  {
+    //      new TextFormatRun
+    //      {
+    //          StartIndex = 0,
+    //          Format = new TextFormat { Bold = false }
+    //      }
+    //  };
+
+    //  foreach (var range in parsed.BoldRanges)
+    //  {
+    //    runs.Add(new TextFormatRun
+    //    {
+    //      StartIndex = range.Start,
+    //      Format = new TextFormat { Bold = true }
+    //    });
+
+    //    runs.Add(new TextFormatRun
+    //    {
+    //      StartIndex = range.Start + range.Length,
+    //      Format = new TextFormat { Bold = false }
+    //    });
+    //  }
+
+    //  return new CellData
+    //  {
+    //    UserEnteredValue = new ExtendedValue
+    //    {
+    //      StringValue = parsed.PlainText
+    //    },
+    //    TextFormatRuns = runs
+    //  };
+    //}
+
+    //private RichTextParseResult ParseBoldHtml(string input)
+    //{
+    //  var result = new RichTextParseResult();
+
+    //  if (string.IsNullOrEmpty(input))
+    //  {
+    //    result.PlainText = "";
+    //    return result;
+    //  }
+
+    //  var boldRanges = new List<(int Start, int Length)>();
+    //  var plainText = "";
+    //  int currentIndex = 0;
+
+    //  var regex = new Regex(@"\{b\}(.*?)\{\/b\}", RegexOptions.IgnoreCase);
+    //  int lastIndex = 0;
+
+    //  foreach (Match match in regex.Matches(input))
+    //  {
+    //    // Text trước {b}
+    //    string before = input.Substring(lastIndex, match.Index - lastIndex);
+    //    plainText += before;
+    //    currentIndex += before.Length;
+
+    //    // Text trong {b}
+    //    string boldText = match.Groups[1].Value;
+
+    //    boldRanges.Add((currentIndex, boldText.Length));
+
+    //    plainText += boldText;
+    //    currentIndex += boldText.Length;
+
+    //    lastIndex = match.Index + match.Length;
+    //  }
+
+    //  // Text còn lại sau cùng
+    //  string after = input.Substring(lastIndex);
+    //  plainText += after;
+
+    //  result.PlainText = plainText;
+    //  result.BoldRanges = boldRanges;
+
+    //  return result;
+    //}
+
+    public async Task ApplyRichTextFromHtml(string spreadsheetId, int sheetId, int startRowIndex, int totalRows, int totalColumns)
+    {
+      var meta = await _service.Spreadsheets.Get(spreadsheetId).ExecuteAsync();
+      var sheetMeta = meta.Sheets
+          .First(s => s.Properties.SheetId == sheetId);
+
+      var sheetName = sheetMeta.Properties.Title;
+
+      // 2. Load grid data bằng SheetName (A1 notation)
+      var getRequest = _service.Spreadsheets.Get(spreadsheetId);
+      getRequest.Ranges = new[] { sheetName };
+      getRequest.IncludeGridData = true;
+
+      var sheet = (await getRequest.ExecuteAsync())
+          .Sheets.First(s => s.Properties.SheetId == sheetId);
+
+      var requests = new List<Request>();
+      var rows = sheet.Data[0].RowData;
+
+      for (int r = startRowIndex; r < rows.Count; r++)
+      {
+        var row = rows[r];
+        if (row.Values == null) continue;
+
+        for (int c = 0; c < Math.Min(row.Values.Count, totalColumns); c++)
+        {
+          var cell = row.Values[c];
+          var text = cell.FormattedValue;
+          if (string.IsNullOrEmpty(text) || (!text.Contains("{b}") && !text.Contains("{#")))
+            continue;
+
+          var richCell = BuildRichCellFromMarkup(text);
+
+          requests.Add(new Request
+          {
+            UpdateCells = new UpdateCellsRequest
+            {
+              Rows = new List<RowData>
+                    {
+                        new RowData
+                        {
+                            Values = new List<CellData> { richCell }
+                        }
+                    },
+              Fields = "userEnteredValue,textFormatRuns",
+              Start = new GridCoordinate
+              {
+                SheetId = sheetId,
+                RowIndex = r,
+                ColumnIndex = c
+              }
+            }
+          });
+        }
+      }
+
+      if (!requests.Any()) return;
+
+      var batch = new BatchUpdateSpreadsheetRequest
+      {
+        Requests = requests
+      };
+
+      await _service.Spreadsheets.BatchUpdate(batch, spreadsheetId).ExecuteAsync();
+    }
+
+    private RichTextParseResult ParseRichMarkup(string input)
+    {
+      var result = new RichTextParseResult
+      {
+        Ranges = new List<RichFormatRange>()
+      };
+
+      if (string.IsNullOrEmpty(input))
+      {
+        result.PlainText = "";
+        return result;
+      }
+
+      var stack = new Stack<(bool Bold, Color? Color)>();
+      stack.Push((false, null)); // base format
+
+      var plain = new StringBuilder();
+      int index = 0;
+
+      var regex = new Regex(@"\{b\}|\{\/b\}|\{#([0-9a-fA-F]{6})\}|\{\/#([0-9a-fA-F]{6})\}",
+          RegexOptions.IgnoreCase);
+
+      int last = 0;
+
+      foreach (Match m in regex.Matches(input))
+      {
+        // text trước tag
+        var before = input.Substring(last, m.Index - last);
+        AppendText(before);
+
+        var token = m.Value.ToLower();
+
+        if (token == "{b}")
+        {
+          var current = stack.Peek();
+          stack.Push((true, current.Color));
+        }
+        else if (token == "{/b}")
+        {
+          stack.Pop();
+        }
+        else if (token.StartsWith("{#"))
+        {
+          var color = HexToColor(m.Groups[1].Value);
+          var current = stack.Peek();
+          stack.Push((current.Bold, color));
+        }
+        else if (token.StartsWith("{/#"))
+        {
+          stack.Pop();
+        }
+
+        last = m.Index + m.Length;
+      }
+
+      AppendText(input.Substring(last));
+
+      result.PlainText = plain.ToString();
+      return result;
+
+      void AppendText(string text)
+      {
+        if (string.IsNullOrEmpty(text)) return;
+
+        var format = stack.Peek();
+
+        if (format.Bold || format.Color != null)
+        {
+          result.Ranges.Add(new RichFormatRange
+          {
+            Start = index,
+            Length = text.Length,
+            Bold = format.Bold,
+            Color = format.Color
+          });
+        }
+
+        plain.Append(text);
+        index += text.Length;
+      }
+    }
+    private Color HexToColor(string hex)
+    {
+      return new Color
+      {
+        Red = Convert.ToInt32(hex.Substring(0, 2), 16) / 255f,
+        Green = Convert.ToInt32(hex.Substring(2, 2), 16) / 255f,
+        Blue = Convert.ToInt32(hex.Substring(4, 2), 16) / 255f
+      };
+    }
+
+    private CellData BuildRichCellFromMarkup(string text)
+    {
+      var parsed = ParseRichMarkup(text);
+
+      var runs = new List<TextFormatRun>
+    {
+        new TextFormatRun
+        {
+            StartIndex = 0,
+            Format = new TextFormat()
+        }
+    };
+
+      foreach (var r in parsed.Ranges)
+      {
+        var format = new TextFormat
+        {
+          Bold = r.Bold,
+          ForegroundColor = r.Color
+        };
+
+        runs.Add(new TextFormatRun
+        {
+          StartIndex = r.Start,
+          Format = format
+        });
+
+        runs.Add(new TextFormatRun
+        {
+          StartIndex = r.Start + r.Length,
+          Format = new TextFormat()
+        });
+      }
+
+      return new CellData
+      {
+        UserEnteredValue = new ExtendedValue
+        {
+          StringValue = parsed.PlainText
+        },
+        TextFormatRuns = runs
+      };
+    }
+
+    class RichTextParseResult
+    {
+      public string PlainText { get; set; }
+      public List<RichFormatRange> Ranges { get; set; } = new();
+    }
+
+    class RichFormatRange
+    {
+      public int Start { get; set; }
+      public int Length { get; set; }
+      public bool Bold { get; set; }
+      public Color? Color { get; set; }
+    }
   }
 }

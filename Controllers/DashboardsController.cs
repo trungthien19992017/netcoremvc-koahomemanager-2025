@@ -224,10 +224,17 @@ public class DashboardsController : Controller
       );
 
       // 2. Ghi lên Google Sheet
-      _googleSheetService.WriteDictionaryToSheet(
+      await _googleSheetService.WriteDictionaryToSheet(
           spreadsheetId: spreadsheetId,
           sheetName: "Sheet1",
           data: data
+      );
+      await _googleSheetService.ApplyRichTextFromHtml(
+          spreadsheetId,
+          sheetId,
+          startRowIndex: 1,
+          totalRows: data.Count + 1,
+          totalColumns: data.First().Count
       );
       await _googleSheetService.FormatSheet(
           spreadsheetId,
