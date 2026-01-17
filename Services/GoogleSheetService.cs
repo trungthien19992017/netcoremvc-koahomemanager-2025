@@ -41,14 +41,20 @@ namespace KOAHome.Services
 
     public GoogleSheetService(IConfiguration config)
     {
-      var credentialPath = config["Google:CredentialPath"];
-      Console.WriteLine(File.Exists(credentialPath));
-
       GoogleCredential credential;
-      using (var stream = new FileStream(credentialPath, FileMode.Open))
+
+      var env = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT");
+
+      if (env == "Development")
       {
-        credential = GoogleCredential.FromStream(stream)
-            .CreateScoped(SheetsService.Scope.Spreadsheets);
+        credential = GoogleCredential.FromFile("service-account.json");
+      }
+      else
+      {
+        var json = Environment.GetEnvironmentVariable("GOOGLE_SERVICE_ACCOUNT_JSON")
+                   .Replace("\\n", "\n");
+
+        credential = GoogleCredential.FromJson(json);
       }
 
       _service = new SheetsService(new BaseClientService.Initializer
