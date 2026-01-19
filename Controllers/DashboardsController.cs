@@ -185,7 +185,8 @@ public class DashboardsController : Controller
     try
     {
       // 1. Lấy dữ liệu từ DB
-      var today = DateTime.Today;
+      var hcmZone = TimeZoneInfo.FindSystemTimeZoneById("SE Asia Standard Time");
+      var today = TimeZoneInfo.ConvertTimeFromUtc(DateTime.UtcNow, hcmZone).Date;
 
       // ISO week: Monday = 1, Sunday = 7
       int diffToMonday = today.DayOfWeek == DayOfWeek.Sunday
