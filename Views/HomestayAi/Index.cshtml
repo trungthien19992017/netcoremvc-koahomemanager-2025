@@ -1,0 +1,86 @@
+@{
+    ViewData["Title"] = "KOA Auto Reply";
+    Layout = "~/Views/Shared/_ContentNavbarLayout.cshtml";
+
+}
+@section PageScripts {
+    <script>
+        $(document).ready(function () {
+            $("#btn-send").click(function () {
+                var message = $("#Message").val();
+                var provider = $("#selectedProvider").val();
+                var model = $("#selectedModel").val();
+                var bookingId = "@ViewBag.BookingID";
+
+                if (!message) {
+                    alert("Vui lòng nhập tin nhắn!");
+                    return;
+                }
+
+                // Hiển thị trạng thái chờ
+                $("#response-area").show();
+                $("#ai-reply").html("<em>KOA Home đang trả lời...</em>");
+                $("#btn-send").prop("disabled", true);
+
+                $.ajax({
+                    url: '/HomestayAi/Index', // Đường dẫn tới Action trong Controller
+                    type: 'POST',
+                    data: {
+                        selectedProvider: provider,
+                        selectedModel: model,
+                        Message: message,
+                        BookingID: bookingId
+                    },
+                    success: function (res) {
+                        // res là chuỗi văn bản hoặc JSON trả về từ Controller
+                        $("#ai-reply").text(res);
+                    },
+                    error: function (xhr) {
+                        var errorMsg = "Lỗi: " + xhr.status + " - " + xhr.statusText;
+                        if(xhr.status == 400) errorMsg = "Lỗi 400: Model này không hỗ trợ tham số hiện tại (thường là DeepSeek Reasoner).";
+                        $("#ai-reply").html("<span class='text-danger'>" + errorMsg + "</span>");
+                    },
+                    complete: function () {
+                        $("#btn-send").prop("disabled", false);
+                    }
+                });
+            });
+        });
+</script>
+
+}
+<h3>Chat với homestay</h3>
+
+<div id="chat-container">
+    <div class="form-group">
+        <label for="selectedProvider">Chọn hãng AI:</label>
+        <select id="selectedProvider" name="selectedProvider" class="form-control">
+            <option value="deepseek" selected>Deep Seek</option>
+            <option value="gemini">Gemini</option>
+        </select>
+    </div>
+    <div class="form-group mt-2">
+        <label for="selectedModel">Chọn phiên bản AI:</label>
+        <select id="selectedModel" name="selectedModel" class="form-control">
+            <option value="deepseek/deepseek-chat" selected>deepseek-chat</option>
+            <option value="deepseek/deepseek-r1:free">deepseek-r1:free</option>
+            <option value="gemini-2.5-flash">gemini-2.5-flash</option>
+            <option value="gemini-1.5-flash">gemini-1.5-flash</option>
+        </select>
+    </div>
+    <textarea id="Message" rows="4" style="width:100%" class="form-control mt-2" placeholder="Nhập câu hỏi..."></textarea>
+    <br />
+    <button type="button" id="btn-send" class="btn btn-primary">Gửi tin nhắn</button>
+</div>
+
+<div id="response-area" class="mt-4" style="display:none;">
+    <hr />
+    <b>KOA Home:</b>
+    <div id="ai-reply" style="white-space: pre-wrap; background: #f8f9fa; padding: 15px; border-radius: 5px;"></div>
+</div>
+
+
+<a type="button" href="javascript:history.back()" class="btn btn-outline-secondary btn-prev waves-effect" style="display: inline-block;">
+                    <i class="icon-base ri ri-arrow-left-line icon-sm me-sm-1 me-0"></i>
+                    <span class="align-middle d-sm-inline-block d-none">Quay lại</span>
+                </a>

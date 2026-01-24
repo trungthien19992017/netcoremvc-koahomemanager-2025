@@ -1,11 +1,13 @@
 using KOAHome.EntityFramework;
-using Microsoft.EntityFrameworkCore;
-using KOAHome.Services;
-using System.Data.Common;
-using Microsoft.AspNetCore.HttpOverrides;
-using Microsoft.AspNetCore.DataProtection;
 using KOAHome.Models;
+using KOAHome.Services;
+using Microsoft.AspNetCore.DataProtection;
 using Microsoft.AspNetCore.Http.Features;
+using Microsoft.AspNetCore.HttpOverrides;
+using Microsoft.EntityFrameworkCore;
+using OpenAI;
+using System.ClientModel;
+using System.Data.Common;
 //using KOAHome.Services;
 
 namespace KOAHome
@@ -49,6 +51,7 @@ namespace KOAHome
 
       services.AddHttpContextAccessor();
       services.AddControllersWithViews();
+      services.AddHttpClient();
       services.AddScoped<IReportEditorService, ReportEditorService>();
       services.AddScoped<IAttachmentService, AttachmentService>();
       services.AddScoped<IReportService, ReportService>();
@@ -62,10 +65,46 @@ namespace KOAHome
       services.AddScoped<INetTabPanelService, NetTabPanelService>();
       services.AddScoped<INetFormWizardService, NetFormWizardService>();
       services.AddScoped<IGoogleSheetService, GoogleSheetService>();
+      services.AddScoped<GeminiService>();
+      services.AddScoped<DeepSeekService>();
+      services.AddTransient<Func<string, IAiService>>(serviceProvider => key =>
+      {
+        return key.ToLower() switch
+        {
+          // Ép kiểu tường minh về IAiService
+          "gemini" => (IAiService)serviceProvider.GetRequiredService<GeminiService>(),
+          "deepseek" => (IAiService)serviceProvider.GetRequiredService<DeepSeekService>(),
+          _ => throw new KeyNotFoundException("Không tìm thấy dịch vụ AI tương ứng")
+        };
+      });
       services.Configure<CloudflareR2Config>(Configuration.GetSection("CloudflareR2"));
       services.Configure<FormOptions>(options =>
       {
         options.MultipartBodyLengthLimit = 104857600; // 100MB
+      });
+
+      services.AddSingleton(sp =>
+      {
+        var config = sp.GetRequiredService<IConfiguration>();
+
+        var env = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT");
+        var apiKey = "";
+        if (env == "Development")
+        {
+          apiKey = config["OpenRouter:ApiKey"];
+        }
+        else
+        {
+          apiKey = Environment.GetEnvironmentVariable("OPENROUTER_API_KEY");
+        }
+
+        return new OpenAIClient(
+            new ApiKeyCredential(apiKey),
+            new OpenAIClientOptions
+            {
+              Endpoint = new Uri(config["OpenRouter:BaseUrl"])
+            }
+        );
       });
       //services.AddSingleton(s =>
       //{

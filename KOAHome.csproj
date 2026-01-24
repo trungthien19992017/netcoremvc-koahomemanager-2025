@@ -16,6 +16,7 @@
     <PackageReference Include="Dapper.DynamicReportGenerator" Version="0.3.3" />
     <PackageReference Include="EPPlus" Version="7.0.0" />
     <PackageReference Include="Google.Apis.Sheets.v4" Version="1.50.0.2175" />
+    <PackageReference Include="Google.GenAI" Version="0.13.1" />
     <PackageReference Include="Microsoft.EntityFrameworkCore" Version="9.0.1" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" Version="9.0.1" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.Tools" Version="9.0.1">
@@ -30,6 +31,7 @@
     <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
     <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="9.0.4" />
     <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL.Design" Version="1.1.0" />
+    <PackageReference Include="OpenAI" Version="2.8.0" />
     <PackageReference Include="Serilog.AspNetCore" Version="8.0.0" />
   </ItemGroup>
 
