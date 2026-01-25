@@ -1,6 +1,6 @@
 @{
     ViewData["Title"] = "KOA Auto Reply";
-    Layout = "~/Views/Shared/_ContentNavbarLayout.cshtml";
+    Layout = "_BlankLayout";
 
 }
 @section VendorStyles {
@@ -130,68 +130,31 @@
 
 }
 
-@section success
-{
-    @if (ViewData["success"] != null)
-    {
-
-        <!-- Toast with Placements -->
-        <div class="bs-toast toast  top-0 end-0 show toast-placement-ex1 m-2" style="position:absolute;" role="alert" aria-live="assertive" aria-atomic="true" data-bs-delay="2000">
-            <div class="toast-header">
-                <i class="ri-home-4-fill me-2 text-success"></i>
-                <div class="me-auto fw-medium">Thông báo</div><small class="text-muted">1 giây trước</small>
-                <button type="button" class="btn-close" data-bs-dismiss="toast" aria-label="Close"></button>
-            </div>
-            <div class="toast-body text-success">@ViewData["success"].</div>
-        </div>
-        <!-- Toast with Placements -->
-    }
-}
-
-@section ErrorMessage
-{
-    @if (ViewData["ErrorMessage"] != null)
-    {
-        <!-- Toast with Placements -->
-        <div class="bs-toast toast  top-0 end-0 show toast-placement-ex1 m-2" style="position:absolute;" role="alert" aria-live="assertive" aria-atomic="true" data-bs-delay="2000">
-            <div class="toast-header">
-                <i class="ri-home-4-fill me-2 text-danger"></i>
-                <div class="me-auto fw-medium">Thông báo</div><small class="text-muted">1 giây trước</small>
-                <button type="button" class="btn-close" data-bs-dismiss="toast" aria-label="Close"></button>
-            </div>
-            <div class="toast-body text-danger">@ViewData["ErrorMessage"].</div>
-        </div>
-        <!-- Toast with Placements -->
-    }
-}
-
-<h3>Chat với homestay</h3>
-
-<div id="chat-container">
-    <div class="form-group">
-        <label for="selectedProvider">Chọn hãng AI:</label>
-        <select id="selectedProvider" name="selectedProvider" class="form-control">
-            <option value="deepseek" selected>Deep Seek</option>
-            <option value="gemini">Gemini</option>
-        </select>
-    </div>
-    <div class="form-group mt-2">
-        <label for="selectedModel">Chọn phiên bản AI:</label>
-        <select id="selectedModel" name="selectedModel" class="form-control">
-            <option value="deepseek/deepseek-chat" selected>deepseek-chat</option>
-            <option value="deepseek/deepseek-r1:free">deepseek-r1:free</option>
-            <option value="gemini-2.5-flash">gemini-2.5-flash</option>
-            <option value="gemini-1.5-flash">gemini-1.5-flash</option>
-        </select>
-    </div>
-</div>
-
-
 <!-- Content wrapper -->
 <div class="content-wrapper">
 <!-- Content -->
 <div class="container-xxl flex-grow-1 container-p-y">
+  
+  <h3>Chat với homestay</h3>
 
+  <div id="chat-container">
+      <div class="form-group">
+          <label for="selectedProvider">Chọn hãng AI:</label>
+          <select id="selectedProvider" name="selectedProvider" class="form-control">
+              <option value="deepseek" selected>Deep Seek</option>
+              <option value="gemini">Gemini</option>
+          </select>
+      </div>
+      <div class="form-group mt-2">
+          <label for="selectedModel">Chọn phiên bản AI:</label>
+          <select id="selectedModel" name="selectedModel" class="form-control">
+              <option value="deepseek/deepseek-chat" selected>deepseek-chat</option>
+              <option value="deepseek/deepseek-r1:free">deepseek-r1:free</option>
+              <option value="gemini-2.5-flash">gemini-2.5-flash</option>
+              <option value="gemini-1.5-flash">gemini-1.5-flash</option>
+          </select>
+      </div>
+  </div>
     <div class="app-chat card overflow-hidden">
         <div class="row g-0">
             <!-- /Chat contacts -->
@@ -329,13 +292,16 @@
             <div class="app-overlay"></div>
         </div>
     </div>
-
+    
+    <a type="button" href="javascript:history.back()" class="btn btn-outline-secondary btn-prev waves-effect" style="display: inline-block;">
+        <i class="icon-base ri ri-arrow-left-line icon-sm me-sm-1 me-0"></i>
+        <span class="align-middle d-sm-inline-block d-none">Quay lại</span>
+    </a>
+    <div class="buy-now">
+        <a href="#" id="scrollToTopBtn" class="btn btn-danger btn-buy-now waves-effect waves-light"><i class="ri-arrow-up-double-fill"></i></a>
+    </div>
 </div>
 <!-- / Content -->
 
 </div>
 
-<a type="button" href="javascript:history.back()" class="btn btn-outline-secondary btn-prev waves-effect" style="display: inline-block;">
-    <i class="icon-base ri ri-arrow-left-line icon-sm me-sm-1 me-0"></i>
-    <span class="align-middle d-sm-inline-block d-none">Quay lại</span>
-</a>

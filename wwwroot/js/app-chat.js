@@ -76,14 +76,16 @@ document.addEventListener("DOMContentLoaded", () => {
         }
         )
     }
-    );
-    //let r = parseInt(c.chatSidebarLeftUserAbout.getAttribute("maxlength"), 10);
-    //e(
-    //c.chatSidebarLeftUserAbout, c.textareaInfo, r),
-    //c.chatSidebarLeftUserAbout.addEventListener("input", () => {
-    //    e(c.chatSidebarLeftUserAbout, c.textareaInfo, r)
-    //}
-    //),
+      );
+    if (c.chatSidebarLeftUserAbout != null) {
+      let r = parseInt(c.chatSidebarLeftUserAbout.getAttribute("maxlength"), 10);
+      e(
+      c.chatSidebarLeftUserAbout, c.textareaInfo, r),
+      c.chatSidebarLeftUserAbout.addEventListener("input", () => {
+          e(c.chatSidebarLeftUserAbout, c.textareaInfo, r)
+      }
+      )
+    }
     c.conversationButton?.addEventListener("click", t),
     c.chatContactListItems.forEach(e => {
         e.addEventListener("click", () => {
