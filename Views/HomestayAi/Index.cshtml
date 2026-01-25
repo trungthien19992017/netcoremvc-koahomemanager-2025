@@ -3,23 +3,102 @@
     Layout = "~/Views/Shared/_ContentNavbarLayout.cshtml";
 
 }
+@section VendorStyles {
+    @* chat *@
+    <link rel="stylesheet" href="~/vendor/css/pages/app-chat.css" />
+}
 @section PageScripts {
+    <script src="~/js/app-chat.js"></script>
     <script>
-        $(document).ready(function () {
+        $(document).ready(function () {const $chatList = $(".chat-history-body ul"); // Selector chứa các thẻ <li>
+          const $historyContainer = $(".chat-history-body");
+
+          // Hàm cuộn xuống cuối
+          function scrollToBottom() {
+              $historyContainer.stop().animate({
+                  scrollTop: $historyContainer[0].scrollHeight
+              }, 300);
+          }
+
+          // Hàm hỗ trợ tạo mẫu tin nhắn (Phía bên phải - User)
+          function appendUserMessage(text, shortname) {
+              const now = new Date();
+              const timeStr = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+        
+              const messageHtml = `
+                  <li class="chat-message chat-message-right">
+                      <div class="d-flex overflow-hidden">
+                          <div class="chat-message-wrapper flex-grow-1 w-50">
+                              <div class="chat-message-text">
+                                  <p class="mb-0">${text}</p>
+                              </div>
+                              <div class="text-end text-body-secondary mt-1">
+                                  <i class="icon-base ri ri-check-double-line icon-16px me-1"></i>
+                                  <small>${timeStr}</small>
+                              </div>
+                          </div>
+                          <div class="user-avatar flex-shrink-0 ms-4">
+                              <div class="avatar avatar-sm">
+                                  <span class="avatar-initial rounded-circle bg-label-primary">${shortname ?? "ME"}</span>
+                              </div>
+                          </div>
+                      </div>
+                  </li>`;
+        
+              // Giả sử container chứa các thẻ <li> là một thẻ <ul> có class .chat-history-list
+              // Hoặc bạn trỏ trực tiếp vào class chứa tin nhắn
+              $(".chat-history-body ul").append(messageHtml);
+        
+              // Tự động cuộn xuống cuối (tận dụng hàm scrollTo của PerfectScrollbar hoặc JS thuần)
+              const historyBody = document.querySelector(".chat-history-body");
+              if(historyBody) {
+                  historyBody.scrollTo(0, historyBody.scrollHeight);
+              }
+          }
+
+          function appendAiLoading() {
+                const timeStr = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+                const tempId = "ai-loading-" + Date.now();
+                const html = `
+                    <li class="chat-message" id="${tempId}">
+                        <div class="d-flex overflow-hidden">
+                            <div class="user-avatar flex-shrink-0 me-4">
+                                <div class="avatar avatar-sm">
+                                    <span class="avatar-initial rounded-circle bg-label-secondary"><i class="ri-openai-fill ri-24px"></i></span>
+                                </div>
+                            </div>
+                            <div class="chat-message-wrapper flex-grow-1 w-50">
+                                <div class="chat-message-text">
+                                    <p class="mb-0 ai-content"><em>KOA Home đang suy nghĩ...</em></p>
+                                </div>
+                                <div class="text-body-secondary mt-1">
+                                    <small>${timeStr}</small>
+                                </div>
+                            </div>
+                        </div>
+                    </li>`;
+                $chatList.append(html);
+                scrollToBottom();
+                return tempId;
+            }
+
             $("#btn-send").click(function () {
                 var message = $("#Message").val();
                 var provider = $("#selectedProvider").val();
                 var model = $("#selectedModel").val();
                 var bookingId = "@ViewBag.BookingID";
+                var logoShortName = "@ViewBag.ShortName"
 
                 if (!message) {
                     alert("Vui lòng nhập tin nhắn!");
                     return;
                 }
+                // --- BƯỚC BỔ SUNG: Hiển thị tin nhắn người dùng lên HTML ngay lập tức ---
+                appendUserMessage(message, logoShortName);
+                $("#Message").val(""); // Xóa trống ô nhập liệu
 
-                // Hiển thị trạng thái chờ
-                $("#response-area").show();
-                $("#ai-reply").html("<em>KOA Home đang trả lời...</em>");
+                // Hiển thị bong bóng chat AI (trạng thái chờ)
+                const aiMsgId = appendAiLoading();
                 $("#btn-send").prop("disabled", true);
 
                 $.ajax({
@@ -32,16 +111,17 @@
                         BookingID: bookingId
                     },
                     success: function (res) {
-                        // res là chuỗi văn bản hoặc JSON trả về từ Controller
-                        $("#ai-reply").text(res);
+                      // Cập nhật nội dung AI trả về vào bong bóng chat đang chờ
+                      $(`#${aiMsgId} .ai-content`).text(res);
                     },
                     error: function (xhr) {
-                        var errorMsg = "Lỗi: " + xhr.status + " - " + xhr.statusText;
-                        if(xhr.status == 400) errorMsg = "Lỗi 400: Model này không hỗ trợ tham số hiện tại (thường là DeepSeek Reasoner).";
-                        $("#ai-reply").html("<span class='text-danger'>" + errorMsg + "</span>");
+                      let errorMsg = "Lỗi kết nối với trợ lý.";
+                      if(xhr.status == 400) errorMsg = "Model không hỗ trợ tham số này.";
+                      $(`#${aiMsgId} .ai-content`).html(`<span class="text-danger">${errorMsg}</span>`);
                     },
                     complete: function () {
                         $("#btn-send").prop("disabled", false);
+                        scrollToBottom();
                     }
                 });
             });
@@ -49,6 +129,42 @@
 </script>
 
 }
+
+@section success
+{
+    @if (ViewData["success"] != null)
+    {
+
+        <!-- Toast with Placements -->
+        <div class="bs-toast toast  top-0 end-0 show toast-placement-ex1 m-2" style="position:absolute;" role="alert" aria-live="assertive" aria-atomic="true" data-bs-delay="2000">
+            <div class="toast-header">
+                <i class="ri-home-4-fill me-2 text-success"></i>
+                <div class="me-auto fw-medium">Thông báo</div><small class="text-muted">1 giây trước</small>
+                <button type="button" class="btn-close" data-bs-dismiss="toast" aria-label="Close"></button>
+            </div>
+            <div class="toast-body text-success">@ViewData["success"].</div>
+        </div>
+        <!-- Toast with Placements -->
+    }
+}
+
+@section ErrorMessage
+{
+    @if (ViewData["ErrorMessage"] != null)
+    {
+        <!-- Toast with Placements -->
+        <div class="bs-toast toast  top-0 end-0 show toast-placement-ex1 m-2" style="position:absolute;" role="alert" aria-live="assertive" aria-atomic="true" data-bs-delay="2000">
+            <div class="toast-header">
+                <i class="ri-home-4-fill me-2 text-danger"></i>
+                <div class="me-auto fw-medium">Thông báo</div><small class="text-muted">1 giây trước</small>
+                <button type="button" class="btn-close" data-bs-dismiss="toast" aria-label="Close"></button>
+            </div>
+            <div class="toast-body text-danger">@ViewData["ErrorMessage"].</div>
+        </div>
+        <!-- Toast with Placements -->
+    }
+}
+
 <h3>Chat với homestay</h3>
 
 <div id="chat-container">
@@ -68,19 +184,158 @@
             <option value="gemini-1.5-flash">gemini-1.5-flash</option>
         </select>
     </div>
-    <textarea id="Message" rows="4" style="width:100%" class="form-control mt-2" placeholder="Nhập câu hỏi..."></textarea>
-    <br />
-    <button type="button" id="btn-send" class="btn btn-primary">Gửi tin nhắn</button>
 </div>
 
-<div id="response-area" class="mt-4" style="display:none;">
-    <hr />
-    <b>KOA Home:</b>
-    <div id="ai-reply" style="white-space: pre-wrap; background: #f8f9fa; padding: 15px; border-radius: 5px;"></div>
-</div>
 
+<!-- Content wrapper -->
+<div class="content-wrapper">
+<!-- Content -->
+<div class="container-xxl flex-grow-1 container-p-y">
+
+    <div class="app-chat card overflow-hidden">
+        <div class="row g-0">
+            <!-- /Chat contacts -->
+            <!-- Chat History -->
+            <div class="col app-chat-history d-block" id="app-chat-history">
+                <div class="chat-history-wrapper">
+                    <div class="chat-history-header border-bottom">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div class="d-flex overflow-hidden align-items-center">
+                                <i class="icon-base ri ri-menu-line icon-lg cursor-pointer d-lg-none d-block me-4" data-bs-toggle="sidebar" data-overlay data-target="#app-chat-contacts"></i>
+                                <div class="flex-shrink-0 avatar avatar-online">
+                                    <span class="avatar-initial rounded-circle bg-label-primary">@(ViewBag.ShortName ?? "ND")</span>
+                                </div>
+                                <div class="chat-contact-info flex-grow-1 ms-4">
+                                    <h6 class="m-0 fw-normal">@(ViewBag.FullName ?? "Người dùng")</h6>
+                                    <small class="user-status text-body">Khách hàng thân thiết</small>
+                                </div>
+                            </div>
+                            <div class="d-flex align-items-center">
+                                <span class="btn btn-text-secondary text-secondary cursor-pointer d-sm-inline-flex d-none me-1 btn-icon rounded-pill">
+                                    <i class="icon-base ri ri-phone-line icon-22px"></i>
+                                </span>
+                                <span class="btn btn-text-secondary text-secondary cursor-pointer d-sm-inline-flex d-none me-1 btn-icon rounded-pill">
+                                    <i class="icon-base ri ri-video-add-line icon-22px"></i>
+                                </span>
+                                <span class="btn btn-text-secondary text-secondary cursor-pointer d-sm-inline-flex d-none me-1 btn-icon rounded-pill">
+                                    <i class="icon-base ri ri-search-line icon-22px"></i>
+                                </span>
+                                <div class="dropdown">
+                                    <button class="btn btn-icon btn-text-secondary text-secondary rounded-pill dropdown-toggle hide-arrow" data-bs-toggle="dropdown" aria-expanded="true" id="chat-header-actions"><i class="icon-base ri ri-more-2-line icon-22px"></i></button>
+                                    <div class="dropdown-menu dropdown-menu-end" aria-labelledby="chat-header-actions">
+                                        <a class="dropdown-item" href="javascript:void(0);">View Contact</a>
+                                        <a class="dropdown-item" href="javascript:void(0);">Mute Notifications</a>
+                                        <a class="dropdown-item" href="javascript:void(0);">Block Contact</a>
+                                        <a class="dropdown-item" href="javascript:void(0);">Clear Chat</a>
+                                        <a class="dropdown-item" href="javascript:void(0);">Report</a>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="chat-history-body">
+                        <ul class="list-unstyled chat-history">
+                          @* nội dung cuộc trò truyện sẽ ở trong đây *@
+                        </ul>
+                    </div>
+                    <!-- Chat message form -->
+                    <div class="chat-history-footer shadow-xs">
+                        <form class="form-send-message d-flex justify-content-between align-items-center ">
+                            <input id="Message" class="form-control message-input border-0 me-4 shadow-none" placeholder="Bạn cần gì ạ?..." />
+                            <div class="message-actions d-flex align-items-center">
+                                <span class="btn btn-text-secondary btn-icon rounded-pill cursor-pointer">
+                                    <i class="speech-to-text icon-base ri ri-mic-line icon-md text-heading"></i>
+                                </span>
+                                <label for="attach-doc" class="form-label mb-0">
+                                    <span class="btn btn-text-secondary btn-icon rounded-pill cursor-pointer mx-1">
+                                        <i class="icon-base ri ri-attachment-2 icon-md text-heading"></i>
+                                    </span>
+                                    <input type="file" id="attach-doc" hidden />
+                                </label>
+                                <button class="btn btn-primary d-flex send-msg-btn" id="btn-send">
+                                    <span class="align-middle d-md-inline-block d-none">Send</span>
+                                    <i class="icon-base ri ri-send-plane-line icon-sm ms-md-2 ms-0"></i>
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+            <!-- /Chat History -->
+            <!-- Sidebar Right -->
+            <div class="col app-chat-sidebar-right app-sidebar overflow-hidden" id="app-chat-sidebar-right">
+                <div class="sidebar-header d-flex flex-column justify-content-center align-items-center flex-wrap px-6 pt-12">
+                    <div class="avatar avatar-xl avatar-online chat-sidebar-avatar">
+                        <img src="../../assets/img/avatars/4.png" alt="Avatar" class="rounded-circle" />
+                    </div>
+                    <h5 class="mt-4 mb-0">Felecia Rower</h5>
+                    <span>NextJS Developer</span>
+                    <i class="icon-base ri ri-close-line icon-24px cursor-pointer close-sidebar d-block" data-bs-toggle="sidebar" data-overlay data-target="#app-chat-sidebar-right"></i>
+                </div>
+                <div class="sidebar-body p-6 pt-0">
+                    <div class="my-6">
+                        <p class="text-uppercase mb-1 text-body-secondary">About</p>
+                        <p class="mb-0">A Next. js developer is a software developer who uses the Next. js framework alongside ReactJS to build web applications.</p>
+                    </div>
+                    <div class="my-6">
+                        <p class="text-uppercase mb-1 text-body-secondary">Personal Information</p>
+                        <ul class="list-unstyled d-grid gap-3 mb-0 ms-2 py-2 text-heading">
+                            <li class="d-flex align-items-center">
+                                <i class="icon-base ri ri-mail-line icon-22px"></i>
+                                <span class="align-middle ms-2">josephGreen@email.com</span>
+                            </li>
+                            <li class="d-flex align-items-center">
+                                <i class="icon-base ri ri-phone-line icon-22px"></i>
+                                <span class="align-middle ms-2">+1(123) 456 - 7890</span>
+                            </li>
+                            <li class="d-flex align-items-center">
+                                <i class="icon-base ri ri-time-line icon-22px "></i>
+                                <span class="align-middle ms-2">Mon - Fri 10AM - 8PM</span>
+                            </li>
+                        </ul>
+                    </div>
+                    <div class="my-6">
+                        <p class="text-uppercase text-body-secondary mb-1">Options</p>
+                        <ul class="list-unstyled d-grid gap-3 ms-2 py-2 text-heading">
+                            <li class="cursor-pointer d-flex align-items-center">
+                                <i class="icon-base ri ri-bookmark-line icon-22px"></i>
+                                <span class="align-middle ms-2">Add Tag</span>
+                            </li>
+                            <li class="cursor-pointer d-flex align-items-center">
+                                <i class="icon-base ri ri-user-star-line icon-22px"></i>
+                                <span class="align-middle ms-2">Important Contact</span>
+                            </li>
+                            <li class="cursor-pointer d-flex align-items-center">
+                                <i class="icon-base ri ri-image-2-line icon-22px"></i>
+                                <span class="align-middle ms-2">Shared Media</span>
+                            </li>
+                            <li class="cursor-pointer d-flex align-items-center">
+                                <i class="icon-base ri ri-delete-bin-7-line icon-22px"></i>
+                                <span class="align-middle ms-2">Delete Contact</span>
+                            </li>
+                            <li class="cursor-pointer d-flex align-items-center">
+                                <i class="icon-base ri ri-forbid-2-line icon-22px"></i>
+                                <span class="align-middle ms-2">Block Contact</span>
+                            </li>
+                        </ul>
+                    </div>
+                    <div class="d-flex mt-6">
+                        <button class="btn btn-danger w-100" data-bs-toggle="sidebar" data-overlay data-target="#app-chat-sidebar-right">Delete Contact<i class="icon-base ri ri-delete-bin-7-line icon-16px ms-1_5"></i></button>
+                    </div>
+                </div>
+            </div>
+            <!-- /Sidebar Right -->
+
+            <div class="app-overlay"></div>
+        </div>
+    </div>
+
+</div>
+<!-- / Content -->
+
+</div>
 
 <a type="button" href="javascript:history.back()" class="btn btn-outline-secondary btn-prev waves-effect" style="display: inline-block;">
-                    <i class="icon-base ri ri-arrow-left-line icon-sm me-sm-1 me-0"></i>
-                    <span class="align-middle d-sm-inline-block d-none">Quay lại</span>
-                </a>
+    <i class="icon-base ri ri-arrow-left-line icon-sm me-sm-1 me-0"></i>
+    <span class="align-middle d-sm-inline-block d-none">Quay lại</span>
+</a>

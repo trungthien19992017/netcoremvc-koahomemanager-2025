@@ -59,5 +59,20 @@ namespace KOAHome.Helpers
       }
 
     }
+    public static string GetLogoShortName(string fullName)
+    {
+      if (string.IsNullOrWhiteSpace(fullName)) return "ND";
+
+      var words = fullName.Trim().Split(' ');
+      if (words.Length >= 2)
+      {
+        // Lấy ký tự đầu của 2 từ cuối cùng
+        var first = words[words.Length - 2][0];
+        var second = words[words.Length - 1][0];
+        return $"{first}{second}".ToUpper();
+      }
+
+      return words[0][0].ToString().ToUpper();
+    }
   }
 }

@@ -1,4 +1,6 @@
+using CommunityToolkit.HighPerformance;
 using KOAHome.EntityFramework;
+using KOAHome.Helpers;
 using KOAHome.Services;
 using Microsoft.AspNetCore.Mvc;
 
@@ -17,7 +19,15 @@ public class HomestayAiController : Controller
   [HttpGet]
   public async Task<IActionResult> Index(int bookingID = 2935)
   {
+    var booking = _db.HsBookings.FirstOrDefault(p => p.Bookingid == bookingID);
+    var customer = _db.HsCustomers.FirstOrDefault(p => p.Customerid == booking.Customerid);
+    string fullName = $"{customer.Firstname} {customer.Lastname}";
+    string shortName = FormatHelper.GetLogoShortName(fullName);
+
     ViewBag.BookingID = bookingID;
+    ViewBag.FullName = fullName;
+    ViewBag.ShortName = shortName;
+
     return View();
   }
 
