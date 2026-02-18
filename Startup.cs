@@ -174,8 +174,8 @@ namespace KOAHome
       //});
 
       // add health check for deploy
-      services.AddHealthChecks()
-          .AddNpgSql(Configuration.GetConnectionString("DefaultConnection"));
+      services.AddHealthChecks();
+          //.AddNpgSql(Configuration.GetConnectionString("DefaultConnection"));
       services.Configure<CloudflareR2Config>(Configuration.GetSection("CloudflareR2"));
       services.Configure<FormOptions>(options =>
       {
