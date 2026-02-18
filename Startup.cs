@@ -221,6 +221,7 @@ namespace KOAHome
 
       app.UseResponseCaching();
 
+      app.UseHealthChecks("/health");
       app.UseAuthentication(); // ⚠️ Phải có
       app.UseAuthorization();
 
