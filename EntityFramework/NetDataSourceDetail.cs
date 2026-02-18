@@ -27,17 +27,17 @@ public partial class NetDatasourcedetail
 
     public bool? Isdefault { get; set; }
 
-    public string? Host { get; set; }
+    public string Host { get; set; }
 
-    public string? Dbname { get; set; }
+    public string Dbname { get; set; }
 
-    public string? User { get; set; }
+    public string User { get; set; }
 
-    public string? Password { get; set; }
+    public string Password { get; set; }
 
     public int? Timeout { get; set; }
 
     public int? Siteid { get; set; }
 
-    public string? Sitecode { get; set; }
+    public string Sitecode { get; set; }
 }

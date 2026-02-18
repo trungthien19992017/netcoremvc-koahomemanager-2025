@@ -3,6 +3,7 @@ using KOAHome.EntityFramework;
 using KOAHome.Helpers;
 using KOAHome.Models;
 using KOAHome.Services;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
@@ -50,6 +51,7 @@ namespace KOAHome.Controllers
     }
 
     // GET: NETReport/Viewer_Utility
+    [Authorize]
     [HttpGet]
     [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)] // Tắt cache mặc định cho action này nếu cần thiết
     public async Task<IActionResult> Viewer_Utility(string? ReportCode)

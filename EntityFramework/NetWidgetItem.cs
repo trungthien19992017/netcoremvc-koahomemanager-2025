@@ -9,9 +9,9 @@ public partial class NetWidgetitem
 
     public int? Widgetlayoutid { get; set; }
 
-    public string? Name { get; set; }
+    public string Name { get; set; }
 
-    public string? Descriptions { get; set; }
+    public string Descriptions { get; set; }
 
     public bool? Isdeleted { get; set; }
 
@@ -29,9 +29,9 @@ public partial class NetWidgetitem
 
     public int? Groupwidgetid { get; set; }
 
-    public string? Imgreview { get; set; }
+    public string Imgreview { get; set; }
 
     public int? Datasourceid { get; set; }
 
-    public string? Templateids { get; set; }
+    public string Templateids { get; set; }
 }

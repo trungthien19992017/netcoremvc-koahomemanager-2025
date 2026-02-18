@@ -17,6 +17,8 @@
     <PackageReference Include="EPPlus" Version="7.0.0" />
     <PackageReference Include="Google.Apis.Sheets.v4" Version="1.50.0.2175" />
     <PackageReference Include="Google.GenAI" Version="0.13.1" />
+    <PackageReference Include="Microsoft.AspNetCore.Authentication.Google" Version="9.0.1" />
+    <PackageReference Include="Microsoft.AspNetCore.Identity.EntityFrameworkCore" Version="9.0.1" />
     <PackageReference Include="Microsoft.EntityFrameworkCore" Version="9.0.1" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" Version="9.0.1" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.Tools" Version="9.0.1">

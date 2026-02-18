@@ -7,9 +7,9 @@ public partial class NetActiontype
 {
     public int Id { get; set; }
 
-    public string? Code { get; set; }
+    public string Code { get; set; }
 
-    public string? Name { get; set; }
+    public string Name { get; set; }
 
     public int? Orderid { get; set; }
 
@@ -19,5 +19,5 @@ public partial class NetActiontype
 
     public int? Siteid { get; set; }
 
-    public string? Sitecode { get; set; }
+    public string Sitecode { get; set; }
 }

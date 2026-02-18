@@ -21,13 +21,13 @@ public partial class NetDynamicfield
 
     public DateTime? Deletiontime { get; set; }
 
-    public string? Name { get; set; }
+    public string Name { get; set; }
 
-    public string? Type { get; set; }
+    public string Type { get; set; }
 
-    public string? Value { get; set; }
+    public string Value { get; set; }
 
     public int? Siteid { get; set; }
 
-    public string? Sitecode { get; set; }
+    public string Sitecode { get; set; }
 }

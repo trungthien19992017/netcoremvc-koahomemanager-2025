@@ -23,17 +23,17 @@ public partial class NetAttachmentsyntax
 
     public int? Tenantid { get; set; }
 
-    public string? Code { get; set; }
+    public string Code { get; set; }
 
-    public string? Name { get; set; }
+    public string Name { get; set; }
 
-    public string? Syntaxpath { get; set; }
+    public string Syntaxpath { get; set; }
 
     public bool? Isdefault { get; set; }
 
     public bool? Ischangesyntaxname { get; set; }
 
-    public string? Syntaxname { get; set; }
+    public string Syntaxname { get; set; }
 
     public int? Orderid { get; set; }
 

@@ -25,15 +25,15 @@ public partial class NetFilter
 
     public long? Dynamicfieldid { get; set; }
 
-    public string? Value { get; set; }
+    public string Value { get; set; }
 
-    public string? Name { get; set; }
+    public string Name { get; set; }
 
     public int? Combolevel { get; set; }
 
     public int? Parentcomboid { get; set; }
 
-    public string? Code { get; set; }
+    public string Code { get; set; }
 
     public bool? Datatype { get; set; }
 
@@ -45,9 +45,9 @@ public partial class NetFilter
 
     public bool? Required { get; set; }
 
-    public string? Width { get; set; }
+    public string Width { get; set; }
 
-    public string? Format { get; set; }
+    public string Format { get; set; }
 
     public int? Version { get; set; }
 
@@ -65,19 +65,19 @@ public partial class NetFilter
 
     public bool? Isgrouped { get; set; }
 
-    public string? Groupfield { get; set; }
+    public string Groupfield { get; set; }
 
     public bool? Isloadmultipleway { get; set; }
 
-    public string? Columns { get; set; }
+    public string Columns { get; set; }
 
-    public string? Zoomlevel { get; set; }
+    public string Zoomlevel { get; set; }
 
-    public string? Datedisplayformat { get; set; }
+    public string Datedisplayformat { get; set; }
 
-    public string? Multicontrolid { get; set; }
+    public string Multicontrolid { get; set; }
 
-    public string? Reportcode { get; set; }
+    public string Reportcode { get; set; }
 
     public int? Type { get; set; }
 

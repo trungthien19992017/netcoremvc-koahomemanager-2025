@@ -27,9 +27,9 @@ public partial class NetFormVersion
 
     public int? Version { get; set; }
 
-    public string? Options { get; set; }
+    public string Options { get; set; }
 
-    public string? Tablename { get; set; }
+    public string Tablename { get; set; }
 
     public int? Datasourceid { get; set; }
 
@@ -39,33 +39,33 @@ public partial class NetFormVersion
 
     public int? Type { get; set; }
 
-    public string? Objectcode { get; set; }
+    public string Objectcode { get; set; }
 
-    public string? Storegetdata { get; set; }
+    public string Storegetdata { get; set; }
 
-    public string? Storesetdata { get; set; }
+    public string Storesetdata { get; set; }
 
     public bool? Isback { get; set; }
 
-    public string? Storedefaultdata { get; set; }
+    public string Storedefaultdata { get; set; }
 
     public bool? Isview { get; set; }
 
-    public string? Storelabelaction { get; set; }
+    public string Storelabelaction { get; set; }
 
-    public string? Storesetreadonly { get; set; }
+    public string Storesetreadonly { get; set; }
 
-    public string? Storecheckurl { get; set; }
+    public string Storecheckurl { get; set; }
 
-    public string? Hinformcode { get; set; }
+    public string Hinformcode { get; set; }
 
     public int? Positionbutton { get; set; }
 
-    public string? Apicontent { get; set; }
+    public string Apicontent { get; set; }
 
     public bool? Exportmergefield { get; set; }
 
     public int? Saveeditortype { get; set; }
 
-    public string? Conditionofaction { get; set; }
+    public string Conditionofaction { get; set; }
 }

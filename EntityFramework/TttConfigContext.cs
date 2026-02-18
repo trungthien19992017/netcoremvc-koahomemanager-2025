@@ -1,10 +1,21 @@
-﻿using System;
-using System.Collections.Generic;
+using KOAHome.Models;
+using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
+using System;
+using System.Collections.Generic;
 
 namespace KOAHome.EntityFramework;
 
-public partial class TttConfigContext : DbContext
+public partial class TttConfigContext : IdentityDbContext<
+    ApplicationUser,
+    ApplicationRole,
+    int,
+    IdentityUserClaim<int>,
+    IdentityUserRole<int>,
+    IdentityUserLogin<int>,
+    IdentityRoleClaim<int>,
+    IdentityUserToken<int>>
 {
     public TttConfigContext()
     {
@@ -59,9 +70,17 @@ public partial class TttConfigContext : DbContext
 
     public virtual DbSet<NetService> NetServices { get; set; }
 
+    public virtual DbSet<NetStepper> NetSteppers { get; set; }
+
+    public virtual DbSet<NetStepperDetail> NetStepperDetails { get; set; }
+
     public virtual DbSet<NetTabpanel> NetTabpanels { get; set; }
 
     public virtual DbSet<NetTabpanelDetail> NetTabpanelDetails { get; set; }
+
+    public virtual DbSet<NetTenant> NetTenants { get; set; }
+
+    public virtual DbSet<NetUnit> NetUnits { get; set; }
 
     public virtual DbSet<NetValidation> NetValidations { get; set; }
 
@@ -88,6 +107,12 @@ public partial class TttConfigContext : DbContext
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
+        modelBuilder.HasDefaultSchema("dbo");
+        base.OnModelCreating(modelBuilder);
+        modelBuilder
+            .HasPostgresExtension("dblink")
+            .HasPostgresExtension("postgres_fdw");
+
         modelBuilder.Entity<NetAction>(entity =>
         {
             entity.HasKey(e => e.Id).HasName("pk_net_action");
@@ -995,6 +1020,70 @@ public partial class TttConfigContext : DbContext
             entity.Property(e => e.Storeddefaultparam).HasColumnName("storeddefaultparam");
         });
 
+        modelBuilder.Entity<NetStepper>(entity =>
+        {
+            entity.HasKey(e => e.Id).HasName("pk_net_stepper");
+
+            entity.ToTable("net_stepper", "dbo");
+
+            entity.Property(e => e.Id).HasColumnName("id");
+            entity.Property(e => e.Code).HasColumnName("code");
+            entity.Property(e => e.Creationtime).HasColumnName("creationtime");
+            entity.Property(e => e.Creatoruserid).HasColumnName("creatoruserid");
+            entity.Property(e => e.Datasourceid).HasColumnName("datasourceid");
+            entity.Property(e => e.Deleteruserid).HasColumnName("deleteruserid");
+            entity.Property(e => e.Deletiontime).HasColumnName("deletiontime");
+            entity.Property(e => e.Isactive).HasColumnName("isactive");
+            entity.Property(e => e.Isactiveeventheader).HasColumnName("isactiveeventheader");
+            entity.Property(e => e.Isdeleted).HasColumnName("isdeleted");
+            entity.Property(e => e.Isdynamicdata).HasColumnName("isdynamicdata");
+            entity.Property(e => e.Issaveeachform).HasColumnName("issaveeachform");
+            entity.Property(e => e.Isviewonly)
+                .HasDefaultValue(false)
+                .HasColumnName("isviewonly");
+            entity.Property(e => e.Lastmodificationtime).HasColumnName("lastmodificationtime");
+            entity.Property(e => e.Lastmodifieruserid).HasColumnName("lastmodifieruserid");
+            entity.Property(e => e.Name).HasColumnName("name");
+            entity.Property(e => e.Orderid).HasColumnName("orderid");
+            entity.Property(e => e.Sitecode)
+                .HasMaxLength(255)
+                .HasColumnName("sitecode");
+            entity.Property(e => e.Siteid).HasColumnName("siteid");
+            entity.Property(e => e.Storedefaultdata).HasColumnName("storedefaultdata");
+            entity.Property(e => e.Storegetdata).HasColumnName("storegetdata");
+            entity.Property(e => e.Storeloaddynamicdata).HasColumnName("storeloaddynamicdata");
+            entity.Property(e => e.Storesetdata).HasColumnName("storesetdata");
+            entity.Property(e => e.Vertical).HasColumnName("vertical");
+        });
+
+        modelBuilder.Entity<NetStepperDetail>(entity =>
+        {
+            entity.HasKey(e => e.Id).HasName("pk_net_stepper_detail");
+
+            entity.ToTable("net_stepper_detail", "dbo");
+
+            entity.Property(e => e.Id).HasColumnName("id");
+            entity.Property(e => e.Creationtime).HasColumnName("creationtime");
+            entity.Property(e => e.Creatoruserid).HasColumnName("creatoruserid");
+            entity.Property(e => e.Deleteruserid).HasColumnName("deleteruserid");
+            entity.Property(e => e.Deletiontime).HasColumnName("deletiontime");
+            entity.Property(e => e.Formid).HasColumnName("formid");
+            entity.Property(e => e.Hinworkflowcode)
+                .HasMaxLength(255)
+                .HasColumnName("hinworkflowcode");
+            entity.Property(e => e.Isactive).HasColumnName("isactive");
+            entity.Property(e => e.Isdeleted).HasColumnName("isdeleted");
+            entity.Property(e => e.Labelactioncode).HasColumnName("labelactioncode");
+            entity.Property(e => e.Lastmodificationtime).HasColumnName("lastmodificationtime");
+            entity.Property(e => e.Lastmodifieruserid).HasColumnName("lastmodifieruserid");
+            entity.Property(e => e.Orderid).HasColumnName("orderid");
+            entity.Property(e => e.Sitecode)
+                .HasMaxLength(255)
+                .HasColumnName("sitecode");
+            entity.Property(e => e.Siteid).HasColumnName("siteid");
+            entity.Property(e => e.Stepperid).HasColumnName("stepperid");
+        });
+
         modelBuilder.Entity<NetTabpanel>(entity =>
         {
             entity.HasKey(e => e.Id).HasName("pk_net_tabpanel");
@@ -1081,8 +1170,91 @@ public partial class TttConfigContext : DbContext
             entity.Property(e => e.Tabicon)
                 .HasMaxLength(50)
                 .HasColumnName("tabicon");
+            entity.Property(e => e.Tabiconcolor)
+                .HasMaxLength(30)
+                .HasColumnName("tabiconcolor");
             entity.Property(e => e.Template).HasColumnName("template");
             entity.Property(e => e.Title).HasColumnName("title");
+        });
+
+        modelBuilder.Entity<NetTenant>(entity =>
+        {
+            entity
+                .HasNoKey()
+                .ToTable("net_tenant", "dbo");
+
+            entity.Property(e => e.Code)
+                .HasMaxLength(200)
+                .HasColumnName("code");
+            entity.Property(e => e.Creationtime).HasColumnName("creationtime");
+            entity.Property(e => e.Creatoruserid).HasColumnName("creatoruserid");
+            entity.Property(e => e.Deleteuserid).HasColumnName("deleteuserid");
+            entity.Property(e => e.Deletiontime).HasColumnName("deletiontime");
+            entity.Property(e => e.Description).HasColumnName("description");
+            entity.Property(e => e.Id)
+                .ValueGeneratedOnAdd()
+                .HasColumnName("id");
+            entity.Property(e => e.Isactive)
+                .HasDefaultValue(true)
+                .HasColumnName("isactive");
+            entity.Property(e => e.Isdeleted)
+                .HasDefaultValue(false)
+                .HasColumnName("isdeleted");
+            entity.Property(e => e.Lastmodificationtime).HasColumnName("lastmodificationtime");
+            entity.Property(e => e.Lastmodifieruserid).HasColumnName("lastmodifieruserid");
+            entity.Property(e => e.Name).HasColumnName("name");
+            entity.Property(e => e.Orderid).HasColumnName("orderid");
+            entity.Property(e => e.Shortname)
+                .HasMaxLength(50)
+                .HasColumnName("shortname");
+            entity.Property(e => e.Startnumberprod).HasColumnName("startnumberprod");
+            entity.Property(e => e.Tenanticourl)
+                .HasMaxLength(500)
+                .HasColumnName("tenanticourl");
+            entity.Property(e => e.Tenantlogotexturl)
+                .HasMaxLength(500)
+                .HasColumnName("tenantlogotexturl");
+            entity.Property(e => e.Tenantlogourl)
+                .HasMaxLength(500)
+                .HasColumnName("tenantlogourl");
+        });
+
+        modelBuilder.Entity<NetUnit>(entity =>
+        {
+            entity
+                .HasNoKey()
+                .ToTable("net_unit", "dbo");
+
+            entity.Property(e => e.Creationtime).HasColumnName("creationtime");
+            entity.Property(e => e.Creatoruserid).HasColumnName("creatoruserid");
+            entity.Property(e => e.Deleteuserid).HasColumnName("deleteuserid");
+            entity.Property(e => e.Deletiontime).HasColumnName("deletiontime");
+            entity.Property(e => e.Description).HasColumnName("description");
+            entity.Property(e => e.Id)
+                .ValueGeneratedOnAdd()
+                .HasColumnName("id");
+            entity.Property(e => e.Isactive)
+                .HasDefaultValue(true)
+                .HasColumnName("isactive");
+            entity.Property(e => e.Isdelete)
+                .HasDefaultValue(false)
+                .HasColumnName("isdelete");
+            entity.Property(e => e.Isparent).HasColumnName("isparent");
+            entity.Property(e => e.Lastmodificationtime).HasColumnName("lastmodificationtime");
+            entity.Property(e => e.Lastmodifieruserid).HasColumnName("lastmodifieruserid");
+            entity.Property(e => e.Leaduserid).HasColumnName("leaduserid");
+            entity.Property(e => e.Orderid).HasColumnName("orderid");
+            entity.Property(e => e.Parentid).HasColumnName("parentid");
+            entity.Property(e => e.Rootid).HasColumnName("rootid");
+            entity.Property(e => e.Shortname).HasColumnName("shortname");
+            entity.Property(e => e.Unitcode).HasColumnName("unitcode");
+            entity.Property(e => e.Unitgroup).HasColumnName("unitgroup");
+            entity.Property(e => e.Unitname)
+                .HasMaxLength(1024)
+                .HasColumnName("unitname");
+            entity.Property(e => e.Unittype)
+                .HasMaxLength(50)
+                .HasColumnName("unittype");
         });
 
         modelBuilder.Entity<NetValidation>(entity =>
@@ -1102,6 +1274,9 @@ public partial class TttConfigContext : DbContext
             entity.Property(e => e.Deletiontime).HasColumnName("deletiontime");
             entity.Property(e => e.Isactive).HasColumnName("isactive");
             entity.Property(e => e.Isdeleted).HasColumnName("isdeleted");
+            entity.Property(e => e.Key)
+                .HasMaxLength(50)
+                .HasColumnName("key");
             entity.Property(e => e.Lastmodificationtime).HasColumnName("lastmodificationtime");
             entity.Property(e => e.Lastmodifieruserid).HasColumnName("lastmodifieruserid");
             entity.Property(e => e.Max).HasColumnName("max");

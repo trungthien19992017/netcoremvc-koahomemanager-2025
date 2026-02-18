@@ -53,6 +53,9 @@
 .authentication-wrapper.authentication-basic .authentication-inner {
   max-width: 460px;
 }
+.authentication-wrapper.authentication-basic .authentication-register-inner {
+  max-width: 720px;
+}
 .authentication-wrapper .auth-input-wrapper .auth-input {
   max-width: 50px;
   padding-left: 0.4rem;

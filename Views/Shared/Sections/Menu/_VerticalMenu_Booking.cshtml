@@ -10,8 +10,14 @@
     @* ! Hide app brand if navbar-full *@
   <div class='app-brand demo @((@ViewData["navbarFull"] != null && Convert.ToBoolean(@ViewData["navbarFull"])) ? "d-xl-none" : "")'>
         <a asp-controller="Dashboards" asp-action="KoaDashboard" class="app-brand-link">
-      <span class="app-brand-logo demo me-1">  @await Html.PartialAsync("../_Partials/_Macros")</span>
-      <span class="app-brand-text demo menu-text fw-semibold ms-2">@TempData.Peek("appName")</span>
+      <span class="app-brand-logo demo me-1">
+        <div>
+            <img src="@(User.FindFirst("TenantLogoUrl")?.Value ?? "")" alt="" class="w-px-50 h-auto rounded-circle">
+        </div>
+      </span>
+      <span class="app-brand-text demo menu-text fw-semibold ms-2">
+        @(User.FindFirst("SiteShortName")?.Value ?? "")
+      </span>
     </a>
 
     <a href="javascript:void(0);" class="layout-menu-toggle menu-link text-large ms-auto">

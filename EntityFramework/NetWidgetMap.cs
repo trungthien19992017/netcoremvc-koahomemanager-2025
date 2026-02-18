@@ -9,9 +9,9 @@ public partial class NetWidgetmap
 
     public int? Widgetitemid { get; set; }
 
-    public string? Name { get; set; }
+    public string Name { get; set; }
 
-    public string? Descriptions { get; set; }
+    public string Descriptions { get; set; }
 
     public int? Pageid { get; set; }
 
