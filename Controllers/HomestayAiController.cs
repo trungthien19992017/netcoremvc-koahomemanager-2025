@@ -17,12 +17,19 @@ public class HomestayAiController : Controller
   }
 
   [HttpGet]
-  public async Task<IActionResult> Index(int bookingID = 2935)
+  public async Task<IActionResult> Index(int? bookingID)
   {
-    var booking = _db.HsBookings.FirstOrDefault(p => p.Bookingid == bookingID);
-    var customer = _db.HsCustomers.FirstOrDefault(p => p.Customerid == booking.Customerid);
-    string fullName = $"{customer.Firstname} {customer.Lastname}";
-    string shortName = FormatHelper.GetLogoShortName(fullName);
+    var booking = new HsBooking();
+    var customer = new HsCustomer();
+    string fullName = "Khách vãng lai";
+    string shortName = "Guest";
+    if (bookingID.HasValue)
+    {
+      booking = _db.HsBookings.FirstOrDefault(p => p.Bookingid == bookingID);
+      customer = _db.HsCustomers.FirstOrDefault(p => p.Customerid == booking.Customerid);
+      fullName = $"{customer.Firstname} {customer.Lastname}";
+      shortName = FormatHelper.GetLogoShortName(fullName);
+    }
 
     ViewBag.BookingID = bookingID;
     ViewBag.FullName = fullName;
@@ -34,8 +41,8 @@ public class HomestayAiController : Controller
   [HttpPost]
   public async Task<IActionResult> Index(ChatRequest req)
   {
-    var booking = _db.HsBookings.FirstOrDefault(p => p.Bookingid == req.BookingID);
-    string phoneNumber = _db.HsCustomers.FirstOrDefault(p => p.Customerid == booking.Customerid).Phonenumber;
+    var booking = _db.HsBookings.FirstOrDefault(p => p.Bookingid == req.BookingID) ?? new HsBooking();
+    string phoneNumber = _db.HsCustomers.FirstOrDefault(p => p.Customerid == booking.Customerid)?.Phonenumber;
 
     var aiService = _aiServiceFactory(req.selectedProvider);
     //var prompt = _ai.BuildGuestPrompt(req.BookingID, req.Message);

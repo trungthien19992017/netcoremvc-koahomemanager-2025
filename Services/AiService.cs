@@ -1,7 +1,6 @@
-using Google.Apis.Auth.OAuth2;
 using Google.GenAI;
 using KOAHome.EntityFramework;
-using Microsoft.Identity.Client.Platforms.Features.DesktopOs.Kerberos;
+using Npgsql;
 using OpenAI;
 using System.Text;
 using System.Text.Json;
@@ -19,12 +18,14 @@ namespace KOAHome.Services
     private readonly HttpClient _http;
     private readonly IConfiguration _config;
     private readonly QLKCL_NEWContext _db;
+    private readonly IConnectionService _con;
 
-    public GeminiService(HttpClient http, IConfiguration config, QLKCL_NEWContext db)
+    public GeminiService(HttpClient http, IConfiguration config, QLKCL_NEWContext db, IConnectionService con)
     {
       _http = http;
       _config = config;
       _db = db;
+      _con = con;
     }
     public async Task<string> AskAsync(string prompt, string selectedModel)
     {
@@ -92,6 +93,19 @@ namespace KOAHome.Services
 
       if (customer == null)
       {
+        // neu khong truyen connect string thi se lay connection string mac dinh
+        string connectionString = _config.GetConnectionString("DefaultConnection"); // Thay thế bằng chuỗi kết nối của bạn
+        var parameters = new Dictionary<string, object>();
+
+        // chuyen thanh cau query tu store va param truyen vao
+        var (sqlQuery, sqlParams) = _con.Connection_GetQueryParam(parameters, "hs_homestayai_promt_all", connectionString).Result;
+
+        var resultList = new List<dynamic>();
+
+        // xu ly lay du lieu dua truyen store va param truyen vao
+
+        var result = _con.Connection_GetSingleDataFromQuery(parameters, "hs_homestayai_promt_all", connectionString, sqlQuery, sqlParams);
+
         return $"""
         Bạn là trợ lý ảo của homestay KOA Home.
 
@@ -104,6 +118,11 @@ namespace KOAHome.Services
         - Tiếng Việt
         - Thông báo không tìm thấy thông tin đặt phòng
         - Không nhắc đến AI
+
+        {(result.Result?.TryGetValue("promt", out var v) == true
+               && !string.IsNullOrWhiteSpace(v?.ToString())
+               ? v.ToString()
+               : null)}
         """;
       }
 
@@ -185,13 +204,15 @@ namespace KOAHome.Services
     private readonly IConfiguration _config;
     private readonly QLKCL_NEWContext _db;
     private readonly OpenAIClient _client;
+    private readonly IConnectionService _con;
 
-    public DeepSeekService(HttpClient http, IConfiguration config, QLKCL_NEWContext db, OpenAIClient client)
+    public DeepSeekService(HttpClient http, IConfiguration config, QLKCL_NEWContext db, OpenAIClient client, IConnectionService con)
     {
       _http = http;
       _config = config;
       _db = db;
       _client = client;
+      _con = con;
     }
     //public async Task<string> AskAsync(string prompt, string selectedModel)
     //{
@@ -301,6 +322,19 @@ namespace KOAHome.Services
 
       if (customer == null)
       {
+        // neu khong truyen connect string thi se lay connection string mac dinh
+        string connectionString = _config.GetConnectionString("DefaultConnection"); // Thay thế bằng chuỗi kết nối của bạn
+        var parameters = new Dictionary<string, object>();
+
+        // chuyen thanh cau query tu store va param truyen vao
+        var (sqlQuery, sqlParams) = _con.Connection_GetQueryParam(parameters, "hs_homestayai_promt_all", connectionString).Result;
+
+        var resultList = new List<dynamic>();
+
+        // xu ly lay du lieu dua truyen store va param truyen vao
+
+        var result = _con.Connection_GetSingleDataFromQuery(parameters, "hs_homestayai_promt_all", connectionString, sqlQuery, sqlParams);
+
         return $"""
         Bạn là trợ lý ảo của homestay KOA Home.
 
@@ -313,6 +347,12 @@ namespace KOAHome.Services
         - Tiếng Việt
         - Thông báo không tìm thấy thông tin đặt phòng
         - Không nhắc đến AI
+        
+        
+        {(result.Result?.TryGetValue("promt", out var v) == true
+               && !string.IsNullOrWhiteSpace(v?.ToString())
+               ? v.ToString()
+               : null)}
         """;
       }
 
