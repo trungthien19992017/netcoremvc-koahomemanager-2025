@@ -76,11 +76,24 @@ namespace KOAHome
         options.Cookie.SameSite = SameSiteMode.Strict;
       });
 
+      var env = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT");
+      var googleAuthClientId = "";
+      var googleAuthClientSecret = "";
+      if (env == "Development")
+      {
+        googleAuthClientId = Configuration["Authentication:Google:ClientId"];
+        googleAuthClientSecret = Configuration["Authentication:Google:ClientSecret"];
+      }
+      else
+      {
+        googleAuthClientId = Environment.GetEnvironmentVariable("GOOGLE_AUTH_CLIENT_ID");
+        googleAuthClientSecret = Environment.GetEnvironmentVariable("GOOGLE_AUTH_CLIENT_SECRET");
+      }
       services.AddAuthentication()
       .AddGoogle(options =>
       {
-        options.ClientId = Configuration["Authentication:Google:ClientId"];
-        options.ClientSecret = Configuration["Authentication:Google:ClientSecret"];
+        options.ClientId = googleAuthClientId;
+        options.ClientSecret = googleAuthClientSecret;
       });
 
 
@@ -159,19 +172,6 @@ namespace KOAHome
             }
         );
       });
-      //services.AddSingleton(s =>
-      //{
-      //  var config = Configuration.GetSection("CloudflareR2").Get<CloudflareR2Config>();
-
-      //  var s3Config = new AmazonS3Config
-      //  {
-      //    RegionEndpoint = Amazon.RegionEndpoint.USEast1, // Không ảnh hưởng vì R2 là regionless
-      //    ServiceURL = $"https://{config.AccountId}.r2.cloudflarestorage.com",
-      //    ForcePathStyle = true
-      //  };
-
-      //  return new AmazonS3Client(config.AccessKey, config.SecretKey, s3Config);
-      //});
 
       // add health check for deploy
       services.AddHealthChecks();
@@ -181,21 +181,6 @@ namespace KOAHome
       {
         options.MultipartBodyLengthLimit = 104857600; // 100MB
       });
-
-
-      //services.AddSingleton(s =>
-      //{
-      //  var config = Configuration.GetSection("CloudflareR2").Get<CloudflareR2Config>();
-
-      //  var s3Config = new AmazonS3Config
-      //  {
-      //    RegionEndpoint = Amazon.RegionEndpoint.USEast1, // Không ảnh hưởng vì R2 là regionless
-      //    ServiceURL = $"https://{config.AccountId}.r2.cloudflarestorage.com",
-      //    ForcePathStyle = true
-      //  };
-
-      //  return new AmazonS3Client(config.AccessKey, config.SecretKey, s3Config);
-      //});
     }
 
     // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
