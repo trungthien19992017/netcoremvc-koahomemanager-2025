@@ -226,8 +226,6 @@ namespace KOAHome
 
       app.UseSession();
 
-      app.UseHealthChecks("/health");
-
       app.UseForwardedHeaders(new ForwardedHeadersOptions
       {
         ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto
@@ -235,6 +233,7 @@ namespace KOAHome
 
       app.UseEndpoints(endpoints =>
       {
+        endpoints.MapHealthChecks("/health").AllowAnonymous();
         endpoints.MapControllers();
         endpoints.MapControllerRoute(
             name: "default",
