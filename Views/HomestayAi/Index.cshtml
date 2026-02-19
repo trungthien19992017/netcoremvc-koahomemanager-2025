@@ -6,6 +6,9 @@
 @section VendorStyles {
     @* chat *@
     <link rel="stylesheet" href="~/vendor/css/pages/app-chat.css" />
+    .ai-content {
+        white-space: pre-line;
+    }
 }
 @section PageScripts {
     <script src="~/js/app-chat.js"></script>
@@ -112,7 +115,7 @@
                     },
                     success: function (res) {
                       // Cập nhật nội dung AI trả về vào bong bóng chat đang chờ
-                      $(`#${aiMsgId} .ai-content`).text(res);
+                      $(`#${aiMsgId} .ai-content`).html(res.replace(/\n/g, "<br>"));
                     },
                     error: function (xhr) {
                       let errorMsg = "Lỗi kết nối với trợ lý.";

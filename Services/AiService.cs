@@ -11,7 +11,7 @@ namespace KOAHome.Services
   {
     public Task<string> AskAsync(string prompt, string selectedModel);
     public string BuildGuestPrompt(int bookingID, string userMessage);
-    public string BuildGuestPromptByPhone(string phoneNumber, string userMessage);
+    public Task<string> BuildGuestPromptByPhone(string phoneNumber, string userMessage);
   }
   public class GeminiService : IAiService
   {
@@ -85,7 +85,7 @@ namespace KOAHome.Services
         """;
     }
 
-    public string BuildGuestPromptByPhone(string phoneNumber, string userMessage)
+    public async Task<string> BuildGuestPromptByPhone(string phoneNumber, string userMessage)
     {
       // 1. Lấy thông tin khách hàng theo số điện thoại
       var customer = _db.HsCustomers
@@ -98,13 +98,13 @@ namespace KOAHome.Services
         var parameters = new Dictionary<string, object>();
 
         // chuyen thanh cau query tu store va param truyen vao
-        var (sqlQuery, sqlParams) = _con.Connection_GetQueryParam(parameters, "hs_homestayai_promt_all", connectionString).Result;
+        var (sqlQuery, sqlParams) = await _con.Connection_GetQueryParam(parameters, "hs_homestayai_promt_all", connectionString);
 
         var resultList = new List<dynamic>();
 
         // xu ly lay du lieu dua truyen store va param truyen vao
 
-        var result = _con.Connection_GetSingleDataFromQuery(parameters, "hs_homestayai_promt_all", connectionString, sqlQuery, sqlParams);
+        var result = await _con.Connection_GetSingleDataFromQuery(parameters, "hs_homestayai_promt_all", connectionString, sqlQuery, sqlParams);
 
         return $"""
         Bạn là trợ lý ảo của homestay KOA Home.
@@ -119,7 +119,7 @@ namespace KOAHome.Services
         - Thông báo không tìm thấy thông tin đặt phòng
         - Không nhắc đến AI
 
-        {(result.Result?.TryGetValue("promt", out var v) == true
+        {(result?.TryGetValue("prompt", out var v) == true
                && !string.IsNullOrWhiteSpace(v?.ToString())
                ? v.ToString()
                : null)}
@@ -314,7 +314,7 @@ namespace KOAHome.Services
         """;
     }
 
-    public string BuildGuestPromptByPhone(string phoneNumber, string userMessage)
+    public async Task<string> BuildGuestPromptByPhone(string phoneNumber, string userMessage)
     {
       // 1. Lấy thông tin khách hàng theo số điện thoại
       var customer = _db.HsCustomers
@@ -327,13 +327,13 @@ namespace KOAHome.Services
         var parameters = new Dictionary<string, object>();
 
         // chuyen thanh cau query tu store va param truyen vao
-        var (sqlQuery, sqlParams) = _con.Connection_GetQueryParam(parameters, "hs_homestayai_promt_all", connectionString).Result;
+        var (sqlQuery, sqlParams) = await _con.Connection_GetQueryParam(parameters, "hs_homestayai_promt_all", connectionString);
 
         var resultList = new List<dynamic>();
 
         // xu ly lay du lieu dua truyen store va param truyen vao
 
-        var result = _con.Connection_GetSingleDataFromQuery(parameters, "hs_homestayai_promt_all", connectionString, sqlQuery, sqlParams);
+        var result = await _con.Connection_GetSingleDataFromQuery(parameters, "hs_homestayai_promt_all", connectionString, sqlQuery, sqlParams);
 
         return $"""
         Bạn là trợ lý ảo của homestay KOA Home.
@@ -349,7 +349,7 @@ namespace KOAHome.Services
         - Không nhắc đến AI
         
         
-        {(result.Result?.TryGetValue("promt", out var v) == true
+        {(result?.TryGetValue("prompt", out var v) == true
                && !string.IsNullOrWhiteSpace(v?.ToString())
                ? v.ToString()
                : null)}
