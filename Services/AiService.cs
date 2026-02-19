@@ -116,7 +116,6 @@ namespace KOAHome.Services
         - Ngắn gọn
         - Thân thiện
         - Tiếng Việt
-        - Thông báo không tìm thấy thông tin đặt phòng
         - Không nhắc đến AI
 
         {(result?.TryGetValue("prompt", out var v) == true
@@ -345,7 +344,6 @@ namespace KOAHome.Services
         - Ngắn gọn
         - Thân thiện
         - Tiếng Việt
-        - Thông báo không tìm thấy thông tin đặt phòng
         - Không nhắc đến AI
         
         
