@@ -1,5 +1,6 @@
 using Google.GenAI;
 using KOAHome.EntityFramework;
+using Microsoft.EntityFrameworkCore.Metadata.Internal;
 using Npgsql;
 using OpenAI;
 using System.Text;
@@ -9,7 +10,7 @@ namespace KOAHome.Services
 {
   public interface IAiService
   {
-    public Task<string> AskAsync(string prompt, string selectedModel);
+    public Task<string> AskAsync(string message, string prompt, string selectedModel);
     public string BuildGuestPrompt(int bookingID, string userMessage);
     public Task<string> BuildGuestPromptByPhone(string phoneNumber, string userMessage);
   }
@@ -19,15 +20,17 @@ namespace KOAHome.Services
     private readonly IConfiguration _config;
     private readonly QLKCL_NEWContext _db;
     private readonly IConnectionService _con;
+    private readonly ILogger<IAiService> _logger;
 
-    public GeminiService(HttpClient http, IConfiguration config, QLKCL_NEWContext db, IConnectionService con)
+    public GeminiService(HttpClient http, IConfiguration config, QLKCL_NEWContext db, IConnectionService con, ILogger<IAiService> logger)
     {
       _http = http;
       _config = config;
       _db = db;
       _con = con;
+      _logger = logger;
     }
-    public async Task<string> AskAsync(string prompt, string selectedModel)
+    public async Task<string> AskAsync(string message, string prompt, string selectedModel)
     {
       var env = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT");
       var apiKey = "";
@@ -45,6 +48,11 @@ namespace KOAHome.Services
         contents: prompt
         );
       var answer = respone.Candidates[0].Content.Parts[0].Text;
+
+      // Log query một lần khi trợ lý trả lời
+      string singleLineCusContent = message.ToString().Replace(Environment.NewLine, " ").Replace("\n", " ");
+      string singleLineBotContent = answer.ToString().Replace(Environment.NewLine, " ").Replace("\n", " ");
+      _logger.LogInformation($"Khách hỏi: '{singleLineCusContent}' - Bot trả lời '{singleLineBotContent}'");
       return answer;
     }
 
@@ -204,14 +212,16 @@ namespace KOAHome.Services
     private readonly QLKCL_NEWContext _db;
     private readonly OpenAIClient _client;
     private readonly IConnectionService _con;
+    private readonly ILogger<IAiService> _logger;
 
-    public DeepSeekService(HttpClient http, IConfiguration config, QLKCL_NEWContext db, OpenAIClient client, IConnectionService con)
+    public DeepSeekService(HttpClient http, IConfiguration config, QLKCL_NEWContext db, OpenAIClient client, IConnectionService con, ILogger<IAiService> logger)
     {
       _http = http;
       _config = config;
       _db = db;
       _client = client;
       _con = con;
+      _logger = logger;
     }
     //public async Task<string> AskAsync(string prompt, string selectedModel)
     //{
@@ -228,7 +238,7 @@ namespace KOAHome.Services
 
     //  return response.Value.Content[0].Text.Trim();
     //}
-    public async Task<string> AskAsync(string prompt, string selectedModel)
+    public async Task<string> AskAsync(string message, string prompt, string selectedModel)
     {
       var env = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT");
       var apiKey = "";
@@ -267,7 +277,13 @@ namespace KOAHome.Services
         var json = await response.Content.ReadAsStringAsync();
         // Bạn có thể dùng System.Text.Json để parse lấy content
         using var doc = JsonDocument.Parse(json);
-        return doc.RootElement.GetProperty("choices")[0].GetProperty("message").GetProperty("content").GetString();
+        var answer = doc.RootElement.GetProperty("choices")[0].GetProperty("message").GetProperty("content").GetString();
+
+        // Log query một lần khi trợ lý trả lời
+        string singleLineCusContent = message.ToString().Replace(Environment.NewLine, " ").Replace("\n", " ");
+        string singleLineBotContent = answer.ToString().Replace(Environment.NewLine, " ").Replace("\n", " ");
+        _logger.LogInformation($"Khách hỏi: '{singleLineCusContent}' - Bot trả lời '{singleLineBotContent}'");
+        return answer;
       }
       else
       {

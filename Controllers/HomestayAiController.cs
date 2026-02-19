@@ -47,7 +47,7 @@ public class HomestayAiController : Controller
     var aiService = _aiServiceFactory(req.selectedProvider);
     //var prompt = _ai.BuildGuestPrompt(req.BookingID, req.Message);
     var prompt = await aiService.BuildGuestPromptByPhone(phoneNumber, req.Message);
-    var reply = await aiService.AskAsync(prompt, req.selectedModel);
+    var reply = await aiService.AskAsync(req.Message, prompt, req.selectedModel);
     return Content(reply);
   }
 
