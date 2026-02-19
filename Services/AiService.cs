@@ -1,10 +1,17 @@
+using Amazon.Runtime.Internal.Util;
 using Google.GenAI;
 using KOAHome.EntityFramework;
+using KOAHome.Models;
+using Microsoft.AspNetCore.Mvc.ApplicationModels;
 using Microsoft.EntityFrameworkCore.Metadata.Internal;
+using Microsoft.Extensions.Caching.Distributed;
+using Microsoft.Identity.Client;
+using Newtonsoft.Json;
 using Npgsql;
 using OpenAI;
 using System.Text;
 using System.Text.Json;
+using GoogleGenAIType = Google.GenAI.Types;
 
 namespace KOAHome.Services
 {
@@ -21,17 +28,48 @@ namespace KOAHome.Services
     private readonly QLKCL_NEWContext _db;
     private readonly IConnectionService _con;
     private readonly ILogger<IAiService> _logger;
+    private readonly IDistributedCache _cache;
+    private readonly IHttpContextAccessor _httpContextAccessor;
 
-    public GeminiService(HttpClient http, IConfiguration config, QLKCL_NEWContext db, IConnectionService con, ILogger<IAiService> logger)
+    public GeminiService(HttpClient http, IConfiguration config, QLKCL_NEWContext db, IConnectionService con, ILogger<IAiService> logger, IDistributedCache cache, IHttpContextAccessor httpContextAccessor)
     {
       _http = http;
       _config = config;
       _db = db;
       _con = con;
       _logger = logger;
+      _cache = cache;
+      _httpContextAccessor = httpContextAccessor;
     }
+    //public async Task<string> AskAsync(string message, string prompt, string selectedModel)
+    //{
+    //  var env = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT");
+    //  var apiKey = "";
+    //  if (env == "Development")
+    //  {
+    //    apiKey = _config["Gemini:ApiKey"];
+    //  }
+    //  else
+    //  {
+    //    apiKey = Environment.GetEnvironmentVariable("GEMINI_API_KEY");
+    //  }
+    //  var client = new Client(apiKey: apiKey);
+    //  var respone = await client.Models.GenerateContentAsync(
+    //    model: selectedModel,
+    //    contents: prompt
+    //    );
+    //  var answer = respone.Candidates[0].Content.Parts[0].Text;
+
+    //  // Log query một lần khi trợ lý trả lời
+    //  string singleLineCusContent = message.ToString().Replace(Environment.NewLine, " ").Replace("\n", " ");
+    //  string singleLineBotContent = answer.ToString().Replace(Environment.NewLine, " ").Replace("\n", " ");
+    //  _logger.LogInformation($"Khách hỏi: '{singleLineCusContent}' - Bot trả lời '{singleLineBotContent}'");
+    //  return answer;
+    //}
+
     public async Task<string> AskAsync(string message, string prompt, string selectedModel)
     {
+      string uniqueKey = GetVisitorId();
       var env = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT");
       var apiKey = "";
       if (env == "Development")
@@ -42,18 +80,101 @@ namespace KOAHome.Services
       {
         apiKey = Environment.GetEnvironmentVariable("GEMINI_API_KEY");
       }
+
+      string cacheKey = $"History_Gemini_{uniqueKey}";
+
+      // 1. Lấy lịch sử từ Redis
+      var cachedData = await _cache.GetStringAsync(cacheKey);
+      List<ChatHistoryModel> history = cachedData != null
+          ? JsonConvert.DeserializeObject<List<ChatHistoryModel>>(cachedData)
+          : new List<ChatHistoryModel>();
+
+      // 2. Thêm tin nhắn mới của User vào lịch sử
+      history.Add(new ChatHistoryModel { Role = "user", Parts = message });
+
+      // Giới hạn lịch sử (Ví dụ: Chỉ lấy 10 câu gần nhất để tiết kiệm token)
+      if (history.Count > 10) history = history.TakeLast(10).ToList();
+
+      var geminiHistory = history.Select(h => new GoogleGenAIType.Content
+      {
+        Role = h.Role, // "user" hoặc "model"
+        Parts = new List<GoogleGenAIType.Part>
+        {
+            new GoogleGenAIType.Part { Text = h.Parts }
+        }
+        }).ToList();
+
+      var generateContentConfig = new GoogleGenAIType.GenerateContentConfig
+      {
+        // Đây chính là Role "System" - định hình tính cách và dữ liệu gốc
+        SystemInstruction = new GoogleGenAIType.Content
+        {
+          Parts = new List<GoogleGenAIType.Part> { new GoogleGenAIType.Part { Text = prompt } }
+        }
+      };
+      // 3. Chuẩn bị gọi Gemini (Gửi kèm System Prompt và History)
+      // Lưu ý: Ở đây bạn cần map history này vào object 'ChatHistoryModels' của Gemini API
       var client = new Client(apiKey: apiKey);
       var respone = await client.Models.GenerateContentAsync(
         model: selectedModel,
-        contents: prompt
+        contents: geminiHistory,
+        config: generateContentConfig
         );
-      var answer = respone.Candidates[0].Content.Parts[0].Text;
+      var botResponse = respone.Candidates[0].Content.Parts[0].Text;
 
       // Log query một lần khi trợ lý trả lời
       string singleLineCusContent = message.ToString().Replace(Environment.NewLine, " ").Replace("\n", " ");
-      string singleLineBotContent = answer.ToString().Replace(Environment.NewLine, " ").Replace("\n", " ");
+      string singleLineBotContent = botResponse.ToString().Replace(Environment.NewLine, " ").Replace("\n", " ");
       _logger.LogInformation($"Khách hỏi: '{singleLineCusContent}' - Bot trả lời '{singleLineBotContent}'");
-      return answer;
+
+      // 4. Cập nhật câu trả lời của Bot vào lịch sử
+      history.Add(new ChatHistoryModel { Role = "model", Parts = botResponse });
+
+      // 5. Lưu lại vào Redis (Set thời gian hết hạn 30 phút - Sliding Expiration)
+      var cacheOptions = new DistributedCacheEntryOptions
+      {
+        SlidingExpiration = TimeSpan.FromMinutes(30)
+      };
+      await _cache.SetStringAsync(cacheKey, JsonConvert.SerializeObject(history), cacheOptions);
+
+      // 6. Lưu vào DB (Background Task) - Để phân tích nhu cầu khách hàng sau này
+      _ = SaveToDatabaseAsync(uniqueKey, message, botResponse);
+
+      return botResponse;
+    }
+
+    private async Task SaveToDatabaseAsync(string sessionId, string userMsg, string botMsg)
+    {
+      // Code lưu vào bảng ChatLogs của bạn
+      // Nên dùng một Queue hoặc BackgroundService để không làm chậm trải nghiệm khách
+    }
+
+    private string GetVisitorId()
+    {
+      const string CookieName = "KOA_Visitor_Identity";
+
+      // 1. Thử lấy Key từ Cookie của trình duyệt gửi lên
+      var visitorId = _httpContextAccessor.HttpContext.Request.Cookies[CookieName];
+
+      if (string.IsNullOrEmpty(visitorId))
+      {
+        // 2. Nếu chưa có (khách mới), tạo một mã định danh duy nhất (GUID)
+        visitorId = Guid.NewGuid().ToString();
+
+        // 3. Cấu hình Cookie để lưu lại trên máy khách
+        var cookieOptions = new CookieOptions
+        {
+          Path = "/",
+          HttpOnly = true, // Bảo mật, không cho script đọc
+          IsEssential = true, // Hoạt động ngay cả khi khách chưa đồng ý cookie (tùy luật GDPR)
+          Expires = DateTimeOffset.UtcNow.AddMinutes(30) // Lưu trong 30 phút, sau đó sẽ hết hạn nếu khách không quay lại
+        };
+
+        // 4. Gửi Cookie về trình duyệt
+        _httpContextAccessor.HttpContext.Response.Cookies.Append(CookieName, visitorId, cookieOptions);
+      }
+
+      return visitorId;
     }
 
     public string BuildGuestPrompt(int bookingID, string userMessage)
@@ -115,17 +236,6 @@ namespace KOAHome.Services
         var result = await _con.Connection_GetSingleDataFromQuery(parameters, "hs_homestayai_promt_all", connectionString, sqlQuery, sqlParams);
 
         return $"""
-        Bạn là trợ lý ảo của homestay KOA Home.
-
-        Khách hỏi:
-        "{userMessage}"
-
-        Yêu cầu trả lời:
-        - Ngắn gọn
-        - Thân thiện
-        - Tiếng Việt
-        - Không nhắc đến AI
-
         {(result?.TryGetValue("prompt", out var v) == true
                && !string.IsNullOrWhiteSpace(v?.ToString())
                ? v.ToString()
@@ -213,8 +323,10 @@ namespace KOAHome.Services
     private readonly OpenAIClient _client;
     private readonly IConnectionService _con;
     private readonly ILogger<IAiService> _logger;
+    private readonly IDistributedCache _cache;
+    private readonly IHttpContextAccessor _httpContextAccessor;
 
-    public DeepSeekService(HttpClient http, IConfiguration config, QLKCL_NEWContext db, OpenAIClient client, IConnectionService con, ILogger<IAiService> logger)
+    public DeepSeekService(HttpClient http, IConfiguration config, QLKCL_NEWContext db, OpenAIClient client, IConnectionService con, ILogger<IAiService> logger, IDistributedCache cache, IHttpContextAccessor httpContextAccessor)
     {
       _http = http;
       _config = config;
@@ -222,6 +334,8 @@ namespace KOAHome.Services
       _client = client;
       _con = con;
       _logger = logger;
+      _cache = cache;
+      _httpContextAccessor = httpContextAccessor;
     }
     //public async Task<string> AskAsync(string prompt, string selectedModel)
     //{
@@ -237,9 +351,66 @@ namespace KOAHome.Services
     //  var response = await chatClient.CompleteChatAsync(messages);
 
     //  return response.Value.Content[0].Text.Trim();
+    ////}
+    //public async Task<string> AskAsync(string message, string prompt, string selectedModel)
+    //{
+    //  var env = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT");
+    //  var apiKey = "";
+    //  if (env == "Development")
+    //  {
+    //    apiKey = _config["OpenRouter:ApiKey"];
+    //  }
+    //  else
+    //  {
+    //    apiKey = Environment.GetEnvironmentVariable("OPENROUTER_API_KEY");
+    //  }
+    //  var baseUrl = _config["OpenRouter:BaseUrl"];
+    //  using var client = new HttpClient();
+
+    //  // 1. Cấu hình các Header bắt buộc cho OpenRouter
+    //  client.DefaultRequestHeaders.Add("Authorization", $"Bearer {apiKey}");
+    //  client.DefaultRequestHeaders.Add("HTTP-Referer", "https://koahome.vn"); // Bắt buộc để tránh lỗi 401/400
+    //  client.DefaultRequestHeaders.Add("X-Title", "KOA Home Management");
+
+    //  // 2. Tạo Body thô nhất có thể để tránh bị "soi" lỗi
+    //  var requestBody = new
+    //  {
+    //    model = selectedModel, // Ví dụ: "deepseek/deepseek-chat:free"
+    //    messages = new[]
+    //      {
+    //        new { role = "user", content = prompt }
+    //    },
+    //    // Với bản Free, tốt nhất chỉ để lại temperature hoặc bỏ hết
+    //    temperature = 1.0
+    //  };
+
+    //  var response = await client.PostAsJsonAsync($"{baseUrl}/chat/completions", requestBody);
+
+    //  if (response.IsSuccessStatusCode)
+    //  {
+    //    var json = await response.Content.ReadAsStringAsync();
+    //    // Bạn có thể dùng System.Text.Json để parse lấy content
+    //    using var doc = JsonDocument.Parse(json);
+    //    var answer = doc.RootElement.GetProperty("choices")[0].GetProperty("message").GetProperty("content").GetString();
+
+    //    // Log query một lần khi trợ lý trả lời
+    //    string singleLineCusContent = message.ToString().Replace(Environment.NewLine, " ").Replace("\n", " ");
+    //    string singleLineBotContent = answer.ToString().Replace(Environment.NewLine, " ").Replace("\n", " ");
+    //    _logger.LogInformation($"Khách hỏi: '{singleLineCusContent}' - Bot trả lời '{singleLineBotContent}'");
+    //    return answer;
+    //  }
+    //  else
+    //  {
+    //    var errorDetail = await response.Content.ReadAsStringAsync();
+    //    return $"Lỗi API ({response.StatusCode}): {errorDetail}";
+    //  }
     //}
+
+
     public async Task<string> AskAsync(string message, string prompt, string selectedModel)
     {
+
+      string uniqueKey = GetVisitorId();
       var env = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT");
       var apiKey = "";
       if (env == "Development")
@@ -250,6 +421,44 @@ namespace KOAHome.Services
       {
         apiKey = Environment.GetEnvironmentVariable("OPENROUTER_API_KEY");
       }
+
+      string cacheKey = $"History_DeepSeek_{uniqueKey}";
+
+      // 1. Lấy lịch sử từ Redis
+      var cachedData = await _cache.GetStringAsync(cacheKey);
+      List<ChatHistoryModel> history = cachedData != null
+          ? JsonConvert.DeserializeObject<List<ChatHistoryModel>>(cachedData)
+          : new List<ChatHistoryModel>();
+
+      // Nếu lịch sử chưa từng có prompt của model thì thêm prompt vào đầu tiên để đảm bảo model hiểu ngữ cảnh
+      var systemMessage = history.FirstOrDefault(h => h.Role == "system");
+
+      if (systemMessage != null)
+      {
+        // Nếu đã có, ghi đè nội dung mới (prompt mới cập nhật từ DB/DTO)
+        systemMessage.Parts = prompt;
+      }
+      else
+      {
+        // Nếu chưa có (lượt chat đầu tiên), thêm vào vị trí đầu tiên
+        history.Insert(0, new ChatHistoryModel { Role = "system", Parts = prompt });
+      }
+      // 2. Thêm tin nhắn mới của User vào lịch sử
+      history.Add(new ChatHistoryModel { Role = "user", Parts = message });
+
+
+      // Giới hạn lịch sử (Ví dụ: Chỉ lấy 10 câu gần nhất để tiết kiệm token)
+      if (history.Count > 10)
+      {
+        // giữ first để giữ prompt của model
+        var firstMessage = history.First();
+        var lastNineMessages = history.TakeLast(9).ToList();
+
+        history = new List<ChatHistoryModel> { firstMessage };
+        history.AddRange(lastNineMessages);
+      }
+
+
       var baseUrl = _config["OpenRouter:BaseUrl"];
       using var client = new HttpClient();
 
@@ -259,13 +468,15 @@ namespace KOAHome.Services
       client.DefaultRequestHeaders.Add("X-Title", "KOA Home Management");
 
       // 2. Tạo Body thô nhất có thể để tránh bị "soi" lỗi
+      var deepSeekHistory = history.Select(h => new
+      {
+        role = h.Role, // "user" hoặc "model"
+        content = h.Parts
+      }).ToList();
       var requestBody = new
       {
         model = selectedModel, // Ví dụ: "deepseek/deepseek-chat:free"
-        messages = new[]
-          {
-            new { role = "user", content = prompt }
-        },
+        messages = deepSeekHistory,
         // Với bản Free, tốt nhất chỉ để lại temperature hoặc bỏ hết
         temperature = 1.0
       };
@@ -277,19 +488,68 @@ namespace KOAHome.Services
         var json = await response.Content.ReadAsStringAsync();
         // Bạn có thể dùng System.Text.Json để parse lấy content
         using var doc = JsonDocument.Parse(json);
-        var answer = doc.RootElement.GetProperty("choices")[0].GetProperty("message").GetProperty("content").GetString();
+        var botResponse = doc.RootElement.GetProperty("choices")[0].GetProperty("message").GetProperty("content").GetString();
+
 
         // Log query một lần khi trợ lý trả lời
         string singleLineCusContent = message.ToString().Replace(Environment.NewLine, " ").Replace("\n", " ");
-        string singleLineBotContent = answer.ToString().Replace(Environment.NewLine, " ").Replace("\n", " ");
+        string singleLineBotContent = botResponse.ToString().Replace(Environment.NewLine, " ").Replace("\n", " ");
         _logger.LogInformation($"Khách hỏi: '{singleLineCusContent}' - Bot trả lời '{singleLineBotContent}'");
-        return answer;
+
+        // 4. Cập nhật câu trả lời của Bot vào lịch sử
+        history.Add(new ChatHistoryModel { Role = "assistant", Parts = botResponse });
+
+        // 5. Lưu lại vào Redis (Set thời gian hết hạn 30 phút - Sliding Expiration)
+        var cacheOptions = new DistributedCacheEntryOptions
+        {
+          SlidingExpiration = TimeSpan.FromMinutes(30)
+        };
+        await _cache.SetStringAsync(cacheKey, JsonConvert.SerializeObject(history), cacheOptions);
+
+        // 6. Lưu vào DB (Background Task) - Để phân tích nhu cầu khách hàng sau này
+        _ = SaveToDatabaseAsync(uniqueKey, message, botResponse);
+
+        return botResponse;
       }
       else
       {
         var errorDetail = await response.Content.ReadAsStringAsync();
         return $"Lỗi API ({response.StatusCode}): {errorDetail}";
       }
+    }
+
+    private async Task SaveToDatabaseAsync(string sessionId, string userMsg, string botMsg)
+    {
+      // Code lưu vào bảng ChatLogs của bạn
+      // Nên dùng một Queue hoặc BackgroundService để không làm chậm trải nghiệm khách
+    }
+
+    private string GetVisitorId()
+    {
+      const string CookieName = "KOA_Visitor_Identity";
+
+      // 1. Thử lấy Key từ Cookie của trình duyệt gửi lên
+      var visitorId = _httpContextAccessor.HttpContext.Request.Cookies[CookieName];
+
+      if (string.IsNullOrEmpty(visitorId))
+      {
+        // 2. Nếu chưa có (khách mới), tạo một mã định danh duy nhất (GUID)
+        visitorId = Guid.NewGuid().ToString();
+
+        // 3. Cấu hình Cookie để lưu lại trên máy khách
+        var cookieOptions = new CookieOptions
+        {
+          Path = "/",
+          HttpOnly = true, // Bảo mật, không cho script đọc
+          IsEssential = true, // Hoạt động ngay cả khi khách chưa đồng ý cookie (tùy luật GDPR)
+          Expires = DateTimeOffset.UtcNow.AddMinutes(30) // Lưu trong 30 phút, sau đó sẽ hết hạn nếu khách không quay lại
+        };
+
+        // 4. Gửi Cookie về trình duyệt
+        _httpContextAccessor.HttpContext.Response.Cookies.Append(CookieName, visitorId, cookieOptions);
+      }
+
+      return visitorId;
     }
 
     public string BuildGuestPrompt(int bookingID, string userMessage)
@@ -351,18 +611,6 @@ namespace KOAHome.Services
         var result = await _con.Connection_GetSingleDataFromQuery(parameters, "hs_homestayai_promt_all", connectionString, sqlQuery, sqlParams);
 
         return $"""
-        Bạn là trợ lý ảo của homestay KOA Home.
-
-        Khách hỏi:
-        "{userMessage}"
-
-        Yêu cầu trả lời:
-        - Ngắn gọn
-        - Thân thiện
-        - Tiếng Việt
-        - Không nhắc đến AI
-        
-        
         {(result?.TryGetValue("prompt", out var v) == true
                && !string.IsNullOrWhiteSpace(v?.ToString())
                ? v.ToString()

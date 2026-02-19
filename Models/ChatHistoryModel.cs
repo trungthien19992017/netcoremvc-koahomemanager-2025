@@ -1,8 +1,8 @@
 namespace KOAHome.Models
 {
-  public class ChatMessage
+  public class ChatHistoryModel
   {
     public string Role { get; set; } // "user" hoặc "model"
-    public string Text { get; set; }
+    public string Parts { get; set; } // Nội dung tin nhắn
   }
 }
