@@ -20,6 +20,7 @@ namespace KOAHome.Services
     public Task<string> AskAsync(string message, string prompt, string selectedModel);
     public string BuildGuestPrompt(int bookingID, string userMessage);
     public Task<string> BuildGuestPromptByPhone(string phoneNumber, string userMessage);
+    public Task<List<ChatHistoryModel>> GetChatHistory();
   }
   public class GeminiService : IAiService
   {
@@ -313,6 +314,18 @@ namespace KOAHome.Services
     - Tiếng Việt
     - Không nhắc đến AI
     """;
+    }
+    public async Task<List<ChatHistoryModel>> GetChatHistory()
+    {
+      string uniqueKey = GetVisitorId();
+      string cacheKey = $"History_Gemini_{uniqueKey}";
+
+      var cachedData = await _cache.GetStringAsync(cacheKey);
+      List<ChatHistoryModel> history = cachedData != null
+          ? JsonConvert.DeserializeObject<List<ChatHistoryModel>>(cachedData)
+          : new List<ChatHistoryModel>();
+
+      return history;
     }
   }
   public class DeepSeekService : IAiService
@@ -688,6 +701,23 @@ namespace KOAHome.Services
     - Tiếng Việt
     - Không nhắc đến AI
     """;
+    }
+
+    public async Task<List<ChatHistoryModel>> GetChatHistory()
+    {
+
+      string uniqueKey = GetVisitorId();
+      string cacheKey = $"History_DeepSeek_{uniqueKey}";
+
+      // 1. Lấy lịch sử từ Redis
+      var cachedData = await _cache.GetStringAsync(cacheKey);
+      List<ChatHistoryModel> history = cachedData != null
+          ? JsonConvert.DeserializeObject<List<ChatHistoryModel>>(cachedData)
+          : new List<ChatHistoryModel>();
+
+      history = history.Where(h => h.Role == "user" || h.Role == "assistant").ToList();
+
+      return history;
     }
   }
 }

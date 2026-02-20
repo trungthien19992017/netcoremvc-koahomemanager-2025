@@ -1,6 +1,7 @@
 @{
     ViewData["Title"] = "KOA Auto Reply";
     Layout = "_BlankLayout";
+    var chatHistory = ViewData["ChatHistory"] as List<KOAHome.Models.ChatHistoryModel>;
 
 }
 @section VendorStyles {
@@ -125,6 +126,106 @@
                     }
                 });
             });
+        function renderChatHistory(chatHistory) {
+
+            var html = '';
+
+            if (!chatHistory || chatHistory.length === 0) {
+
+                html = `
+                <li class="chat-message" id="${tempId}">
+                    <div class="d-flex overflow-hidden">
+                        <div class="user-avatar flex-shrink-0 me-4">
+                            <div class="avatar avatar-sm">
+                                <span class="avatar-initial rounded-circle bg-label-secondary"><i class="ri-openai-fill ri-24px"></i></span>
+                            </div>
+                        </div>
+                        <div class="chat-message-wrapper flex-grow-1 w-50">
+                            <div class="chat-message-text">
+                                <p class="mb-0 ai-content"><em>Chào bạn, mình là trợ lý đắc thủ của KOA. Mình có thể hỗ trợ gì cho bạn? </em></p>
+                            </div>
+                        </div>
+                    </div>
+                </li>
+                `;
+
+                $("#chat-history").html(html);
+                return; // ⛔ dừng tại đây
+            }
+            chatHistory.forEach(function (msg) {
+
+                var timeStr = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+
+                if (msg.role === "user") {
+
+                    html += `
+                    <li class="chat-message chat-message-right">
+                        <div class="d-flex overflow-hidden">
+                            <div class="chat-message-wrapper flex-grow-1 w-50">
+                                <div class="chat-message-text">
+                                    <p class="mb-0">${msg.parts.replace(/\n/g, "<br>")}</p>
+                                </div>
+                                <div class="text-end text-body-secondary mt-1">
+                                    <i class="icon-base ri ri-check-double-line icon-16px me-1"></i>
+                                      <small>${timeStr}</small>
+                                </div>
+                            </div>
+                            <div class="user-avatar flex-shrink-0 ms-4">
+                                <div class="avatar avatar-sm">
+                                    <span class="avatar-initial rounded-circle bg-label-primary">GUEST</span>
+                                </div>
+                            </div>
+                        </div>
+                    </li>
+                    `;
+                }
+                else {
+
+                    html += `
+                    
+                    <li class="chat-message">
+                        <div class="d-flex overflow-hidden">
+                            <div class="user-avatar flex-shrink-0 me-4">
+                                <div class="avatar avatar-sm">
+                                    <span class="avatar-initial rounded-circle bg-label-secondary"><i class="ri-openai-fill ri-24px"></i></span>
+                                </div>
+                            </div>
+                            <div class="chat-message-wrapper flex-grow-1 w-50">
+                                <div class="chat-message-text">
+                                      <p class="mb-0 ai-content"><em>${msg.parts.replace(/\n/g, "<br>")} </em></p>
+                                </div>
+                            </div>
+                        </div>
+                    </li>
+                    `;
+                }
+            });
+
+            $("#chat-history").html(html);
+        }
+
+        $("#selectedProvider").change(function () {
+
+          var provider = $(this).val();
+
+          $.ajax({
+              url: '/HomestayAi/GetChatHistoryByProvider',
+              type: 'GET',
+              data: {
+                  provider: provider
+              },
+              beforeSend: function () {
+                  $("#chat-history").html("<p>Đang tải...</p>");
+              },
+              success: function (response) {
+                  renderChatHistory(response);
+              },
+              error: function () {
+                  alert("Lỗi khi tải lịch sử chat");
+              }
+          });
+
+      });
         });
 </script>
 
@@ -202,7 +303,52 @@
                         </div>
                     </div>
                     <div class="chat-history-body">
-                        <ul class="list-unstyled chat-history">
+                        <ul class="list-unstyled chat-history" id="chat-history">
+                        @if (chatHistory != null && chatHistory.Count > 0)
+                        {
+                            @foreach (var msg in chatHistory)
+                            {
+                                string timeStr = DateTime.Now.ToString("HH:mm");
+                                if (msg.Role == "user")
+                                {
+                                    <li class="chat-message chat-message-right">
+                                        <div class="d-flex overflow-hidden">
+                                            <div class="chat-message-wrapper flex-grow-1 w-50">
+                                                <div class="chat-message-text">
+                                                    <p class="mb-0">@Html.Raw(msg.Parts.Replace("\n", "<br>"))</p>
+                                                </div>
+                                                <div class="text-end text-body-secondary mt-1">
+                                                    <i class="icon-base ri ri-check-double-line icon-16px me-1"></i>
+                                                    <small>@timeStr</small>
+                                                </div>
+                                            </div>
+                                            <div class="user-avatar flex-shrink-0 ms-4">
+                                                <div class="avatar avatar-sm">
+                                                    <span class="avatar-initial rounded-circle bg-label-primary">GUEST</span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </li>
+                                }
+                                else{
+                                  <li class="chat-message">
+                                      <div class="d-flex overflow-hidden">
+                                          <div class="user-avatar flex-shrink-0 me-4">
+                                              <div class="avatar avatar-sm">
+                                                  <span class="avatar-initial rounded-circle bg-label-secondary"><i class="ri-openai-fill ri-24px"></i></span>
+                                              </div>
+                                          </div>
+                                          <div class="chat-message-wrapper flex-grow-1 w-50">
+                                              <div class="chat-message-text">
+                                                  <p class="mb-0 ai-content"><em>@Html.Raw(msg.Parts.Replace("\n", "<br>")) </em></p>
+                                              </div>
+                                          </div>
+                                      </div>
+                                  </li>
+                                  }
+                              }
+                        }
+                        else {
                             <li class="chat-message" id="${tempId}">
                                 <div class="d-flex overflow-hidden">
                                     <div class="user-avatar flex-shrink-0 me-4">
@@ -217,8 +363,10 @@
                                     </div>
                                 </div>
                             </li>
+                        }
                         </ul>
                     </div>
+
                     <!-- Chat message form -->
                     <div class="chat-history-footer shadow-xs">
                         <form class="form-send-message d-flex justify-content-between align-items-center ">

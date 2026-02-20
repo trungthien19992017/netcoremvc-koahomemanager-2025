@@ -31,9 +31,12 @@ public class HomestayAiController : Controller
       shortName = FormatHelper.GetLogoShortName(fullName);
     }
 
+    var aiService = _aiServiceFactory("gemini");
+    var chatHistory = await aiService.GetChatHistory();
     ViewBag.BookingID = bookingID;
     ViewBag.FullName = fullName;
     ViewBag.ShortName = shortName;
+    ViewBag.ChatHistory = chatHistory;
 
     return View();
   }
@@ -49,6 +52,15 @@ public class HomestayAiController : Controller
     var prompt = await aiService.BuildGuestPromptByPhone(phoneNumber, req.Message);
     var reply = await aiService.AskAsync(req.Message, prompt, req.selectedModel);
     return Content(reply);
+  }
+
+  [HttpGet]
+  public async Task<IActionResult> GetChatHistoryByProvider(string provider)
+  {
+    var aiService = _aiServiceFactory(provider);
+    var chatHistory = await aiService.GetChatHistory();
+
+    return Json(chatHistory);
   }
 
   public class ChatRequest
