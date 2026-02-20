@@ -1607,14 +1607,14 @@
                     // Nếu trả về thành công và có HTML, chèn vào container
                     if (response.success === false) {
                         // Nếu không thành công, hiển thị thông báo lỗi
-                        rplm({
-                               title: "Lỗi khi hiển thị main menu!",
-                               text: response.errorMessage || "Có vấn đề xảy ra.",
-                               type: "error",
-                               timer: 2000,
-                               confirmButtonText: 'Xác nhận',
-                               html: true
-                           });
+                        // rplm({
+                        //        title: "Lỗi khi hiển thị main menu!",
+                        //        text: response.errorMessage || "Có vấn đề xảy ra.",
+                        //        type: "error",
+                        //        timer: 2000,
+                        //        confirmButtonText: 'Xác nhận',
+                        //        html: true
+                        //    });
                     } else {
                         // Nếu không có lỗi, chèn HTML vào container
                         let html = response;
@@ -1622,15 +1622,15 @@
                     }
                 },
                 error: function (xhr, status, error) {
-                    // Nếu không thành công, hiển thị thông báo lỗi
-                    rplm({
-                            title: "Lỗi khi hiển thị main menu!",
-                            text: error || "Có vấn đề xảy ra.",
-                            type: "error",
-                            timer: 2000,
-                            confirmButtonText: 'Xác nhận',
-                            html: true
-                        });
+                    // // Nếu không thành công, hiển thị thông báo lỗi
+                    // rplm({
+                    //         title: "Lỗi khi hiển thị main menu!",
+                    //         text: error || "Có vấn đề xảy ra.",
+                    //         type: "error",
+                    //         timer: 2000,
+                    //         confirmButtonText: 'Xác nhận',
+                    //         html: true
+                    //     });
                 }
             });
         });
@@ -1716,27 +1716,27 @@
                   data: queryParams,
                   success: function (response) {
                       if (response.success === false) {
-                          rplm({
-                              title: "Lỗi khi hiển thị menu!",
-                              text: response.errorMessage || "Có vấn đề xảy ra.",
-                              type: "error",
-                              timer: 2000,
-                              confirmButtonText: 'Xác nhận',
-                              html: true
-                          });
+                          // rplm({
+                          //     title: "Lỗi khi hiển thị menu!",
+                          //     text: response.errorMessage || "Có vấn đề xảy ra.",
+                          //     type: "error",
+                          //     timer: 2000,
+                          //     confirmButtonText: 'Xác nhận',
+                          //     html: true
+                          // });
                       } else {
                           $("#net-menu").append(response);
                       }
                   },
                   error: function (xhr, status, error) {
-                      rplm({
-                          title: "Lỗi khi hiển thị menu!",
-                          text: error || "Có vấn đề xảy ra.",
-                          type: "error",
-                          timer: 2000,
-                          confirmButtonText: 'Xác nhận',
-                          html: true
-                      });
+                      // rplm({
+                      //     title: "Lỗi khi hiển thị menu!",
+                      //     text: error || "Có vấn đề xảy ra.",
+                      //     type: "error",
+                      //     timer: 2000,
+                      //     confirmButtonText: 'Xác nhận',
+                      //     html: true
+                      // });
                   }
               });
           }
