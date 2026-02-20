@@ -47,6 +47,9 @@
     <Content Update="wwwroot\img\icons\koa\koa-chatbot.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
+    <Content Update="wwwroot\vendor\css\pages\app-chat-bk.css">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
   </ItemGroup>
 
 </Project>

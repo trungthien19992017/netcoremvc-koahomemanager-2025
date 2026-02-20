@@ -70,7 +70,7 @@
                             </div>
                             <div class="chat-message-wrapper flex-grow-1 w-50">
                                 <div class="chat-message-text">
-                                    <p class="mb-0 ai-content"><em>KOA Home đang suy nghĩ...</em></p>
+                                    <p class="mb-0 ai-content">KOA Home đang suy nghĩ...</p>
                                 </div>
                                 <div class="text-body-secondary mt-1">
                                     <small>${timeStr}</small>
@@ -127,7 +127,7 @@
                 });
             });
         function renderChatHistory(chatHistory) {
-
+            var timeStr = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
             var html = '';
 
             if (!chatHistory || chatHistory.length === 0) {
@@ -142,7 +142,10 @@
                         </div>
                         <div class="chat-message-wrapper flex-grow-1 w-50">
                             <div class="chat-message-text">
-                                <p class="mb-0 ai-content"><em>Chào bạn, mình là trợ lý đắc thủ của KOA. Mình có thể hỗ trợ gì cho bạn? </em></p>
+                                <p class="mb-0 ai-content">Chào bạn, mình là trợ lý đắc thủ của KOA. Mình có thể hỗ trợ gì cho bạn? </p>
+                            </div>
+                            <div class="text-body-secondary mt-1">
+                                  <small>${timeStr}</small>
                             </div>
                         </div>
                     </div>
@@ -153,8 +156,6 @@
                 return; // ⛔ dừng tại đây
             }
             chatHistory.forEach(function (msg) {
-
-                var timeStr = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
 
                 if (msg.role === "user") {
 
@@ -192,7 +193,10 @@
                             </div>
                             <div class="chat-message-wrapper flex-grow-1 w-50">
                                 <div class="chat-message-text">
-                                      <p class="mb-0 ai-content"><em>${msg.parts.replace(/\n/g, "<br>")} </em></p>
+                                      <p class="mb-0 ai-content">${msg.parts.replace(/\n/g, "<br>")} </p>
+                                </div>
+                                <div class="text-body-secondary mt-1">
+                                    <small>${timeStr}</small>
                                 </div>
                             </div>
                         </div>
@@ -260,7 +264,7 @@
           </select>
       </div>
   </div>
-    <div class="app-chat card overflow-hidden">
+    <div class="app-chat overflow-hidden">
 
         <div class="row g-0">
             <!-- /Chat contacts -->
@@ -275,22 +279,22 @@
                                     <img src="/img/icons/koa/koa-chatbot.png" alt="Scroll To Top" style="width:50px; height:50px;">
                                 </div>
                                 <div class="chat-contact-info flex-grow-1 ms-4">
-                                    <h6 class="m-0 fw-normal">KOA Kaka</h6>
-                                        <small class="user-status text-body">Trợ lý ảo của KOA Rental Home</small>
+                                    <h6 class="m-0 fw-normal text-white">KOA Kaka</h6>
+                                    <small class="user-status">Trợ lý ảo của KOA Rental Home</small>
                                 </div>
                             </div>
-                            <div class="d-flex align-items-center">
-                                <span class="btn btn-text-secondary text-secondary cursor-pointer d-sm-inline-flex d-none me-1 btn-icon rounded-pill">
+                            <div class="d-flex chat-container-items-center">
+                                <span class="btn btn-text-light cursor-pointer d-sm-inline-flex d-none me-1 btn-icon rounded-pill">
                                     <i class="icon-base ri ri-phone-line icon-22px"></i>
                                 </span>
-                                <span class="btn btn-text-secondary text-secondary cursor-pointer d-sm-inline-flex d-none me-1 btn-icon rounded-pill">
+                                <span class="btn btn-text-light cursor-pointer d-sm-inline-flex d-none me-1 btn-icon rounded-pill">
                                     <i class="icon-base ri ri-video-add-line icon-22px"></i>
                                 </span>
-                                <span class="btn btn-text-secondary text-secondary cursor-pointer d-sm-inline-flex d-none me-1 btn-icon rounded-pill">
+                                <span class="btn btn-text-light cursor-pointer d-sm-inline-flex d-none me-1 btn-icon rounded-pill">
                                     <i class="icon-base ri ri-search-line icon-22px"></i>
                                 </span>
                                 <div class="dropdown">
-                                    <button class="btn btn-icon btn-text-secondary text-secondary rounded-pill dropdown-toggle hide-arrow" data-bs-toggle="dropdown" aria-expanded="true" id="chat-header-actions"><i class="icon-base ri ri-more-2-line icon-22px"></i></button>
+                                    <button class="btn btn-icon btn-text-light rounded-pill dropdown-toggle hide-arrow" data-bs-toggle="dropdown" aria-expanded="true" id="chat-header-actions"><i class="icon-base ri ri-more-2-line icon-22px"></i></button>
                                     <div class="dropdown-menu dropdown-menu-end" aria-labelledby="chat-header-actions">
                                         <a class="dropdown-item" href="javascript:void(0);">View Contact</a>
                                         <a class="dropdown-item" href="javascript:void(0);">Mute Notifications</a>
@@ -304,65 +308,73 @@
                     </div>
                     <div class="chat-history-body">
                         <ul class="list-unstyled chat-history" id="chat-history">
-                        @if (chatHistory != null && chatHistory.Count > 0)
-                        {
-                            @foreach (var msg in chatHistory)
-                            {
-                                string timeStr = DateTime.Now.ToString("HH:mm");
-                                if (msg.Role == "user")
-                                {
-                                    <li class="chat-message chat-message-right">
+                        @{
+                          string timeStr = DateTime.Now.ToString("HH:mm");
+                          if (chatHistory != null && chatHistory.Count > 0)
+                          {
+                              @foreach (var msg in chatHistory)
+                              {
+                                  if (msg.Role == "user")
+                                  {
+                                      <li class="chat-message chat-message-right">
+                                          <div class="d-flex overflow-hidden">
+                                              <div class="chat-message-wrapper flex-grow-1 w-50">
+                                                  <div class="chat-message-text">
+                                                      <p class="mb-0">@Html.Raw(msg.Parts.Replace("\n", "<br>"))</p>
+                                                  </div>
+                                                  <div class="text-end text-body-secondary mt-1">
+                                                      <i class="icon-base ri ri-check-double-line icon-16px me-1"></i>
+                                                      <small>@timeStr</small>
+                                                  </div>
+                                              </div>
+                                              <div class="user-avatar flex-shrink-0 ms-4">
+                                                  <div class="avatar avatar-sm">
+                                                      <span class="avatar-initial rounded-circle bg-label-primary">GUEST</span>
+                                                  </div>
+                                              </div>
+                                          </div>
+                                      </li>
+                                  }
+                                  else{
+                                    <li class="chat-message">
                                         <div class="d-flex overflow-hidden">
-                                            <div class="chat-message-wrapper flex-grow-1 w-50">
-                                                <div class="chat-message-text">
-                                                    <p class="mb-0">@Html.Raw(msg.Parts.Replace("\n", "<br>"))</p>
-                                                </div>
-                                                <div class="text-end text-body-secondary mt-1">
-                                                    <i class="icon-base ri ri-check-double-line icon-16px me-1"></i>
-                                                    <small>@timeStr</small>
+                                            <div class="user-avatar flex-shrink-0 me-4">
+                                                <div class="avatar avatar-sm">
+                                                    <span class="avatar-initial rounded-circle bg-label-secondary"><i class="ri-openai-fill ri-24px"></i></span>
                                                 </div>
                                             </div>
-                                            <div class="user-avatar flex-shrink-0 ms-4">
-                                                <div class="avatar avatar-sm">
-                                                    <span class="avatar-initial rounded-circle bg-label-primary">GUEST</span>
+                                            <div class="chat-message-wrapper flex-grow-1 w-50">
+                                                <div class="chat-message-text">
+                                                    <p class="mb-0 ai-content">@Html.Raw(msg.Parts.Replace("\n", "<br>")) </p>
+                                                </div>
+                                                <div class="text-body-secondary mt-1">
+                                                    <small>@timeStr</small>
                                                 </div>
                                             </div>
                                         </div>
                                     </li>
+                                    }
                                 }
-                                else{
-                                  <li class="chat-message">
-                                      <div class="d-flex overflow-hidden">
-                                          <div class="user-avatar flex-shrink-0 me-4">
-                                              <div class="avatar avatar-sm">
-                                                  <span class="avatar-initial rounded-circle bg-label-secondary"><i class="ri-openai-fill ri-24px"></i></span>
-                                              </div>
-                                          </div>
-                                          <div class="chat-message-wrapper flex-grow-1 w-50">
-                                              <div class="chat-message-text">
-                                                  <p class="mb-0 ai-content"><em>@Html.Raw(msg.Parts.Replace("\n", "<br>")) </em></p>
-                                              </div>
+                          }
+                          else {
+                              <li class="chat-message" id="${tempId}">
+                                  <div class="d-flex overflow-hidden">
+                                      <div class="user-avatar flex-shrink-0 me-4">
+                                          <div class="avatar avatar-sm">
+                                              <span class="avatar-initial rounded-circle bg-label-secondary"><i class="ri-openai-fill ri-24px"></i></span>
                                           </div>
                                       </div>
-                                  </li>
-                                  }
-                              }
-                        }
-                        else {
-                            <li class="chat-message" id="${tempId}">
-                                <div class="d-flex overflow-hidden">
-                                    <div class="user-avatar flex-shrink-0 me-4">
-                                        <div class="avatar avatar-sm">
-                                            <span class="avatar-initial rounded-circle bg-label-secondary"><i class="ri-openai-fill ri-24px"></i></span>
+                                      <div class="chat-message-wrapper flex-grow-1 w-50">
+                                          <div class="chat-message-text">
+                                              <p class="mb-0 ai-content">Chào bạn, mình là trợ lý đắc thủ của KOA. Mình có thể hỗ trợ gì cho bạn? </p>
+                                          </div>
+                                          <div class="text-body-secondary mt-1">
+                                            <small>@timeStr</small>
                                         </div>
-                                    </div>
-                                    <div class="chat-message-wrapper flex-grow-1 w-50">
-                                        <div class="chat-message-text">
-                                            <p class="mb-0 ai-content"><em>Chào bạn, mình là trợ lý đắc thủ của KOA. Mình có thể hỗ trợ gì cho bạn? </em></p>
-                                        </div>
-                                    </div>
-                                </div>
-                            </li>
+                                      </div>
+                                  </div>
+                              </li>
+                          }
                         }
                         </ul>
                     </div>
