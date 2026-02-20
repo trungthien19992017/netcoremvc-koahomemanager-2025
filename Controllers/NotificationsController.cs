@@ -1,20 +1,7 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Mvc.Rendering;
-using Microsoft.EntityFrameworkCore;
 using KOAHome.EntityFramework;
-using AspnetCoreMvcFull.Controllers;
 using KOAHome.Services;
-using Newtonsoft.Json.Linq;
-using System.Dynamic;
-using Newtonsoft.Json;
-using KOAHome.Models;
-using Microsoft.AspNetCore.Http;
-using Microsoft.SqlServer.Server;
-using Microsoft.Extensions.Caching.Memory;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 using System.Diagnostics;
 
 namespace KOAHome.Controllers
@@ -43,6 +30,7 @@ namespace KOAHome.Controllers
     }
 
     [HttpGet]
+    [AllowAnonymous]
     public async Task<IActionResult> GetNotifications()
     {
       Dictionary<string, object> objParameters = new Dictionary<string, object>();

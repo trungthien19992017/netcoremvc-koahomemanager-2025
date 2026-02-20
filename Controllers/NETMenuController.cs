@@ -1,6 +1,7 @@
 using AspnetCoreMvcFull.Models;
 using KOAHome.EntityFramework;
 using KOAHome.Services;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
@@ -50,6 +51,7 @@ namespace KOAHome.Controllers
 
     // danh sách main menu (gọi ajax)
     [HttpGet]
+    [AllowAnonymous]
     public async Task<IActionResult> MainMenu_List()
     {
       try
@@ -81,6 +83,7 @@ namespace KOAHome.Controllers
 
     // danh sach menu theo main menu code (gọi ajxa)
     [HttpGet]
+    [AllowAnonymous]
     public async Task<IActionResult> Menu_List(string currentPage, string? MenuCode)
     {
       try

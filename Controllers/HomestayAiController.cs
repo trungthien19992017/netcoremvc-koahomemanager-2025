@@ -44,6 +44,7 @@ public class HomestayAiController : Controller
   }
 
   [HttpPost]
+  [AllowAnonymous]
   public async Task<IActionResult> Index(ChatRequest req)
   {
     var booking = _db.HsBookings.FirstOrDefault(p => p.Bookingid == req.BookingID) ?? new HsBooking();
@@ -57,6 +58,7 @@ public class HomestayAiController : Controller
   }
 
   [HttpGet]
+  [AllowAnonymous]
   public async Task<IActionResult> GetChatHistoryByProvider(string provider)
   {
     var aiService = _aiServiceFactory(provider);
