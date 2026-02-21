@@ -265,8 +265,8 @@
     padding-block:1rem;padding-inline:1.25rem}*/
 
 .app-chat .app-chat-history .chat-history-header {
-  background: #f78796;
-  color: white !important;
+  background: #1f6f6f;
+  color: white;
   font-weight: 600;
   padding-block: 1rem;
   padding-inline: 1.25rem
@@ -325,16 +325,32 @@
     border-start-start-radius: 0
 }*/
 
-  .app-chat .app-chat-history .chat-history-body .chat-history .chat-message:not(.chat-message-right) .chat-message-text {
-    background: #2e8b8b;
-    color: #fff;
-    border-radius: 20px 20px 20px 6px;
-    padding: 14px 18px;
-    box-shadow: 6px 6px 16px rgba(0,0,0,0.08), -4px -4px 10px rgba(255,255,255,0.8);
-    position: relative;
-    transition: all 0.2s ease;
-    border-bottom-left-radius: 0.3rem;
-  }
+.app-chat .app-chat-history .chat-history-body .chat-history .chat-message:not(.chat-message-right) .chat-message-text {
+  background: #2e8b8b;
+  color: #fff;
+  border-radius: 20px 20px 20px 6px;
+  padding: 14px 18px;
+  box-shadow: 6px 6px 16px rgba(0,0,0,0.08), -4px -4px 10px rgba(255,255,255,0.8);
+  position: relative;
+  transition: all 0.2s ease;
+  border-bottom-left-radius: 0.3rem;
+}
+.app-chat .app-chat-history .chat-history-body .chat-history .chat-message:not(.chat-message-right) .chat-message-text a {
+  display: inline-block;
+  padding: 4px 10px;
+  border-radius: 8px;
+  border: 2px solid #ffd86b;
+  color: #ffd86b;
+  font-weight: 600;
+  text-decoration: none;
+  transition: 0.2s ease;
+
+}
+
+.app-chat .app-chat-history .chat-history-body .chat-history .chat-message:not(.chat-message-right) .chat-message-text a:hover {
+  background: #ffd86b;
+  color: #0f4c4c;
+}
 
 .chat-message-text:hover {
   transform: translateY(-2px);
@@ -413,9 +429,9 @@
   transition: 0.2s ease;
 }
 
-  .send-button:hover {
-    background: #d79b2c;
-  }
+.send-button:hover {
+  background: #d79b2c;
+}
 
 .chat-container {
   backdrop-filter: blur(10px);
