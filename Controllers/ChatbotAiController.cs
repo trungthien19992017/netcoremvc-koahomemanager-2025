@@ -7,11 +7,11 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace AspnetCoreMvcFull.Controllers;
 
-public class HomestayAiController : Controller
+public class ChatbotAiController : Controller
 {
   private readonly Func<string, IAiService> _aiServiceFactory;
   private readonly QLKCL_NEWContext _db;
-  public HomestayAiController(ILogger<HomestayAiController> logger, Func<string, IAiService> aiServiceFactory, QLKCL_NEWContext db)
+  public ChatbotAiController(ILogger<ChatbotAiController> logger, Func<string, IAiService> aiServiceFactory, QLKCL_NEWContext db)
   {
     _aiServiceFactory = aiServiceFactory;
     _db = db;

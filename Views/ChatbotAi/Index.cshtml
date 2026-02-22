@@ -155,7 +155,7 @@
                 $("#btn-send").prop("disabled", true);
 
                 $.ajax({
-                    url: '/HomestayAi/Index', // Đường dẫn tới Action trong Controller
+                    url: '/ChatbotAi/Index', // Đường dẫn tới Action trong Controller
                     type: 'POST',
                     data: {
                         selectedProvider: provider,
@@ -274,7 +274,7 @@
             var provider = $(this).val();
 
             $.ajax({
-                url: '/HomestayAi/GetChatHistoryByProvider',
+                url: '/ChatbotAi/GetChatHistoryByProvider',
                 type: 'GET',
                 data: {
                     provider: provider

@@ -228,13 +228,13 @@ namespace KOAHome.Services
         var parameters = new Dictionary<string, object>();
 
         // chuyen thanh cau query tu store va param truyen vao
-        var (sqlQuery, sqlParams) = await _con.Connection_GetQueryParam(parameters, "hs_homestayai_promt_all", connectionString);
+        var (sqlQuery, sqlParams) = await _con.Connection_GetQueryParam(parameters, "hs_chatbotai_promt_all", connectionString);
 
         var resultList = new List<dynamic>();
 
         // xu ly lay du lieu dua truyen store va param truyen vao
 
-        var result = await _con.Connection_GetSingleDataFromQuery(parameters, "hs_homestayai_promt_all", connectionString, sqlQuery, sqlParams);
+        var result = await _con.Connection_GetSingleDataFromQuery(parameters, "hs_chatbotai_promt_all", connectionString, sqlQuery, sqlParams);
 
         return $"""
         {(result?.TryGetValue("prompt", out var v) == true
@@ -626,13 +626,13 @@ namespace KOAHome.Services
         var parameters = new Dictionary<string, object>();
 
         // chuyen thanh cau query tu store va param truyen vao
-        var (sqlQuery, sqlParams) = await _con.Connection_GetQueryParam(parameters, "hs_homestayai_promt_all", connectionString);
+        var (sqlQuery, sqlParams) = await _con.Connection_GetQueryParam(parameters, "hs_chatbotai_promt_all", connectionString);
 
         var resultList = new List<dynamic>();
 
         // xu ly lay du lieu dua truyen store va param truyen vao
 
-        var result = await _con.Connection_GetSingleDataFromQuery(parameters, "hs_homestayai_promt_all", connectionString, sqlQuery, sqlParams);
+        var result = await _con.Connection_GetSingleDataFromQuery(parameters, "hs_chatbotai_promt_all", connectionString, sqlQuery, sqlParams);
 
         return $"""
         {(result?.TryGetValue("prompt", out var v) == true
