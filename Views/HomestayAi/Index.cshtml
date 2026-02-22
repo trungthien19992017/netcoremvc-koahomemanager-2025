@@ -7,20 +7,27 @@
 @section VendorStyles {
     @* chat *@
     <link rel="stylesheet" href="~/vendor/css/pages/app-chat.css" />
+    <style>
+        /* Mặc định ẩn nút copy */
+        .btn-copy-chat {
+            opacity: 0;
+            transition: opacity 0.2s ease-in-out;
+        }
+
+        /* Hiện khi hover vào tin nhắn */
+        .chat-message:hover .btn-copy-chat {
+            opacity: 1;
+        }
+
+        /* Màu khi hover vào chính cái nút */
+        .btn-copy-chat:hover {
+            color: #7367f0 !important; /* Màu thương hiệu của bạn */
+        }
+    </style>
 }
 @section PageScripts {
     <script src="~/js/app-chat.js"></script>
     <script>
-        $(document).ready(function () {const $chatList = $(".chat-history-body ul"); // Selector chứa các thẻ <li>
-      
-          const $historyContainer = $(".chat-history-body");
-
-          // Hàm cuộn xuống cuối
-          function scrollToBottom() {
-              $historyContainer.stop().animate({
-                  scrollTop: $historyContainer[0].scrollHeight
-              }, 300);
-          }
           const modelData = {
               gemini: [
                   { value: 'gemini-2.5-flash', text: 'gemini-2.5-flash' },
@@ -40,13 +47,25 @@
           function updateModels() {
               const selected = providerSelect.value;
               const models = modelData[selected] || [];
-    
+
               // Xóa sạch các option cũ và render option mới
-              modelSelect.innerHTML = models.map(m => 
+              modelSelect.innerHTML = models.map(m =>
                   `<option value="${m.value}">${m.text}</option>`
               ).join('');
           }
+
+        $(document).ready(function () {
           updateModels();
+          const $chatList = $(".chat-history-body ul"); // Selector chứa các thẻ <li>
+      
+          const $historyContainer = $(".chat-history-body");
+
+          // Hàm cuộn xuống cuối
+          function scrollToBottom() {
+              $historyContainer.stop().animate({
+                  scrollTop: $historyContainer[0].scrollHeight
+              }, 300);
+          }
 
           // Hàm hỗ trợ tạo mẫu tin nhắn (Phía bên phải - User)
           function appendUserMessage(text, shortname) {
@@ -97,10 +116,16 @@
                             </div>
                             <div class="chat-message-wrapper flex-grow-1 w-50">
                                 <div class="chat-message-text">
-                                    <p class="mb-0 ai-content">KOA Home đang suy nghĩ...</p>
+                                    <p class="mb-0 ai-content content-to-copy">KOA Home đang suy nghĩ...</p>
                                 </div>
-                                <div class="text-body-secondary mt-1">
-                                    <small>${timeStr}</small>
+                                <div class="text-body-secondary mt-1 d-flex align-items-center">
+                                    <small class="me-2">${timeStr}</small>
+                                    <button class="btn btn-sm btn-icon btn-copy-chat"
+                                            onclick="copyTextToClipboard(this)"
+                                            title="Sao chép nội dung"
+                                            style="padding: 0; background: none; border: none; cursor: pointer; color: #a1acb8;">
+                                        <i class="ri-file-copy-line"></i> <span class="copy-status" style="display:none; font-size: 10px; margin-left: 5px;">Đã chép!</span>
+                                    </button>
                                 </div>
                             </div>
                         </div>
@@ -153,111 +178,145 @@
                     }
                 });
             });
-        function renderChatHistory(chatHistory) {
-            var timeStr = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-            var html = '';
+        });
 
-            if (!chatHistory || chatHistory.length === 0) {
 
-                html = `
-                <li class="chat-message">
-                    <div class="d-flex overflow-hidden">
-                        <div class="user-avatar flex-shrink-0 me-4">
-                            <div class="avatar avatar-sm">
-                                <span class="avatar-initial rounded-circle bg-label-secondary"><img src="/img/icons/koa/koa-chatbot.png" alt="Scroll To Top" style="width:50px; height:50px;"></span>
-                            </div>
-                        </div>
-                        <div class="chat-message-wrapper flex-grow-1 w-50">
-                            <div class="chat-message-text">
-                                <p class="mb-0 ai-content">Chào bạn, mình là trợ lý đắc thủ của KOA. Mình có thể hỗ trợ gì cho bạn? </p>
-                            </div>
-                            <div class="text-body-secondary mt-1">
-                                  <small>${timeStr}</small>
-                            </div>
-                        </div>
-                    </div>
-                </li>
-                `;
+          function renderChatHistory(chatHistory) {
+              var timeStr = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+              var html = '';
 
-                $("#chat-history").html(html);
-                return; // ⛔ dừng tại đây
-            }
-            chatHistory.forEach(function (msg) {
+              if (!chatHistory || chatHistory.length === 0) {
 
-                if (msg.role === "user") {
-
-                    html += `
-                    <li class="chat-message chat-message-right">
-                        <div class="d-flex overflow-hidden">
-                            <div class="chat-message-wrapper flex-grow-1 w-50">
-                                <div class="chat-message-text">
-                                    <p class="mb-0">${msg.parts.replace(/\n/g, "<br>")}</p>
-                                </div>
-                                <div class="text-end text-body-secondary mt-1">
-                                    <i class="icon-base ri ri-check-double-line icon-16px me-1"></i>
-                                      <small>${timeStr}</small>
-                                </div>
-                            </div>
-                            <div class="user-avatar flex-shrink-0 ms-4">
-                                <div class="avatar avatar-sm">
-                                    <span class="avatar-initial rounded-circle bg-label-primary">GUEST</span>
-                                </div>
-                            </div>
-                        </div>
-                    </li>
-                    `;
-                }
-                else {
-
-                    html += `
-                    
-                    <li class="chat-message">
-                        <div class="d-flex overflow-hidden">
-                            <div class="user-avatar flex-shrink-0 me-4">
-                                <div class="avatar avatar-sm">
-                                      <span class="avatar-initial rounded-circle bg-label-secondary"><img src="/img/icons/koa/koa-chatbot.png" alt="Scroll To Top" style="width:50px; height:50px;"></span>
-                                </div>
-                            </div>
-                            <div class="chat-message-wrapper flex-grow-1 w-50">
-                                <div class="chat-message-text">
-                                      <p class="mb-0 ai-content">${msg.parts.replace(/\n/g, "<br>")} </p>
-                                </div>
-                                <div class="text-body-secondary mt-1">
+                  html = `
+                  <li class="chat-message">
+                      <div class="d-flex overflow-hidden">
+                          <div class="user-avatar flex-shrink-0 me-4">
+                              <div class="avatar avatar-sm">
+                                  <span class="avatar-initial rounded-circle bg-label-secondary"><img src="/img/icons/koa/koa-chatbot.png" alt="Scroll To Top" style="width:50px; height:50px;"></span>
+                              </div>
+                          </div>
+                          <div class="chat-message-wrapper flex-grow-1 w-50">
+                              <div class="chat-message-text">
+                                  <p class="mb-0 ai-content">Chào bạn, mình là trợ lý đắc thủ của KOA. Mình có thể hỗ trợ gì cho bạn? </p>
+                              </div>
+                              <div class="text-body-secondary mt-1">
                                     <small>${timeStr}</small>
-                                </div>
-                            </div>
-                        </div>
-                    </li>
-                    `;
+                              </div>
+                          </div>
+                      </div>
+                  </li>
+                  `;
+
+                  $("#chat-history").html(html);
+                  return; // ⛔ dừng tại đây
+              }
+              chatHistory.forEach(function (msg) {
+
+                  if (msg.role === "user") {
+
+                      html += `
+                      <li class="chat-message chat-message-right">
+                          <div class="d-flex overflow-hidden">
+                              <div class="chat-message-wrapper flex-grow-1 w-50">
+                                  <div class="chat-message-text">
+                                      <p class="mb-0">${msg.parts.replace(/\n/g, "<br>")}</p>
+                                  </div>
+                                  <div class="text-end text-body-secondary mt-1">
+                                      <i class="icon-base ri ri-check-double-line icon-16px me-1"></i>
+                                        <small>${timeStr}</small>
+                                  </div>
+                              </div>
+                              <div class="user-avatar flex-shrink-0 ms-4">
+                                  <div class="avatar avatar-sm">
+                                      <span class="avatar-initial rounded-circle bg-label-primary">GUEST</span>
+                                  </div>
+                              </div>
+                          </div>
+                      </li>
+                      `;
+                  }
+                  else {
+
+                      html += `
+
+                      <li class="chat-message">
+                          <div class="d-flex overflow-hidden">
+                              <div class="user-avatar flex-shrink-0 me-4">
+                                  <div class="avatar avatar-sm">
+                                        <span class="avatar-initial rounded-circle bg-label-secondary"><img src="/img/icons/koa/koa-chatbot.png" alt="Scroll To Top" style="width:50px; height:50px;"></span>
+                                  </div>
+                              </div>
+                              <div class="chat-message-wrapper flex-grow-1 w-50">
+                                  <div class="chat-message-text">
+                                        <p class="mb-0 ai-content content-to-copy">${msg.parts.replace(/\n/g, "<br>")} </p>
+                                  </div>
+                                  <div class="text-body-secondary mt-1 d-flex align-items-center">
+                                      <small class="me-2">${timeStr}</small>
+                                      <button class="btn btn-sm btn-icon btn-copy-chat" 
+                                              onclick="copyTextToClipboard(this)" 
+                                              title="Sao chép nội dung"
+                                              style="padding: 0; background: none; border: none; cursor: pointer; color: #a1acb8;">
+                                          <i class="ri-file-copy-line"></i> <span class="copy-status" style="display:none; font-size: 10px; margin-left: 5px;">Đã chép!</span>
+                                      </button>
+                                  </div>
+                              </div>
+                          </div>
+                      </li>
+                      `;
+                  }
+              });
+
+              $("#chat-history").html(html);
+          }
+
+          $("#selectedProvider").change(function () {
+            updateModels();
+            var provider = $(this).val();
+
+            $.ajax({
+                url: '/HomestayAi/GetChatHistoryByProvider',
+                type: 'GET',
+                data: {
+                    provider: provider
+                },
+                beforeSend: function () {
+                    $("#chat-history").html("<p>Đang tải...</p>");
+                },
+                success: function (response) {
+                    renderChatHistory(response);
+                },
+                error: function () {
+                    alert("Lỗi khi tải lịch sử chat");
                 }
             });
 
-            $("#chat-history").html(html);
-        }
-
-        $("#selectedProvider").change(function () {
-          updateModels();
-          var provider = $(this).val();
-
-          $.ajax({
-              url: '/HomestayAi/GetChatHistoryByProvider',
-              type: 'GET',
-              data: {
-                  provider: provider
-              },
-              beforeSend: function () {
-                  $("#chat-history").html("<p>Đang tải...</p>");
-              },
-              success: function (response) {
-                  renderChatHistory(response);
-              },
-              error: function () {
-                  alert("Lỗi khi tải lịch sử chat");
-              }
-          });
-
-      });
         });
+        function copyTextToClipboard(button) {
+            // Tìm thẻ p chứa nội dung AI trong cùng một wrapper
+            const messageWrapper = button.closest('.chat-message-wrapper');
+            const textElement = messageWrapper.querySelector('.content-to-copy');
+    
+            // Lấy text (loại bỏ các thẻ <br> nếu có)
+            const textToCopy = textElement.innerText;
+
+            navigator.clipboard.writeText(textToCopy).then(() => {
+                // Hiệu ứng phản hồi cho người dùng
+                const status = button.querySelector('.copy-status');
+                const icon = button.querySelector('i');
+
+                if (status) {
+                    status.style.display = 'inline';
+                    if (icon) icon.style.display = 'none';
+            
+                    setTimeout(() => {
+                        status.style.display = 'none';
+                        if (icon) icon.style.display = 'inline';
+                    }, 2000);
+                }
+            }).catch(err => {
+                console.error('Lỗi khi copy: ', err);
+            });
+        }
 </script>
 
 }
@@ -373,10 +432,16 @@
                                             </div>
                                             <div class="chat-message-wrapper flex-grow-1 w-50">
                                                 <div class="chat-message-text">
-                                                    <p class="mb-0 ai-content">@Html.Raw(msg.Parts.Replace("\n", "<br>")) </p>
+                                                    <p class="mb-0 ai-content content-to-copy">@Html.Raw(msg.Parts.Replace("\n", "<br>")) </p>
                                                 </div>
-                                                <div class="text-body-secondary mt-1">
-                                                    <small>@timeStr</small>
+                                                <div class="text-body-secondary mt-1 d-flex align-items-center">
+                                                    <small class="me-2">@timeStr</small>
+                                                    <button class="btn btn-sm btn-icon btn-copy-chat" 
+                                                            onclick="copyTextToClipboard(this)" 
+                                                            title="Sao chép nội dung"
+                                                            style="padding: 0; background: none; border: none; cursor: pointer; color: #a1acb8;">
+                                                        <i class="ri-file-copy-line"></i> <span class="copy-status" style="display:none; font-size: 10px; margin-left: 5px;">Đã chép!</span>
+                                                    </button>
                                                 </div>
                                             </div>
                                         </div>
