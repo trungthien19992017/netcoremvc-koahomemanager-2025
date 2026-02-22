@@ -328,7 +328,7 @@ namespace KOAHome.Services
       return history;
     }
   }
-  public class DeepSeekService : IAiService
+  public class OpenRouterService : IAiService
   {
     private readonly HttpClient _http;
     private readonly IConfiguration _config;
@@ -339,7 +339,7 @@ namespace KOAHome.Services
     private readonly IDistributedCache _cache;
     private readonly IHttpContextAccessor _httpContextAccessor;
 
-    public DeepSeekService(HttpClient http, IConfiguration config, QLKCL_NEWContext db, OpenAIClient client, IConnectionService con, ILogger<IAiService> logger, IDistributedCache cache, IHttpContextAccessor httpContextAccessor)
+    public OpenRouterService(HttpClient http, IConfiguration config, QLKCL_NEWContext db, OpenAIClient client, IConnectionService con, ILogger<IAiService> logger, IDistributedCache cache, IHttpContextAccessor httpContextAccessor)
     {
       _http = http;
       _config = config;
@@ -435,7 +435,7 @@ namespace KOAHome.Services
         apiKey = Environment.GetEnvironmentVariable("OPENROUTER_API_KEY");
       }
 
-      string cacheKey = $"History_DeepSeek_{uniqueKey}";
+      string cacheKey = $"History_OpenRouter_{uniqueKey}";
 
       // 1. Lấy lịch sử từ Redis
       var cachedData = await _cache.GetStringAsync(cacheKey);
@@ -480,8 +480,19 @@ namespace KOAHome.Services
       client.DefaultRequestHeaders.Add("HTTP-Referer", "https://koahome.vn"); // Bắt buộc để tránh lỗi 401/400
       client.DefaultRequestHeaders.Add("X-Title", "KOA Home Management");
 
+      var modelConfig = new Dictionary<string, double>
+      {
+          { "deepseek/deepseek-chat", 1.0 },
+          { "deepseek/deepseek-r1-0528", 1.0 },
+          { "minimax/minimax-m2.5-chat", 0.5 }
+      };
+
+      double temperature = modelConfig.ContainsKey(selectedModel)
+          ? modelConfig[selectedModel]
+          : 0.7;
+
       // 2. Tạo Body thô nhất có thể để tránh bị "soi" lỗi
-      var deepSeekHistory = history.Select(h => new
+      var openRouterHistory = history.Select(h => new
       {
         role = h.Role, // "user" hoặc "model"
         content = h.Parts
@@ -489,9 +500,9 @@ namespace KOAHome.Services
       var requestBody = new
       {
         model = selectedModel, // Ví dụ: "deepseek/deepseek-chat:free"
-        messages = deepSeekHistory,
+        messages = openRouterHistory,
         // Với bản Free, tốt nhất chỉ để lại temperature hoặc bỏ hết
-        temperature = 1.0
+        temperature = temperature
       };
 
       var response = await client.PostAsJsonAsync($"{baseUrl}/chat/completions", requestBody);
@@ -707,7 +718,7 @@ namespace KOAHome.Services
     {
 
       string uniqueKey = GetVisitorId();
-      string cacheKey = $"History_DeepSeek_{uniqueKey}";
+      string cacheKey = $"History_OpenRouter_{uniqueKey}";
 
       // 1. Lấy lịch sử từ Redis
       var cachedData = await _cache.GetStringAsync(cacheKey);

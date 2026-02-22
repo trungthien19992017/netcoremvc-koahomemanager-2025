@@ -12,6 +12,7 @@
     <script src="~/js/app-chat.js"></script>
     <script>
         $(document).ready(function () {const $chatList = $(".chat-history-body ul"); // Selector chứa các thẻ <li>
+      
           const $historyContainer = $(".chat-history-body");
 
           // Hàm cuộn xuống cuối
@@ -20,6 +21,32 @@
                   scrollTop: $historyContainer[0].scrollHeight
               }, 300);
           }
+          const modelData = {
+              gemini: [
+                  { value: 'gemini-2.5-flash', text: 'gemini-2.5-flash' },
+                  { value: 'gemini-2.5-flash-lite', text: 'gemini-2.5-flash-lite' }
+              ],
+              openrouter: [
+                  { value: 'deepseek/deepseek-chat', text: 'deepseek-chat' },
+                  { value: 'deepseek/deepseek-r1-0528', text: 'deepseek-r1-0528' },
+                  { value: 'deepseek/deepseek-r1-0528:free', text: 'deepseek-r1-0528:free' },
+                  { value: 'minimax/minimax-m2.5', text: 'minimax-m2.5' }
+              ]
+          };
+
+          const providerSelect = document.getElementById('selectedProvider');
+          const modelSelect = document.getElementById('selectedModel');
+
+          function updateModels() {
+              const selected = providerSelect.value;
+              const models = modelData[selected] || [];
+    
+              // Xóa sạch các option cũ và render option mới
+              modelSelect.innerHTML = models.map(m => 
+                  `<option value="${m.value}">${m.text}</option>`
+              ).join('');
+          }
+          updateModels();
 
           // Hàm hỗ trợ tạo mẫu tin nhắn (Phía bên phải - User)
           function appendUserMessage(text, shortname) {
@@ -209,7 +236,7 @@
         }
 
         $("#selectedProvider").change(function () {
-
+          updateModels();
           var provider = $(this).val();
 
           $.ajax({
@@ -250,7 +277,7 @@
           <label for="selectedProvider">Chọn hãng AI:</label>
           <select id="selectedProvider" name="selectedProvider" class="form-control">
               <option value="gemini"selected>Gemini</option>
-              <option value="deepseek">Deep Seek</option>
+              <option value="openrouter">Open Router</option>
           </select>
       </div>
       <div class="form-group mt-2">
@@ -261,6 +288,7 @@
               <option value="deepseek/deepseek-chat">deepseek-chat</option>
               <option value="deepseek/deepseek-r1-0528">deepseek-r1-0528</option>
               <option value="deepseek/deepseek-r1-0528:free">deepseek-r1-0528:free</option>
+              <option value="minimax/minimax-m2.5">minimax-m2.5</option>
           </select>
       </div>
   </div>
