@@ -132,14 +132,14 @@ namespace KOAHome
       services.AddScoped<INetFormWizardService, NetFormWizardService>();
       services.AddScoped<IGoogleSheetService, GoogleSheetService>();
       services.AddScoped<GeminiService>();
-      services.AddScoped<DeepSeekService>();
+      services.AddScoped<OpenRouterService>();
       services.AddTransient<Func<string, IAiService>>(serviceProvider => key =>
       {
         return key.ToLower() switch
         {
           // Ép kiểu tường minh về IAiService
           "gemini" => (IAiService)serviceProvider.GetRequiredService<GeminiService>(),
-          "deepseek" => (IAiService)serviceProvider.GetRequiredService<DeepSeekService>(),
+          "openrouter" => (IAiService)serviceProvider.GetRequiredService<OpenRouterService>(),
           _ => throw new KeyNotFoundException("Không tìm thấy dịch vụ AI tương ứng")
         };
       });
