@@ -176,6 +176,7 @@ namespace KOAHome
       //  options.Configuration = Configuration["Redis:ConnectionString"];
       //  options.InstanceName = "KOAHome";
       //});
+      //a
 
       // add health check for deploy
       services.AddHealthChecks();
