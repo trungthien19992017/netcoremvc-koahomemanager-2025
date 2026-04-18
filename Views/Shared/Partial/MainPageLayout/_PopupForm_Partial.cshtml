@@ -63,11 +63,11 @@ asp-route-id="@id" data-modal-id="modal-PopupForm" enctype="multipart/form-data"
     <div class="modal-dialog modal-xl modal-dialog-centered" role="document">
         <div class="modal-content card mb-6">
             <div class="modal-header">
-                <h5 class="modal-title card-header" id="modalCenterTitle">@formTitle</h5>
+                <h5 class="modal-title card-header bg-label-primary d-flex justify-content-sm-between align-items-sm-center flex-column flex-sm-row" id="modalCenterTitle" style="@labelStyle">@formTitle</h5>
                 <button type="button"
-                class="btn-close"
-                data-bs-dismiss="modal"
-                aria-label="Close"></button>
+                        class="btn-close"
+                        data-bs-dismiss="modal"
+                        aria-label="Close"></button>
             </div>
             <div class="modal-body card-body">
                 @if (config_form != null)
