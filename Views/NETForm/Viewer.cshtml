@@ -589,7 +589,7 @@
                                                                 {
                                                                     <label for="@child_name" class="htmleditor-form-label"><i class="@iconclass" style="@iconstyle"></i> <span style="@labelstyle">@child_label</span> <span class='text-danger'>@(child_isrequired == true ? "*" : "")</span></label>
                                                                     // Quill Editor hiển thị
-                                                                    <div id="@("editor-container-"+child_name)" style="height:300px;" class="quill-editor"></div>
+                                                                    <div id="@("editor-container-"+child_name)" style="height:300px;" class="quill-editor" data-readonly="@(isreadonly == true ? "true" : "false")"></div>
                                                                     // Hidden input để submit
                                                                     <input type="hidden" id="@("editor-content-"+child_name)" name="@child_name" value="@child_value" />
                                                                 }
@@ -941,7 +941,7 @@
                                                     {
                                                         <label for="@name" class="htmleditor-form-label"><i class="@iconclass" style="@iconstyle"></i> <span style="@labelstyle">@label</span></label>
                                                         // Quill Editor hiển thị
-                                                        <div id="@("editor-container-"+name)" style="height:300px;" class="quill-editor"></div>
+                                                        <div id="@("editor-container-"+name)" style="height:300px;" class="quill-editor" data-readonly="@(isreadonly == true ? "true" : "false")"></div>
                                                         // Hidden input để submit
                                                         <input type="hidden" id="@("editor-content-"+name)" name="@name" value="@value" />
                                                     }

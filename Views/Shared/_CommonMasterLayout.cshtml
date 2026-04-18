@@ -1306,60 +1306,68 @@
 
         // xử lý Quill HTML editor cho field form
         document.addEventListener("DOMContentLoaded", function () {
-        var quillEditors = {}; // Lưu danh sách editor
-            document.querySelectorAll(".quill-editor").forEach(function (el) {
-                var id = el.id.replace("editor-container-", ""); // lấy fieldName
-                var hiddenInput = document.getElementById("editor-content-" + id);
+            var quillEditors = {}; // Lưu danh sách editor
+                document.querySelectorAll(".quill-editor").forEach(function (el) {
+                    var id = el.id.replace("editor-container-", ""); // lấy fieldName
+                    var hiddenInput = document.getElementById("editor-content-" + id);
 
-                // Khởi tạo Quill
-                var quill = new Quill("#" + el.id, {
-                    theme: "snow",
-                    placeholder: "Nhập nội dung tại đây...",
-                    modules: {
-                        toolbar: [
-                            ['bold', 'italic', 'underline', 'strike'],        // toggled buttons
-                            ['blockquote', 'code-block'],
-                            ['link', 'image', 'video', 'formula'],
+                    // 👉 đọc readonly từ data attribute
+                    var isReadonly = el.dataset.readonly === "true";
 
-                            [{ 'header': 1 }, { 'header': 2 }],               // custom button values
-                            [{ 'list': 'ordered'}, { 'list': 'bullet' }, { 'list': 'check' }],
-                            [{ 'script': 'sub'}, { 'script': 'super' }],      // superscript/subscript
-                            [{ 'indent': '-1'}, { 'indent': '+1' }],          // outdent/indent
-                            [{ 'direction': 'rtl' }],                         // text direction
+                    var toolbarOptions = [
+                        ['bold', 'italic', 'underline', 'strike'],
+                        ['blockquote', 'code-block'],
+                        ['link', 'image', 'video', 'formula'],
+                        [{ 'header': 1 }, { 'header': 2 }],
+                        [{ 'list': 'ordered'}, { 'list': 'bullet' }, { 'list': 'check' }],
+                        [{ 'script': 'sub'}, { 'script': 'super' }],
+                        [{ 'indent': '-1'}, { 'indent': '+1' }],
+                        [{ 'direction': 'rtl' }],
+                        [{ 'size': ['small', false, 'large', 'huge'] }],
+                        [{ 'header': [1, 2, 3, 4, 5, 6, false] }],
+                        [{ 'color': [] }, { 'background': [] }],
+                        [{ 'font': [] }],
+                        [{ 'align': [] }],
+                        ['clean']
+                    ];
 
-                            [{ 'size': ['small', false, 'large', 'huge'] }],  // custom dropdown
-                            [{ 'header': [1, 2, 3, 4, 5, 6, false] }],
+                    var quill = new Quill("#" + el.id, {
+                        theme: "snow",
+                        placeholder: isReadonly ? "" : "Nhập nội dung tại đây...",
+                        modules: {
+                            toolbar: isReadonly ? false : toolbarOptions
+                        }
+                    });
 
-                            [{ 'color': [] }, { 'background': [] }],          // dropdown with defaults from theme
-                            [{ 'font': [] }],
-                            [{ 'align': [] }],
+                    quill.enable(!isReadonly);
 
-                            ['clean']                                         // remove formatting button
-                          ]
+                    // Gán giá trị từ input nếu có (khi edit)
+                    if (hiddenInput && hiddenInput.value) {
+                        var val = hiddenInput.value.trim();
+  
+                        if (val.startsWith('<')) {
+                          quill.clipboard.dangerouslyPasteHTML(val);
+                        } else {
+                              quill.root.innerHTML = val;
+                        }
                     }
+
+                    // Lưu vào danh sách
+                    quillEditors[id] = quill;
                 });
 
-                // Gán giá trị từ input nếu có (khi edit)
-                if (hiddenInput.value) {
-                    quill.root.innerHTML = hiddenInput.value;
+                // Khi submit: đồng bộ nội dung
+                const form = document.querySelector("form");
+                if (form)
+                {
+                  form.addEventListener("submit", function () {
+                      for (var id in quillEditors) {
+                          var editor = quillEditors[id];
+                          var html = editor.root.innerHTML;
+                          document.getElementById("editor-content-" + id).value = html;
+                      }
+                  });
                 }
-
-                // Lưu vào danh sách
-                quillEditors[id] = quill;
-            });
-
-            // Khi submit: đồng bộ nội dung
-            const form = document.querySelector("form");
-            if (form)
-            {
-              form.addEventListener("submit", function () {
-                  for (var id in quillEditors) {
-                      var editor = quillEditors[id];
-                      var html = editor.root.innerHTML;
-                      document.getElementById("editor-content-" + id).value = html;
-                  }
-              });
-            }
         });
 
         // Hàm xử lý thay đổi cho input file

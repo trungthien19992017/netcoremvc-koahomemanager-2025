@@ -422,7 +422,7 @@ asp-route-id="@id" data-modal-id="modal-PopupForm" enctype="multipart/form-data"
                                                     {
                                                         <label for="@child_name" class="htmleditor-form-label"><i class="@iconclass" style="@iconstyle"></i> <span style="@labelstyle">@child_label</span> <span class='text-danger'>@(child_isrequired == true ? "*" : "")</span></label>
                                                         // Quill Editor hiển thị
-                                                        <div id="@("editor-container-"+child_name)" style="height:300px;" class="quill-editor"></div>
+                                                        <div id="@("editor-container-"+child_name)" style="height:300px;" class="quill-editor" data-readonly="@(isreadonly == true ? "true" : "false")"></div>
                                                         // Hidden input để submit
                                                         <input type="hidden" id="@("editor-content-"+child_name)" name="@child_name" value="@child_value" />
                                                     }
@@ -768,7 +768,7 @@ asp-route-id="@id" data-modal-id="modal-PopupForm" enctype="multipart/form-data"
                                         {
                                             <label for="@name" class="htmleditor-form-label"><span style="@labelstyle">@label</span></label>
                                             // Quill Editor hiển thị
-                                            <div id="@("editor-container-"+name)" style="height:300px;" class="quill-editor"></div>
+                                            <div id="@("editor-container-"+name)" style="height:300px;" class="quill-editor" data-readonly="@(isreadonly == true ? "true" : "false")"></div>
                                             // Hidden input để submit
                                             <input type="hidden" id="@("editor-content-"+name)" name="@name" value="@value" />
                                         }
@@ -1271,5 +1271,71 @@ asp-route-id="@id" data-modal-id="modal-PopupForm" enctype="multipart/form-data"
               // ✅ Gán lại vào DOM element để lấy lại sau
               form._fvInstance = fv;
             }
+        });
+        
+        // xu ly html editor
+          $(document).ready(function () {
+            var quillEditors = {}; // Lưu danh sách editor
+                document.querySelectorAll(".quill-editor").forEach(function (el) {
+                    var id = el.id.replace("editor-container-", ""); // lấy fieldName
+                    var hiddenInput = document.getElementById("editor-content-" + id);
+
+                    // 👉 đọc readonly từ data attribute
+                    var isReadonly = el.dataset.readonly === "true";
+
+                    var toolbarOptions = [
+                        ['bold', 'italic', 'underline', 'strike'],
+                        ['blockquote', 'code-block'],
+                        ['link', 'image', 'video', 'formula'],
+                        [{ 'header': 1 }, { 'header': 2 }],
+                        [{ 'list': 'ordered'}, { 'list': 'bullet' }, { 'list': 'check' }],
+                        [{ 'script': 'sub'}, { 'script': 'super' }],
+                        [{ 'indent': '-1'}, { 'indent': '+1' }],
+                        [{ 'direction': 'rtl' }],
+                        [{ 'size': ['small', false, 'large', 'huge'] }],
+                        [{ 'header': [1, 2, 3, 4, 5, 6, false] }],
+                        [{ 'color': [] }, { 'background': [] }],
+                        [{ 'font': [] }],
+                        [{ 'align': [] }],
+                        ['clean']
+                    ];
+
+                    var quill = new Quill("#" + el.id, {
+                        theme: "snow",
+                        placeholder: isReadonly ? "" : "Nhập nội dung tại đây...",
+                        modules: {
+                            toolbar: isReadonly ? false : toolbarOptions
+                        }
+                    });
+
+                    quill.enable(!isReadonly);
+
+                    // Gán giá trị từ input nếu có (khi edit)
+                    if (hiddenInput && hiddenInput.value) {
+                        var val = hiddenInput.value.trim();
+  
+                        if (val.startsWith('<')) {
+                          quill.clipboard.dangerouslyPasteHTML(val);
+                        } else {
+                              quill.root.innerHTML = val;
+                        }
+                    }
+
+                    // Lưu vào danh sách
+                    quillEditors[id] = quill;
+                });
+
+                // Khi submit: đồng bộ nội dung
+                const form = document.querySelector("form");
+                if (form)
+                {
+                  form.addEventListener("submit", function () {
+                      for (var id in quillEditors) {
+                          var editor = quillEditors[id];
+                          var html = editor.root.innerHTML;
+                          document.getElementById("editor-content-" + id).value = html;
+                      }
+                  });
+                }
         });
     </script>
