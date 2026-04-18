@@ -405,10 +405,12 @@
                                           var popupDictValue = ParseDataHelper.GetReplacePopupLinkWithResult(actionValue, null, listFilterValue);
                                           string actionFormCode = popupDictValue.ContainsKey("FORMCODE") ? popupDictValue["FORMCODE"].ToString() ?? "" : "";
                                           string actionLink = popupDictValue.ContainsKey("LINK") ? popupDictValue["LINK"].ToString() ?? "" : "";
-                                          <a href="" data-bs-toggle="modal" data-bs-target="#modal-PopupForm" data-actionlink="@actionLink" type="button" class="btn btn-icon btn-primary popupform-action" data-bs-toggle="tooltip" data-bs-offset="0,4" data-bs-placement="top" data-bs-html="true"
+                                        <span data-bs-toggle="tooltip" data-bs-offset="0,4" data-bs-placement="top" data-bs-html="true"
                                               title="<i class='@(actionIcon)'></i> <span>@actionName</span>">
-                                              <i class="@(actionIcon)"></i>
-                                          </a>
+                                              <a href="" data-bs-toggle="modal" data-bs-target="#modal-PopupForm" data-actionlink="@actionLink" type="button" class="btn btn-icon btn-primary popupform-action" >
+                                                  <i class="@(actionIcon)"></i>
+                                              </a>
+                                          </span>
                                       }
                                       else if (actionType == "IMPORT_FILEEXCEL")
                                       {

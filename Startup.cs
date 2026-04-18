@@ -172,10 +172,10 @@ namespace KOAHome
             }
         );
       });
-      services.AddStackExchangeRedisCache(options => {
-        options.Configuration = Configuration["Redis:ConnectionString"];
-        options.InstanceName = "KOAHome";
-      });
+      //services.AddStackExchangeRedisCache(options => {
+      //  options.Configuration = Configuration["Redis:ConnectionString"];
+      //  options.InstanceName = "KOAHome";
+      //});
 
       // add health check for deploy
       services.AddHealthChecks();
