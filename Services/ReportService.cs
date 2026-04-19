@@ -1,31 +1,18 @@
 
-using Microsoft.EntityFrameworkCore;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Mvc.Rendering;
 using KOAHome.EntityFramework;
-using Microsoft.Data.SqlClient;
-using Newtonsoft.Json;
-using System.Dynamic;
-using System.Text;
-using Newtonsoft.Json.Linq;
-using Microsoft.EntityFrameworkCore.Metadata.Internal;
-using System.Globalization;
-using System.Data;
-using System.Security.Cryptography;
-using System.Text.RegularExpressions;
-using OfficeOpenXml;
-using System.Reflection.Metadata;
-using System.ComponentModel;
-using LicenseContext = OfficeOpenXml.LicenseContext;
 using KOAHome.Helpers;
+using Microsoft.AspNetCore.Mvc.Rendering;
+using Microsoft.EntityFrameworkCore;
+using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 using Npgsql;
+using OfficeOpenXml;
+using System.Data;
+using System.Text;
 using System.Text.Json;
 using System.Web;
 using JsonSerializer = System.Text.Json.JsonSerializer;
+using LicenseContext = OfficeOpenXml.LicenseContext;
 
 namespace KOAHome.Services
 {
@@ -552,92 +539,99 @@ namespace KOAHome.Services
         sb.AppendLine($"<td class='{tdClass}' data-isexport='{isExport}'>{value}</td>");
       }
 
-      // Các cột STT nếu có
-      var sttCols = displayList
-          .Where(p => p.isdisplay == true && (p.code?.ToLower() == "stt") && p.isparent == false && string.IsNullOrEmpty(p.parentcode))
-          .OrderBy(p => p.colnum ?? 0);
+      //// Các cột STT nếu có
+      //var sttCols = displayList
+      //    .Where(p => p.isdisplay == true && (p.code?.ToLower() == "stt") && p.isparent == false && string.IsNullOrEmpty(p.parentcode))
+      //    .OrderBy(p => p.colnum ?? 0);
 
-      foreach (var display in sttCols)
-      {
-        var css = display.isfreepane == true ? "freepanze-col" : "";
-        var isExport = display.isexport?.ToString() ?? "True";
+      //foreach (var display in sttCols)
+      //{
+      //  var css = display.isfreepane == true ? "freepanze-col" : "";
+      //  var isExport = display.isexport?.ToString() ?? "True";
 
-        string fieldCode = display.code?.ToLower() ?? "";
-        string value = rowDict.TryGetValue(fieldCode, out var rawVal)
-            ? rawVal?.ToString() ?? "N/A"
-            : "N/A";
+      //  string fieldCode = display.code?.ToLower() ?? "";
+      //  string value = rowDict.TryGetValue(fieldCode, out var rawVal)
+      //      ? rawVal?.ToString() ?? "N/A"
+      //      : "N/A";
 
-        sb.AppendLine($"<td class='text-center {css}' data-isexport='{isExport}'>{HttpUtility.HtmlEncode(value)}</td>");
-      }
+      //  sb.AppendLine($"<td class='text-center {css}' data-isexport='{isExport}'>{HttpUtility.HtmlEncode(value)}</td>");
+      //}
 
-      // Xử lý dropdown action list từ actionListDetailGrid
-      sb.AppendLine("<td class='text-center' data-isexport='False'>");
-      sb.AppendLine("<div class='demo-inline-spacing'>");
-      sb.AppendLine("<div class='btn-group' id='dropdown-icon-demo'>");
-      sb.AppendLine("<button type='button' class='btn btn-primary btn-xs dropdown-toggle' data-bs-toggle='dropdown' aria-expanded='false'><i class='ri-align-justify me-1'></i></button>");
-      sb.AppendLine("<ul class='dropdown-menu overflow-auto' style='max-height:200px'>");
+      //// Xử lý dropdown action list từ actionListDetailGrid
+      //sb.AppendLine("<td class='text-center' data-isexport='False'>");
+      //sb.AppendLine("<div class='demo-inline-spacing'>");
+      //sb.AppendLine("<div class='btn-group' id='dropdown-icon-demo'>");
+      //sb.AppendLine("<button type='button' class='btn btn-primary btn-xs dropdown-toggle' data-bs-toggle='dropdown' aria-expanded='false'><i class='ri-align-justify me-1'></i></button>");
+      //sb.AppendLine("<ul class='dropdown-menu overflow-auto' style='max-height:200px'>");
 
-      var actionlistdetailList_grid = null as List<dynamic>;
-      // neu ton tai action list detail
-      if (actionlistdetailList != null)
-      {
-        // phan biet action top va grid
-        actionlistdetailList_grid = actionlistdetailList.Where(p => p.istop == null || p.istop == false).ToList();
-      }
+      //var actionlistdetailList_grid = null as List<dynamic>;
+      //// neu ton tai action list detail
+      //if (actionlistdetailList != null)
+      //{
+      //  // phan biet action top va grid
+      //  actionlistdetailList_grid = actionlistdetailList.Where(p => p.istop == null || p.istop == false).ToList();
+      //}
 
-      foreach (var action in actionlistdetailList_grid.OrderBy(p => p.actionlistdetailorderid))
-      {
-        var actionDict = (IDictionary<string, object>)action;
-        string actionName = actionDict.ContainsKey("actionname") ? (actionDict["actionname"].ToString() ?? "") : "";
-        string actionCode = actionDict.ContainsKey("actioncode") ? (actionDict["actioncode"].ToString() ?? "") : "";
-        bool actionIsTop = actionDict.ContainsKey("istop") ? Convert.ToBoolean(actionDict["istop"]) : false;
-        string actionIcon = actionDict.ContainsKey("actionicon") ? (actionDict["actionicon"].ToString() ?? "") : "";
-        string actionType = actionDict["type"].ToString() ?? "";
-        string actionValue = actionDict["value"].ToString() ?? "";
+      //foreach (var action in actionlistdetailList_grid.OrderBy(p => p.actionlistdetailorderid))
+      //{
+      //  var actionDict = (IDictionary<string, object>)action;
+      //  string actionName = actionDict.ContainsKey("actionname") ? (actionDict["actionname"].ToString() ?? "") : "";
+      //  string actionCode = actionDict.ContainsKey("actioncode") ? (actionDict["actioncode"].ToString() ?? "") : "";
+      //  bool actionIsTop = actionDict.ContainsKey("istop") ? Convert.ToBoolean(actionDict["istop"]) : false;
+      //  string actionIcon = actionDict.ContainsKey("actionicon") ? (actionDict["actionicon"].ToString() ?? "") : "";
+      //  string actionType = actionDict["type"].ToString() ?? "";
+      //  string actionValue = actionDict["value"].ToString() ?? "";
 
-        if (actionType == "LINK")
-        {
-          string url = ParseDataHelper.GetReplaceLinkWithResult(actionValue, rowDict, listFilterValue);
-          sb.AppendLine($"<li><a href='{url}' class='dropdown-item'><i class='{actionIcon + " me-1 text-primary"}'></i> {actionName}</a></li>");
-        }
-        else if (actionType == "STORE")
-        {
-          string actionStore = actionValue;
-          bool isPopupConfirm = Convert.ToBoolean(actionDict["ispopupconfirm"]);
-          int? dataSourceID = actionDict.TryGetValue("datasourceid", out var num) && num is int val ? Convert.ToInt32(num) : null;
-          string confirmButtonText = !string.IsNullOrWhiteSpace(actionDict["confirmbuttontext"].ToString()) ? actionDict["confirmbuttontext"].ToString() : null;
-          string confirmTitle = !string.IsNullOrWhiteSpace(actionDict["confirmtitle"].ToString()) ? actionDict["confirmtitle"].ToString() : null;
-          string confirmText = !string.IsNullOrWhiteSpace(actionDict["confirmtext"].ToString()) ? actionDict["confirmtext"].ToString() : null;
-          sb.AppendLine("<li>");
-          sb.AppendLine(isPopupConfirm
-              ? $"<a href='' data-id='{rowId}' data-isconfirm='{isPopupConfirm}' data-confirmtext='{confirmText}' data-confirmtitle='{confirmTitle}' data-confirmbutton='{confirmButtonText}' data-sqlstore='{actionStore}' data-datasourceid='{dataSourceID}' class='dropdown-item confirmAction'><i class='{actionIcon + " me-1 text-primary"}'></i> {actionName}</a>"
-              : $"<a href='' data-id='{rowId}' data-sqlstore='{actionStore}' data-datasourceid='{dataSourceID}' class='dropdown-item confirmAction'><i class='{actionIcon + " me-1 text-primary"}'></i> {actionName}</a>");
-          sb.AppendLine("</li>");
-        }
-        else if (actionType == "POPUPFORM")
-        {
-          var popupDictValue = ParseDataHelper.GetReplacePopupLinkWithResult(actionValue, rowDict, listFilterValue);
-          string actionFormCode = popupDictValue.ContainsKey("FORMCODE") ? popupDictValue["FORMCODE"].ToString() ?? "" : "";
-          string actionLink = popupDictValue.ContainsKey("LINK") ? popupDictValue["LINK"].ToString() ?? "" : "";
-          sb.AppendLine($"<li><a href='' data-bs-toggle='modal' data-bs-target='#modal-PopupForm' data-actionlink='{actionLink}' class='dropdown-item popupform-action'><i class='{actionIcon + " me-1 text-primary"}'></i> {actionName}</a></li>");
-        }
-        else
-        {
-          string url = ParseDataHelper.GetReplaceLinkWithResult(actionValue, rowDict, listFilterValue);
-          sb.AppendLine($"<li><a href='{url}' class='dropdown-item'><i class='{actionIcon + " me-1 text-primary"}'></i> {actionName}</a></li>");
-        }
-      }
+      //  if (actionType == "LINK")
+      //  {
+      //    string url = ParseDataHelper.GetReplaceLinkWithResult(actionValue, rowDict, listFilterValue);
+      //    sb.AppendLine($"<li><a href='{url}' class='dropdown-item'><i class='{actionIcon + " me-1 text-primary"}'></i> {actionName}</a></li>");
+      //  }
+      //  else if (actionType == "STORE")
+      //  {
+      //    string actionStore = actionValue;
+      //    bool isPopupConfirm = Convert.ToBoolean(actionDict["ispopupconfirm"]);
+      //    int? dataSourceID = actionDict.TryGetValue("datasourceid", out var num) && num is int val ? Convert.ToInt32(num) : null;
+      //    string confirmButtonText = !string.IsNullOrWhiteSpace(actionDict["confirmbuttontext"].ToString()) ? actionDict["confirmbuttontext"].ToString() : null;
+      //    string confirmTitle = !string.IsNullOrWhiteSpace(actionDict["confirmtitle"].ToString()) ? actionDict["confirmtitle"].ToString() : null;
+      //    string confirmText = !string.IsNullOrWhiteSpace(actionDict["confirmtext"].ToString()) ? actionDict["confirmtext"].ToString() : null;
+      //    sb.AppendLine("<li>");
+      //    sb.AppendLine(isPopupConfirm
+      //        ? $"<a href='' data-id='{rowId}' data-isconfirm='{isPopupConfirm}' data-confirmtext='{confirmText}' data-confirmtitle='{confirmTitle}' data-confirmbutton='{confirmButtonText}' data-sqlstore='{actionStore}' data-datasourceid='{dataSourceID}' class='dropdown-item confirmAction'><i class='{actionIcon + " me-1 text-primary"}'></i> {actionName}</a>"
+      //        : $"<a href='' data-id='{rowId}' data-sqlstore='{actionStore}' data-datasourceid='{dataSourceID}' class='dropdown-item confirmAction'><i class='{actionIcon + " me-1 text-primary"}'></i> {actionName}</a>");
+      //    sb.AppendLine("</li>");
+      //  }
+      //  else if (actionType == "POPUPFORM")
+      //  {
+      //    var popupDictValue = ParseDataHelper.GetReplacePopupLinkWithResult(actionValue, rowDict, listFilterValue);
+      //    string actionFormCode = popupDictValue.ContainsKey("FORMCODE") ? popupDictValue["FORMCODE"].ToString() ?? "" : "";
+      //    string actionLink = popupDictValue.ContainsKey("LINK") ? popupDictValue["LINK"].ToString() ?? "" : "";
+      //    sb.AppendLine($"<li><a href='' data-bs-toggle='modal' data-bs-target='#modal-PopupForm' data-actionlink='{actionLink}' class='dropdown-item popupform-action'><i class='{actionIcon + " me-1 text-primary"}'></i> {actionName}</a></li>");
+      //  }
+      //  else
+      //  {
+      //    string url = ParseDataHelper.GetReplaceLinkWithResult(actionValue, rowDict, listFilterValue);
+      //    sb.AppendLine($"<li><a href='{url}' class='dropdown-item'><i class='{actionIcon + " me-1 text-primary"}'></i> {actionName}</a></li>");
+      //  }
+      //}
 
-      sb.AppendLine("</ul>");
-      sb.AppendLine("</div>");
-      sb.AppendLine("</div>");
-      sb.AppendLine("</td>");
+      //sb.AppendLine("</ul>");
+      //sb.AppendLine("</div>");
+      //sb.AppendLine("</div>");
+      //sb.AppendLine("</td>");
 
       // Xử lý cột không có parentcode và không phải là parent
       var columnsWithoutParent = displayList
-          .Where(p => p.isdisplay == true && p.code?.ToLower() != "stt" && p.isparent == false && string.IsNullOrEmpty(p.parentcode))
+          .Where(p => p.isdisplay == true /*&& p.code?.ToLower() != "stt" */&& p.isparent == false && string.IsNullOrEmpty(p.parentcode))
           .OrderBy(p => p.colnum ?? 0);
 
+      var lastFreePaneCode = columnsWithoutParent.Where(p => p.isfreepane == true).OrderBy(p => p.colnum ?? 0).LastOrDefault()?.code?.ToLower();
+
+
+      if (lastFreePaneCode == null)
+      {
+        RenderActionDropdown(sb, actionlistdetailList, result, listFilterValue);
+      }
       foreach (var display in columnsWithoutParent)
       {
         var displayType = display.type as string ?? "link";
@@ -754,7 +748,13 @@ namespace KOAHome.Services
         }
 
         sb.AppendLine("</td>");
+
+        if (displayCode == lastFreePaneCode)
+        {
+          RenderActionDropdown(sb, actionlistdetailList, result, listFilterValue);
+        }
       }
+
       // **Xử lý cột có isparent == true và các cột con (2 cấp)**
       var parentColumns = displayList
           .Where(p => p.isparent == true && p.isdisplay == true)
@@ -897,6 +897,69 @@ namespace KOAHome.Services
       sb.AppendLine("</tr>");
 
       return sb.ToString();
+    }
+
+    void RenderActionDropdown(StringBuilder sb, List<dynamic> actionlistdetailList, dynamic result, Dictionary<string, object> listFilterValue)
+    {
+      var rowDict = (IDictionary<string, object>)result;
+      var rowId = rowDict.ContainsKey("id") ? Convert.ToInt32(rowDict["id"]) : 0;
+
+      sb.AppendLine("<td class='text-center' data-isexport='False'>");
+      sb.AppendLine("<div class='demo-inline-spacing'>");
+      sb.AppendLine("<div class='btn-group' id='dropdown-icon-demo'>");
+      sb.AppendLine("<button type='button' class='btn btn-primary btn-xs dropdown-toggle' data-bs-toggle='dropdown' aria-expanded='false'><i class='ri-align-justify me-1'></i></button>");
+      sb.AppendLine("<ul class='dropdown-menu overflow-auto' style='max-height:200px'>");
+
+      var actionlistdetailList_grid = actionlistdetailList?
+          .Where(p => p.istop == null || p.istop == false)
+          .ToList() ?? new List<dynamic>();
+
+      foreach (var action in actionlistdetailList_grid.OrderBy(p => p.actionlistdetailorderid))
+      {
+        var actionDict = (IDictionary<string, object>)action;
+        string actionName = actionDict.ContainsKey("actionname") ? (actionDict["actionname"].ToString() ?? "") : "";
+        string actionCode = actionDict.ContainsKey("actioncode") ? (actionDict["actioncode"].ToString() ?? "") : "";
+        string actionIcon = actionDict.ContainsKey("actionicon") ? (actionDict["actionicon"].ToString() ?? "") : "";
+        string actionType = actionDict["type"].ToString() ?? "";
+        string actionValue = actionDict["value"].ToString() ?? "";
+        bool actionIsTop = actionDict.ContainsKey("istop") ? Convert.ToBoolean(actionDict["istop"]) : false;
+
+        if (actionType == "LINK")
+        {
+          string url = ParseDataHelper.GetReplaceLinkWithResult(actionValue, rowDict, listFilterValue);
+          sb.AppendLine($"<li><a href='{url}' class='dropdown-item'><i class='{actionIcon} me-1 text-primary'></i> {actionName}</a></li>");
+        }
+        else if (actionType == "STORE")
+        {
+          bool isPopupConfirm = Convert.ToBoolean(actionDict["ispopupconfirm"]);
+          int? dataSourceID = actionDict.TryGetValue("datasourceid", out var num) ? Convert.ToInt32(num) : null;
+          string confirmButtonText = !string.IsNullOrWhiteSpace(actionDict["confirmbuttontext"].ToString()) ? actionDict["confirmbuttontext"].ToString() : null;
+          string confirmTitle = !string.IsNullOrWhiteSpace(actionDict["confirmtitle"].ToString()) ? actionDict["confirmtitle"].ToString() : null;
+          string confirmText = !string.IsNullOrWhiteSpace(actionDict["confirmtext"].ToString()) ? actionDict["confirmtext"].ToString() : null;
+          sb.AppendLine("<li>");
+          sb.AppendLine(isPopupConfirm
+              ? $"<a href='' data-id='{rowId}' data-isconfirm='{isPopupConfirm}' data-confirmtext='{confirmText}' data-confirmtitle='{confirmTitle}' data-confirmbutton='{confirmButtonText}' data-sqlstore='{actionValue}' data-datasourceid='{dataSourceID}' class='dropdown-item confirmAction'><i class='{actionIcon} me-1 text-primary'></i> {actionName}</a>"
+              : $"<a href='' data-id='{rowId}' data-sqlstore='{actionValue}' data-datasourceid='{dataSourceID}' class='dropdown-item confirmAction'><i class='{actionIcon} me-1 text-primary'></i> {actionName}</a>");
+          sb.AppendLine("</li>");
+        }
+        else if (actionType == "POPUPFORM")
+        {
+          var popupDictValue = ParseDataHelper.GetReplacePopupLinkWithResult(actionValue, rowDict, listFilterValue);
+          string actionFormCode = popupDictValue.ContainsKey("FORMCODE") ? popupDictValue["FORMCODE"].ToString() ?? "" : "";
+          string actionLink = popupDictValue.ContainsKey("LINK") ? popupDictValue["LINK"].ToString() ?? "" : "";
+          sb.AppendLine($"<li><a href='' data-bs-toggle='modal' data-bs-target='#modal-PopupForm' data-actionlink='{actionLink}' class='dropdown-item popupform-action'><i class='{actionIcon} me-1 text-primary'></i> {actionName}</a></li>");
+        }
+        else
+        {
+          string url = ParseDataHelper.GetReplaceLinkWithResult(actionValue, rowDict, listFilterValue);
+          sb.AppendLine($"<li><a href='{url}' class='dropdown-item'><i class='{actionIcon} me-1 text-primary'></i> {actionName}</a></li>");
+        }
+      }
+
+      sb.AppendLine("</ul>");
+      sb.AppendLine("</div>");
+      sb.AppendLine("</div>");
+      sb.AppendLine("</td>");
     }
   }
 }

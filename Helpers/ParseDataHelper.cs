@@ -2,6 +2,7 @@ using Microsoft.EntityFrameworkCore.Metadata.Internal;
 using Microsoft.Extensions.Primitives;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
+using System.Text;
 using System.Text.RegularExpressions;
 
 namespace KOAHome.Helpers
@@ -259,6 +260,42 @@ namespace KOAHome.Helpers
       }
 
       return new Dictionary<string, object>();
+    }
+
+    public static string JsonToStyle(string json)
+    {
+      if (string.IsNullOrWhiteSpace(json))
+        return string.Empty;
+
+      var jObj = JObject.Parse(json);
+      var sb = new StringBuilder();
+
+      void ParseToken(JToken token, string? prefix = null)
+      {
+        foreach (var prop in token.Children<JProperty>())
+        {
+          var key = string.IsNullOrEmpty(prefix) ? prop.Name : $"{prefix}-{prop.Name}";
+
+          if (prop.Value.Type == JTokenType.Object)
+          {
+            // đệ quy nếu là object
+            ParseToken(prop.Value, key);
+          }
+          else
+          {
+            var value = prop.Value.ToString();
+
+            if (!string.IsNullOrWhiteSpace(value))
+            {
+              sb.Append($"{key}:{value};");
+            }
+          }
+        }
+      }
+
+      ParseToken(jObj);
+
+      return sb.ToString();
     }
   }
 }
