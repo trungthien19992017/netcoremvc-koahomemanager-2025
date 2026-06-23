@@ -46,6 +46,153 @@
                   });
               });
           });
+          $(document).ready(function () {
+            $('#ocrFormMultiple').on('submit', function (e) {
+                e.preventDefault();
+
+                var formData = new FormData(this);
+                $('#loading').removeClass('d-none');
+                $('#btnUploadMultiple').prop('disabled', true);
+                $('#resultBody').empty(); // Xóa kết quả cũ trước khi render mới
+
+                $.ajax({
+                    url: '/Dashboards/ScanMultipleCards', // Đường dẫn tới Action mới
+                    type: 'POST',
+                    data: formData,
+                    contentType: false,
+                    processData: false,
+                    success: function (response) {
+                        $('#loading').addClass('d-none');
+                        $('#btnUploadMultiple').prop('disabled', false);
+
+                        if (response.success) {
+                            if (response.results.length === 0) {
+                                $('#resultBody').html('<tr><td colspan="5" class="text-center text-muted">Không bóc tách được file nào.</td></tr>');
+                                return;
+                            }
+
+                            // Duyệt mảng kết quả trả về từ server để build từng dòng table
+                            $.each(response.results, function (index, item) {
+                                var row = `<tr>
+                                    <td class="text-truncate" style="max-width: 150px;" title="${item.fileName}"><strong>${item.fileName}</strong></td>
+                                    <td class="text-danger fw-bold">${item.idNumber}</td>
+                                    <td class="text-dark fw-bold">${item.fullName}</td>
+                                    <td>${item.birthDate}</td>
+                                    <td>${item.gender}</td>
+                                </tr>`;
+                                $('#resultBody').append(row);
+                            });
+                        } else {
+                            alert(response.message);
+                        }
+                    },
+                    error: function () {
+                        $('#loading').addClass('d-none');
+                        $('#btnUploadMultiple').prop('disabled', false);
+                        alert('Đã xảy ra lỗi hệ thống khi upload danh sách ảnh.');
+                    }
+                });
+            });
+        });
+        $(document).ready(function () {
+          $('#ocrFormMultiple1').on('submit', function (e) {
+            e.preventDefault();
+
+            var formData = new FormData(this);
+            var files = document.getElementById('fileInputMultiple1').files;
+
+            if (!files || files.length === 0) {
+              alert('Vui lòng chọn ít nhất 1 ảnh.');
+              return;
+            }
+
+            $('#loading').removeClass('d-none');
+            $('#btnUploadMultiple1').prop('disabled', true);
+            $('#resultsContainer').html(''); // Reset
+            $('#noResults').addClass('d-none');
+
+            $.ajax({
+              url: '/Dashboards/ScanCardsMultiple1', // Endpoint xử lý multiple files
+              type: 'POST',
+              data: formData,
+              contentType: false,
+              processData: false,
+              success: function (response) {
+                $('#loading').addClass('d-none');
+                $('#btnUploadMultiple1').prop('disabled', false);
+
+                if (response.success && response.data && response.data.length > 0) {
+                  renderResults(response.data);
+                } else {
+                  alert(response.message || 'Không xử lý được file nào.');
+                }
+              },
+              error: function () {
+                $('#loading').addClass('d-none');
+                $('#btnUploadMultiple1').prop('disabled', false);
+                alert('Đã xảy ra lỗi hệ thống khi upload ảnh.');
+              }
+            });
+          });
+
+          function renderResults(results) {
+            var container = $('#resultsContainer');
+            container.html('');
+
+            results.forEach(function (item, index) {
+              var accordionItem = `
+                <div class="accordion-item">
+                  <h2 class="accordion-header">
+                    <button class="accordion-button ${index > 0 ? 'collapsed' : ''}" type="button" data-bs-toggle="collapse" data-bs-target="#collapse${index}">
+                      <strong>${item.fileName}</strong>
+                      ${item.success ? `<span class="badge bg-success ms-2">CCCD: ${item.data.idNumber}</span>` : `<span class="badge bg-danger ms-2">Thất bại</span>`}
+                    </button>
+                  </h2>
+                  <div id="collapse${index}" class="accordion-collapse collapse ${index === 0 ? 'show' : ''}" data-bs-parent="#resultsContainer">
+                    <div class="accordion-body">
+                      ${item.success ? renderSuccessContent(item.data, item.rawText) : `<p class="text-danger">${item.error}</p>`}
+                    </div>
+                  </div>
+                </div>
+              `;
+              container.append(accordionItem);
+            });
+
+            $('#noResults').addClass('d-none');
+          }
+
+          function renderSuccessContent(data, rawText) {
+            return `
+              <div class="mb-2">
+                <strong>Số CCCD:</strong> <span class="text-danger fw-bold">${data.idNumber}</span>
+              </div>
+              <div class="mb-2">
+                <strong>Họ tên:</strong> <span class="text-dark fw-bold">${data.fullName}</span>
+              </div>
+              <div class="mb-2">
+                <strong>Ngày sinh:</strong> <span class="text-dark">${data.birthDate}</span>
+              </div>
+              <div class="mb-3">
+                <strong>Giới tính:</strong> <span class="text-dark">${data.gender}</span>
+              </div>
+              <details>
+                <summary class="text-muted" style="cursor:pointer;">Xem text thô (Raw text từ Google Vision API)</summary>
+                <pre class="bg-dark text-light p-2 mt-2" style="max-height: 150px; overflow-y: auto; font-size: 11px;">${escapeHtml(rawText)}</pre>
+              </details>
+            `;
+          }
+
+          function escapeHtml(text) {
+            var map = {
+              '&': '&amp;',
+              '<': '&lt;',
+              '>': '&gt;',
+              '"': '&quot;',
+              "'": '&#039;'
+            };
+            return text.replace(/[&<>"']/g, function (m) { return map[m]; });
+          }
+        });
     </script>
 }
     <div class="container mt-5">
@@ -56,10 +203,11 @@
                         <h5 class="card-title mb-0">Tích hợp OCR - Quét CCCD nhanh</h5>
                     </div>
                     <div class="card-body">
+                    <strong class="mb-0 text-primary"><i class="ri-id-card-line" style="color:#024CAA;font-size:50px"></i> <span style="font-weight:bold;font-size:18px;color:#024CAA">Nhập 1 khách</span></strong>
                         <form id="ocrForm" enctype="multipart/form-data">
                             <div class="mb-3">
                                 <label for="fileInput" class="form-label">Chọn ảnh CCCD khách gửi</label>
-                                <input class="form-control" type="file" id="fileInput" name="file" accept="image/*" required>
+                                <input class="form-control" type="file" id="fileInput" name="file" accept="image/*" required multiple>
                             </div>
                             <button type="submit" class="btn btn-primary w-100" id="btnUpload">Bắt đầu quét bằng AI (Async)</button>
                         </form>
@@ -89,6 +237,72 @@
                             <summary class="text-muted" style="cursor:pointer;">Xem text thô (Raw text từ Tesseract)</summary>
                             <pre id="rawText" class="bg-dark text-light p-2 mt-2 style-scroll" style="max-height: 150px; overflow-y: auto; font-size: 12px;"></pre>
                         </details>
+                        <br />
+                        <strong class="mb-0 text-primary"><i class="ri-id-card-line" style="color:#024CAA;font-size:50px"></i> <span style="font-weight:bold;font-size:18px;color:#024CAA">Nhập nhiều khách</span></strong>
+                        <form id="ocrFormMultiple" enctype="multipart/form-data">
+                            <div class="mb-3">
+                                <label for="fileInput" class="form-label">Chọn các ảnh CCCD khách gửi (Chọn nhiều file)</label>
+                                <input class="form-control" type="file" id="fileInput" name="files" accept="image/*" required multiple>
+                            </div>
+                            <button type="submit" class="btn btn-primary w-100" id="btnUploadMultiple">Bắt đầu quét bằng AI (Async)</button>
+                        </form>
+
+                        <div id="loading" class="text-center my-3 d-none">
+                            <div class="spinner-border text-primary" role="status"></div>
+                            <p class="mt-2 text-muted">Đang quét đồng thời các hình ảnh, vui lòng đợi...</p>
+                        </div>
+
+                        <hr>
+
+                        <h5 class="mb-3 text-secondary">Kết quả trích xuất danh sách:</h5>
+                        <div class="table-responsive">
+                            <table class="table table-bordered table-striped align-middle" id="resultTable">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th>Tên File</th>
+                                        <th>Số CCCD</th>
+                                        <th>Họ và Tên</th>
+                                        <th>Ngày sinh</th>
+                                        <th>Giới tính</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="resultBody">
+                                    <tr>
+                                        <td colspan="5" class="text-center text-muted">Chưa có dữ liệu. Vui lòng chọn ảnh và bấm quét.</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="card shadow-sm">
+                    <div class="card-header bg-primary text-white">
+                        <h5 class="card-title mb-0">Tích hợp OCR - Quét CCCD nhanh</h5>
+                    </div>
+                    <div class="card-body">
+                        <form id="ocrFormMultiple1" enctype="multipart/form-data">
+                            <div class="mb-3">
+                                <label for="fileInputMultiple1" class="form-label">Chọn ảnh CCCD khách gửi</label>
+                                <input class="form-control" type="file" id="fileInputMultiple1" name="files" accept="image/*" required multiple>
+                            </div>
+                            <button type="submit" class="btn btn-primary w-100" id="btnUploadMultiple1">Bắt đầu quét bằng AI (Async)</button>
+                        </form>
+
+                        <div id="loading" class="text-center my-3 d-none">
+                            <div class="spinner-border text-primary" role="status"></div>
+                            <p class="mt-2 text-muted">Đang xử lý hình ảnh, vui lòng đợi...</p>
+                        </div>
+
+                        <hr>
+
+                        <h5 class="mb-3 text-secondary">Kết quả trích xuất:</h5>
+
+                        <!-- Accordion để group từng file -->
+                        <div id="resultsContainer" class="accordion"></div>
+
+                        <div id="noResults" class="alert alert-info">Chưa có kết quả. Vui lòng upload ảnh.</div>
                     </div>
                 </div>
             </div>
