@@ -25,9 +25,10 @@ public class DashboardsController : Controller
   private readonly IGoogleSheetService _googleSheetService;
   private readonly string _tessdataPath;
   private readonly IHttpClientFactory _httpClientFactory;
+  private readonly string _googleCloudVisionApiKey;
 
 
-  public DashboardsController(ILogger<DashboardsController> logger, IWidgetService widget, IReportService reportService, IGoogleSheetService googleSheetService, IWebHostEnvironment webHostEnvironment, IHttpClientFactory httpClientFactory)
+  public DashboardsController(ILogger<DashboardsController> logger, IWidgetService widget, IReportService reportService, IGoogleSheetService googleSheetService, IWebHostEnvironment webHostEnvironment, IHttpClientFactory httpClientFactory, IConfiguration configuration)
   {
     _logger = logger;
     _widget = widget;
@@ -35,6 +36,7 @@ public class DashboardsController : Controller
     _googleSheetService = googleSheetService;
     _tessdataPath = Path.Combine(webHostEnvironment.WebRootPath, "tessdata");
     _httpClientFactory = httpClientFactory;
+    _googleCloudVisionApiKey = configuration["Google:CloudVisionApiKey"];
   }
 
   public async Task<IActionResult> Index()
@@ -285,7 +287,7 @@ public class DashboardsController : Controller
 
     try
     {
-      string apiKey = "AIzaSyB2AMjsvEBM5exdUf8ZwC0KW5FqATZfBw4";
+      string apiKey = _googleCloudVisionApiKey;
 
       // 1. Đọc file ảnh chuyển thành chuỗi Base64
       using var memoryStream = new MemoryStream();
