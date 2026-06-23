@@ -1,0 +1,96 @@
+@{
+    ViewData["Title"] = "Tích hợp OCR - Quét CCCD nhanh";
+    Layout = "~/Views/Shared/_ContentNavbarLayout.cshtml";
+}
+@section VendorStyles {
+}
+
+@section VendorScripts {
+}
+
+@section PageScripts {
+  <script>
+          $(document).ready(function () {
+              $('#ocrForm').on('submit', function (e) {
+                  e.preventDefault();
+
+                  var formData = new FormData(this);
+                  $('#loading').removeClass('d-none');
+                  $('#btnUpload').prop('disabled', true);
+
+                  $.ajax({
+                      url: '/Dashboards/ScanCard',
+                      type: 'POST',
+                      data: formData,
+                      contentType: false,
+                      processData: false,
+                      success: function (response) {
+                          $('#loading').addClass('d-none');
+                          $('#btnUpload').prop('disabled', false);
+
+                          if (response.success) {
+                              $('#resId').text(response.data.idNumber);
+                              $('#resName').text(response.data.fullName);
+                              $('#resBirthDate').text(response.data.birthDate);
+                              $('#resGender').text(response.data.gender);
+                              $('#rawText').text(response.rawText);
+                          } else {
+                              alert(response.message);
+                          }
+                      },
+                      error: function () {
+                          $('#loading').addClass('d-none');
+                          $('#btnUpload').prop('disabled', false);
+                          alert('Đã xảy ra lỗi hệ thống khi upload ảnh.');
+                      }
+                  });
+              });
+          });
+    </script>
+}
+    <div class="container mt-5">
+        <div class="row justify-content-center">
+            <div class="col-md-6">
+                <div class="card shadow-sm">
+                    <div class="card-header bg-primary text-white">
+                        <h5 class="card-title mb-0">Tích hợp OCR - Quét CCCD nhanh</h5>
+                    </div>
+                    <div class="card-body">
+                        <form id="ocrForm" enctype="multipart/form-data">
+                            <div class="mb-3">
+                                <label for="fileInput" class="form-label">Chọn ảnh CCCD khách gửi</label>
+                                <input class="form-control" type="file" id="fileInput" name="file" accept="image/*" required>
+                            </div>
+                            <button type="submit" class="btn btn-primary w-100" id="btnUpload">Bắt đầu quét bằng AI (Async)</button>
+                        </form>
+
+                        <div id="loading" class="text-center my-3 d-none">
+                            <div class="spinner-border text-primary" role="status"></div>
+                            <p class="mt-2 text-muted">Đang xử lý hình ảnh, vui lòng đợi...</p>
+                        </div>
+
+                        <hr>
+
+                        <h5 class="mb-3 text-secondary">Kết quả trích xuất:</h5>
+                        <div class="mb-2">
+                            <strong>Số CCCD:</strong> <span id="resId" class="text-danger fw-bold">-</span>
+                        </div>
+                        <div class="mb-2">
+                            <strong>Họ tên:</strong> <span id="resName" class="text-dark fw-bold">-</span>
+                        </div>
+                        <div class="mb-3">
+                            <strong>Ngày sinh:</strong> <span id="resBirthDate" class="text-dark">-</span>
+                        </div>
+                        <div class="mb-3">
+                            <strong>Giới tính:</strong> <span id="resGender" class="text-dark">-</span>
+                        </div>
+
+                        <details>
+                            <summary class="text-muted" style="cursor:pointer;">Xem text thô (Raw text từ Tesseract)</summary>
+                            <pre id="rawText" class="bg-dark text-light p-2 mt-2 style-scroll" style="max-height: 150px; overflow-y: auto; font-size: 12px;"></pre>
+                        </details>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>

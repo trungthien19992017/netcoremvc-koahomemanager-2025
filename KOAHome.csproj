@@ -1,4 +1,4 @@
-<Project Sdk="Microsoft.NET.Sdk.Web">
+﻿<Project Sdk="Microsoft.NET.Sdk.Web">
 
   <PropertyGroup>
     <TargetFramework>net9.0</TargetFramework>
@@ -16,6 +16,7 @@
     <PackageReference Include="Dapper.DynamicReportGenerator" Version="0.3.3" />
     <PackageReference Include="EPPlus" Version="7.0.0" />
     <PackageReference Include="Google.Apis.Sheets.v4" Version="1.50.0.2175" />
+    <PackageReference Include="Google.Cloud.Vision.V1" Version="3.0.0" />
     <PackageReference Include="Google.GenAI" Version="0.13.1" />
     <PackageReference Include="Microsoft.AspNetCore.Authentication.Google" Version="9.0.1" />
     <PackageReference Include="Microsoft.AspNetCore.Identity.EntityFrameworkCore" Version="9.0.1" />
@@ -36,6 +37,7 @@
     <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL.Design" Version="1.1.0" />
     <PackageReference Include="OpenAI" Version="2.8.0" />
     <PackageReference Include="Serilog.AspNetCore" Version="8.0.0" />
+    <PackageReference Include="Tesseract" Version="5.2.0" />
   </ItemGroup>
 
   <ItemGroup>
@@ -45,6 +47,12 @@
 
   <ItemGroup>
     <Content Update="wwwroot\img\icons\koa\koa-chatbot.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Update="wwwroot\tessdata\eng.traineddata">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Update="wwwroot\tessdata\vie.traineddata">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Update="wwwroot\vendor\css\pages\app-chat-bk.css">
