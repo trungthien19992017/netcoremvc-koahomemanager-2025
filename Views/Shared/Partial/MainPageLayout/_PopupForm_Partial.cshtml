@@ -121,9 +121,15 @@ asp-route-id="@id" data-modal-id="modal-PopupForm" enctype="multipart/form-data"
                             // neu type la GroupItem thi hiển thị group và gọi các field con
                             if (type == "GroupItem")
                             {
-                                <div class="@("col-md-" + field_width)">
+                                // xử lý hiển thị các field
+                                string parent_iconclass = (field_optionsDict.ContainsKey("iconClass") ? Convert.ToString(field_optionsDict["iconClass"]) : "");
+                                string parent_iconstyle = (field_optionsDict.ContainsKey("iconStyle") ? Convert.ToString(field_optionsDict["iconStyle"]) : "");
+                                string parent_labelstyle = (field_optionsDict.ContainsKey("labelStyle") ? Convert.ToString(field_optionsDict["labelStyle"]) : "");
+                                string parent_inputstyle = (field_optionsDict.ContainsKey("inputStyle") ? Convert.ToString(field_optionsDict["inputStyle"]) : "");
+
+                                <div class="@("col-md-" + field_width)" style="@parent_inputstyle">
                                     <div class="row gx-5">
-                                        <div class="col-md-12 card-header"><strong class="mb-0 text-primary">@label</strong></div>
+                                        <div class="col-md-12 card-header"><strong class="mb-0 text-primary"><i class="@parent_iconclass" style="@parent_iconstyle"></i> <span style="@parent_labelstyle">@label</span></strong></div>
                                         @* goi vong lap de lay cac field con *@
                                         @foreach (var fieldchild in config_formfield.Where(p => p.parentid == field.id).OrderBy(p => p.tabindex).ToList())
                                         {
@@ -488,10 +494,34 @@ asp-route-id="@id" data-modal-id="modal-PopupForm" enctype="multipart/form-data"
                                                             </video>
                                                         </div>
                                                     }
+                                                    else if (child_type == "ScanCCCD")
+                                                    {
+                                                        string codeUpload = child_field_optionsDict.ContainsKey("codeUpload") ? (child_field_optionsDict["codeUpload"].ToString() ?? "") : "";
+                                                        bool isMultiple = child_field_optionsDict.ContainsKey("multiple") ? Convert.ToBoolean(child_field_optionsDict["multiple"]) : false;
+                                                        var dataField = ParseDataHelper.ParseFieldOptionsChildToDictionary(child_field_options,"dataField");
+                                                        string idNumberKey = dataField.ContainsKey("idNumber") ? (dataField["idNumber"]?.ToString()?.ToLower() ?? "") : "";
+                                                        string fullNameKey = dataField.ContainsKey("fullName") ? (dataField["fullName"]?.ToString()?.ToLower() ?? "") : "";
+                                                        string genderKey = dataField.ContainsKey("gender") ? (dataField["gender"]?.ToString()?.ToLower() ?? "") : "";
+                                                        string birthDateKey = dataField.ContainsKey("birthDate") ? (dataField["birthDate"]?.ToString()?.ToLower() ?? "") : "";
+                                                        var fileList = new List<string>();
+                                                        if (fileUrlsDict != null)
+                                                        {
+                                                            fileList = fileUrlsDict != null && fileUrlsDict.ContainsKey(codeUpload)
+                                                            ? fileUrlsDict[codeUpload]
+                                                            : new List<string>();
+                                                        }
+                                                        <div class="">
+                                                            <label for="@child_name" class="form-label"><i class="@iconclass" style="@iconstyle"></i> <span style="@labelstyle">@child_label</span>  <span class='text-danger'>@(child_isrequired == true ? "*" : "")</span></label>
+                                                            <div class="d-flex gap-2 align-items-center flex-nowrap">
+                                                                  <input class="form-control" type="file" id="@codeUpload" name="@codeUpload" @(isMultiple == true ? "multiple" : "") />                                                               
+                                                                  <button class="btn btn-danger" onclick="ScanCCCDHandle('@codeUpload','@isMultiple','@idNumberKey','@fullNameKey','@genderKey','@birthDateKey',event)"><i class="ri-qr-scan-2-line"></i></button>
+                                                            </div>
+                                                        </div>
+                                                    }
 
                                                     @{
                                                         // mot số trường sử dụng label riêng
-                                                        string[] nolabel_fieldtypes = ["DynamicReport","FileUploader","HTMLEditor","RadioGroup","EmptyBox","ListSelection","Label","EmbedYoutube","VideoUploader"];
+                                                        string[] nolabel_fieldtypes = ["DynamicReport", "FileUploader", "HTMLEditor", "RadioGroup", "EmptyBox", "ListSelection", "Label", "EmbedYoutube", "VideoUploader", "ScanCCCD"];
                                                         if (!nolabel_fieldtypes.Contains(child_type))
                                                         {
                                                             <label for="@child_name"><i class="@iconclass" style="@iconstyle"></i> <span style="@labelstyle">@child_label</span> <span class='text-danger'>@(child_isrequired == true ? "*" : "")</span></label>
@@ -851,10 +881,34 @@ asp-route-id="@id" data-modal-id="modal-PopupForm" enctype="multipart/form-data"
                                                 </video>
                                             </div>
                                         }
+                                        else if (type == "ScanCCCD")
+                                        {
+                                            string codeUpload = field_optionsDict.ContainsKey("codeUpload") ? (field_optionsDict["codeUpload"].ToString() ?? "") : "";
+                                            bool isMultiple = field_optionsDict.ContainsKey("multiple") ? Convert.ToBoolean(field_optionsDict["multiple"]) : false;
+                                            var dataField = ParseDataHelper.ParseFieldOptionsChildToDictionary(field_options, "dataField");
+                                            string idNumberKey = dataField.ContainsKey("idNumber") ? (dataField["idNumber"]?.ToString()?.ToLower() ?? "") : "";
+                                            string fullNameKey = dataField.ContainsKey("fullName") ? (dataField["fullName"]?.ToString()?.ToLower() ?? "") : "";
+                                            string genderKey = dataField.ContainsKey("gender") ? (dataField["gender"]?.ToString()?.ToLower() ?? "") : "";
+                                            string birthDateKey = dataField.ContainsKey("birthDate") ? (dataField["birthDate"]?.ToString()?.ToLower() ?? "") : "";
+                                            var fileList = new List<string>();
+                                            if (fileUrlsDict != null)
+                                            {
+                                                fileList = fileUrlsDict != null && fileUrlsDict.ContainsKey(codeUpload)
+                                                ? fileUrlsDict[codeUpload]
+                                                : new List<string>();
+                                            }
+                                            <div class="">
+                                                <label for="@name" class="form-label"><i class="@iconclass" style="@iconstyle"></i> <span style="@labelstyle">@label</span>  <span class='text-danger'>@(isrequired == true ? "*" : "")</span></label>
+                                                <div class="d-flex gap-2 align-items-center flex-nowrap">
+                                                    <input class="form-control" type="file" id="@codeUpload" name="@codeUpload" @(isMultiple == true ? "multiple" : "") />
+                                                    <button class="btn btn-danger" onclick="ScanCCCDHandle('@codeUpload','@isMultiple','@idNumberKey','@fullNameKey','@genderKey','@birthDateKey',event)"><i class="ri-qr-scan-2-line"></i></button>
+                                                </div>
+                                            </div>
+                                        }
 
                                         @* neu type dynamic report hoac file uploadder thì tự check label riêng *@
                                         @{
-                                            string[] nolabel_fieldtypes = ["DynamicReport","FileUploader","HTMLEditor","RadioGroup","EmptyBox","ListSelection","Label","EmbedYoutube","VideoUploader"];
+                                            string[] nolabel_fieldtypes = ["DynamicReport","FileUploader","HTMLEditor","RadioGroup","EmptyBox","ListSelection","Label","EmbedYoutube","VideoUploader","ScanCCCD"];
                                             if (!nolabel_fieldtypes.Contains(type))
                                             {
                                                 <label for="@name"><i class="@iconclass" style="@iconstyle"></i> <span style="@labelstyle">@label</span> <span class='text-danger'>@(isrequired == true ? "*" : "")</span></label>

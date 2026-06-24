@@ -46,6 +46,26 @@ namespace KOAHome.Helpers
       }
     }
 
+    public static IDictionary<string, object> ParseFieldOptionsChildToDictionary(string json, string childValue)
+    {
+      if (string.IsNullOrWhiteSpace(json)) return new Dictionary<string, object>();
+
+      try
+      {
+        var jObj = JObject.Parse(json);
+        var editorOptions = jObj[childValue] as JObject;
+
+        if (editorOptions == null) return new Dictionary<string, object>();
+
+        return editorOptions.Properties()
+                            .ToDictionary(p => p.Name, p => (object)p.Value);
+      }
+      catch (JsonException)
+      {
+        return new Dictionary<string, object>();
+      }
+    }
+
     // chuyen array json thành List Dictionary
     public static List<Dictionary<string, object>> ParseJsonToListDict(string json)
     {

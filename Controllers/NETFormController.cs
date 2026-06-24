@@ -10,6 +10,9 @@ using Microsoft.Data.SqlClient;
 using Newtonsoft.Json.Linq;
 using Npgsql;
 using System.Diagnostics;
+using System.Text;
+using System.Text.Json;
+using System.Text.RegularExpressions;
 
 namespace KOAHome.Controllers
 {
@@ -26,8 +29,10 @@ namespace KOAHome.Controllers
     private readonly IDRDatasourceService _datasrc;
     private readonly INetServiceService _netService;
     private readonly IConnectionService _con;
+    private readonly IHttpClientFactory _httpClientFactory;
+    private readonly string _googleCloudVisionApiKey;
 
-    public NETFormController(QLKCL_NEWContext db, ILogger<NETFormController> logger, IReportEditorService re, IAttachmentService att, IReportService report, IFormService form, IActionService action, IWidgetService widget, IDRDatasourceService datasrc, INetServiceService netService, IConnectionService con)
+    public NETFormController(QLKCL_NEWContext db, ILogger<NETFormController> logger, IReportEditorService re, IAttachmentService att, IReportService report, IFormService form, IActionService action, IWidgetService widget, IDRDatasourceService datasrc, INetServiceService netService, IConnectionService con, IHttpClientFactory httpClientFactory, IConfiguration configuration)
     {
       _db = db;
       _logger = logger;
@@ -40,6 +45,8 @@ namespace KOAHome.Controllers
       _datasrc = datasrc;
       _netService = netService;
       _con = con;
+      _httpClientFactory = httpClientFactory;
+      _googleCloudVisionApiKey = configuration["Google:CloudVisionApiKey"];
     }
 
     // GET: NETFormController
@@ -669,6 +676,186 @@ namespace KOAHome.Controllers
       Console.WriteLine($"Type of data: {data?.GetType()}"); // Kiểm tra kiểu dữ liệu
 
       return Ok(data);
+    }
+
+
+    [HttpPost]
+    public async Task<IActionResult> ScanCCCD(List<IFormFile> files)
+    {
+      if (files == null || files.Count == 0)
+        return Json(new { success = false, message = "Vui lòng chọn ít nhất 1 file ảnh." });
+
+      try
+      {
+        string apiKey = _googleCloudVisionApiKey;
+
+        // Danh sách chứa các request con và danh sách lưu tên file tương ứng để map kết quả
+        var imageRequests = new List<object>();
+        var fileNames = new List<string>();
+
+        // 1. Đóng gói toàn bộ các file ảnh thành các Object trong mảng requests
+        foreach (var file in files)
+        {
+          if (file.Length > 0)
+          {
+            using var memoryStream = new MemoryStream();
+            await file.CopyToAsync(memoryStream);
+            string base64Image = Convert.ToBase64String(memoryStream.ToArray());
+
+            // Thêm từng ảnh vào danh sách batch theo đúng format Google yêu cầu
+            imageRequests.Add(new
+            {
+              image = new { content = base64Image },
+              features = new[] { new { type = "TEXT_DETECTION" } }
+            });
+
+            fileNames.Add(file.FileName);
+          }
+        }
+
+        if (imageRequests.Count == 0)
+          return Json(new { success = false, message = "Không có file nào hợp lệ để xử lý." });
+
+        // 2. Gom tất cả vào 1 Payload duy nhất gửi đi theo dạng Batch
+        var batchRequestBody = new { requests = imageRequests };
+        string jsonPayload = JsonSerializer.Serialize(batchRequestBody);
+
+        // 3. Gửi 1 REQUEST HTTP POST duy nhất chứa toàn bộ các ảnh lên Google
+        var client = _httpClientFactory.CreateClient();
+        string url = $"https://vision.googleapis.com/v1/images:annotate?key={apiKey}";
+
+        var content = new StringContent(jsonPayload, Encoding.UTF8, "application/json");
+        var response = await client.PostAsync(url, content);
+
+        if (!response.IsSuccessStatusCode)
+        {
+          string errorContent = await response.Content.ReadAsStringAsync();
+          return Json(new { success = false, message = $"Lỗi từ Google API: {errorContent}" });
+        }
+
+        // 4. Đọc dữ liệu mảng kết quả trả về từ Google
+        string jsonResponse = await response.Content.ReadAsStringAsync();
+        var finalResults = new List<object>();
+
+        using var doc = JsonDocument.Parse(jsonResponse);
+        var root = doc.RootElement;
+
+        // Google sẽ trả về mảng "responses" có số lượng và thứ tự khớp 100% với danh sách ảnh gửi lên
+        if (root.TryGetProperty("responses", out var responses) && responses.GetArrayLength() > 0)
+        {
+          for (int i = 0; i < responses.GetArrayLength(); i++)
+          {
+            string currentFileName = fileNames[i];
+            string extractedText = "";
+            var singleResponse = responses[i];
+
+            // Kiểm tra xem ảnh này có trích xuất text thành công không
+            if (singleResponse.TryGetProperty("textAnnotations", out var textAnnotations) && textAnnotations.GetArrayLength() > 0)
+            {
+              extractedText = textAnnotations[0].GetProperty("description").GetString();
+            }
+
+            // 5. Thừa kế hàm Regex tách chuỗi chuẩn hiện tại của bạn
+            dynamic parsedData = ParseCccdData(extractedText);
+
+            finalResults.Add(new
+            {
+              FileName = currentFileName,
+              IdNumber = parsedData.IdNumber,
+              FullName = parsedData.FullName,
+              Gender = parsedData.Gender,
+              BirthDate = parsedData.BirthDate
+            });
+          }
+        }
+
+        // Trả danh sách kết quả về cho Frontend render ra Table
+        return Json(new { success = true, results = finalResults });
+      }
+      catch (Exception ex)
+      {
+        return Json(new { success = false, message = "Lỗi xử lý Batch OCR: " + ex.Message });
+      }
+    }
+
+    private object ParseCccdData(string text)
+    {
+      var result = new { IdNumber = "Không tìm thấy", FullName = "Không tìm thấy", Gender = "Không tìm thấy", BirthDate = "Không tìm thấy" };
+      if (string.IsNullOrEmpty(text)) return result;
+
+      // 1. Tìm số CCCD: Quét chuỗi 12 số liên tiếp trên toàn văn bản
+      string idNumber = "Không tìm thấy";
+      var matchId = Regex.Match(text, @"\b\d{12}\b");
+      if (matchId.Success) idNumber = matchId.Value;
+
+      // 2. Tìm Giới tính: Quét từ khóa độc lập bất kể dính dòng
+      string gender = "Không tìm thấy";
+      if (Regex.IsMatch(text, @"Giới tính\s*/\s*Sex\s*Nữ|Sex\s*Nữ|SexNữ|Nữ", RegexOptions.IgnoreCase)) gender = "Nữ";
+      else if (Regex.IsMatch(text, @"Giới tính\s*/\s*Sex\s*Nam|Sex\s*Nam|SexNam|Nam", RegexOptions.IgnoreCase)) gender = "Nam";
+
+      // 3. XỬ LÝ HỌ TÊN THEO KHỐI (BẤT CHẤP XUỐNG DÒNG)
+      string fullName = "Không tìm thấy";
+
+      // Khai báo Regex quét KHỐI dựa trên từ khóa rút gọn "name" hoặc "tên"
+      // Tận dụng RegexOptions.Singleline để gom toàn bộ các dòng họ tên bị bẻ dòng
+      string patternNameBlock = @"(?:name|tên)[:\s/]*(.*?)(?:Ngày|Date|birth|\d{2}/\d{2}/\d{4})";
+
+      var blockMatch = Regex.Match(text, patternNameBlock, RegexOptions.IgnoreCase | RegexOptions.Singleline);
+
+      if (blockMatch.Success)
+      {
+        string rawNameBlock = blockMatch.Groups[1].Value;
+
+        // Tách khối vừa nhặt được thành các dòng để lọc chữ in hoa
+        string[] rawLines = rawNameBlock.Split(new[] { "\r\n", "\r", "\n" }, StringSplitOptions.RemoveEmptyEntries);
+        var validNameParts = new System.Collections.Generic.List<string>();
+
+        foreach (var line in rawLines)
+        {
+          string cleanLine = line.Trim();
+
+          // BỎ QUA DÒNG RÁC: Nếu từ khóa "name" vô tình bắt trúng đoạn trên, 
+          // dòng tiếp theo có thể chứa chữ "CITIZEN" hoặc "CARD", ta sẽ loại ngay.
+          if (cleanLine.Contains("CITIZEN") || cleanLine.Contains("IDENTITY") || cleanLine.Contains("CARD"))
+            continue;
+
+          if (cleanLine == "/" || cleanLine == ":" || string.IsNullOrEmpty(cleanLine))
+            continue;
+
+          // Tiêu chuẩn vàng: Họ tên CCCD bắt buộc phải là chữ IN HOA hoàn toàn
+          string noSpace = cleanLine.Replace(" ", "");
+          bool isAllUpperCase = noSpace.Length > 0 && noSpace.All(c => !char.IsLetter(c) || char.IsUpper(c));
+
+          if (isAllUpperCase && cleanLine.Length > 1)
+          {
+            validNameParts.Add(cleanLine);
+          }
+        }
+
+        if (validNameParts.Count > 0)
+        {
+          fullName = string.Join(" ", validNameParts).ToUpper().Trim();
+        }
+      }
+
+      // 4. BỔ SUNG: XỬ LÝ NGÀY SINH (Tìm định dạng ngày tháng ngay sau từ khóa birth/sinh)
+      string birthDate = "Không tìm thấy";
+
+      // Quét tìm từ khóa rút gọn "birth" hoặc "sinh", sau đó tìm chuỗi ngày tháng dd/mm/yyyy gần nhất
+      var birthMatch = Regex.Match(text, @"(?:birth|sinh)[\s\S]*?(\d{2}/\d{2}/\d{4})", RegexOptions.IgnoreCase);
+      if (birthMatch.Success)
+      {
+        birthDate = birthMatch.Groups[1].Value;
+      }
+      else
+      {
+        // Backup case: Nếu OCR tệ đến mức mất luôn chữ "birth" hay "sinh", quét tìm chuỗi ngày tháng đầu tiên xuất hiện trong văn bản
+        var backupBirthMatch = Regex.Match(text, @"\b\d{2}/\d{2}/\d{4}\b");
+        if (backupBirthMatch.Success) birthDate = backupBirthMatch.Value;
+      }
+
+      // Trả về kết quả đã bao gồm Ngày sinh (BirthDate)
+      return new { IdNumber = idNumber, FullName = fullName, Gender = gender, BirthDate = birthDate };
     }
   }
 }
