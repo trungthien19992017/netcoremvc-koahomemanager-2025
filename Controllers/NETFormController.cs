@@ -145,7 +145,11 @@ namespace KOAHome.Controllers
         // Kiểm tra xem form có file nào không
         // lay danh sach object type code tu config form neu co field file uploader
         string attObjectTypeCodes = config_form.ContainsKey("attobjecttypecodes") ? Convert.ToString(config_form["attobjecttypecodes"]) : "";
-        ViewData["fileUrls"] = await _att.HandleFiles(attObjectTypeCodes, null, id);
+
+        if (!string.IsNullOrEmpty(attObjectTypeCodes))
+        {
+          ViewData["fileUrls"] = await _att.HandleFiles(attObjectTypeCodes, null, id);
+        }
 
         // danh sach service theo booking 
         var reportResultList = await _report.ReportDetail_FromParent("bookingid", (id ?? 0).ToString(), "HS_BookingService_search", null);
@@ -248,7 +252,10 @@ namespace KOAHome.Controllers
         // lay danh sach object type code tu config form neu co field file uploader
         string attObjectTypeCodes = config_form.ContainsKey("attobjecttypecodes") ? Convert.ToString(config_form["attobjecttypecodes"]) : "";
 
-        await _att.HandleFiles(attObjectTypeCodes, form, id);
+        if (!string.IsNullOrEmpty(attObjectTypeCodes))
+        {
+          await _att.HandleFiles(attObjectTypeCodes, form, id);
+        }
 
         // Convert the IFormCollection to a dictionary of strings
         var formData = form.ToDictionary(
@@ -258,7 +265,7 @@ namespace KOAHome.Controllers
 
 
         // nếu saveEditorType là 3 (Lưu attachment trước form sau) thì lưu attachment ở đây và trả về list attachmentid cho store set data
-        if (saveEditorType == 3)
+        if (!string.IsNullOrEmpty(attObjectTypeCodes) && saveEditorType == 3)
         {
           // xu ly luu bang attachment
           var saveAttachmentResult = await _att.SaveAttachmentTable(form, id ?? 0);
@@ -296,7 +303,7 @@ namespace KOAHome.Controllers
           id = (int)id_return;
 
           // nếu saveEditorType là 3 (Lưu attachment trước form sau) thì không cần lưu attachment ở đây
-          if (saveEditorType != 3)
+          if (!string.IsNullOrEmpty(attObjectTypeCodes) && saveEditorType != 3)
           {
             // xu ly luu bang attachment
             var saveAttachmentResult = await _att.SaveAttachmentTable(form, id ?? 0);
@@ -465,7 +472,11 @@ namespace KOAHome.Controllers
         // Kiểm tra xem form có file nào không
         // lay danh sach object type code tu config form neu co field file uploader
         string attObjectTypeCodes = config_form.ContainsKey("attobjecttypecodes") ? Convert.ToString(config_form["attobjecttypecodes"]) : "";
-        ViewData["fileUrls"] = await _att.HandleFiles(attObjectTypeCodes, null, id);
+
+        if (!string.IsNullOrEmpty(attObjectTypeCodes))
+        {
+            ViewData["fileUrls"] = await _att.HandleFiles(attObjectTypeCodes, null, id);
+        }
 
         // danh sach service theo booking 
         var reportResultList = await _report.ReportDetail_FromParent("bookingid", (id ?? 0).ToString(), "HS_BookingService_search", null);
@@ -570,7 +581,10 @@ namespace KOAHome.Controllers
       // lay danh sach object type code tu config form neu co field file uploader
       string attObjectTypeCodes = config_form.ContainsKey("attobjecttypecodes") ? Convert.ToString(config_form["attobjecttypecodes"]) : "";
 
-      await _att.HandleFiles(attObjectTypeCodes, form, id);
+      if (!string.IsNullOrEmpty(attObjectTypeCodes))
+      {
+          await _att.HandleFiles(attObjectTypeCodes, form, id);
+      }
 
       // Convert the IFormCollection to a dictionary of strings
       var formData = form.ToDictionary(
@@ -594,17 +608,20 @@ namespace KOAHome.Controllers
       {
         id = Convert.ToInt32(id_return);
 
-        // xu ly luu bang attachment
-        var saveAttachmentResult = await _att.SaveAttachmentTable(form, id ?? 0);
-
-        // Dùng JsonConvert để chuyển về JObject hoặc dynamic
-        var json = JObject.FromObject(saveAttachmentResult); // nếu dùng Newtonsoft.Json
-        bool success = json["success"]?.Value<bool>() ?? false;
-
-        if (!success)
+        if (!string.IsNullOrEmpty(attObjectTypeCodes))
         {
-          string error = json["errorMessage"]?.ToString();
-          return Json(new { success = false, errorMessage = error ?? "Lưu file không thành công" });
+          // xu ly luu bang attachment
+          var saveAttachmentResult = await _att.SaveAttachmentTable(form, id ?? 0);
+
+          // Dùng JsonConvert để chuyển về JObject hoặc dynamic
+          var json = JObject.FromObject(saveAttachmentResult); // nếu dùng Newtonsoft.Json
+          bool success = json["success"]?.Value<bool>() ?? false;
+
+          if (!success)
+          {
+            string error = json["errorMessage"]?.ToString();
+            return Json(new { success = false, errorMessage = error ?? "Lưu file không thành công" });
+          }
         }
 
         //xu ly report form
