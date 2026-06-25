@@ -311,7 +311,10 @@
                                             <th class="text-center @(display.isfreepane == true ? "freepanze-col" : "")" rowspan="@displayParentLevelNum" data-code="@display.code?.ToLower()" data-index="@(display.colnum ?? "0")" data-isexport="@(display.isexport ?? "True")" style="min-width:@((display.width ?? "200") + "px");@(display.cssheader ?? "")">@Html.Raw(display.name)</th>
                                         }
                                         @* them mot cot xu ly *@
-                                        <th class="text-center" data-code="HandleColumn" data-index="2" rowspan="@displayParentLevelNum" data-isexport="False" style="width:50px">Xử lý</th>
+                                        @if (actionlistdetailList_grid.Count > 0)
+                                        {
+                                            <th class="text-center" data-code="HandleColumn" data-index="2" rowspan="@displayParentLevelNum" data-isexport="False" style="width:50px">Xử lý</th>
+                                        }
                                         @* neu cot khong co parent code cung khong phai is parent thi xu ly rieng *@
                                         @foreach (var display in displayList.Where(p => p.isdisplay == true && p.code?.ToLower() != "stt" && p.isparent == false && string.IsNullOrEmpty(p.parentcode?.ToLower())).OrderBy(p => p.colnum ?? 0).ToList())
                                         {

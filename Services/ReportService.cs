@@ -628,7 +628,7 @@ namespace KOAHome.Services
       var lastFreePaneCode = columnsWithoutParent.Where(p => p.isfreepane == true).OrderBy(p => p.colnum ?? 0).LastOrDefault()?.code?.ToLower();
 
 
-      if (lastFreePaneCode == null)
+      if (lastFreePaneCode == null && actionlistdetailList.Count > 0)
       {
         RenderActionDropdown(sb, actionlistdetailList, result, listFilterValue);
       }
@@ -749,7 +749,7 @@ namespace KOAHome.Services
 
         sb.AppendLine("</td>");
 
-        if (displayCode == lastFreePaneCode)
+        if (displayCode == lastFreePaneCode && actionlistdetailList.Count > 0)
         {
           RenderActionDropdown(sb, actionlistdetailList, result, listFilterValue);
         }

@@ -487,7 +487,7 @@
 
                                     var lastFreePaneCode = columnsWithoutParent.Where(p => p.isfreepane == true).OrderBy(p => p.colnum ?? 0).LastOrDefault()?.code?.ToLower();
 
-                                    @if (lastFreePaneCode == null)
+                                    @if (lastFreePaneCode == null && actionlistdetailList_grid.Count > 0)
                                     {
                                         @* them mot cot xu ly *@
                                         <th class="text-center freepanze-col" data-code="HandleColumn" data-index="99" rowspan="@displayParentLevelNum" data-isexport="False" style="width:50px">Xử lý</th>
@@ -497,7 +497,7 @@
                                     {
                                         @* co dinh cot neu co cau hinh (chi ap dung cho cot 1 rowspan) *@
                                         <th class="text-center @(display.isfreepane == true ? "freepanze-col" : "")" rowspan="@displayParentLevelNum" data-code="@display.code.ToLower()" data-index="@(display.colnum ?? "0")" data-isexport="@(display.isexport ?? "True")" style="min-width:@((display.width ?? "200") + "px");@(display.cssheader ?? "")">@Html.Raw(display.name)</th>
-                                        @if (display.code.ToLower() == lastFreePaneCode)
+                                        @if (display.code.ToLower() == lastFreePaneCode && actionlistdetailList_grid.Count > 0)
                                         {
                                             @* them mot cot xu ly *@
                                             <th class="text-center freepanze-col" data-code="HandleColumn" data-index="99" rowspan="@displayParentLevelNum" data-isexport="False" style="width:50px">Xử lý</th>
