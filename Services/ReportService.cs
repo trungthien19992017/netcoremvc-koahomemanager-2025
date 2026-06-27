@@ -355,7 +355,30 @@ namespace KOAHome.Services
       if (!parameters.ContainsKey("param"))
       {
         // cac du lieu parameter se add vao store display duoi dang bien param cach nhau bang dau ;
-        string displayParamString = string.Join(";", parameters.Select(kvp => $"{kvp.Key}={kvp.Value ?? ""}"));
+        string displayParamString = string.Join(";",
+            parameters.Select(kvp =>
+            {
+              string value;
+
+              if (kvp.Value == null)
+              {
+                value = "";
+              }
+              else if (kvp.Value is DateTime dt)
+              {
+                value = dt.ToString("yyyy-MM-dd");
+              }
+              else if (DateTime.TryParse(kvp.Value.ToString(), out var parsedDate))
+              {
+                value = parsedDate.ToString("yyyy-MM-dd");
+              }
+              else
+              {
+                value = kvp.Value.ToString();
+              }
+
+              return $"{kvp.Key}={value}";
+            }));
         parameters.Add("param", displayParamString);
       }
       parameters.Add("reportid", reportId);
