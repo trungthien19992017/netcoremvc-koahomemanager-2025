@@ -213,19 +213,12 @@
 }
 
 @* ************** Content ************** *@
-<!-- Content wrapper -->
-<div class="content-wrapper">
-    <!-- Content -->
-
-    <div class="container-xxl flex-grow-1 container-p-y">
         <!-- Booking form -->
-        <div class="row">
-            <div id="wizard-validation" class="col-xl">
-                <form id="create-form" class="needs-validation" novalidate="" method="post" asp-controller="NETForm" asp-action="Viewer" asp-route-formCode="@formCode"
-                asp-route-id="@id" enctype="multipart/form-data">
                     @if (config_form != null)
                     {
                     <div class="card mb-6" style="@formStyle">
+                      <form id="create-form" class="needs-validation" novalidate="" method="post" asp-controller="NETForm" asp-action="Viewer" asp-route-formCode="@formCode"
+                      asp-route-id="@id" enctype="multipart/form-data">
                         <div class="card-header sticky-element bg-label-primary d-flex justify-content-sm-between align-items-sm-center flex-column flex-sm-row" style="@labelBGStyle">
                             <h5 class="card-title mb-sm-0 me-2" style="@labelStyle">@formTitle</h5>
                             <div class="action-btns">
@@ -1106,15 +1099,11 @@
                                         </div>
                                     </div> *@
                               </div>
-                    </div>
+                            </div>
+                        </form>
                 </div>
                 }
-              </form>
-            </div>
-        </div>
         <!-- end Booking form -->
-    </div>
-    <!-- / Content -->
 
     <div>
         <a type="button" class="btn btn-primary" href="javascript:history.back()"><i class="ri-arrow-left-circle-line"></i> Trở về</a>
