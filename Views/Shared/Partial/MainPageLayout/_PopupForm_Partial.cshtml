@@ -16,6 +16,7 @@
     var config_formOptions = null as IDictionary<string, object>;
     var config_formCssOptionHeader = null as IDictionary<string, object>;
     var form_colCount = 3;
+    string form_buttonLocation = "bottom";
     string formTitle = "";
     string formStyle = "";
     string labelStyle = "";
@@ -29,12 +30,11 @@
         labelStyle = (config_formCssOptionHeader.ContainsKey("labelStyle") ? Convert.ToString(config_formCssOptionHeader["labelStyle"]) : "");
         labelBGStyle = (config_formCssOptionHeader.ContainsKey("labelBGStyle") ? Convert.ToString(config_formCssOptionHeader["labelBGStyle"]) : "");
 
-        config_formOptions = ParseDataHelper.ParseOptionsToDictionary(config_form.ContainsKey("options") ? config_form["options"].ToString() : "{}");
-
         formTitle = config_form.ContainsKey("formtitle") ? config_form["formtitle"].ToString() : "Thông tin";
         config_formOptions = ParseDataHelper.ParseOptionsToDictionary(config_form.ContainsKey("options") ? config_form["options"].ToString() : "{}");
         // mac dinh col count cua form = 3
         form_colCount = config_formOptions.ContainsKey("colCount") ? Convert.ToInt32(config_formOptions["colCount"]) : 3;
+        form_buttonLocation = config_formOptions.ContainsKey("labelLocation") ? Convert.ToString(config_formOptions["labelLocation"]) : "bottom";
     }
 
     // nhận param để chuyển đến partial nếu có
@@ -62,12 +62,38 @@
 asp-route-id="@id" data-modal-id="modal-PopupForm" enctype="multipart/form-data">
     <div class="modal-dialog modal-xl modal-dialog-centered" role="document">
         <div class="modal-content card mb-6">
-            <div class="modal-header">
-                <h5 class="modal-title card-header bg-label-primary d-flex justify-content-sm-between align-items-sm-center flex-column flex-sm-row" id="modalCenterTitle" style="@labelStyle">@formTitle</h5>
-                <button type="button"
-                        class="btn-close"
-                        data-bs-dismiss="modal"
-                        aria-label="Close"></button>
+            <div class="modal-header" style="display: flex; flex-direction: column; align-items: stretch; padding: 0; background: linear-gradient(135deg, #F0F8FF 0%, #E8F4FF 100%); border-bottom: 2px solid #D0E8FF;">
+                <!-- Row 1: Title + Close button -->
+                <div style="display: flex; justify-content: space-between; align-items: center; padding: 16px 20px; border-bottom: 1px solid #E0EBF7;">
+                    <h5 class="modal-title card-header bg-label-primary d-flex justify-content-sm-between align-items-sm-center flex-column flex-sm-row" id="modalCenterTitle" style="@labelStyle">@formTitle</h5>
+                    <button type="button"
+                            class="btn-close"
+                            data-bs-dismiss="modal"
+                            aria-label="Close"></button>
+                </div>
+                @if (form_buttonLocation == "top")
+                {
+                    <!-- Row 2: Button Lưu (góc bên phải) -->
+                    <div style="display: flex; justify-content: flex-end; padding: 12px 20px;">
+                        <button type="button" class="btn btn-primary modal-btn-submit" style="background: linear-gradient(135deg, #024CAA 0%, #0A3F8E 100%);
+                                border: none;
+                                border-radius: 6px;
+                                padding: 8px 24px;
+                                font-weight: 600;
+                                font-size: 13px;
+                                box-shadow: 0 2px 8px rgba(2, 76, 170, 0.25);
+                                transition: all 0.3s ease;
+                                text-transform: uppercase;
+                                letter-spacing: 0.4px;
+                                display: flex;
+                                align-items: center;
+                                gap: 6px;
+                                white-space: nowrap;" onmouseover="this.style.boxShadow='0 4px 12px rgba(2, 76, 170, 0.35)'; this.style.transform='translateY(-1px)';" onmouseout="this.style.boxShadow='0 2px 8px rgba(2, 76, 170, 0.25)'; this.style.transform='translateY(0)';">
+                            <i class="ri-save-line" style="font-size: 14px;"></i>
+                            <span>Lưu</span>
+                        </button>
+                    </div>
+                }
             </div>
             <div class="modal-body card-body">
                 @if (config_form != null)
@@ -928,27 +954,30 @@ asp-route-id="@id" data-modal-id="modal-PopupForm" enctype="multipart/form-data"
                 }
             </div>
             <div class="modal-footer">
-                @* nếu là trang hoàn chỉnh (is page) thì không có nút close *@
-                @if (isPage == false)
+                @if (form_buttonLocation == "bottom")
                 {
-                    <button type="button" class="btn btn-outline-secondary modal-btn-close" data-bs-dismiss="modal">
-                        Close
-                    </button>
-                    <button type="button" class="btn btn-primary modal-btn-submit" style="background: linear-gradient(135deg, rgb(2, 76, 170) 0%, rgb(10, 63, 142) 100%); border-width: medium; border-style: none; border-color: currentcolor; border-image: initial; border-radius: 8px; padding: 10px 32px; font-weight: 600; font-size: 14px; box-shadow: rgba(2, 76, 170, 0.3) 0px 4px 12px; transition: 0.3s; text-transform: uppercase; letter-spacing: 0.5px; transform: translateY(0px);" onmouseover="this.style.boxShadow='0 6px 16px rgba(2, 76, 170, 0.4)'; this.style.transform='translateY(-2px)';" onmouseout="this.style.boxShadow='0 4px 12px rgba(2, 76, 170, 0.3)'; this.style.transform='translateY(0)';">
-                        <i class="ri-save-line" style="margin-right: 6px;"></i>
-                        Lưu
-                    </button>
-                }
-                else if (isStepper == true)
-                {
-                    // nếu là dạng stepper thì nút sẽ được cấu hình riêng
-                }
-                else
-                {
-                    <button type="button" class="btn btn-primary modal-btn-submit" style="background: linear-gradient(135deg, rgb(2, 76, 170) 0%, rgb(10, 63, 142) 100%); border-width: medium; border-style: none; border-color: currentcolor; border-image: initial; border-radius: 8px; padding: 10px 32px; font-weight: 600; font-size: 14px; box-shadow: rgba(2, 76, 170, 0.3) 0px 4px 12px; transition: 0.3s; text-transform: uppercase; letter-spacing: 0.5px; transform: translateY(0px);" onmouseover="this.style.boxShadow='0 6px 16px rgba(2, 76, 170, 0.4)'; this.style.transform='translateY(-2px)';" onmouseout="this.style.boxShadow='0 4px 12px rgba(2, 76, 170, 0.3)'; this.style.transform='translateY(0)';">
-                        <i class="ri-save-line" style="margin-right: 6px;"></i>
-                        Lưu
-                    </button>
+                    @* nếu là trang hoàn chỉnh (is page) thì không có nút close *@
+                    @if (isPage == false)
+                    {
+                        <button type="button" class="btn btn-outline-secondary modal-btn-close" data-bs-dismiss="modal">
+                            Close
+                        </button>
+                        <button type="button" class="btn btn-primary modal-btn-submit" style="background: linear-gradient(135deg, rgb(2, 76, 170) 0%, rgb(10, 63, 142) 100%); border-width: medium; border-style: none; border-color: currentcolor; border-image: initial; border-radius: 8px; padding: 10px 32px; font-weight: 600; font-size: 14px; box-shadow: rgba(2, 76, 170, 0.3) 0px 4px 12px; transition: 0.3s; text-transform: uppercase; letter-spacing: 0.5px; transform: translateY(0px);" onmouseover="this.style.boxShadow='0 6px 16px rgba(2, 76, 170, 0.4)'; this.style.transform='translateY(-2px)';" onmouseout="this.style.boxShadow='0 4px 12px rgba(2, 76, 170, 0.3)'; this.style.transform='translateY(0)';">
+                            <i class="ri-save-line" style="margin-right: 6px;"></i>
+                            Lưu
+                        </button>
+                    }
+                    else if (isStepper == true)
+                    {
+                        // nếu là dạng stepper thì nút sẽ được cấu hình riêng
+                    }
+                    else
+                    {
+                        <button type="button" class="btn btn-primary modal-btn-submit" style="background: linear-gradient(135deg, rgb(2, 76, 170) 0%, rgb(10, 63, 142) 100%); border-width: medium; border-style: none; border-color: currentcolor; border-image: initial; border-radius: 8px; padding: 10px 32px; font-weight: 600; font-size: 14px; box-shadow: rgba(2, 76, 170, 0.3) 0px 4px 12px; transition: 0.3s; text-transform: uppercase; letter-spacing: 0.5px; transform: translateY(0px);" onmouseover="this.style.boxShadow='0 6px 16px rgba(2, 76, 170, 0.4)'; this.style.transform='translateY(-2px)';" onmouseout="this.style.boxShadow='0 4px 12px rgba(2, 76, 170, 0.3)'; this.style.transform='translateY(0)';">
+                            <i class="ri-save-line" style="margin-right: 6px;"></i>
+                            Lưu
+                        </button>
+                    }
                 }
         </div>
     </div>
