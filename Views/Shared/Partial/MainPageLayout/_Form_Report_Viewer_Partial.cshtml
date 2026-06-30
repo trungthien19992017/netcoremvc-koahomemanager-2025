@@ -199,7 +199,7 @@
                             if (actionType == "LINK")
                             {
                                 string url = ParseDataHelper.GetReplaceLinkWithResult(actionValue, null, listFilterValue);
-                                <a href="@url" type="button" class="btn btn-icon btn-primary" data-bs-toggle="tooltip" data-bs-offset="0,4" data-bs-placement="top" data-bs-html="true"
+                                <a href="@url" type="button" class="btn btn-icon btn-primary pull-up" data-bs-toggle="tooltip" data-bs-offset="0,4" data-bs-placement="top" data-bs-html="true"
                                    title="<i class='@(actionIcon)'></i> <span>@actionName</span>">
                                     <i class="@(actionIcon)"></i>
                                 </a>
@@ -215,14 +215,14 @@
                                 string confirmText = !string.IsNullOrWhiteSpace(actionDict["confirmtext"].ToString()) ? actionDict["confirmtext"].ToString() : null;
                                 @if (isPopupConfirm)
                                 {
-                                    <a href="" data-isconfirm="@isPopupConfirm" data-confirmtext="@confirmText" data-confirmtitle="@confirmTitle" data-confirmbutton="@confirmButtonText" data-sqlstore="@actionStore" data-datasourceid="@dataSourceID" type="button" class="btn btn-icon btn-primary confirmAction" data-bs-toggle="tooltip" data-bs-offset="0,4" data-bs-placement="top" data-bs-html="true"
+                                    <a href="" data-isconfirm="@isPopupConfirm" data-confirmtext="@confirmText" data-confirmtitle="@confirmTitle" data-confirmbutton="@confirmButtonText" data-sqlstore="@actionStore" data-datasourceid="@dataSourceID" type="button" class="btn btn-icon btn-primary pull-up confirmAction" data-bs-toggle="tooltip" data-bs-offset="0,4" data-bs-placement="top" data-bs-html="true"
                                        title="<i class='@(actionIcon)'></i> <span>@actionName</span>">
                                         <i class="@(actionIcon)"></i>
                                     </a>
                                 }
                                 else
                                 {
-                                    <a href="" data-sqlstore="@actionStore" data-datasourceid="@dataSourceID" type="button" class="btn btn-icon btn-primary confirmAction" data-bs-toggle="tooltip" data-bs-offset="0,4" data-bs-placement="top" data-bs-html="true"
+                                    <a href="" data-sqlstore="@actionStore" data-datasourceid="@dataSourceID" type="button" class="btn btn-icon btn-primary pull-up confirmAction" data-bs-toggle="tooltip" data-bs-offset="0,4" data-bs-placement="top" data-bs-html="true"
                                        title="<i class='@(actionIcon)'></i> <span>@actionName</span>">
                                         <i class="@(actionIcon)"></i>
                                     </a>
@@ -234,7 +234,7 @@
                                 var popupDictValue = ParseDataHelper.GetReplacePopupLinkWithResult(actionValue, null, listFilterValue);
                                 string actionFormCode = popupDictValue.ContainsKey("FORMCODE") ? popupDictValue["FORMCODE"].ToString() ?? "" : "";
                                 string actionLink = popupDictValue.ContainsKey("LINK") ? popupDictValue["LINK"].ToString() ?? "" : "";
-                                <a href="" data-bs-toggle="modal" data-bs-target="#modal-PopupForm" data-actionlink="@actionLink" type="button" class="btn btn-icon btn-primary popupform-action" data-bs-toggle="tooltip" data-bs-offset="0,4" data-bs-placement="top" data-bs-html="true"
+                                <a href="" data-bs-toggle="modal" data-bs-target="#modal-PopupForm" data-actionlink="@actionLink" type="button" class="btn btn-icon btn-primary pull-up popupform-action" data-bs-toggle="tooltip" data-bs-offset="0,4" data-bs-placement="top" data-bs-html="true"
                                    title="<i class='@(actionIcon)'></i> <span>@actionName</span>">
                                     <i class="@(actionIcon)"></i>
                                 </a>
@@ -242,7 +242,7 @@
                             else if (actionType == "IMPORT_FILEEXCEL")
                             {
                                 @* Button import file excel *@
-                                <button id="importFileBtn" class="btn btn-icon btn-primary" data-bs-toggle="tooltip" data-bs-offset="0,4" data-bs-placement="top" data-bs-html="true"
+                                <button id="importFileBtn" class="btn btn-icon btn-primary pull-up" data-bs-toggle="tooltip" data-bs-offset="0,4" data-bs-placement="top" data-bs-html="true"
                                         title="<i class='@(actionIcon)'></i> <span>@actionName</span>">
                                     <i class="@(actionIcon)"></i>
                                 </button>
@@ -260,7 +260,7 @@
                                     // kiếm tra đường dẫn chưa có dấu / thì thêm vào
                                     url = (fileTemplate.StartsWith("/") ? fileTemplate : ("/" + fileTemplate));
                                 }
-                                <a href="@url" type="button" class="btn btn-icon btn-primary" data-bs-toggle="tooltip" data-bs-offset="0,4" data-bs-placement="top" data-bs-html="true"
+                                <a href="@url" type="button" class="btn btn-icon btn-primary pull-up" data-bs-toggle="tooltip" data-bs-offset="0,4" data-bs-placement="top" data-bs-html="true"
                                    title="<i class='@(actionIcon)'></i> <span>@actionName</span>">
                                     <i class="@(actionIcon)"></i>
                                 </a>
@@ -268,7 +268,7 @@
                             else
                             {
                                 string url = ParseDataHelper.GetReplaceLinkWithResult(actionValue, null, listFilterValue);
-                                <a href="@url" type="button" class="btn btn-icon btn-primary" data-bs-toggle="tooltip" data-bs-offset="0,4" data-bs-placement="top" data-bs-html="true"
+                                <a href="@url" type="button" class="btn btn-icon btn-primary pull-up" data-bs-toggle="tooltip" data-bs-offset="0,4" data-bs-placement="top" data-bs-html="true"
                                    title="<i class='@(actionIcon)'></i> <span>@actionName</span>">
                                     <i class="@(actionIcon)"></i>
                                 </a>

@@ -698,7 +698,7 @@ namespace KOAHome.Services
                 {
                   var title = icon.GetProperty("title").GetString();
                   var image = icon.GetProperty("image").GetString();
-                  sb.AppendLine($"<li data-bs-toggle='tooltip' class='avatar avatar-xs pull-up' aria-label='{title}'><img src='{image}' alt='Avatar' class='rounded-circle' /></li>");
+                  sb.AppendLine($"<li data-bs-toggle='tooltip' class='avatar avatar-xs pull-up' aria-label='{title}' data-bs-offset=\"0,4\" data-bs-placement=\"top\" data-bs-html=\"true\" data-bs-original-title=\"{title}\"><img src='{image}' alt='Avatar' class='rounded-circle' /></li>");
                 }
                 sb.AppendLine("</ul>");
               }
