@@ -2486,6 +2486,133 @@
                 }
             });
         }
+
+        function ButtonActionHandler(event, button) {
+            if (event) {
+                event.preventDefault();
+            }
+            
+            var form = $(button).closest("form")[0];
+            var formData = new FormData(form);
+
+            // 3. Hiển thị hiệu ứng loading
+            $('#loading').removeClass('d-none');
+
+            // 4. Gọi API xử lý hàng loạt
+            $.ajax({
+                url: '/NETForm/ButtonAction',
+                type: 'POST',
+                data: formData,
+                contentType: false,
+                processData: false,
+                success: function (response) {
+                    $('#loading').addClass('d-none');
+
+                    if (response.success) {
+                        if (!response.results || response.results.length === 0) {
+                            alert("Không bóc tách được dữ liệu từ các file đã chọn.");
+                            return;
+                        }
+
+                        // TRƯỜNG HỢP 1: isMultiple là false -> Chỉ gán bộ CCCD đầu tiên vào key đích danh ban đầu
+                        if (!isMultiple) {
+                            var item = response.results[0];
+
+                            if (idNumberKey)  $('#' + idNumberKey).val(item.idNumber);
+                            if (fullNameKey)  $('#' + fullNameKey).val(item.fullName);
+                            if (birthDateKey) $('#' + birthDateKey).val(item.birthDate);
+                            if (genderKey)    $('#' + genderKey).val(item.gender);
+                        }
+                        // TRƯỜNG HỢP 2: isMultiple là true -> Xử lý cộng chuỗi động tăng dần (1, 2, 3...)
+                        else {
+                            // Hàm loại bỏ số 1 ở cuối chuỗi cấu hình (ví dụ: "IdNumber1" -> "IdNumber")
+                            // để phục vụ việc cộng chuỗi động tịnh tiến phía dưới
+                            var cleanKey = function(key) {
+                                return (key && key.endsWith('1')) ? key.slice(0, -1) : key;
+                            };
+
+                            var baseIdKey = cleanKey(idNumberKey);
+                            var baseNameKey = cleanKey(fullNameKey);
+                            var baseBirthKey = cleanKey(birthDateKey);
+                            var baseGenderKey = cleanKey(genderKey);
+
+                            $.each(response.results, function (index, item) {
+                                var suffix = index + 1; // 1, 2, 3...
+
+                                var txtIdNumber = $('#' + baseIdKey + suffix);
+                                var txtFullName = $('#' + baseNameKey + suffix);
+                                var txtBirthDate = $('#' + baseBirthKey + suffix);
+                                var txtGender = $('#' + baseGenderKey + suffix);
+
+                                if (txtIdNumber.length)  txtIdNumber.val(item.idNumber);
+                                if (txtFullName.length)  txtFullName.val(item.fullName);
+                                if (txtBirthDate.length) txtBirthDate.val(item.birthDate);
+                                if (txtGender.length)    txtGender.val(item.gender);
+                            });
+                        }
+
+                    } else {
+                        alert(response.message);
+                    }
+                },
+                error: function () {
+                    $('#loading').addClass('d-none');
+                    alert('Đã xảy ra lỗi hệ thống khi quét danh sách ảnh CCCD.');
+                }
+            });
+        }
+
+             //      function handleAjaxConfirmed(id, listid, sqlstore, datasourceid) {
+             //     // dua cac du lieu can truyen vao formdata
+             //     var formData = new FormData();
+             //     formData.append("id", id); // key cua du lieu
+             //     formData.append("sqlstore", sqlstore); // Lấy sqlstore tu button truyen vao
+             //     formData.append("datasourceid", datasourceid); // Lấy datasource tu button truyen vao
+             //     formData.append("listid", listid); // list id xuất hiện khi chọn nhiều dòng table, áp dụng với nút on top
+
+             //     // Gọi AJAX để gửi yêu cầu xóa
+             //     $.ajax({
+             //         url: '/Home/Action_Confirmed', // Controller xử lý hành động
+             //         type: 'POST', // Hoặc 'GET' nếu phù hợp
+             //         data: formData, // Truyền ID của dòng cần hành động và store xử lý
+             //         processData: false, // Không chuyển `FormData` thành query string
+             //         contentType: false, // Để trình duyệt tự động đặt `content-type`
+             //         success: function (response) {
+             //             if (response.success) {
+             //                 rplm({
+             //                     title: "Xử lý thành công!",
+             //                     text: "Hành động của bạn đã được xử lý.",
+             //                     type: "success",
+             //                     timer: 2000,
+             //                     confirmButtonText: 'Xác nhận',
+             //                     html: true
+             //                 }, function () {
+             //                     // reload lại sau khi đóng popup
+             //                     location.reload();
+             //                 });
+             //             } else {
+             //                 rplm({
+             //                     title: "Lỗi!",
+             //                     text: response.errorMessage || "Có vấn đề xảy ra.",
+             //                     type: "error",
+             //                     timer: 2000,
+             //                     confirmButtonText: 'Xác nhận',
+             //                     html: true
+             //                 });
+             //             }
+             //         },
+             //         error: function () {
+             //             rplm({
+             //                 title: "Lỗi!",
+             //                 text: "Lỗi khi kết nối đến máy chủ.",
+             //                 type: "error",
+             //                 timer: 2000,
+             //                 confirmButtonText: 'Done',
+             //                 html: true
+             //             });
+             //         }
+             //     });
+             // }
     </script>
 
     <!-- Page Scripts-->

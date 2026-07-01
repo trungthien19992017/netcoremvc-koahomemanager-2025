@@ -546,10 +546,30 @@ asp-route-id="@id" data-modal-id="modal-PopupForm" enctype="multipart/form-data"
                                                             </div>
                                                         </div>
                                                     }
+                                                    else if (child_type == "ButtonAction")
+                                                    {
+                                                        string codeUpload = child_field_optionsDict.ContainsKey("codeUpload") ? (child_field_optionsDict["codeUpload"].ToString() ?? "") : "";
+                                                        bool isMultiple = child_field_optionsDict.ContainsKey("multiple") ? Convert.ToBoolean(child_field_optionsDict["multiple"]) : false;
+                                                        var dataField = ParseDataHelper.ParseFieldOptionsChildToDictionary(child_field_options, "dataField");
+                                                        string idNumberKey = dataField.ContainsKey("idNumber") ? (dataField["idNumber"]?.ToString()?.ToLower() ?? "") : "";
+                                                        string fullNameKey = dataField.ContainsKey("fullName") ? (dataField["fullName"]?.ToString()?.ToLower() ?? "") : "";
+                                                        string genderKey = dataField.ContainsKey("gender") ? (dataField["gender"]?.ToString()?.ToLower() ?? "") : "";
+                                                        string birthDateKey = dataField.ContainsKey("birthDate") ? (dataField["birthDate"]?.ToString()?.ToLower() ?? "") : "";
+                                                        var fileList = new List<string>();
+                                                        if (fileUrlsDict != null)
+                                                        {
+                                                            fileList = fileUrlsDict != null && fileUrlsDict.ContainsKey(codeUpload)
+                                                            ? fileUrlsDict[codeUpload]
+                                                            : new List<string>();
+                                                        }
+                                                        <button class="btn pull-up waves-effect" onclick="ButtonActionHandler(event, this)" style="@labelstyle">
+                                                            <i class="@iconclass" style="@iconstyle"></i> <span class="ms-2" style="@iconstyle">@name</span>
+                                                        </button>
+                                                    }
 
                                                     @{
                                                         // mot số trường sử dụng label riêng
-                                                        string[] nolabel_fieldtypes = ["DynamicReport", "FileUploader", "HTMLEditor", "RadioGroup", "EmptyBox", "ListSelection", "Label", "EmbedYoutube", "VideoUploader", "ScanCCCD"];
+                                                        string[] nolabel_fieldtypes = ["DynamicReport", "FileUploader", "HTMLEditor", "RadioGroup", "EmptyBox", "ListSelection", "Label", "EmbedYoutube", "VideoUploader", "ScanCCCD", "ButtonAction"];
                                                         if (!nolabel_fieldtypes.Contains(child_type))
                                                         {
                                                             <label for="@child_name"><i class="@iconclass" style="@iconstyle"></i> <span style="@labelstyle">@child_label</span> <span class='text-danger'>@(child_isrequired == true ? "*" : "")</span></label>
@@ -935,10 +955,30 @@ asp-route-id="@id" data-modal-id="modal-PopupForm" enctype="multipart/form-data"
                                                 </div>
                                             </div>
                                         }
+                                        else if (type == "ButtonAction")
+                                        {
+                                            string codeUpload = field_optionsDict.ContainsKey("codeUpload") ? (field_optionsDict["codeUpload"].ToString() ?? "") : "";
+                                            bool isMultiple = field_optionsDict.ContainsKey("multiple") ? Convert.ToBoolean(field_optionsDict["multiple"]) : false;
+                                            var dataField = ParseDataHelper.ParseFieldOptionsChildToDictionary(field_options, "dataField");
+                                            string idNumberKey = dataField.ContainsKey("idNumber") ? (dataField["idNumber"]?.ToString()?.ToLower() ?? "") : "";
+                                            string fullNameKey = dataField.ContainsKey("fullName") ? (dataField["fullName"]?.ToString()?.ToLower() ?? "") : "";
+                                            string genderKey = dataField.ContainsKey("gender") ? (dataField["gender"]?.ToString()?.ToLower() ?? "") : "";
+                                            string birthDateKey = dataField.ContainsKey("birthDate") ? (dataField["birthDate"]?.ToString()?.ToLower() ?? "") : "";
+                                            var fileList = new List<string>();
+                                            if (fileUrlsDict != null)
+                                            {
+                                                fileList = fileUrlsDict != null && fileUrlsDict.ContainsKey(codeUpload)
+                                                ? fileUrlsDict[codeUpload]
+                                                : new List<string>();
+                                            }
+                                            <button class="btn pull-up waves-effect" onclick="ButtonActionHandler(event, this)" style="@labelstyle">
+                                                <i class="@iconclass" style="@iconstyle"></i> <span class="ms-2" style="@iconstyle">@name</span>
+                                            </button>
+                                        }
 
                                         @* neu type dynamic report hoac file uploadder thì tự check label riêng *@
                                         @{
-                                            string[] nolabel_fieldtypes = ["DynamicReport","FileUploader","HTMLEditor","RadioGroup","EmptyBox","ListSelection","Label","EmbedYoutube","VideoUploader","ScanCCCD"];
+                                            string[] nolabel_fieldtypes = ["DynamicReport","FileUploader","HTMLEditor","RadioGroup","EmptyBox","ListSelection","Label","EmbedYoutube","VideoUploader","ScanCCCD","ButtonAction"];
                                             if (!nolabel_fieldtypes.Contains(type))
                                             {
                                                 <label for="@name"><i class="@iconclass" style="@iconstyle"></i> <span style="@labelstyle">@label</span> <span class='text-danger'>@(isrequired == true ? "*" : "")</span></label>
