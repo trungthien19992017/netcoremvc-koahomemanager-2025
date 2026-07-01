@@ -538,7 +538,7 @@ asp-route-id="@id" data-modal-id="modal-PopupForm" enctype="multipart/form-data"
                                                         }
                                                         <div class="">
                                                             <label for="@child_name" class="form-label"><i class="@iconclass" style="@iconstyle"></i> <span style="@labelstyle">@child_label</span>  <span class='text-danger'>@(child_isrequired == true ? "*" : "")</span></label>
-                                                            <div class="d-flex gap-2 align-items-center flex-nowrap" style="background: #FFF8FB; padding: 12px; border-radius: 8px; border: 1.5px dashed #000000;">
+                                                            <div class="d-flex gap-2 align-items-center flex-nowrap" style="background: #FFFFFF; padding: 12px; border-radius: 8px; border: 1.5px dashed #000000;">
                                                                 <input class="form-control" type="file" id="@codeUpload" name="@codeUpload" @(isMultiple == true ? "multiple" : "") style="border: none; padding: 6px; font-size: 12px; background: transparent; flex: 1;">
                                                                 <button class="btn btn-danger" onclick="ScanCCCDHandle('@codeUpload','@isMultiple','@idNumberKey','@fullNameKey','@genderKey','@birthDateKey',event)" style="border-radius: 6px; box-shadow: 0 2px 8px rgba(244, 67, 54, 0.2); flex-shrink: 0; padding: 8px 12px; transition: all 0.3s ease;" onmouseover="this.style.boxShadow='0 4px 12px rgba(244, 67, 54, 0.3)';" onmouseout="this.style.boxShadow='0 2px 8px rgba(244, 67, 54, 0.2)';">
                                                                     <i class="ri-qr-scan-2-line"></i>
@@ -927,7 +927,7 @@ asp-route-id="@id" data-modal-id="modal-PopupForm" enctype="multipart/form-data"
                                             }
                                             <div class="">
                                                 <label for="@name" class="form-label"><i class="@iconclass" style="@iconstyle"></i> <span style="@labelstyle">@label</span>  <span class='text-danger'>@(isrequired == true ? "*" : "")</span></label>
-                                                <div class="d-flex gap-2 align-items-center flex-nowrap" style="background: #FFF8FB; padding: 12px; border-radius: 8px; border: 1.5px dashed #000000;">
+                                                <div class="d-flex gap-2 align-items-center flex-nowrap" style="background: #FFFFFF; padding: 12px; border-radius: 8px; border: 1.5px dashed #000000;">
                                                     <input class="form-control" type="file" id="@codeUpload" name="@codeUpload" @(isMultiple == true ? "multiple" : "") style="border: none; padding: 6px; font-size: 12px; background: transparent; flex: 1;">
                                                     <button class="btn btn-danger" onclick="ScanCCCDHandle('@codeUpload','@isMultiple','@idNumberKey','@fullNameKey','@genderKey','@birthDateKey',event)" style="border-radius: 6px; box-shadow: 0 2px 8px rgba(244, 67, 54, 0.2); flex-shrink: 0; padding: 8px 12px; transition: all 0.3s ease;" onmouseover="this.style.boxShadow='0 4px 12px rgba(244, 67, 54, 0.3)';" onmouseout="this.style.boxShadow='0 2px 8px rgba(244, 67, 54, 0.2)';">
                                                         <i class="ri-qr-scan-2-line"></i>
