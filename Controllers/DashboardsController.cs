@@ -193,6 +193,7 @@ public class DashboardsController : Controller
     return View(new ErrorViewModel { RequestId = Activity.Current?.Id ?? HttpContext.TraceIdentifier });
   }
   [HttpPost]
+  [AllowAnonymous]
   public async Task<IActionResult> SyncGoogleSheet()
   {
     try
