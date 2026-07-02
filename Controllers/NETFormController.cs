@@ -875,107 +875,8 @@ namespace KOAHome.Controllers
       return new { IdNumber = idNumber, FullName = fullName, Gender = gender, BirthDate = birthDate };
     }
 
-    //[HttpPost]
-    //public async Task<IActionResult> ButtonAction(List<IFormFile> files)
-    //{
-    //  if (files == null || files.Count == 0)
-    //    return Json(new { success = false, message = "Vui lòng chọn ít nhất 1 file ảnh." });
-
-    //  try
-    //  {
-    //    string apiKey = _googleCloudVisionApiKey;
-
-    //    // Danh sách chứa các request con và danh sách lưu tên file tương ứng để map kết quả
-    //    var imageRequests = new List<object>();
-    //    var fileNames = new List<string>();
-
-    //    // 1. Đóng gói toàn bộ các file ảnh thành các Object trong mảng requests
-    //    foreach (var file in files)
-    //    {
-    //      if (file.Length > 0)
-    //      {
-    //        using var memoryStream = new MemoryStream();
-    //        await file.CopyToAsync(memoryStream);
-    //        string base64Image = Convert.ToBase64String(memoryStream.ToArray());
-
-    //        // Thêm từng ảnh vào danh sách batch theo đúng format Google yêu cầu
-    //        imageRequests.Add(new
-    //        {
-    //          image = new { content = base64Image },
-    //          features = new[] { new { type = "TEXT_DETECTION" } }
-    //        });
-
-    //        fileNames.Add(file.FileName);
-    //      }
-    //    }
-
-    //    if (imageRequests.Count == 0)
-    //      return Json(new { success = false, message = "Không có file nào hợp lệ để xử lý." });
-
-    //    // 2. Gom tất cả vào 1 Payload duy nhất gửi đi theo dạng Batch
-    //    var batchRequestBody = new { requests = imageRequests };
-    //    string jsonPayload = JsonSerializer.Serialize(batchRequestBody);
-
-    //    // 3. Gửi 1 REQUEST HTTP POST duy nhất chứa toàn bộ các ảnh lên Google
-    //    var client = _httpClientFactory.CreateClient();
-    //    string url = $"https://vision.googleapis.com/v1/images:annotate?key={apiKey}";
-
-    //    var content = new StringContent(jsonPayload, Encoding.UTF8, "application/json");
-    //    var response = await client.PostAsync(url, content);
-
-    //    if (!response.IsSuccessStatusCode)
-    //    {
-    //      string errorContent = await response.Content.ReadAsStringAsync();
-    //      return Json(new { success = false, message = $"Lỗi từ Google API: {errorContent}" });
-    //    }
-
-    //    // 4. Đọc dữ liệu mảng kết quả trả về từ Google
-    //    string jsonResponse = await response.Content.ReadAsStringAsync();
-    //    var finalResults = new List<object>();
-
-    //    using var doc = JsonDocument.Parse(jsonResponse);
-    //    var root = doc.RootElement;
-
-    //    // Google sẽ trả về mảng "responses" có số lượng và thứ tự khớp 100% với danh sách ảnh gửi lên
-    //    if (root.TryGetProperty("responses", out var responses) && responses.GetArrayLength() > 0)
-    //    {
-    //      for (int i = 0; i < responses.GetArrayLength(); i++)
-    //      {
-    //        string currentFileName = fileNames[i];
-    //        string extractedText = "";
-    //        var singleResponse = responses[i];
-
-    //        // Kiểm tra xem ảnh này có trích xuất text thành công không
-    //        if (singleResponse.TryGetProperty("textAnnotations", out var textAnnotations) && textAnnotations.GetArrayLength() > 0)
-    //        {
-    //          extractedText = textAnnotations[0].GetProperty("description").GetString();
-    //        }
-
-    //        // 5. Thừa kế hàm Regex tách chuỗi chuẩn hiện tại của bạn
-    //        dynamic parsedData = ParseCccdData(extractedText);
-
-    //        finalResults.Add(new
-    //        {
-    //          FileName = currentFileName,
-    //          IdNumber = parsedData.IdNumber,
-    //          FullName = parsedData.FullName,
-    //          Gender = parsedData.Gender,
-    //          BirthDate = parsedData.BirthDate
-    //        });
-    //      }
-    //    }
-
-    //    // Trả danh sách kết quả về cho Frontend render ra Table
-    //    return Json(new { success = true, results = finalResults });
-    //  }
-    //  catch (Exception ex)
-    //  {
-    //    return Json(new { success = false, message = "Lỗi xử lý Batch OCR: " + ex.Message });
-    //  }
-    //}
-
     [HttpPost]
-    public async Task<IActionResult> ButtonAction([FromForm] IFormCollection form)
+    public async Task<IActionResult> AjaxButton([FromForm] IFormCollection form)
     {
       try
       {
@@ -1014,7 +915,7 @@ namespace KOAHome.Controllers
 
 
         // xu ly luu form
-        var result = await _form.NET_Form_ButtonActionHandler(formData, sqlstore, connectionString);
+        var result = await _form.NET_Form_AjaxButtonHandler(formData, sqlstore, connectionString);
         return Json(new { success = true, response = result, responsefield = responsefield });
       }
       catch (PostgresException ex)

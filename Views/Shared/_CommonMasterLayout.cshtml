@@ -2487,7 +2487,7 @@
             });
         }
 
-        function ButtonActionHandler(event, button, datasourceid, sqlstore, responsefield) {
+        function AjaxButtonHandler(event, button, datasourceid, sqlstore, responsefield) {
             if (event) {
                 event.preventDefault();
             }
@@ -2499,17 +2499,23 @@
             formData.append("responsefield", responsefield);
 
             // 3. Hiển thị hiệu ứng loading
-            $('#loading').removeClass('d-none');
+           // Chỉ hiển thị spinner sau 2 giây khi trang load
+            loadingTimeout = setTimeout(() => {
+                $("#loading-overlay").show();
+            }, 1000);
 
             // 4. Gọi API xử lý hàng loạt
             $.ajax({
-                url: '/NETForm/ButtonAction',
+                url: '/NETForm/AjaxButton',
                 type: 'POST',
                 data: formData,
                 contentType: false,
                 processData: false,
                 success: function (response) {
-                    $('#loading').addClass('d-none');
+                    clearTimeout(loadingTimeout);
+                    if ($("#loading-overlay").length) {
+                        $("#loading-overlay").hide();
+                    }
 
                     // Định nghĩa danh sách các key hệ thống cần loại trừ
                     var systemKeys = ['successmessage', 'errormessage', 'unhidefield', 'reload', 'success', 'responsefield'];
@@ -2614,63 +2620,14 @@
                     }
                 },
                 error: function () {
-                    $('#loading').addClass('d-none');
+                    clearTimeout(loadingTimeout);
+                    if ($("#loading-overlay").length) {
+                        $("#loading-overlay").hide();
+                    }
                     alert('Đã xảy ra lỗi hệ thống khi quét danh sách ảnh CCCD.');
                 }
             });
         }
-
-             //      function handleAjaxConfirmed(id, listid, sqlstore, datasourceid) {
-             //     // dua cac du lieu can truyen vao formdata
-             //     var formData = new FormData();
-             //     formData.append("id", id); // key cua du lieu
-             //     formData.append("sqlstore", sqlstore); // Lấy sqlstore tu button truyen vao
-             //     formData.append("datasourceid", datasourceid); // Lấy datasource tu button truyen vao
-             //     formData.append("listid", listid); // list id xuất hiện khi chọn nhiều dòng table, áp dụng với nút on top
-
-             //     // Gọi AJAX để gửi yêu cầu xóa
-             //     $.ajax({
-             //         url: '/Home/Action_Confirmed', // Controller xử lý hành động
-             //         type: 'POST', // Hoặc 'GET' nếu phù hợp
-             //         data: formData, // Truyền ID của dòng cần hành động và store xử lý
-             //         processData: false, // Không chuyển `FormData` thành query string
-             //         contentType: false, // Để trình duyệt tự động đặt `content-type`
-             //         success: function (response) {
-             //             if (response.success) {
-             //                 rplm({
-             //                     title: "Xử lý thành công!",
-             //                     text: "Hành động của bạn đã được xử lý.",
-             //                     type: "success",
-             //                     timer: 2000,
-             //                     confirmButtonText: 'Xác nhận',
-             //                     html: true
-             //                 }, function () {
-             //                     // reload lại sau khi đóng popup
-             //                     location.reload();
-             //                 });
-             //             } else {
-             //                 rplm({
-             //                     title: "Lỗi!",
-             //                     text: response.errorMessage || "Có vấn đề xảy ra.",
-             //                     type: "error",
-             //                     timer: 2000,
-             //                     confirmButtonText: 'Xác nhận',
-             //                     html: true
-             //                 });
-             //             }
-             //         },
-             //         error: function () {
-             //             rplm({
-             //                 title: "Lỗi!",
-             //                 text: "Lỗi khi kết nối đến máy chủ.",
-             //                 type: "error",
-             //                 timer: 2000,
-             //                 confirmButtonText: 'Done',
-             //                 html: true
-             //             });
-             //         }
-             //     });
-             // }
     </script>
 
     <!-- Page Scripts-->

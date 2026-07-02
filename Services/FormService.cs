@@ -20,7 +20,7 @@ namespace KOAHome.Services
     public Task<List<dynamic>> NET_Form_VersionField_WithForm_sel(string? formCode, int? formId);
     public Task<string> NET_Form_GetValidation(string formCode);
     public Task<string> NET_Form_GetListReportCode(string formCode);
-    public Task<IDictionary<string, object>> NET_Form_ButtonActionHandler(Dictionary<string, object> parameters, string sqlStore, string connectionString);
+    public Task<IDictionary<string, object>> NET_Form_AjaxButtonHandler(Dictionary<string, object> parameters, string sqlStore, string connectionString);
 
   }
   public class FormService : IFormService
@@ -210,7 +210,7 @@ namespace KOAHome.Services
 
       return stringaggreportcodes;
     }
-    public async Task<IDictionary<string, object>> NET_Form_ButtonActionHandler(Dictionary<string, object> parameters, string sqlStore, string connectionString)
+    public async Task<IDictionary<string, object>> NET_Form_AjaxButtonHandler(Dictionary<string, object> parameters, string sqlStore, string connectionString)
     {
       // neu khong truyen connect string thi se lay connection string mac dinh
       if (connectionString == null)

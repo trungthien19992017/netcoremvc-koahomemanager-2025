@@ -679,15 +679,23 @@
                                                                         </div>
                                                                     </div>
                                                                 }
-                                                                else if (child_type == "ButtonAction")
+                                                                else if (child_type == "AjaxButton")
                                                                 {
                                                                     var responseField = child_field_optionsDict.ContainsKey("responseField") ? (child_field_optionsDict["responseField"].ToString() ?? "") : "";
                                                                     var request = ParseDataHelper.ParseFieldOptionsChildToDictionary(child_field_options, "request");
                                                                     string datasourceId = request.ContainsKey("datasourceid") ? (request["datasourceid"]?.ToString()?.ToLower() ?? "") : "";
                                                                     string sqlStore = request.ContainsKey("sqlstore") ? (request["sqlstore"]?.ToString()?.ToLower() ?? "") : "";
                                                                     <div style="@inputstyle">
-                                                                        <button style="@labelstyle" class="btn waves-effect" onclick="ButtonActionHandler(event, this, '@datasourceId','@sqlStore','@responseField')" onmouseover="this.style.filter='brightness(0.92)'; this.style.transform='translateY(-1px)'; this.style.boxShadow='0 4px 10px rgba(0,0,0,0.25)';"
-                                                                                onmouseout="this.style.filter='none'; this.style.transform='translateY(0)'; this.style.boxShadow='0 2px 5px rgba(0,0,0,0.15)';">
+                                                                        <button style="@labelstyle" class="btn waves-effect"
+                                                                                @* /* 1. HIỆU ỨNG KHI CHẠM (MOBILE) * / *@
+                                                                                ontouchstart="this.style.filter='brightness(0.85)'; this.style.transform='scale(0.95)';"
+                                                                                ontouchend="this.style.filter='none'; this.style.transform='scale(1)';"
+                                                                                ontouchcancel="this.style.filter='none'; this.style.transform='scale(1)';"
+                                                                                @* /* 2. HIỆU ỨNG REO CHUỘT (PC) * / *@
+                                                                                onmouseover="this.style.filter='brightness(0.92)'; this.style.transform='translateY(-1px)';"
+                                                                                onmouseout="this.style.filter='none'; this.style.transform='translateY(0)';"
+                                                                                @* /* 3. GỌI HÀM DUY NHẤT Ở ĐÂY * / *@
+                                                                                onclick="AjaxButtonHandler(event, this, '@datasourceId','@sqlStore','@responseField');">
                                                                             <i class="@iconclass" style="@iconstyle"></i> <span class="ms-2" style="@iconstyle">@label</span>
                                                                         </button>
                                                                     </div>
@@ -695,7 +703,7 @@
 
                                                                 @{
                                                                     // mot số trường sử dụng label riêng
-                                                                    string[] nolabel_fieldtypes = ["DynamicReport","FileUploader","HTMLEditor","RadioGroup","EmptyBox","ListSelection","ColorBox","Label","EmbedYoutube","VideoUploader","ScanCCCD","ButtonAction"];
+                                                                    string[] nolabel_fieldtypes = ["DynamicReport","FileUploader","HTMLEditor","RadioGroup","EmptyBox","ListSelection","ColorBox","Label","EmbedYoutube","VideoUploader","ScanCCCD","AjaxButton"];
                                                                     if (!nolabel_fieldtypes.Contains(child_type))
                                                                     {
                                                                         <label for="@child_name"><i class="@iconclass" style="@iconstyle"></i> <span style="@labelstyle">@child_label</span> <span class='text-danger'>@(child_isrequired == true ? "*" : "")</span></label>
@@ -1080,15 +1088,23 @@
                                                             </div>
                                                         </div>
                                                     }
-                                                    else if (type == "ButtonAction")
+                                                    else if (type == "AjaxButton")
                                                     {
                                                         var responseField = field_optionsDict.ContainsKey("responseField") ? (field_optionsDict["responseField"].ToString() ?? "") : "";
                                                         var request = ParseDataHelper.ParseFieldOptionsChildToDictionary(field_options, "request");
                                                         string datasourceId = request.ContainsKey("datasourceid") ? (request["datasourceid"]?.ToString()?.ToLower() ?? "") : "";
                                                         string sqlStore = request.ContainsKey("sqlstore") ? (request["sqlstore"]?.ToString()?.ToLower() ?? "") : "";
                                                         <div style="@inputstyle">
-                                                            <button style="@labelstyle" class="btn waves-effect" onclick="ButtonActionHandler(event, this, '@datasourceId','@sqlStore','@responseField')" onmouseover="this.style.filter='brightness(0.92)'; this.style.transform='translateY(-1px)'; this.style.boxShadow='0 4px 10px rgba(0,0,0,0.25)';"
-                                                                    onmouseout="this.style.filter='none'; this.style.transform='translateY(0)'; this.style.boxShadow='0 2px 5px rgba(0,0,0,0.15)';">
+                                                            <button style="@labelstyle" class="btn waves-effect"
+                                                                    @* /* 1. HIỆU ỨNG KHI CHẠM (MOBILE) * / *@
+                                                                    ontouchstart="this.style.filter='brightness(0.85)'; this.style.transform='scale(0.95)';"
+                                                                    ontouchend="this.style.filter='none'; this.style.transform='scale(1)';"
+                                                                    ontouchcancel="this.style.filter='none'; this.style.transform='scale(1)';"
+                                                                    @* /* 2. HIỆU ỨNG REO CHUỘT (PC) * / *@
+                                                                    onmouseover="this.style.filter='brightness(0.92)'; this.style.transform='translateY(-1px)';"
+                                                                    onmouseout="this.style.filter='none'; this.style.transform='translateY(0)';"
+                                                                    @* /* 3. GỌI HÀM DUY NHẤT Ở ĐÂY * / *@
+                                                                    onclick="AjaxButtonHandler(event, this, '@datasourceId','@sqlStore','@responseField');">
                                                                 <i class="@iconclass" style="@iconstyle"></i> <span class="ms-2" style="@iconstyle">@label</span>
                                                             </button>
                                                         </div>
@@ -1096,7 +1112,7 @@
 
                                                     @* neu type dynamic report hoac file uploadder thì tự check label riêng *@
                                                     @{
-                                                        string[] nolabel_fieldtypes = ["DynamicReport","FileUploader","HTMLEditor","RadioGroup","EmptyBox","ListSelection","ColorBox","Label","EmbedYoutube","VideoUploader","ScanCCCD","ButtonAction"];
+                                                        string[] nolabel_fieldtypes = ["DynamicReport","FileUploader","HTMLEditor","RadioGroup","EmptyBox","ListSelection","ColorBox","Label","EmbedYoutube","VideoUploader","ScanCCCD","AjaxButton"];
                                                         if (!nolabel_fieldtypes.Contains(type))
                                                         {
                                                             <label for="@name"><i class="@iconclass" style="@iconstyle"></i> <span style="@labelstyle">@label</span> <span class='text-danger'>@(isrequired == true ? "*" : "")</span></label>
