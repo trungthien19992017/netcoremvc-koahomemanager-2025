@@ -205,12 +205,12 @@ asp-route-id="@id" data-modal-id="modal-PopupForm" enctype="multipart/form-data"
                                             string[] noclasslabel_fieldtypes = ["RadioGroup","FileUploader","HTMLEditor"];
 
                                             <div class="col-md-@(Convert.ToInt32(child_field_width) == 0 ? "4" : child_field_width) form-control-validation fv-plugins-icon-container">
-                                                <div style="@inputstyle" class="@(
+                                                <div class="@(
                                                   noclasslabel_fieldtypes.Contains(child_type) ? "" : child_type == "CheckBox" ? "form-check mt-4" : child_type == "Switch" ? "form-check form-switch me-n3" : child_type == "DropDownBox" ? "form-floating form-floating-outline select2-dark form-floating-select2" : "form-floating form-floating-outline"
                                                 )">
                                                     @if (child_type == "TextBox")
                                                     {
-                                                        <input class="form-control form-control-sm" type="text" id="@child_name" name="@child_name" value="@child_value" @(child_isreadonly == true ? "readonly" : "") @(child_isrequired == true ? "required" : "") />
+                                                        <input style="@inputstyle" class="form-control form-control-sm" type="text" id="@child_name" name="@child_name" value="@child_value" @(child_isreadonly == true ? "readonly" : "") @(child_isrequired == true ? "required" : "") />
                                                     }
                                                     else if (child_type == "ColorBox")
                                                     {
@@ -226,17 +226,17 @@ asp-route-id="@id" data-modal-id="modal-PopupForm" enctype="multipart/form-data"
                                                     {
                                                         // lấy thông tin chiều cao (mặc định 200)
                                                         int height = child_field_editoroptionsDict.ContainsKey("height") ? Convert.ToInt32(child_field_editoroptionsDict["height"]) : 200;
-                                                        <textarea style="height:@(height + "px")" class="form-control" placeholder="@child_label" name="@child_name" id="@child_name" aria-label="@child_label" @(child_isreadonly == true ? "readonly" : "") @(child_isrequired == true ? "required" : "")>@child_value</textarea>
+                                                        <textarea style="height:@(height + "px") @inputstyle" class="form-control" placeholder="@child_label" name="@child_name" id="@child_name" aria-label="@child_label" @(child_isreadonly == true ? "readonly" : "") @(child_isrequired == true ? "required" : "")>@child_value</textarea>
                                                     }
                                                     else if (child_type == "NumberBox")
                                                     {
-                                                        <input class="form-control form-control-sm" type="number" id="@child_name"  name="@child_name" value="@child_value" @(child_isreadonly == true ? "readonly" : "") @(child_isrequired == true ? "required" : "") />
+                                                        <input style="@inputstyle" class="form-control form-control-sm" type="number" id="@child_name" name="@child_name" value="@child_value" @(child_isreadonly == true ? "readonly" : "") @(child_isrequired == true ? "required" : "") />
                                                     }
                                                     else if (child_type == "DateBox")
                                                     {
                                                         @* mac dinh datetype la date *@
                                                         string datetype = child_field_editoroptionsDict.ContainsKey("type") ? (child_field_editoroptionsDict["type"].ToString() ?? "date") : "date";
-                                                        <input class="form-control form-control-sm" type="@datetype" id="@child_name" name="@child_name" value="@child_value" @(child_isreadonly == true ? "readonly" : "") @(child_isrequired == true ? "required" : "")/>
+                                                        <input style="@inputstyle" class="form-control form-control-sm" type="@datetype" id="@child_name" name="@child_name" value="@child_value" @(child_isreadonly == true ? "readonly" : "") @(child_isrequired == true ? "required" : "") />
                                                     }
                                                     else if (child_type == "EmptyBox")
                                                     {
@@ -302,9 +302,9 @@ asp-route-id="@id" data-modal-id="modal-PopupForm" enctype="multipart/form-data"
 
                                                         // serialize whitelist tiếng Việt không bị escape unicode
                                                         var whitelistJson = JsonConvert.SerializeObject(tagBoxWhitelist, new JsonSerializerSettings
-                                        {
-                                            StringEscapeHandling = StringEscapeHandling.Default
-                                        });
+                                                        {
+                                                            StringEscapeHandling = StringEscapeHandling.Default
+                                                        });
 
                                                         <input id="@child_name" class="tag-input form-control h-auto" name="@child_name" value="@child_value" data-jsonwhitelist='@whitelistJson' aria-label="@child_label" tabindex="-1">
                                                     }
@@ -343,7 +343,7 @@ asp-route-id="@id" data-modal-id="modal-PopupForm" enctype="multipart/form-data"
                                                             foreach (var item in selectList)
                                                             {
                                                                 <div class="form-check form-check-inline">
-                                                                    <input type="radio" class="form-check-input"
+                                                                    <input type="radio" style="@inputstyle" class="form-check-input"
                                                                     name="@child_name"
                                                                     id="@(child_name + "_" + item.Value)"
                                                                     value="@item.Value"
@@ -355,7 +355,7 @@ asp-route-id="@id" data-modal-id="modal-PopupForm" enctype="multipart/form-data"
                                                     }
                                                     else if (child_type == "CheckBox" || child_type == "Switch")
                                                     {
-                                                        <input class="form-check-input" type="checkbox" id="@child_name" name="@child_name" value="true" @((child_value ?? "").ToString().ToLower() == "true" ? "checked" : "") @(child_isreadonly == true ? "readonly" : "") @(child_isrequired == true ? "required" : "")/>
+                                                        <input style="@inputstyle" class="form-check-input" type="checkbox" id="@child_name" name="@child_name" value="true" @((child_value ?? "").ToString().ToLower() == "true" ? "checked" : "") @(child_isreadonly == true ? "readonly" : "") @(child_isrequired == true ? "required" : "") />
                                                     }
                                                     else if (child_type == "FileUploader")
                                                     {
@@ -371,7 +371,7 @@ asp-route-id="@id" data-modal-id="modal-PopupForm" enctype="multipart/form-data"
                                                             <div class="col-md-4 card-header">
                                                                 <div class="mb-4">
                                                                     <label for="@child_name" class="form-label"><i class="@iconclass" style="@iconstyle"></i> <span style="@labelstyle">@child_label</span>  <span class='text-danger'>@(child_isrequired == true ? "*" : "")</span></label>
-                                                                    <input class="form-control" type="file" id="@codeUpload" name="@codeUpload" data-target="@("#fileList-"+codeUpload)" data-carousel="@("#carouselSlideImage-"+codeUpload)" multiple />
+                                                                    <input style="@inputstyle" class="form-control" type="file" id="@codeUpload" name="@codeUpload" data-target="@("#fileList-" + codeUpload)" data-carousel="@("#carouselSlideImage-" + codeUpload)" multiple />
                                                                     @* tao danh sach file rong de xu ly js hiển thị *@
                                                                     <ul id="@("fileList-"+codeUpload)"></ul>
                                                                 </div>
@@ -454,7 +454,7 @@ asp-route-id="@id" data-modal-id="modal-PopupForm" enctype="multipart/form-data"
                                                     {
                                                         <label for="@child_name" class="htmleditor-form-label"><i class="@iconclass" style="@iconstyle"></i> <span style="@labelstyle">@child_label</span> <span class='text-danger'>@(child_isrequired == true ? "*" : "")</span></label>
                                                         // Quill Editor hiển thị
-                                                        <div id="@("editor-container-"+child_name)" style="height:300px;" class="quill-editor" data-readonly="@(isreadonly == true ? "true" : "false")"></div>
+                                                        <div id="@("editor-container-"+child_name)" style="height:300px; @inputstyle" class="quill-editor" data-readonly="@(isreadonly == true ? "true" : "false")"></div>
                                                         // Hidden input để submit
                                                         <input type="hidden" id="@("editor-content-"+child_name)" name="@child_name" value="@child_value" />
                                                     }
@@ -485,7 +485,7 @@ asp-route-id="@id" data-modal-id="modal-PopupForm" enctype="multipart/form-data"
                                                     else if (child_type == "EmbedYoutube")
                                                     {
                                                         <P for="@child_name" class="htmleditor-form-label"><i class="@iconclass" style="@iconstyle"></i> <span style="@labelstyle">@label</span></P>
-                                                        <div class="youtube-video-embed w-100">
+                                                        <div style="@inputstyle" class="youtube-video-embed w-100">
                                                             <div class="plyr__video-embed" id="plyr-youtube-video">
                                                                 <iframe src="@child_value"
                                                                         allowfullscreen
@@ -514,7 +514,7 @@ asp-route-id="@id" data-modal-id="modal-PopupForm" enctype="multipart/form-data"
                                                         }
 
                                                         <p for="@child_name" class="htmleditor-form-label"><i class="@iconclass" style="@iconstyle"></i> <span style="@labelstyle">@child_label</span></p>
-                                                        <div class="video-player-embed">
+                                                        <div style="@inputstyle" class="video-player-embed">
                                                             <video class="w-100 plyr__video-embed" id="@("plyr-video-player-"+name)" poster="@thumbnailpath" playsinline="" controls="" title="@mediatitle">
                                                                 <source src="@mediapath" type="video/mp4">
                                                             </video>
@@ -538,7 +538,7 @@ asp-route-id="@id" data-modal-id="modal-PopupForm" enctype="multipart/form-data"
                                                         }
                                                         <div class="">
                                                             <label for="@child_name" class="form-label"><i class="@iconclass" style="@iconstyle"></i> <span style="@labelstyle">@child_label</span>  <span class='text-danger'>@(child_isrequired == true ? "*" : "")</span></label>
-                                                            <div class="d-flex gap-2 align-items-center flex-nowrap" style="background: #FFFFFF; padding: 12px; border-radius: 8px; border: 1.5px dashed #000000;">
+                                                            <div class="d-flex gap-2 align-items-center flex-nowrap" style="background: #FFFFFF; padding: 12px; border-radius: 8px; border: 1.5px dashed #000000;  @inputstyle">
                                                                 <input class="form-control" type="file" id="@codeUpload" name="@codeUpload" @(isMultiple == true ? "multiple" : "") style="border: none; padding: 6px; font-size: 12px; background: transparent; flex: 1;">
                                                                 <button class="btn btn-danger" onclick="ScanCCCDHandle('@codeUpload','@isMultiple','@idNumberKey','@fullNameKey','@genderKey','@birthDateKey',event)" style="border-radius: 6px; box-shadow: 0 2px 8px rgba(244, 67, 54, 0.2); flex-shrink: 0; padding: 8px 12px; transition: all 0.3s ease;" onmouseover="this.style.boxShadow='0 4px 12px rgba(244, 67, 54, 0.3)';" onmouseout="this.style.boxShadow='0 2px 8px rgba(244, 67, 54, 0.2)';">
                                                                     <i class="ri-qr-scan-2-line"></i>
@@ -562,9 +562,11 @@ asp-route-id="@id" data-modal-id="modal-PopupForm" enctype="multipart/form-data"
                                                             ? fileUrlsDict[codeUpload]
                                                             : new List<string>();
                                                         }
-                                                        <button class="btn pull-up waves-effect" onclick="ButtonActionHandler(event, this)" style="@labelstyle">
-                                                            <i class="@iconclass" style="@iconstyle"></i> <span class="ms-2" style="@iconstyle">@label</span>
-                                                        </button>
+                                                        <div style="@inputstyle">
+                                                            <button style="@labelstyle" class="btn pull-up waves-effect" onclick="ButtonActionHandler(event, this)">
+                                                                <i class="@iconclass" style="@iconstyle"></i> <span class="ms-2" style="@iconstyle">@label</span>
+                                                            </button>
+                                                        </div>
                                                     }
 
                                                     @{
@@ -596,12 +598,12 @@ asp-route-id="@id" data-modal-id="modal-PopupForm" enctype="multipart/form-data"
                                 string inputstyle = (field_optionsDict.ContainsKey("inputStyle") ? Convert.ToString(field_optionsDict["inputStyle"]) : "");
 
                                 <div class="col-md-@(Convert.ToInt32(field_width) == 0 ? "4" : field_width) form-control-validation fv-plugins-icon-container">
-                                    <div style="@inputstyle" class="@(
+                                    <div class="@(
                                         noclasslabel_fieldtypes.Contains(type) ? "" : type == "CheckBox" ? "form-check mt-4" : type == "Switch" ? "form-check form-switch me-n3" : type == "DropDownBox" ? "form-floating form-floating-outline select2-dark form-floating-select2" : "form-floating form-floating-outline"
                                       )">
                                         @if (type == "TextBox")
                                         {
-                                            <input class="form-control form-control-sm" type="text" id="@name" name="@name" value="@value" @(isreadonly == true ? "readonly" : "") @(isrequired == true ? "required" : "") />
+                                            <input style="@inputstyle" class="form-control form-control-sm" type="text" id="@name" name="@name" value="@value" @(isreadonly == true ? "readonly" : "") @(isrequired == true ? "required" : "") />
                                         }
                                         else if (type == "ColorBox")
                                         {
@@ -618,17 +620,17 @@ asp-route-id="@id" data-modal-id="modal-PopupForm" enctype="multipart/form-data"
                                         {
                                             // lấy thông tin chiều cao (mặc định 200)
                                             int height = field_editoroptionsDict.ContainsKey("height") ? Convert.ToInt32(field_editoroptionsDict["height"]) : 200;
-                                            <textarea style="height:@(height + "px")" class="form-control" placeholder="@label" name="@name" id="@name" aria-label="@label" @(isreadonly == true ? "readonly" : "") @(isrequired == true ? "required" : "")>@value</textarea>
+                                            <textarea style="height:@(height + "px") @inputstyle" class="form-control" placeholder="@label" name="@name" id="@name" aria-label="@label" @(isreadonly == true ? "readonly" : "") @(isrequired == true ? "required" : "")>@value</textarea>
                                         }
                                         else if (type == "NumberBox")
                                         {
-                                            <input class="form-control form-control-sm" type="number" id="@name"  name="@name" value="@value" @(isreadonly == true ? "readonly" : "") @(isrequired == true ? "required" : "") />
+                                            <input style="@inputstyle" class="form-control form-control-sm" type="number" id="@name" name="@name" value="@value" @(isreadonly == true ? "readonly" : "") @(isrequired == true ? "required" : "") />
                                         }
                                         else if (type == "DateBox")
                                         {
                                             @* mac dinh datetype la date *@
                                             string datetype = field_editoroptionsDict.ContainsKey("type") ? (field_editoroptionsDict["type"].ToString() ?? "date") : "date";
-                                            <input class="form-control form-control-sm" type="@datetype" id="@name" name="@name" value="@value" @(isreadonly == true ? "readonly" : "") @(isrequired == true ? "required" : "")/>
+                                            <input style="@inputstyle" class="form-control form-control-sm" type="@datetype" id="@name" name="@name" value="@value" @(isreadonly == true ? "readonly" : "") @(isrequired == true ? "required" : "") />
                                         }
                                         else if (type == "EmptyBox")
                                         {
@@ -694,9 +696,9 @@ asp-route-id="@id" data-modal-id="modal-PopupForm" enctype="multipart/form-data"
 
                                             // serialize whitelist tiếng Việt không bị escape unicode
                                             var whitelistJson = JsonConvert.SerializeObject(tagBoxWhitelist, new JsonSerializerSettings
-                              {
-                                  StringEscapeHandling = StringEscapeHandling.Default
-                              });
+                                            {
+                                                StringEscapeHandling = StringEscapeHandling.Default
+                                            });
 
                                             <input id="@name" class="tag-input form-control h-auto" name="@name" value="@value" data-jsonwhitelist='@whitelistJson' aria-label="@label" tabindex="-1">
                                         }
@@ -735,7 +737,7 @@ asp-route-id="@id" data-modal-id="modal-PopupForm" enctype="multipart/form-data"
                                                 foreach (var item in selectList)
                                                 {
                                                     <div class="form-check form-check-inline">
-                                                        <input type="radio" class="form-check-input"
+                                                        <input type="radio" style="@inputstyle" class="form-check-input"
                                                         name="@name"
                                                         id="@(name + "_" + item.Value)"
                                                         value="@item.Value"
@@ -747,7 +749,7 @@ asp-route-id="@id" data-modal-id="modal-PopupForm" enctype="multipart/form-data"
                                         }
                                         else if (type == "CheckBox" || type == "Switch")  
                                         {
-                                            <input class="form-check-input" type="checkbox" id="@name" name="@name" value="true" @((value ?? "").ToString().ToLower() == "true" ? "checked" : "") @(isreadonly == true ? "readonly" : "") @(isrequired == true ? "required" : "")/>
+                                            <input style="@inputstyle" class="form-check-input" type="checkbox" id="@name" name="@name" value="true" @((value ?? "").ToString().ToLower() == "true" ? "checked" : "") @(isreadonly == true ? "readonly" : "") @(isrequired == true ? "required" : "") />
                                         }
                                         else if (type == "FileUploader")
                                         {
@@ -763,7 +765,7 @@ asp-route-id="@id" data-modal-id="modal-PopupForm" enctype="multipart/form-data"
                                                 <div class="col-md-4 card-header">
                                                     <div class="mb-4">
                                                         <label for="@name" class="form-label"><i class="@iconclass" style="@iconstyle"></i> <span style="@labelstyle">@label</span> <span class='text-danger'>@(isrequired == true ? "*" : "")</span></label>
-                                                        <input class="form-control" type="file" id="@codeUpload" name="@codeUpload" data-target="@("#fileList-"+codeUpload)" data-carousel="@("#carouselSlideImage-"+codeUpload)" multiple />
+                                                        <input style="@inputstyle" class="form-control" type="file" id="@codeUpload" name="@codeUpload" data-target="@("#fileList-" + codeUpload)" data-carousel="@("#carouselSlideImage-" + codeUpload)" multiple />
                                                         @* tao danh sach file rong de xu ly js hiển thị *@
                                                         <ul id="@("fileList-"+codeUpload)"></ul>
                                                     </div>
@@ -846,7 +848,7 @@ asp-route-id="@id" data-modal-id="modal-PopupForm" enctype="multipart/form-data"
                                         {
                                             <label for="@name" class="htmleditor-form-label"><span style="@labelstyle">@label</span></label>
                                             // Quill Editor hiển thị
-                                            <div id="@("editor-container-"+name)" style="height:300px;" class="quill-editor" data-readonly="@(isreadonly == true ? "true" : "false")"></div>
+                                            <div id="@("editor-container-"+name)" style="height:300px; @inputstyle" class="quill-editor" data-readonly="@(isreadonly == true ? "true" : "false")"></div>
                                             // Hidden input để submit
                                             <input type="hidden" id="@("editor-content-"+name)" name="@name" value="@value" />
                                         }
@@ -894,7 +896,7 @@ asp-route-id="@id" data-modal-id="modal-PopupForm" enctype="multipart/form-data"
                                         else if (type == "EmbedYoutube")
                                         {
                                             <p for="@name" class="htmleditor-form-label"><i class="@iconclass" style="@iconstyle"></i> <span style="@labelstyle">@label</span></p>
-                                            <div class="youtube-video-embed w-100">
+                                            <div style="@inputstyle" class="youtube-video-embed w-100">
                                                 <div class="plyr__video-embed" id="@("plyr-youtube-video-"+name)">
                                                     <iframe src="@value"
                                                             allowfullscreen
@@ -923,7 +925,7 @@ asp-route-id="@id" data-modal-id="modal-PopupForm" enctype="multipart/form-data"
                                             }
 
                                             <p for="@name" class="htmleditor-form-label"><i class="@iconclass" style="@iconstyle"></i> <span style="@labelstyle">@label</span></p>
-                                            <div class="video-player-embed">
+                                            <div style="@inputstyle" class="video-player-embed">
                                                 <video class="w-100 plyr__video-embed" id="@("plyr-video-player-"+name)" poster="@thumbnailpath" playsinline="" controls="" title="@mediatitle">
                                                     <source src="@mediapath" type="video/mp4">
                                                 </video>
@@ -947,7 +949,7 @@ asp-route-id="@id" data-modal-id="modal-PopupForm" enctype="multipart/form-data"
                                             }
                                             <div class="">
                                                 <label for="@name" class="form-label"><i class="@iconclass" style="@iconstyle"></i> <span style="@labelstyle">@label</span>  <span class='text-danger'>@(isrequired == true ? "*" : "")</span></label>
-                                                <div class="d-flex gap-2 align-items-center flex-nowrap" style="background: #FFFFFF; padding: 12px; border-radius: 8px; border: 1.5px dashed #000000;">
+                                                <div class="d-flex gap-2 align-items-center flex-nowrap" style="background: #FFFFFF; padding: 12px; border-radius: 8px; border: 1.5px dashed #000000;  @inputstyle">
                                                     <input class="form-control" type="file" id="@codeUpload" name="@codeUpload" @(isMultiple == true ? "multiple" : "") style="border: none; padding: 6px; font-size: 12px; background: transparent; flex: 1;">
                                                     <button class="btn btn-danger" onclick="ScanCCCDHandle('@codeUpload','@isMultiple','@idNumberKey','@fullNameKey','@genderKey','@birthDateKey',event)" style="border-radius: 6px; box-shadow: 0 2px 8px rgba(244, 67, 54, 0.2); flex-shrink: 0; padding: 8px 12px; transition: all 0.3s ease;" onmouseover="this.style.boxShadow='0 4px 12px rgba(244, 67, 54, 0.3)';" onmouseout="this.style.boxShadow='0 2px 8px rgba(244, 67, 54, 0.2)';">
                                                         <i class="ri-qr-scan-2-line"></i>
@@ -971,9 +973,11 @@ asp-route-id="@id" data-modal-id="modal-PopupForm" enctype="multipart/form-data"
                                                 ? fileUrlsDict[codeUpload]
                                                 : new List<string>();
                                             }
-                                            <button class="btn pull-up waves-effect" onclick="ButtonActionHandler(event, this)" style="@labelstyle">
-                                                <i class="@iconclass" style="@iconstyle"></i> <span class="ms-2" style="@iconstyle">@label</span>
-                                            </button>
+                                            <div style="@inputstyle">
+                                                <button style="@labelstyle" class="btn pull-up waves-effect" onclick="ButtonActionHandler(event, this)">
+                                                    <i class="@iconclass" style="@iconstyle"></i> <span class="ms-2" style="@iconstyle">@label</span>
+                                                </button>
+                                            </div>
                                         }
 
                                         @* neu type dynamic report hoac file uploadder thì tự check label riêng *@
