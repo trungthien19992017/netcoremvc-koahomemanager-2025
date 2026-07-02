@@ -2487,13 +2487,15 @@
             });
         }
 
-        function ButtonActionHandler(event, button) {
+        function ButtonActionHandler(event, button, datasourceid, sqlstore) {
             if (event) {
                 event.preventDefault();
             }
             
             var form = $(button).closest("form")[0];
             var formData = new FormData(form);
+            formData.append("sqlstore", sqlstore);
+            formData.append("datasourceid", datasourceid);
 
             // 3. Hiển thị hiệu ứng loading
             $('#loading').removeClass('d-none');
@@ -2506,53 +2508,88 @@
                 contentType: false,
                 processData: false,
                 success: function (response) {
-                    $('#loading').addClass('d-none');
+                    $('#loading').addClass('d-none');// Định nghĩa danh sách các key hệ thống cần loại trừ ra khỏi returnvalue
 
-                    if (response.success) {
-                        if (!response.results || response.results.length === 0) {
-                            alert("Không bóc tách được dữ liệu từ các file đã chọn.");
-                            return;
+                    var systemKeys = ['successmessage', 'errormessage', 'unhidefield', 'reload', 'success'];
+                    var data = response.response
+
+                    // ========================================================
+                    // 1. XỬ LÝ RETURNVALUE (Điền dữ liệu phẳng vào Form)
+                    // ========================================================
+                       $.each(data, function (key, value) {
+                        // Nếu không thuộc key hệ thống và value hợp lệ
+                        if (systemKeys.indexOf(key.toLowerCase()) === -1 && value !== null && value !== undefined) {
+                            var $field = $('#' + key);
+                            if ($field.length > 0) {
+                                // Điền giá trị vào field (hỗ trợ cả text/input hoặc thẻ hiển thị thông thường)
+                                if ($field.is('input, select, textarea')) {
+                                    $field.val(value);
+                                } else {
+                                    $field.html(value); // Html.Raw bằng cách ép render trực tiếp qua innerHTML
+                                }
+                            }
                         }
+                    });
 
-                        // TRƯỜNG HỢP 1: isMultiple là false -> Chỉ gán bộ CCCD đầu tiên vào key đích danh ban đầu
-                        if (!isMultiple) {
-                            var item = response.results[0];
+                    // ========================================================
+                    // 2. XỬ LÝ UNHIDEFIELD (Hiện các field bị ẩn ở div cha)
+                    // ========================================================
+                    if (data.unhidefield) {
+                        // Tách chuỗi bằng dấu phẩy
+                        var fieldsToUnhide = data.unhidefield.split(',');
+                        $.each(fieldsToUnhide, function (i, fieldId) {
+                            var $targetField = $('#' + trimString(fieldId));
+                            if ($targetField.length > 0) {
+                                // Tìm div cha gần nhất chứa class 'd-none' và loại bỏ nó
+                                $targetField.closest('.d-none').removeClass('d-none');
+                            }
+                        });
+                    }
 
-                            if (idNumberKey)  $('#' + idNumberKey).val(item.idNumber);
-                            if (fullNameKey)  $('#' + fullNameKey).val(item.fullName);
-                            if (birthDateKey) $('#' + birthDateKey).val(item.birthDate);
-                            if (genderKey)    $('#' + genderKey).val(item.gender);
-                        }
-                        // TRƯỜNG HỢP 2: isMultiple là true -> Xử lý cộng chuỗi động tăng dần (1, 2, 3...)
-                        else {
-                            // Hàm loại bỏ số 1 ở cuối chuỗi cấu hình (ví dụ: "IdNumber1" -> "IdNumber")
-                            // để phục vụ việc cộng chuỗi động tịnh tiến phía dưới
-                            var cleanKey = function(key) {
-                                return (key && key.endsWith('1')) ? key.slice(0, -1) : key;
-                            };
+                    // Hàm helper dùng để trim khoảng trắng nếu chuỗi unhidefield có cách (VD: "a, b")
+                    function trimString(str) {
+                        return str.replace(/^\s+|\s+$/g, '');
+                    }
 
-                            var baseIdKey = cleanKey(idNumberKey);
-                            var baseNameKey = cleanKey(fullNameKey);
-                            var baseBirthKey = cleanKey(birthDateKey);
-                            var baseGenderKey = cleanKey(genderKey);
-
-                            $.each(response.results, function (index, item) {
-                                var suffix = index + 1; // 1, 2, 3...
-
-                                var txtIdNumber = $('#' + baseIdKey + suffix);
-                                var txtFullName = $('#' + baseNameKey + suffix);
-                                var txtBirthDate = $('#' + baseBirthKey + suffix);
-                                var txtGender = $('#' + baseGenderKey + suffix);
-
-                                if (txtIdNumber.length)  txtIdNumber.val(item.idNumber);
-                                if (txtFullName.length)  txtFullName.val(item.fullName);
-                                if (txtBirthDate.length) txtBirthDate.val(item.birthDate);
-                                if (txtGender.length)    txtGender.val(item.gender);
-                            });
-                        }
-
-                    } else {
-                        alert(response.message);
+                    // ========================================================
+                    // 3. XỬ LÝ RELOAD, SUCCESSMESSAGE, ERRORMESSAGE
+                    // ========================================================
+            
+                    // Ưu tiên 1: Có yêu cầu RELOAD trang
+                    if (data.reload) {
+                        rplm({
+                            title: "Xử lý thành công!",
+                            text: data.successmessage || "Hành động của bạn đã được xử lý.",
+                            type: "success",
+                            timer: 2000,
+                            confirmButtonText: 'Xác nhận',
+                            html: true
+                        }, function () {
+                            location.reload();
+                        });
+                    } 
+                    // Ưu tiên 2: Có lỗi ERRORMESSAGE
+                    else if (data.errormessage) {
+                        rplm({
+                            title: "Lỗi!",
+                            text: data.errormessage,
+                            type: "error",
+                            timer: 2000,
+                            confirmButtonText: 'Xác nhận',
+                            html: true
+                        });
+                    } 
+                    // Ưu tiên 3: Chỉ hiển thị thông báo THÀNH CÔNG thông thường
+                    else if (data.successmessage) {
+                        rplm({
+                            title: "Xử lý thành công!",
+                            text: data.successmessage,
+                            type: "success",
+                            timer: 2000,
+                            confirmButtonText: 'Xác nhận',
+                            html: true
+                        }, function () {
+                        });
                     }
                 },
                 error: function () {

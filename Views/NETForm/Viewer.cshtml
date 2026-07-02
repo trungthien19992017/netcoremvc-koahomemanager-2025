@@ -253,6 +253,7 @@
                                         int field_colcount = Convert.ToInt32(field_optionsDict.ContainsKey("colCount") ? Convert.ToInt32(field_optionsDict["colCount"]) : 1);
                                         // tinh do rong cua field dua tren gia tri config
                                         int field_width = (12 / form_colCount * field_colspan);
+                                        bool field_visible = field_optionsDict.ContainsKey("visible") ? Convert.ToBoolean(field_optionsDict["visible"]) : true;
 
                                         // lay thong tin validation
                                         string field_validates = field.validates;
@@ -306,6 +307,7 @@
                                                         int child_field_colcount = Convert.ToInt32(child_field_optionsDict.ContainsKey("colCount") ? Convert.ToInt32(child_field_optionsDict["colCount"]) : 1);
                                                         // tinh do rong cua field dua tren gia tri config
                                                         int child_field_width = (12 / field_colcount * child_field_colspan);
+                                                        bool child_field_visible = child_field_optionsDict.ContainsKey("visible") ? Convert.ToBoolean(child_field_optionsDict["visible"]) : true;
 
                                                         // xử lý hiển thị các field
                                                         string iconclass = (child_field_optionsDict.ContainsKey("iconClass") ? Convert.ToString(child_field_optionsDict["iconClass"]) : "");
@@ -336,7 +338,7 @@
                                                         string[] noclasslabel_fieldtypes = ["RadioGroup","FileUploader","HTMLEditor"];
 
                                                         <div class="col-md-@(Convert.ToInt32(child_field_width) == 0 ? "4" : child_field_width) form-control-validation fv-plugins-icon-container">
-                                                            <div class="@(
+                                                            <div class="@(child_field_visible == false ? "d-none" : "") @(
                                                               noclasslabel_fieldtypes.Contains(child_type) ? "" : child_type == "CheckBox" ? "form-check mt-4" : child_type == "Switch" ? "form-check form-switch me-n3" : child_type == "DropDownBox" ? "form-floating form-floating-outline select2-dark form-floating-select2" : "form-floating form-floating-outline"
                                                             )">
                                                                 @if (child_type == "TextBox")
@@ -677,10 +679,33 @@
                                                                         </div>
                                                                     </div>
                                                                 }
+                                                                else if (child_type == "ButtonAction")
+                                                                {
+                                                                    string codeUpload = child_field_optionsDict.ContainsKey("codeUpload") ? (child_field_optionsDict["codeUpload"].ToString() ?? "") : "";
+                                                                    bool isMultiple = child_field_optionsDict.ContainsKey("multiple") ? Convert.ToBoolean(child_field_optionsDict["multiple"]) : false;
+                                                                    var dataField = ParseDataHelper.ParseFieldOptionsChildToDictionary(child_field_options, "dataField");
+                                                                    string idNumberKey = dataField.ContainsKey("idNumber") ? (dataField["idNumber"]?.ToString()?.ToLower() ?? "") : "";
+                                                                    string fullNameKey = dataField.ContainsKey("fullName") ? (dataField["fullName"]?.ToString()?.ToLower() ?? "") : "";
+                                                                    string genderKey = dataField.ContainsKey("gender") ? (dataField["gender"]?.ToString()?.ToLower() ?? "") : "";
+                                                                    string birthDateKey = dataField.ContainsKey("birthDate") ? (dataField["birthDate"]?.ToString()?.ToLower() ?? "") : "";
+                                                                    var fileList = new List<string>();
+                                                                    if (fileUrlsDict != null)
+                                                                    {
+                                                                        fileList = fileUrlsDict != null && fileUrlsDict.ContainsKey(codeUpload)
+                                                                        ? fileUrlsDict[codeUpload]
+                                                                        : new List<string>();
+                                                                    }
+                                                                    <div style="@inputstyle">
+                                                                        <button style="@labelstyle" class="btn waves-effect" onclick="ButtonActionHandler(event, this, '66','hs_booking_nhapkhachnhanh_checkcccd')" onmouseover="this.style.filter='brightness(0.92)'; this.style.transform='translateY(-1px)'; this.style.boxShadow='0 4px 10px rgba(0,0,0,0.25)';"
+                                                                                onmouseout="this.style.filter='none'; this.style.transform='translateY(0)'; this.style.boxShadow='0 2px 5px rgba(0,0,0,0.15)';">
+                                                                            <i class="@iconclass" style="@iconstyle"></i> <span class="ms-2" style="@iconstyle">@label</span>
+                                                                        </button>
+                                                                    </div>
+                                                                }
 
                                                                 @{
                                                                     // mot số trường sử dụng label riêng
-                                                                    string[] nolabel_fieldtypes = ["DynamicReport","FileUploader","HTMLEditor","RadioGroup","EmptyBox","ListSelection","ColorBox","Label","EmbedYoutube","VideoUploader","ScanCCCD"];
+                                                                    string[] nolabel_fieldtypes = ["DynamicReport","FileUploader","HTMLEditor","RadioGroup","EmptyBox","ListSelection","ColorBox","Label","EmbedYoutube","VideoUploader","ScanCCCD","ButtonAction"];
                                                                     if (!nolabel_fieldtypes.Contains(child_type))
                                                                     {
                                                                         <label for="@child_name"><i class="@iconclass" style="@iconstyle"></i> <span style="@labelstyle">@child_label</span> <span class='text-danger'>@(child_isrequired == true ? "*" : "")</span></label>
@@ -705,7 +730,7 @@
                                             string inputstyle = (field_optionsDict.ContainsKey("inputStyle") ? Convert.ToString(field_optionsDict["inputStyle"]) : "");
 
                                             <div class="col-md-@(Convert.ToInt32(field_width) == 0 ? "4" : field_width) form-control-validation fv-plugins-icon-container">
-                                                <div class="@(
+                                                <div class="@(field_visible == false ? "d-none" : "") @(
                                                     noclasslabel_fieldtypes.Contains(type) ? "" : type == "CheckBox" ? "form-check mt-4" : type == "Switch" ? "form-check form-switch me-n3" : type == "DropDownBox" ? "form-floating form-floating-outline select2-dark form-floating-select2" : "form-floating form-floating-outline"
                                                   )">
                                                     @if (type == "TextBox")
@@ -1065,10 +1090,33 @@
                                                             </div>
                                                         </div>
                                                     }
+                                                    else if (type == "ButtonAction")
+                                                    {
+                                                        string codeUpload = field_optionsDict.ContainsKey("codeUpload") ? (field_optionsDict["codeUpload"].ToString() ?? "") : "";
+                                                        bool isMultiple = field_optionsDict.ContainsKey("multiple") ? Convert.ToBoolean(field_optionsDict["multiple"]) : false;
+                                                        var dataField = ParseDataHelper.ParseFieldOptionsChildToDictionary(field_options, "dataField");
+                                                        string idNumberKey = dataField.ContainsKey("idNumber") ? (dataField["idNumber"]?.ToString()?.ToLower() ?? "") : "";
+                                                        string fullNameKey = dataField.ContainsKey("fullName") ? (dataField["fullName"]?.ToString()?.ToLower() ?? "") : "";
+                                                        string genderKey = dataField.ContainsKey("gender") ? (dataField["gender"]?.ToString()?.ToLower() ?? "") : "";
+                                                        string birthDateKey = dataField.ContainsKey("birthDate") ? (dataField["birthDate"]?.ToString()?.ToLower() ?? "") : "";
+                                                        var fileList = new List<string>();
+                                                        if (fileUrlsDict != null)
+                                                        {
+                                                            fileList = fileUrlsDict != null && fileUrlsDict.ContainsKey(codeUpload)
+                                                            ? fileUrlsDict[codeUpload]
+                                                            : new List<string>();
+                                                        }
+                                                        <div style="@inputstyle">
+                                                            <button style="@labelstyle" class="btn waves-effect" onclick="ButtonActionHandler(event, this, '66','hs_booking_nhapkhachnhanh_checkcccd')" onmouseover="this.style.filter='brightness(0.92)'; this.style.transform='translateY(-1px)'; this.style.boxShadow='0 4px 10px rgba(0,0,0,0.25)';"
+                                                                    onmouseout="this.style.filter='none'; this.style.transform='translateY(0)'; this.style.boxShadow='0 2px 5px rgba(0,0,0,0.15)';">
+                                                                <i class="@iconclass" style="@iconstyle"></i> <span class="ms-2" style="@iconstyle">@label</span>
+                                                            </button>
+                                                        </div>
+                                                    }
 
                                                     @* neu type dynamic report hoac file uploadder thì tự check label riêng *@
                                                     @{
-                                                        string[] nolabel_fieldtypes = ["DynamicReport","FileUploader","HTMLEditor","RadioGroup","EmptyBox","ListSelection","ColorBox","Label","EmbedYoutube","VideoUploader","ScanCCCD"];
+                                                        string[] nolabel_fieldtypes = ["DynamicReport","FileUploader","HTMLEditor","RadioGroup","EmptyBox","ListSelection","ColorBox","Label","EmbedYoutube","VideoUploader","ScanCCCD","ButtonAction"];
                                                         if (!nolabel_fieldtypes.Contains(type))
                                                         {
                                                             <label for="@name"><i class="@iconclass" style="@iconstyle"></i> <span style="@labelstyle">@label</span> <span class='text-danger'>@(isrequired == true ? "*" : "")</span></label>

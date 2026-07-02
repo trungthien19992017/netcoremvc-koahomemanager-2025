@@ -20,6 +20,7 @@ namespace KOAHome.Services
     public Task<List<dynamic>> NET_Form_VersionField_WithForm_sel(string? formCode, int? formId);
     public Task<string> NET_Form_GetValidation(string formCode);
     public Task<string> NET_Form_GetListReportCode(string formCode);
+    public Task<IDictionary<string, object>> NET_Form_ButtonActionHandler(Dictionary<string, object> parameters, string sqlStore, string connectionString);
 
   }
   public class FormService : IFormService
@@ -208,6 +209,35 @@ namespace KOAHome.Services
       var stringaggreportcodes = result.ContainsKey("value") ? Convert.ToString(result["value"]) ?? "[]" : "[]";
 
       return stringaggreportcodes;
+    }
+    public async Task<IDictionary<string, object>> NET_Form_ButtonActionHandler(Dictionary<string, object> parameters, string sqlStore, string connectionString)
+    {
+      // neu khong truyen connect string thi se lay connection string mac dinh
+      if (connectionString == null)
+      {
+        connectionString = _configuration.GetConnectionString("DefaultConnection"); // Thay thế bằng chuỗi kết nối của bạn
+      }
+      if (parameters == null)
+      {
+        parameters = new Dictionary<string, object>();
+      }
+
+      // chuyen thanh cau query tu store va param truyen vao
+      var (sqlQuery, sqlParams) = await _con.Connection_GetQueryParam(parameters, sqlStore, connectionString);
+
+      var resultList = new List<dynamic>();
+
+      // xu ly lay du lieu dua truyen store va param truyen vao
+      resultList = await _con.Connection_GetDataFromQuery(parameters, sqlStore, connectionString, sqlQuery, sqlParams);
+
+      // Chuyển đổi List<dynamic> thành Dictionary<string, object>
+      var dictionary = resultList
+    .SelectMany(obj => ((IDictionary<string, object>)obj)
+        .Select(prop => new KeyValuePair<string, object>(prop.Key, prop.Value)))
+    .ToDictionary(pair => pair.Key, pair => pair.Value);
+
+      // nhan du lieu duoi dang object
+      return dictionary;
     }
   }
 }

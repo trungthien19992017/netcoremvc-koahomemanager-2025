@@ -1011,44 +1011,8 @@ namespace KOAHome.Controllers
 
 
         // xu ly luu form
-        var resultList = await _action.Action_store(formData, sqlstore, connectionString);
-        //kiem tra du lieu success tra ve
-        var success_return = resultList
-        .Where(item => ((IDictionary<string, object>)item).ContainsKey("success"))
-        .Select(item => ((IDictionary<string, object>)item)["success"])
-        .FirstOrDefault(); // Lọc ra những phần tử có Success
-
-        //kiem tra du lieu error message tra ve
-        var errormessage_return = resultList
-        .Where(item => ((IDictionary<string, object>)item).ContainsKey("errormessage"))
-        .Select(item => ((IDictionary<string, object>)item)["errormessage"])
-        .FirstOrDefault(); // Lọc ra những phần tử có ErrorMessage
-
-        bool success = false;
-        string? errorMessage = null;
-        // neu co gia tri success tra ve thi xu ly tiep, khong thi bao loi
-        if (success_return != null && bool.TryParse(success_return.ToString(), out bool issuccess))
-        {
-          success = (bool)success_return;
-          // kiem tra co error message tra ve hay khong
-          if (errormessage_return != null && errormessage_return.ToString() != "")
-          {
-            errorMessage = errormessage_return.ToString();
-          }
-          // tra ve json
-          if (success == true)
-          {
-            return Json(new { success = true });
-          }
-          else
-          {
-            return Json(new { success = false, errorMessage = errorMessage ?? "Có lỗi trong quá trình xử lý" });
-          }
-        }
-        else
-        {
-          return Json(new { success = false, errorMessage = "Store chưa trả về giá trị success." });
-        }
+        var result = await _form.NET_Form_ButtonActionHandler(formData, sqlstore, connectionString);
+        return Json(new { success = true, response = result });
       }
       catch (PostgresException ex)
       {
