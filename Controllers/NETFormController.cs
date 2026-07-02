@@ -986,6 +986,9 @@ namespace KOAHome.Controllers
                         pair => (object)pair.Value.ToString()  // Ensure each value is a string (flatten StringValues)
                     );
 
+
+        string responsefield = formData.ContainsKey("responsefield") ? formData["responsefield"].ToString() : "";
+
         // lay gia tri sql store tu ajax gui len
         string? sqlstore = formData.ContainsKey("sqlstore") ? formData["sqlstore"].ToString() : null;
         if (sqlstore == null)
@@ -1012,7 +1015,7 @@ namespace KOAHome.Controllers
 
         // xu ly luu form
         var result = await _form.NET_Form_ButtonActionHandler(formData, sqlstore, connectionString);
-        return Json(new { success = true, response = result });
+        return Json(new { success = true, response = result, responsefield = responsefield });
       }
       catch (PostgresException ex)
       {

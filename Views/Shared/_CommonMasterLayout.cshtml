@@ -2487,15 +2487,16 @@
             });
         }
 
-        function ButtonActionHandler(event, button, datasourceid, sqlstore) {
+        function ButtonActionHandler(event, button, datasourceid, sqlstore, responsefield) {
             if (event) {
                 event.preventDefault();
             }
-            
+
             var form = $(button).closest("form")[0];
             var formData = new FormData(form);
             formData.append("sqlstore", sqlstore);
             formData.append("datasourceid", datasourceid);
+            formData.append("responsefield", responsefield);
 
             // 3. Hiển thị hiệu ứng loading
             $('#loading').removeClass('d-none');
@@ -2508,24 +2509,50 @@
                 contentType: false,
                 processData: false,
                 success: function (response) {
-                    $('#loading').addClass('d-none');// Định nghĩa danh sách các key hệ thống cần loại trừ ra khỏi returnvalue
+                    $('#loading').addClass('d-none');
 
-                    var systemKeys = ['successmessage', 'errormessage', 'unhidefield', 'reload', 'success'];
-                    var data = response.response
+                    // Định nghĩa danh sách các key hệ thống cần loại trừ
+                    var systemKeys = ['successmessage', 'errormessage', 'unhidefield', 'reload', 'success', 'responsefield'];
+
+                    // Sửa lại: data lấy trực tiếp từ root response theo ảnh debug thực tế
+                    var data = response.response;
+
+                    // Hàm helper dùng để trim khoảng trắng
+                    function trimString(str) {
+                        return str ? str.replace(/^\s+|\s+$/g, '') : '';
+                    }
 
                     // ========================================================
-                    // 1. XỬ LÝ RETURNVALUE (Điền dữ liệu phẳng vào Form)
+                    // 🌟 BỔ SUNG: KHỞI TẠO & CLEAR DỮ LIỆU CŨ THEO RESPONSEFIELD
                     // ========================================================
-                       $.each(data, function (key, value) {
+                    if (response.responsefield) {
+                        var fieldsToClear = response.responsefield.split(',');
+                        $.each(fieldsToClear, function (i, fieldId) {
+                            var cleanId = trimString(fieldId);
+                            var $field = $('#' + cleanId);
+                            if ($field.length > 0) {
+                                if ($field.is('input, select, textarea')) {
+                                    $field.val(''); // Reset value về rỗng hoàn toàn
+                                } else {
+                                    $field.html(''); // Xóa nội dung HTML tĩnh
+                                }
+                            }
+                        });
+                    }
+
+                    // ========================================================
+                    // 1. XỬ LÝ RETURNVALUE (Điền dữ liệu mới vào Form)
+                    // ========================================================
+                    $.each(data, function (key, value) {
                         // Nếu không thuộc key hệ thống và value hợp lệ
-                        if (systemKeys.indexOf(key.toLowerCase()) === -1 && value !== null && value !== undefined) {
+                        if (systemKeys.indexOf(key.toLowerCase()) === -1 && value !== null && value !== undefined && value !== '') {
                             var $field = $('#' + key);
                             if ($field.length > 0) {
-                                // Điền giá trị vào field (hỗ trợ cả text/input hoặc thẻ hiển thị thông thường)
+                                // Điền giá trị mới vào field sau khi đã được dọn sạch ở trên
                                 if ($field.is('input, select, textarea')) {
                                     $field.val(value);
                                 } else {
-                                    $field.html(value); // Html.Raw bằng cách ép render trực tiếp qua innerHTML
+                                    $field.html(value); // Render HTML an toàn giống Html.Raw
                                 }
                             }
                         }
@@ -2535,7 +2562,6 @@
                     // 2. XỬ LÝ UNHIDEFIELD (Hiện các field bị ẩn ở div cha)
                     // ========================================================
                     if (data.unhidefield) {
-                        // Tách chuỗi bằng dấu phẩy
                         var fieldsToUnhide = data.unhidefield.split(',');
                         $.each(fieldsToUnhide, function (i, fieldId) {
                             var $targetField = $('#' + trimString(fieldId));
@@ -2546,15 +2572,10 @@
                         });
                     }
 
-                    // Hàm helper dùng để trim khoảng trắng nếu chuỗi unhidefield có cách (VD: "a, b")
-                    function trimString(str) {
-                        return str.replace(/^\s+|\s+$/g, '');
-                    }
-
                     // ========================================================
                     // 3. XỬ LÝ RELOAD, SUCCESSMESSAGE, ERRORMESSAGE
                     // ========================================================
-            
+
                     // Ưu tiên 1: Có yêu cầu RELOAD trang
                     if (data.reload) {
                         rplm({
@@ -2567,7 +2588,7 @@
                         }, function () {
                             location.reload();
                         });
-                    } 
+                    }
                     // Ưu tiên 2: Có lỗi ERRORMESSAGE
                     else if (data.errormessage) {
                         rplm({
@@ -2578,7 +2599,7 @@
                             confirmButtonText: 'Xác nhận',
                             html: true
                         });
-                    } 
+                    }
                     // Ưu tiên 3: Chỉ hiển thị thông báo THÀNH CÔNG thông thường
                     else if (data.successmessage) {
                         rplm({

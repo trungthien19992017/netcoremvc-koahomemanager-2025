@@ -550,22 +550,12 @@ asp-route-id="@id" data-modal-id="modal-PopupForm" enctype="multipart/form-data"
                                                     }
                                                     else if (child_type == "ButtonAction")
                                                     {
-                                                        string codeUpload = child_field_optionsDict.ContainsKey("codeUpload") ? (child_field_optionsDict["codeUpload"].ToString() ?? "") : "";
-                                                        bool isMultiple = child_field_optionsDict.ContainsKey("multiple") ? Convert.ToBoolean(child_field_optionsDict["multiple"]) : false;
-                                                        var dataField = ParseDataHelper.ParseFieldOptionsChildToDictionary(child_field_options, "dataField");
-                                                        string idNumberKey = dataField.ContainsKey("idNumber") ? (dataField["idNumber"]?.ToString()?.ToLower() ?? "") : "";
-                                                        string fullNameKey = dataField.ContainsKey("fullName") ? (dataField["fullName"]?.ToString()?.ToLower() ?? "") : "";
-                                                        string genderKey = dataField.ContainsKey("gender") ? (dataField["gender"]?.ToString()?.ToLower() ?? "") : "";
-                                                        string birthDateKey = dataField.ContainsKey("birthDate") ? (dataField["birthDate"]?.ToString()?.ToLower() ?? "") : "";
-                                                        var fileList = new List<string>();
-                                                        if (fileUrlsDict != null)
-                                                        {
-                                                            fileList = fileUrlsDict != null && fileUrlsDict.ContainsKey(codeUpload)
-                                                            ? fileUrlsDict[codeUpload]
-                                                            : new List<string>();
-                                                        }
+                                                        var responseField = child_field_optionsDict.ContainsKey("responseField") ? (child_field_optionsDict["responseField"].ToString() ?? "") : "";
+                                                        var request = ParseDataHelper.ParseFieldOptionsChildToDictionary(child_field_options, "request");
+                                                        string datasourceId = request.ContainsKey("datasourceid") ? (request["datasourceid"]?.ToString()?.ToLower() ?? "") : "";
+                                                        string sqlStore = request.ContainsKey("sqlstore") ? (request["sqlstore"]?.ToString()?.ToLower() ?? "") : "";
                                                         <div style="@inputstyle">
-                                                            <button style="@labelstyle" class="btn waves-effect" onclick="ButtonActionHandler(event, this, '66','hs_booking_nhapkhachnhanh_checkcccd')" onmouseover="this.style.filter='brightness(0.92)'; this.style.transform='translateY(-1px)'; this.style.boxShadow='0 4px 10px rgba(0,0,0,0.25)';"
+                                                            <button style="@labelstyle" class="btn waves-effect" onclick="ButtonActionHandler(event, this, '@datasourceId','@sqlStore','@responseField')" onmouseover="this.style.filter='brightness(0.92)'; this.style.transform='translateY(-1px)'; this.style.boxShadow='0 4px 10px rgba(0,0,0,0.25)';"
                                                                     onmouseout="this.style.filter='none'; this.style.transform='translateY(0)'; this.style.boxShadow='0 2px 5px rgba(0,0,0,0.15)';">
                                                                 <i class="@iconclass" style="@iconstyle"></i> <span class="ms-2" style="@iconstyle">@label</span>
                                                             </button>
@@ -962,22 +952,12 @@ asp-route-id="@id" data-modal-id="modal-PopupForm" enctype="multipart/form-data"
                                         }
                                         else if (type == "ButtonAction")
                                         {
-                                            string codeUpload = field_optionsDict.ContainsKey("codeUpload") ? (field_optionsDict["codeUpload"].ToString() ?? "") : "";
-                                            bool isMultiple = field_optionsDict.ContainsKey("multiple") ? Convert.ToBoolean(field_optionsDict["multiple"]) : false;
-                                            var dataField = ParseDataHelper.ParseFieldOptionsChildToDictionary(field_options, "dataField");
-                                            string idNumberKey = dataField.ContainsKey("idNumber") ? (dataField["idNumber"]?.ToString()?.ToLower() ?? "") : "";
-                                            string fullNameKey = dataField.ContainsKey("fullName") ? (dataField["fullName"]?.ToString()?.ToLower() ?? "") : "";
-                                            string genderKey = dataField.ContainsKey("gender") ? (dataField["gender"]?.ToString()?.ToLower() ?? "") : "";
-                                            string birthDateKey = dataField.ContainsKey("birthDate") ? (dataField["birthDate"]?.ToString()?.ToLower() ?? "") : "";
-                                            var fileList = new List<string>();
-                                            if (fileUrlsDict != null)
-                                            {
-                                                fileList = fileUrlsDict != null && fileUrlsDict.ContainsKey(codeUpload)
-                                                ? fileUrlsDict[codeUpload]
-                                                : new List<string>();
-                                            }
+                                            var responseField = field_optionsDict.ContainsKey("responseField") ? (field_optionsDict["responseField"].ToString() ?? "") : "";
+                                            var request = ParseDataHelper.ParseFieldOptionsChildToDictionary(field_options, "request");
+                                            string datasourceId = request.ContainsKey("datasourceid") ? (request["datasourceid"]?.ToString()?.ToLower() ?? "") : "";
+                                            string sqlStore = request.ContainsKey("sqlstore") ? (request["sqlstore"]?.ToString()?.ToLower() ?? "") : "";
                                             <div style="@inputstyle">
-                                                <button style="@labelstyle" class="btn waves-effect" onclick="ButtonActionHandler(event, this, '66','hs_booking_nhapkhachnhanh_checkcccd')" onmouseover="this.style.filter='brightness(0.92)'; this.style.transform='translateY(-1px)'; this.style.boxShadow='0 4px 10px rgba(0,0,0,0.25)';"
+                                                <button style="@labelstyle" class="btn waves-effect" onclick="ButtonActionHandler(event, this, '@datasourceId','@sqlStore','@responseField')" onmouseover="this.style.filter='brightness(0.92)'; this.style.transform='translateY(-1px)'; this.style.boxShadow='0 4px 10px rgba(0,0,0,0.25)';"
                                                         onmouseout="this.style.filter='none'; this.style.transform='translateY(0)'; this.style.boxShadow='0 2px 5px rgba(0,0,0,0.15)';">
                                                     <i class="@iconclass" style="@iconstyle"></i> <span class="ms-2" style="@iconstyle">@label</span>
                                                 </button>
