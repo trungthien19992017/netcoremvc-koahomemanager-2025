@@ -81,6 +81,7 @@
     <script>
         @* xử lý hiển thị form popup  *@
         $(document).on('click', '.popupform-action', function (e) {
+            $('#modal-PopupForm').html("");
             const $btn = $(this);
             const actionlink = $btn.data('actionlink') ?? null;
             const id = $btn.data('id') ?? "";

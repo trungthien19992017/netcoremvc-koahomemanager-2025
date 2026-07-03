@@ -2496,6 +2496,33 @@
                                 } else {
                                     $field.html(''); // Xóa nội dung HTML tĩnh
                                 }
+                                $field.each(function () {
+                                  const el = this;
+
+                                  // Restart animation nếu đã từng chạy
+                                  el.classList.remove(
+                                      'animate__animated',
+                                      'animate__fadeInLeft'
+                                  );
+
+                                  // Force reflow
+                                  void el.offsetWidth;
+
+                                  // Add animation
+                                  el.classList.add(
+                                      'animate__animated',
+                                      'animate__fadeInLeft'
+                                  );
+
+                                  // Dọn class sau khi chạy xong
+                                  el.addEventListener('animationend', function handler() {
+                                      el.classList.remove(
+                                          'animate__animated',
+                                          'animate__fadeInLeft'
+                                      );
+                                      el.removeEventListener('animationend', handler);
+                                  });
+                              });
                             }
                         });
                     }
@@ -2589,6 +2616,7 @@
                 }
             });
         }
+
     </script>
 
     <!-- Page Scripts-->
