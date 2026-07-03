@@ -2332,73 +2332,6 @@
           });
         });
 
-        // let player;
-
-        // function getYouTubeEmbedURL(url) {
-        //   const regExp = /^.*(?:youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=)([^#\&\?]*).*/;
-        //   const match = url.match(regExp);
-        //   if (match && match[1].length === 11) {
-        //     return `https://www.youtube.com/embed/${match[1]}?origin=${location.origin}&iv_load_policy=3&modestbranding=1`;
-        //   }
-        //   return null;
-        // }
-
-        // function loadVideo() {
-        //   const url = document.getElementById("youtubeQuickViewUrl").value;
-        //   const embedUrl = getYouTubeEmbedURL(url);
-
-        //   if (!embedUrl) {
-        //     alert("URL không hợp lệ!");
-        //     return;
-        //   }
-
-        //   // Xóa player cũ nếu có
-        //   if (player) {
-        //     player.destroy();
-        //   }
-
-        //   const playerDiv = document.getElementById("player");
-        //   playerDiv.innerHTML = `
-        //     <iframe
-        //       src="${embedUrl}"
-        //       allowfullscreen
-        //       allowtransparency
-        //       allow="autoplay"
-        //     ></iframe>`;
-
-        //   // Khởi tạo Plyr lại với iframe mới
-        //   player = new Plyr(playerDiv, {
-        //     youtube: {
-        //         autoplay: false,
-        //         loop: { active: true },
-        //         volume: 1,
-        //         speed: { selected: 1, options: [0.75, 1, 1.25, 1.5, 2] },
-        //         controls: [
-        //             'play-large', 'rewind', 'play', 'fast-forward',
-        //             'progress', 'current-time', 'duration',
-        //             'mute', 'volume', 'captions', 'settings', 'fullscreen', 'pip'
-        //         ],
-        //         i18n: {
-        //             restart: 'Phát lại',
-        //             rewind: 'Lùi 10s',
-        //             play: 'Phát',
-        //             pause: 'Tạm dừng',
-        //             fastForward: 'Tiến 10s',
-        //             fullscreen: 'Toàn màn hình',
-        //             settings: 'Cài đặt',
-        //             captions: 'Phụ đề',
-        //             volume: 'Âm lượng'
-        //         }
-        //     }
-        //   });
-        // }
-
-        //  document.getElementById("youtubeQuickViewBtn").addEventListener("click", function (e) {
-        //   e.preventDefault(); // Chỉ cần nếu nằm trong form
-        //   loadVideo(e);
-        // });
-
-
         function ScanCCCDHandle(fileInputId, multiple, idNumberKey, fullNameKey, genderKey, birthDateKey, event) {
             if (event) {
                 event.preventDefault();
@@ -2407,7 +2340,14 @@
             // 1. Lấy ra element input file dựa vào id truyền vào
             var fileInput = document.getElementById(fileInputId);
             if (!fileInput || fileInput.files.length === 0) {
-                alert("Vui lòng chọn ít nhất 1 file ảnh CCCD.");
+                rplm({
+                    title: "Lỗi!",
+                    text: "Vui lòng chọn ít nhất 1 file ảnh CCCD.",
+                    type: "error",
+                    timer: 2000,
+                    confirmButtonText: 'Xác nhận',
+                    html: true
+                });
                 return;
             }
 
@@ -2435,7 +2375,14 @@
 
                     if (response.success) {
                         if (!response.results || response.results.length === 0) {
-                            alert("Không bóc tách được dữ liệu từ các file đã chọn.");
+                            rplm({
+                                title: "Lỗi!",
+                                text: "Không bóc tách được dữ liệu từ các file đã chọn.",
+                                type: "error",
+                                timer: 2000,
+                                confirmButtonText: 'Xác nhận',
+                                html: true
+                            });
                             return;
                         }
 
@@ -2482,7 +2429,14 @@
                 },
                 error: function () {
                     $('#loading').addClass('d-none');
-                    alert('Đã xảy ra lỗi hệ thống khi quét danh sách ảnh CCCD.');
+                    rplm({
+                        title: "Lỗi!",
+                        text: "Đã xảy ra lỗi hệ thống khi quét danh sách ảnh CCCD.",
+                        type: "error",
+                        timer: 2000,
+                        confirmButtonText: 'Xác nhận',
+                        html: true
+                    });
                 }
             });
         }
@@ -2624,7 +2578,14 @@
                     if ($("#loading-overlay").length) {
                         $("#loading-overlay").hide();
                     }
-                    alert('Đã xảy ra lỗi hệ thống khi quét danh sách ảnh CCCD.');
+                    rplm({
+                        title: "Lỗi!",
+                            text: "Đã xảy ra lỗi hệ thống, vui lòng liên hệ admin",
+                        type: "error",
+                        timer: 2000,
+                        confirmButtonText: 'Xác nhận',
+                        html: true
+                    });
                 }
             });
         }
