@@ -2390,10 +2390,29 @@
                         if (!isMultiple) {
                             var item = response.results[0];
 
-                            if (idNumberKey)  $('#' + idNumberKey).val(item.idNumber);
-                            if (fullNameKey)  $('#' + fullNameKey).val(item.fullName);
-                            if (birthDateKey) $('#' + birthDateKey).val(item.birthDate);
-                            if (genderKey)    $('#' + genderKey).val(item.gender);
+                            if (idNumberKey) {
+                                var $f = $('#' + idNumberKey);
+                                $f.val(item.idNumber);
+                                animateElement($f);
+                            }
+
+                            if (fullNameKey) {
+                                var $f = $('#' + fullNameKey);
+                                $f.val(item.fullName);
+                                animateElement($f);
+                            }
+
+                            if (birthDateKey) {
+                                var $f = $('#' + birthDateKey);
+                                $f.val(item.birthDate);
+                                animateElement($f);
+                            }
+
+                            if (genderKey) {
+                                var $f = $('#' + genderKey);
+                                $f.val(item.gender);
+                                animateElement($f);
+                            }
                         }
                         // TRƯỜNG HỢP 2: isMultiple là true -> Xử lý cộng chuỗi động tăng dần (1, 2, 3...)
                         else {
@@ -2416,10 +2435,25 @@
                                 var txtBirthDate = $('#' + baseBirthKey + suffix);
                                 var txtGender = $('#' + baseGenderKey + suffix);
 
-                                if (txtIdNumber.length)  txtIdNumber.val(item.idNumber);
-                                if (txtFullName.length)  txtFullName.val(item.fullName);
-                                if (txtBirthDate.length) txtBirthDate.val(item.birthDate);
-                                if (txtGender.length)    txtGender.val(item.gender);
+                                if (txtIdNumber.length) {
+                                    txtIdNumber.val(item.idNumber);
+                                    animateElement(txtIdNumber);
+                                }
+
+                                if (txtFullName.length) {
+                                    txtFullName.val(item.fullName);
+                                    animateElement(txtFullName);
+                                }
+
+                                if (txtBirthDate.length) {
+                                    txtBirthDate.val(item.birthDate);
+                                    animateElement(txtBirthDate);
+                                }
+
+                                if (txtGender.length) {
+                                    txtGender.val(item.gender);
+                                    animateElement(txtGender);
+                                }
                             });
                         }
 
@@ -2438,6 +2472,33 @@
                         html: true
                     });
                 }
+            });
+        }
+
+        function animateElement($element, animation = 'animate__fadeInLeft') {
+            $element.each(function () {
+                const el = this;
+
+                // Restart animation
+                el.classList.remove(
+                    'animate__animated',
+                    animation
+                );
+
+                void el.offsetWidth;
+
+                el.classList.add(
+                    'animate__animated',
+                    animation
+                );
+
+                el.addEventListener('animationend', function handler() {
+                    el.classList.remove(
+                        'animate__animated',
+                        animation
+                    );
+                    el.removeEventListener('animationend', handler);
+                });
             });
         }
 
