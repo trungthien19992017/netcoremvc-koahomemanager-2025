@@ -555,15 +555,7 @@ asp-route-id="@id" data-modal-id="modal-PopupForm" enctype="multipart/form-data"
                                                         string datasourceId = request.ContainsKey("datasourceid") ? (request["datasourceid"]?.ToString()?.ToLower() ?? "") : "";
                                                         string sqlStore = request.ContainsKey("sqlstore") ? (request["sqlstore"]?.ToString()?.ToLower() ?? "") : "";
                                                         <div style="@inputstyle">
-                                                            <button style="@labelstyle" class="btn waves-effect"
-                                                                    @* /* 1. HIỆU ỨNG KHI CHẠM (MOBILE) * / *@
-                                                                    ontouchstart="this.style.filter='brightness(0.85)'; this.style.transform='scale(0.95)';"
-                                                                    ontouchend="this.style.filter='none'; this.style.transform='scale(1)';"
-                                                                    ontouchcancel="this.style.filter='none'; this.style.transform='scale(1)';"
-                                                                    @* /* 2. HIỆU ỨNG REO CHUỘT (PC) * / *@
-                                                                    onmouseover="this.style.filter='brightness(0.92)'; this.style.transform='translateY(-1px)';"
-                                                                    onmouseout="this.style.filter='none'; this.style.transform='translateY(0)';"
-                                                                    @* /* 3. GỌI HÀM DUY NHẤT Ở ĐÂY * / *@
+                                                            <button style="@labelstyle" class="btn btn-primary waves-effect waves-light"
                                                                     onclick="AjaxButtonHandler(event, this, '@datasourceId','@sqlStore','@responseField');">
                                                                 <i class="@iconclass" style="@iconstyle"></i> <span class="ms-2" style="@iconstyle">@label</span>
                                                             </button>
@@ -965,15 +957,7 @@ asp-route-id="@id" data-modal-id="modal-PopupForm" enctype="multipart/form-data"
                                             string datasourceId = request.ContainsKey("datasourceid") ? (request["datasourceid"]?.ToString()?.ToLower() ?? "") : "";
                                             string sqlStore = request.ContainsKey("sqlstore") ? (request["sqlstore"]?.ToString()?.ToLower() ?? "") : "";
                                             <div style="@inputstyle">
-                                                <button style="@labelstyle" class="btn waves-effect"
-                                                        @* /* 1. HIỆU ỨNG KHI CHẠM (MOBILE) * / *@
-                                                        ontouchstart="this.style.filter='brightness(0.85)'; this.style.transform='scale(0.95)';"
-                                                        ontouchend="this.style.filter='none'; this.style.transform='scale(1)';"
-                                                        ontouchcancel="this.style.filter='none'; this.style.transform='scale(1)';"
-                                                        @* /* 2. HIỆU ỨNG REO CHUỘT (PC) * / *@
-                                                        onmouseover="this.style.filter='brightness(0.92)'; this.style.transform='translateY(-1px)';"
-                                                        onmouseout="this.style.filter='none'; this.style.transform='translateY(0)';"
-                                                        @* /* 3. GỌI HÀM DUY NHẤT Ở ĐÂY * / *@
+                                                <button style="@labelstyle" class="btn btn-primary waves-effect waves-light"
                                                         onclick="AjaxButtonHandler(event, this, '@datasourceId','@sqlStore','@responseField');">
                                                     <i class="@iconclass" style="@iconstyle"></i> <span class="ms-2" style="@iconstyle">@label</span>
                                                 </button>
