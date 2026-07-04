@@ -98,46 +98,86 @@ $(function() {
         showDropdowns: !0,
         opens: isRtl ? "left" : "right"
     }),
-    // nếu độ rộng desktop thì hiển thị range, nếu độ rộng mobile thì ẩn range
-    h.length && window.innerWidth > 768 && h.daterangepicker({
-        showDropdowns: !0,
-        opens: isRtl ? "left" : "right",
-        startDate: moment().subtract(7, 'days'),
-        endDate: moment(),
-        minDate: '1980-01-01',
-        timePicker: false,
-        timePicker24Hour: false,
-        autoApply: true,
-        showISOWeekNumbers: true,
-        locale: {
-            format: 'DD/MM/YYYY',
-            applyLabel: 'Chọn',
-            cancelLabel: 'Hủy',
-            customRangeLabel: 'Tùy chọn',
-        },
-        ranges: {
-            'Hôm nay': [moment(), moment()],
-            'Hôm qua': [moment().subtract(1, 'days'), moment().subtract(1, 'days')],
-            '7 ngày qua': [moment().subtract(6, 'days'), moment()],
-            '30 ngày qua': [moment().subtract(29, 'days'), moment()]
-        }
-    }),
-    h.length && window.innerWidth < 768 && h.daterangepicker({
-        showDropdowns: !0,
-        opens: isRtl ? "left" : "right",
-        startDate: moment().subtract(7, 'days'),
-        endDate: moment(),
-        minDate: '1980-01-01',
-        timePicker: false,
-        timePicker24Hour: false,
-        autoApply: true,
-        locale: {
-            format: 'DD/MM/YYYY',
-            applyLabel: 'Chọn',
-            cancelLabel: 'Hủy',
-            customRangeLabel: 'Tùy chọn',
-        }
-    }),
+    h.length && h.each(function () {
+          const $this = $(this);
+          let start = moment().subtract(7, "days");
+          let end = moment();
+          const value = $this.val();
+          if (value) {
+              const arr = value.split(" - ");
+              if (arr.length === 2) {
+                  const s = moment(arr[0], "DD/MM/YYYY", true);
+                  const e = moment(arr[1], "DD/MM/YYYY", true);
+                  if (s.isValid() && e.isValid()) {
+                      start = s;
+                      end = e;
+                  }
+              }
+          }
+
+          $this.daterangepicker({
+              showDropdowns: true,
+              opens: isRtl ? "left" : "right",
+              startDate: start,
+              endDate: end,
+              minDate: "1980-01-01",
+              autoApply: true,
+              showISOWeekNumbers: window.innerWidth > 768,
+              locale: {
+                  format: "DD/MM/YYYY",
+                  applyLabel: "Chọn",
+                  cancelLabel: "Hủy",
+                  customRangeLabel: "Tùy chọn"
+              },
+              ranges: window.innerWidth > 768 ? {
+                  "Hôm nay": [moment(), moment()],
+                  "Hôm qua": [moment().subtract(1, "days"), moment().subtract(1, "days")],
+                  "7 ngày qua": [moment().subtract(6, "days"), moment()],
+                  "30 ngày qua": [moment().subtract(29, "days"), moment()]
+              } : undefined
+          });
+
+      }),
+    //// nếu độ rộng desktop thì hiển thị range, nếu độ rộng mobile thì ẩn range
+    //h.length && window.innerWidth > 768 && h.daterangepicker({
+    //    showDropdowns: !0,
+    //    opens: isRtl ? "left" : "right",
+    //    startDate: moment().subtract(7, 'days'),
+    //    endDate: moment(),
+    //    minDate: '1980-01-01',
+    //    timePicker: false,
+    //    timePicker24Hour: false,
+    //    autoApply: true,
+    //    showISOWeekNumbers: true,
+    //    locale: {
+    //        format: 'DD/MM/YYYY',
+    //        applyLabel: 'Chọn',
+    //        cancelLabel: 'Hủy',
+    //        customRangeLabel: 'Tùy chọn',
+    //    },
+    //    ranges: {
+    //        'Hôm nay': [moment(), moment()],
+    //        'Hôm qua': [moment().subtract(1, 'days'), moment().subtract(1, 'days')],
+    //        '7 ngày qua': [moment().subtract(6, 'days'), moment()],
+    //        '30 ngày qua': [moment().subtract(29, 'days'), moment()]
+    //    }
+    //}),
+    //h.length && window.innerWidth < 768 && h.daterangepicker({
+    //    showDropdowns: !0,
+    //    opens: isRtl ? "left" : "right",
+    //    startDate: moment().subtract(7, 'days'),
+    //    endDate: moment(),
+    //    minDate: '1980-01-01',
+    //    timePicker: false,
+    //    timePicker24Hour: false,
+    //    autoApply: true,
+    //    locale: {
+    //        format: 'DD/MM/YYYY',
+    //        applyLabel: 'Chọn',
+    //        cancelLabel: 'Hủy',
+    //        customRangeLabel: 'Tùy chọn',
+    //    }
+    //}),
     document.getElementsByClassName("cancelBtn"))
       , t = (Array.from(e).forEach(e => {
         e.classList.remove("btn-default"),
