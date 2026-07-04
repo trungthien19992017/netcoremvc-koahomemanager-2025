@@ -17,6 +17,13 @@
 
 @section VendorStyles {
     <link rel="stylesheet" href="~/vendor/libs/apex-charts/apex-charts.css" />
+    <style>
+        .card-img-position {
+            position: absolute;
+            block-size: 190px
+        }
+
+    </style>
 }
 
 @section VendorScripts {
@@ -64,17 +71,19 @@
 }
 
 @* ************** Content ************** *@
-<button id="btnSync" class="btn btn-primary">
-    Đồng bộ Google Sheet
-</button>
-<a class="btn btn-primary" href="https://docs.google.com/spreadsheets/d/1VgUes_otZNcWHm_UOErhDjPkYs2sWWhz94lvIKDIx9Q/edit?usp=sharing">
-    Lịch book phòng thời gian thực
-</a>
+<div class="mb-12">
+    <button id="btnSync" class="btn btn-primary">
+        Đồng bộ Google Sheet
+    </button>
+    <a class="btn btn-primary" href="https://docs.google.com/spreadsheets/d/1VgUes_otZNcWHm_UOErhDjPkYs2sWWhz94lvIKDIx9Q/edit?usp=sharing">
+        Lịch book phòng thời gian thực
+    </a>
+</div>
 <div id="result"></div>
 <div class="row gy-6">
     <!--/ ------------------------------------------------------------------------------------ -->
     <!-- Thu chuc mung -->
-    <div class="col-md-12 col-lg-4">
+  @*   <div class="col-md-12 col-lg-4">
         <div class="card">
             <div class="card-header">
                 <div class="d-flex align-items-center justify-content-between">
@@ -92,6 +101,30 @@
                  width="83"
                  alt="view sales" />
         </div>
+    </div> *@
+    <div class="col-md-12 col-lg-4">
+       <div class="card">
+          <div class="row">
+             <div class="col-12 col-md-6">
+                <div class="card-body text-nowrap">
+                   <h5 class="card-title mb-0 flex-wrap text-nowrap">
+                      Chúc mừng KOA! 🎉
+                   </h5>
+                  <h4 class="text-primary mb-0">@(SimpleCard_ChucMung.ContainsKey("tongdoanhthuthang") ? SimpleCard_ChucMung["tongdoanhthuthang"] : "") VND</h4>
+                  <p class="mb-2">@(SimpleCard_ChucMung.ContainsKey("phantrammuctieu") ? SimpleCard_ChucMung["phantrammuctieu"] : "")% mục tiêu 🚀</p>
+                  <a href="javascript:;" class="btn btn-sm btn-primary">Xem chi tiết</a>
+                </div>
+             </div>
+             <div class="col-12 col-md-6 position-relative text-center">
+                <img
+                   src="https://pub-7171d6b031a04e3983a20a87daffce46.r2.dev/koala1.png"
+                   class="card-img-position bottom-0 w-auto end-0 scaleX-n1-rtl"
+                   alt="View Profile"
+                   style="height: 250px"
+                />
+             </div>
+          </div>
+       </div>
     </div>
     <!--/ Thu chuc mung -->
     <!-- Số liệu trong tháng -->
@@ -118,7 +151,7 @@
                 </div>
                 <p class="small mb-0"><span class="h6 mb-0">Doanh thu tăng 10% </span> 😎 tháng này</p>
             </div>
-            <div class="card-body pt-lg-10">
+            <div class="card-body">
                 <div class="row g-6">
                     <div class="col-md-3 col-6">
                         <div class="d-flex align-items-center">
