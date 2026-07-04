@@ -1,13 +1,14 @@
 
-using Microsoft.EntityFrameworkCore;
 using KOAHome.EntityFramework;
 using Microsoft.Data.SqlClient;
-using System.Dynamic;
-using System.Text;
-using System.Data;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Npgsql;
 using NpgsqlTypes;
+using System.Data;
+using System.Dynamic;
+using System.Security.Claims;
+using System.Text;
 
 namespace KOAHome.Services
 {
@@ -28,6 +29,7 @@ namespace KOAHome.Services
     private readonly IHttpContextAccessor _httpContextAccessor;
     private readonly IConfiguration _configuration;
     private readonly ILogger<NetDatasourcedetail> _logger;
+    private ClaimsPrincipal? User => _httpContextAccessor.HttpContext?.User;
     public ConnectionService(QLKCL_NEWContext db, IHttpContextAccessor httpContextAccessor, IConfiguration configuration, ILogger<NetDatasourcedetail> logger)
     {
       _db = db;
@@ -244,6 +246,9 @@ namespace KOAHome.Services
             string sqlStore,
             string? connectionString)
     {
+      var userId = GetClaim<int>("UserID");
+      var currentSiteId = GetClaim<int>("SiteId");
+
       //lower ten store
       sqlStore = sqlStore.ToLower();
 
@@ -330,6 +335,14 @@ namespace KOAHome.Services
         {
           var value = "NULL";
           sqlQuery.Append($"_{cleanParamName} := {value} ::{paramType},");
+        }
+        if (cleanParamName == "userid" && !parameters.ContainsKey("userid") && userId != null)
+        {
+          parameters["userid"] = userId;
+        }
+        if (cleanParamName == "currentsiteid" && !parameters.ContainsKey("currentsiteid") && currentSiteId != null)
+        {
+          parameters["currentsiteid"] = currentSiteId;
         }
         if (parameters.ContainsKey(cleanParamName))
         {
@@ -748,6 +761,15 @@ namespace KOAHome.Services
                 ["CreatedDate"] = DateTime.Now.AddDays(-1)
             }
         };
+    }
+    private T? GetClaim<T>(string claimType)
+    {
+      var value = User?.FindFirst(claimType)?.Value;
+
+      if (string.IsNullOrWhiteSpace(value))
+        return default;
+
+      return (T)Convert.ChangeType(value, typeof(T));
     }
   }
 }

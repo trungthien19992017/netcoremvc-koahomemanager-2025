@@ -47,10 +47,6 @@ namespace KOAHome.Services
 
     public async Task<List<dynamic>> NET_MainMenu_List(Dictionary<string, object>? parameters)
     {
-      var user = _httpContextAccessor.HttpContext.User;
-      int userId = user.GetUserId();
-      int siteId = user.GetSiteId();
-
       // su dung datasource config de lay du lieu
       string connectionString = _configuration.GetConnectionString("ConfigConnection"); // Thay thế bằng chuỗi kết nối của bạn
       // store get du lieu
@@ -61,9 +57,6 @@ namespace KOAHome.Services
       {
         parameters = new Dictionary<string, object>();
       }
-      // add thong tin user va site
-      parameters.Add("userid", userId);
-      parameters.Add("currentsiteid", siteId);
 
       // chuyen thanh cau query tu store va param truyen vao
       var (sqlQuery, sqlParams) = await _con.Connection_GetQueryParam(parameters, sqlStore, connectionString);
@@ -78,10 +71,6 @@ namespace KOAHome.Services
 
     public async Task<IDictionary<string, object>?> NET_MainMenu_Get(string menuCode)
     {
-      var user = _httpContextAccessor.HttpContext.User;
-      int userId = user.GetUserId();
-      int siteId = user.GetSiteId();
-
       // su dung datasource config de lay du lieu
       string connectionString = _configuration.GetConnectionString("ConfigConnection"); // Thay thế bằng chuỗi kết nối của bạn
       // store get du lieu
@@ -89,9 +78,6 @@ namespace KOAHome.Services
       // khai bao param lien quan
       var parameters = new Dictionary<string, object>();
       parameters.Add("menucode", menuCode);
-      // add thong tin user va site
-      parameters.Add("userid", userId);
-      parameters.Add("currentsiteid", siteId);
 
       // chuyen thanh cau query tu store va param truyen vao
       var (sqlQuery, sqlParams) = await _con.Connection_GetQueryParam(parameters, sqlStore, connectionString);
@@ -103,10 +89,6 @@ namespace KOAHome.Services
     }
     public async Task<List<dynamic>> NET_Menu_WithMainMenu_Get(string? menuCode, int? menuId)
     {
-      var user = _httpContextAccessor.HttpContext.User;
-      int userId = user.GetUserId();
-      int siteId = user.GetSiteId();
-
       // su dung datasource config de lay du lieu
       string connectionString = _configuration.GetConnectionString("ConfigConnection"); // Thay thế bằng chuỗi kết nối của bạn
       // store get du lieu
@@ -115,9 +97,6 @@ namespace KOAHome.Services
       var parameters = new Dictionary<string, object>();
       parameters.Add("menucode", menuCode);
       parameters.Add("menuid", menuId);
-      // add thong tin user va site
-      parameters.Add("userid", userId);
-      parameters.Add("currentsiteid", siteId);
 
       // chuyen thanh cau query tu store va param truyen vao
       var (sqlQuery, sqlParams) = await _con.Connection_GetQueryParam(parameters, sqlStore, connectionString);
