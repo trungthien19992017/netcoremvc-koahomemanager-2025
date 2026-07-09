@@ -18,6 +18,7 @@ namespace KOAHome.Services
   public interface IAiService
   {
     public Task<string> AskAsync(string message, string prompt, string selectedModel);
+    public Task<string> AskOneShotAsync(string systemPrompt, string userMessage, string selectedModel);
     public string BuildGuestPrompt(int bookingID, string userMessage);
     public Task<string> BuildGuestPromptByPhone(string phoneNumber, string userMessage);
     public Task<List<ChatHistoryModel>> GetChatHistory();
@@ -42,31 +43,6 @@ namespace KOAHome.Services
       _cache = cache;
       _httpContextAccessor = httpContextAccessor;
     }
-    //public async Task<string> AskAsync(string message, string prompt, string selectedModel)
-    //{
-    //  var env = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT");
-    //  var apiKey = "";
-    //  if (env == "Development")
-    //  {
-    //    apiKey = _config["Gemini:ApiKey"];
-    //  }
-    //  else
-    //  {
-    //    apiKey = Environment.GetEnvironmentVariable("GEMINI_API_KEY");
-    //  }
-    //  var client = new Client(apiKey: apiKey);
-    //  var respone = await client.Models.GenerateContentAsync(
-    //    model: selectedModel,
-    //    contents: prompt
-    //    );
-    //  var answer = respone.Candidates[0].Content.Parts[0].Text;
-
-    //  // Log query một lần khi trợ lý trả lời
-    //  string singleLineCusContent = message.ToString().Replace(Environment.NewLine, " ").Replace("\n", " ");
-    //  string singleLineBotContent = answer.ToString().Replace(Environment.NewLine, " ").Replace("\n", " ");
-    //  _logger.LogInformation($"Khách hỏi: '{singleLineCusContent}' - Bot trả lời '{singleLineBotContent}'");
-    //  return answer;
-    //}
 
     public async Task<string> AskAsync(string message, string prompt, string selectedModel)
     {
@@ -327,6 +303,37 @@ namespace KOAHome.Services
 
       return history;
     }
+    public async Task<string> AskOneShotAsync(string systemPrompt, string userMessage, string selectedModel)
+    {
+      var env = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT");
+      var apiKey = env == "Development"
+          ? _config["Gemini:ApiKey"]
+          : Environment.GetEnvironmentVariable("GEMINI_API_KEY");
+
+      var generateContentConfig = new GoogleGenAIType.GenerateContentConfig
+      {
+        SystemInstruction = new GoogleGenAIType.Content
+        {
+          Parts = new List<GoogleGenAIType.Part> { new GoogleGenAIType.Part { Text = systemPrompt } }
+        }
+      };
+
+      var client = new Client(apiKey: apiKey);
+      var response = await client.Models.GenerateContentAsync(
+          model: selectedModel,
+          contents: new List<GoogleGenAIType.Content>
+          {
+            new GoogleGenAIType.Content
+            {
+                Role = "user",
+                Parts = new List<GoogleGenAIType.Part> { new GoogleGenAIType.Part { Text = userMessage } }
+            }
+          },
+          config: generateContentConfig
+      );
+
+      return response.Candidates[0].Content.Parts[0].Text;
+    }
   }
   public class OpenRouterService : IAiService
   {
@@ -350,75 +357,6 @@ namespace KOAHome.Services
       _cache = cache;
       _httpContextAccessor = httpContextAccessor;
     }
-    //public async Task<string> AskAsync(string prompt, string selectedModel)
-    //{
-    //  var chatClient = _client.GetChatClient(selectedModel);
-    //  var messages = new ChatMessage[]
-    //  {
-    //        new SystemChatMessage(
-    //            "Bạn là trợ lý cho hệ thống homestay, trả lời ngắn gọn, thân thiện."
-    //        ),
-    //        new UserChatMessage(prompt)
-    //  };
-
-    //  var response = await chatClient.CompleteChatAsync(messages);
-
-    //  return response.Value.Content[0].Text.Trim();
-    ////}
-    //public async Task<string> AskAsync(string message, string prompt, string selectedModel)
-    //{
-    //  var env = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT");
-    //  var apiKey = "";
-    //  if (env == "Development")
-    //  {
-    //    apiKey = _config["OpenRouter:ApiKey"];
-    //  }
-    //  else
-    //  {
-    //    apiKey = Environment.GetEnvironmentVariable("OPENROUTER_API_KEY");
-    //  }
-    //  var baseUrl = _config["OpenRouter:BaseUrl"];
-    //  using var client = new HttpClient();
-
-    //  // 1. Cấu hình các Header bắt buộc cho OpenRouter
-    //  client.DefaultRequestHeaders.Add("Authorization", $"Bearer {apiKey}");
-    //  client.DefaultRequestHeaders.Add("HTTP-Referer", "https://koahome.vn"); // Bắt buộc để tránh lỗi 401/400
-    //  client.DefaultRequestHeaders.Add("X-Title", "KOA Home Management");
-
-    //  // 2. Tạo Body thô nhất có thể để tránh bị "soi" lỗi
-    //  var requestBody = new
-    //  {
-    //    model = selectedModel, // Ví dụ: "deepseek/deepseek-chat:free"
-    //    messages = new[]
-    //      {
-    //        new { role = "user", content = prompt }
-    //    },
-    //    // Với bản Free, tốt nhất chỉ để lại temperature hoặc bỏ hết
-    //    temperature = 1.0
-    //  };
-
-    //  var response = await client.PostAsJsonAsync($"{baseUrl}/chat/completions", requestBody);
-
-    //  if (response.IsSuccessStatusCode)
-    //  {
-    //    var json = await response.Content.ReadAsStringAsync();
-    //    // Bạn có thể dùng System.Text.Json để parse lấy content
-    //    using var doc = JsonDocument.Parse(json);
-    //    var answer = doc.RootElement.GetProperty("choices")[0].GetProperty("message").GetProperty("content").GetString();
-
-    //    // Log query một lần khi trợ lý trả lời
-    //    string singleLineCusContent = message.ToString().Replace(Environment.NewLine, " ").Replace("\n", " ");
-    //    string singleLineBotContent = answer.ToString().Replace(Environment.NewLine, " ").Replace("\n", " ");
-    //    _logger.LogInformation($"Khách hỏi: '{singleLineCusContent}' - Bot trả lời '{singleLineBotContent}'");
-    //    return answer;
-    //  }
-    //  else
-    //  {
-    //    var errorDetail = await response.Content.ReadAsStringAsync();
-    //    return $"Lỗi API ({response.StatusCode}): {errorDetail}";
-    //  }
-    //}
-
 
     public async Task<string> AskAsync(string message, string prompt, string selectedModel)
     {
@@ -729,6 +667,43 @@ namespace KOAHome.Services
       history = history.Where(h => h.Role == "user" || h.Role == "assistant").ToList();
 
       return history;
+    }
+
+    public async Task<string> AskOneShotAsync(string systemPrompt, string userMessage, string selectedModel)
+    {
+      var env = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT");
+      var apiKey = env == "Development"
+          ? _config["OpenRouter:ApiKey"]
+          : Environment.GetEnvironmentVariable("OPENROUTER_API_KEY");
+
+      var baseUrl = _config["OpenRouter:BaseUrl"];
+      using var client = new HttpClient();
+      client.DefaultRequestHeaders.Add("Authorization", $"Bearer {apiKey}");
+      client.DefaultRequestHeaders.Add("HTTP-Referer", "https://koahome.vn");
+      client.DefaultRequestHeaders.Add("X-Title", "KOA Home Management");
+
+      var requestBody = new
+      {
+        model = selectedModel,
+        messages = new object[]
+          {
+            new { role = "system", content = systemPrompt },
+            new { role = "user", content = userMessage }
+          },
+        temperature = 0.3 // thấp để kết quả phân loại ổn định, ít "sáng tạo"
+      };
+
+      var response = await client.PostAsJsonAsync($"{baseUrl}/chat/completions", requestBody);
+
+      if (!response.IsSuccessStatusCode)
+      {
+        var errorDetail = await response.Content.ReadAsStringAsync();
+        throw new Exception($"Lỗi API ({response.StatusCode}): {errorDetail}");
+      }
+
+      var json = await response.Content.ReadAsStringAsync();
+      using var doc = JsonDocument.Parse(json);
+      return doc.RootElement.GetProperty("choices")[0].GetProperty("message").GetProperty("content").GetString();
     }
   }
 }

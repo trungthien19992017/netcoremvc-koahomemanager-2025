@@ -1,0 +1,90 @@
+@{
+    ViewData["Title"] = "Test phân loại icon chi phí";
+}
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+
+<div class="container mt-4" style="max-width: 600px;">
+    <h4>Test AI phân loại icon chi phí</h4>
+
+    <div class="mb-3">
+        <label class="form-label">Tên chi phí</label>
+        <input id="expenseName" class="form-control" placeholder="VD: Cà phê sáng với khách hàng" />
+    </div>
+
+    <div class="row mb-3">
+        <div class="col">
+            <label class="form-label">Provider</label>
+            <select id="provider" class="form-select">
+                <option value="gemini">Gemini</option>
+                <option value="openrouter" selected>OpenRouter</option>
+            </select>
+        </div>
+        <div class="col">
+            <label class="form-label">Model</label>
+            <input id="model" class="form-control" value="deepseek/deepseek-chat" />
+        </div>
+    </div>
+
+    <button id="btnClassify" class="btn btn-primary">Phân loại</button>
+
+    <div id="result" class="mt-4 p-3 border rounded d-none">
+        <div class="d-flex align-items-center gap-3">
+            <i id="resultIcon" class="fa" style="font-size: 32px;"></i>
+            <div>
+                <div><strong>Category:</strong> <span id="resultCategory"></span></div>
+                <div><strong>Icon class:</strong> <code id="resultIconName"></code></div>
+                <div><strong>Color:</strong> <code id="resultColor"></code></div>
+            </div>
+        </div>
+    </div>
+
+    <div id="errorBox" class="alert alert-danger mt-3 d-none"></div>
+</div>
+
+<script>
+document.getElementById('btnClassify').addEventListener('click', async function () {
+    const expenseName = document.getElementById('expenseName').value.trim();
+    const provider = document.getElementById('provider').value;
+    const model = document.getElementById('model').value;
+    const errorBox = document.getElementById('errorBox');
+    const resultBox = document.getElementById('result');
+
+    errorBox.classList.add('d-none');
+    resultBox.classList.add('d-none');
+
+    if (!expenseName) {
+        errorBox.textContent = 'Vui lòng nhập tên chi phí';
+        errorBox.classList.remove('d-none');
+        return;
+    }
+
+    this.disabled = true;
+    this.textContent = 'Đang xử lý...';
+
+    try {
+        const res = await fetch('/ExpenseAi/Classify', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ expenseName, provider, model })
+        });
+
+        if (!res.ok) throw new Error('Lỗi server: ' + res.status);
+
+        const data = await res.json();
+
+        document.getElementById('resultIcon').className = 'fa ' + data.faIcon;
+        document.getElementById('resultIcon').style.color = data.colorHex;
+        document.getElementById('resultCategory').textContent = data.category;
+        document.getElementById('resultIconName').textContent = data.faIcon;
+        document.getElementById('resultColor').textContent = data.colorHex;
+
+        resultBox.classList.remove('d-none');
+    } catch (err) {
+        errorBox.textContent = err.message;
+        errorBox.classList.remove('d-none');
+    } finally {
+        this.disabled = false;
+        this.textContent = 'Phân loại';
+    }
+});
+</script>

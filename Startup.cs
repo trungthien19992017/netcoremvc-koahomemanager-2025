@@ -133,6 +133,9 @@ namespace KOAHome
       services.AddScoped<IGoogleSheetService, GoogleSheetService>();
       services.AddScoped<GeminiService>();
       services.AddScoped<OpenRouterService>();
+      services.AddScoped<IExpenseIconService, ExpenseIconService>();
+      services.AddSingleton<IBackgroundTaskQueue>(_ => new BackgroundTaskQueue(200));
+      services.AddHostedService<QueuedHostedService>();
       services.AddTransient<Func<string, IAiService>>(serviceProvider => key =>
       {
         return key.ToLower() switch
