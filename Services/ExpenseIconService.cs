@@ -1,4 +1,5 @@
 using Newtonsoft.Json;
+using System.ComponentModel.DataAnnotations;
 
 namespace KOAHome.Services
 {
@@ -29,16 +30,7 @@ namespace KOAHome.Services
   {
     private readonly Func<string, IAiService> _aiServiceFactory;
     private readonly ILogger<ExpenseIconService> _logger;
-
-    // Whitelist icon để validate kết quả AI trả về (tránh AI "sáng tạo" class không tồn tại)
-    private static readonly HashSet<string> _allowedIcons = new()
-        {
-            "fa-utensils", "fa-car", "fa-home", "fa-shopping-cart", "fa-plane",
-            "fa-heartbeat", "fa-graduation-cap", "fa-film", "fa-mobile-alt",
-            "fa-gift", "fa-briefcase", "fa-bolt", "fa-tint", "fa-wifi",
-            "fa-coffee", "fa-money-bill-wave", "fa-tshirt", "fa-tools",
-            "fa-baby", "fa-paw", "fa-glass-cheers", "fa-book"
-        };
+    private readonly FontAwesomeService _validator;
 
     private const string SystemPrompt = """
             Bạn là bộ phân loại chi phí cho phần mềm quản lý chi tiêu.
@@ -47,19 +39,36 @@ namespace KOAHome.Services
             {"category": string, "faIcon": string, "colorHex": string}
 
             Quy định:
-            - faIcon CHỈ được chọn 1 trong danh sách sau (không tự tạo thêm):
-              fa-utensils, fa-car, fa-home, fa-shopping-cart, fa-plane, fa-heartbeat,
-              fa-graduation-cap, fa-film, fa-mobile-alt, fa-gift, fa-briefcase, fa-bolt,
-              fa-tint, fa-wifi, fa-coffee, fa-money-bill-wave, fa-tshirt, fa-tools,
-              fa-baby, fa-paw, fa-glass-cheers, fa-book
+            - faIcon phải là icon có thật của FontAwesome Free 6.
+            - Không tự tạo icon.
+            - Ưu tiên icon trực quan nhất.
+
+              Ví dụ:
+
+              fa-bolt
+              fa-lightbulb
+              fa-house
+              fa-bed
+              fa-gas-pump
+              fa-car
+              fa-faucet
+              fa-utensils
+              fa-shirt
+              fa-book
+              fa-laptop
+              fa-server
+              fa-wifi
+              fa-coins
+              ...
             - colorHex là mã màu hex phù hợp tâm lý màu theo nhóm chi phí
             - category là tên nhóm chi phí ngắn gọn bằng tiếng Việt
             """;
 
-    public ExpenseIconService(Func<string, IAiService> aiServiceFactory, ILogger<ExpenseIconService> logger)
+    public ExpenseIconService(Func<string, IAiService> aiServiceFactory, ILogger<ExpenseIconService> logger, FontAwesomeService validator)
     {
       _aiServiceFactory = aiServiceFactory;
       _logger = logger;
+      _validator = validator;
     }
 
     public async Task<ExpenseIconResult> ClassifyAsync(string expenseName, string provider, string model)
@@ -89,11 +98,9 @@ namespace KOAHome.Services
 
         if (result == null) return fallback;
 
-        // Validate icon — nếu AI trả icon không có trong whitelist thì fallback
-        if (!_allowedIcons.Contains(result.FaIcon))
+        if (!_validator.Icons.Contains(result.FaIcon))
         {
-          _logger.LogWarning($"AI trả icon không hợp lệ: {result.FaIcon} cho '{expenseName}'");
-          result.FaIcon = fallback.FaIcon;
+          result.FaIcon = "fa-money-bill-wave";
         }
 
         // Validate color hex cơ bản

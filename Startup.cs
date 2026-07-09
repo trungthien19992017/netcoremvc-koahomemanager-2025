@@ -136,6 +136,7 @@ namespace KOAHome
       services.AddScoped<IExpenseIconService, ExpenseIconService>();
       services.AddSingleton<IBackgroundTaskQueue>(_ => new BackgroundTaskQueue(200));
       services.AddHostedService<QueuedHostedService>();
+      services.AddSingleton<FontAwesomeService>();
       services.AddTransient<Func<string, IAiService>>(serviceProvider => key =>
       {
         return key.ToLower() switch
