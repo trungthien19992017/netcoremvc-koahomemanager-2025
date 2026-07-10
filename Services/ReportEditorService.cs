@@ -15,6 +15,7 @@ namespace KOAHome.Services
     public Task<List<dynamic>> ReportEditor_Json_Update(Dictionary<string, object>? parameters, int? Id, string json, string sqlStore, string? connectionString);
     public Task<string> AIResponse(string provider, string model, string systemPrompt, string request);
     public Task<IFormCollection> ProcessFormWithAIAsync(IFormCollection form, string aiRequestColumn, string systemPrompt, string provider, string model);
+    public Task<string> GetSystemPrompt(string storeName, string? jsonParam);
 
   }
   public class ReportEditorService : IReportEditorService
@@ -178,6 +179,21 @@ namespace KOAHome.Services
       }
 
       return new FormCollection(newFields, form.Files);
+    }
+
+    public async Task<string> GetSystemPrompt(string storeName, string? jsonParam)
+    {
+      string connectionString = _configuration.GetConnectionString("DefaultConnection"); 
+      string sqlStore = storeName;
+
+      var parameters = new Dictionary<string, object>();
+      parameters.Add("json", jsonParam ?? "");
+      var (sqlQuery, sqlParams) = await _con.Connection_GetQueryParam(parameters, sqlStore, connectionString);
+      var result = await _con.Connection_GetSingleDataFromQuery(parameters, sqlStore, connectionString, sqlQuery, sqlParams);
+
+      var data = result.ContainsKey("promptdata") ? Convert.ToString(result["promptdata"]) ?? "" : "";
+
+      return data;
     }
   }
 }
