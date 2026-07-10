@@ -407,6 +407,73 @@ namespace KOAHome.Controllers
                         pair => (object)pair.Value.ToString()  // Ensure each value is a string (flatten StringValues)
                     );
 
+        //string provider = "openrouter";
+        //string model = "deepseek/deepseek-chat";
+        //string systemPrompt = """
+        //    Bạn là bộ phân loại chi phí cho phần mềm quản lý chi tiêu.
+        //    Với tên chi phí do người dùng nhập, hãy trả về DUY NHẤT một JSON object,
+        //    KHÔNG kèm markdown, KHÔNG kèm text giải thích, đúng format:
+        //    {"category": string, "faIcon": string, "colorHex": string}
+
+        //    Quy định:
+        //    - faIcon phải là icon có thật của FontAwesome Free 6.
+        //    - Không tự tạo icon.
+        //    - Ưu tiên icon trực quan nhất.
+
+        //      Ví dụ:
+
+        //      fa-bolt
+        //      fa-lightbulb
+        //      fa-house
+        //      fa-bed
+        //      fa-gas-pump
+        //      fa-car
+        //      fa-faucet
+        //      fa-utensils
+        //      fa-shirt
+        //      fa-book
+        //      fa-laptop
+        //      fa-server
+        //      fa-wifi
+        //      fa-coins
+        //      ...
+        //    - colorHex là mã màu hex phù hợp tâm lý màu theo nhóm chi phí
+        //    - category là tên nhóm chi phí ngắn gọn bằng tiếng Việt
+        //    """;
+        //string request = "Tiền điện tháng 5";
+        //var airesponse = await _re.AIResponse(provider, model, systemPrompt, request);
+
+        //form = await form.ProcessAIColumnsAsync(
+        //    aiRequestColumns: "content,quantity",
+        //    provider: "openrouter",
+        //    model: "deepseek/deepseek-chat",
+        //    systemPrompt: systemPrompt,
+        //    aiFunc: AIResponse
+        //);
+
+        string provider = "openrouter";
+        string model = "deepseek/deepseek-chat";
+        string systemPrompt = """
+              Bạn là bộ phân loại chi phí cho phần mềm quản lý chi tiêu.
+              Dữ liệu đầu vào của bạn sẽ là một JSON Object chứa các thông tin chi tiết của chi phí (ví dụ: {"content": "...", "quantity": "..."}). Hãy dựa vào trường "content" (và các thông tin bổ trợ khác nếu có) để phân loại chính xác.
+
+              Yêu cầu kết quả trả về:
+              Trả về DUY NHẤT một JSON object hợp lệ, đúng format sau:
+              {"category": string, "faIcon": string, "colorHex": string}
+
+              Quy định:
+              - faIcon phải là icon có thật của FontAwesome Free 6. Không tự tạo icon. Ưu tiên icon trực quan nhất (Ví dụ: fa-bolt, fa-lightbulb, fa-house, fa-car, fa-utensils, fa-wifi, fa-coins...).
+              - colorHex là mã màu hex phù hợp tâm lý màu theo nhóm chi phí.
+              - category là tên nhóm chi phí ngắn gọn bằng tiếng Việt.
+
+              CRITICAL WARNING: 
+              - KHÔNG bọc kết quả trong các thẻ markdown code block như ```json ... ``` hoặc ``` ... ```.
+              - KHÔNG kèm bất kỳ text giải thích nào khác. 
+              - Chỉ trả về chuỗi JSON thuần túy bắt đầu bằng { và kết thúc bằng }.
+              """;
+        //string request = "Tiền điện tháng 5";
+        form = await _re.ProcessFormWithAIAsync(form, "content,quantity" , systemPrompt, provider, model);
+
         //xu ly report editor
         // Dictionary để nhóm dữ liệu theo số thứ tự [n]
         // Chuyển đổi dữ liệu sang JSON (loc du lieu form tra ve lay du lieu grid va chuyen thanh json)

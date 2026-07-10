@@ -1,12 +1,10 @@
 
+using Google.Api;
+using Google.Apis.Sheets.v4.Data;
 using KOAHome.EntityFramework;
-using Microsoft.Data.SqlClient;
+using Microsoft.Extensions.Primitives;
 using Newtonsoft.Json;
-using OfficeOpenXml.FormulaParsing.Excel.Functions.Text;
-using System.Data;
-using System.Dynamic;
 using System.Globalization;
-using System.Text;
 using System.Text.RegularExpressions;
 
 namespace KOAHome.Services
@@ -15,6 +13,8 @@ namespace KOAHome.Services
   {
     public Task<string> ExtractGridDataToJson(IFormCollection form);
     public Task<List<dynamic>> ReportEditor_Json_Update(Dictionary<string, object>? parameters, int? Id, string json, string sqlStore, string? connectionString);
+    public Task<string> AIResponse(string provider, string model, string systemPrompt, string request);
+    public Task<IFormCollection> ProcessFormWithAIAsync(IFormCollection form, string aiRequestColumn, string systemPrompt, string provider, string model);
 
   }
   public class ReportEditorService : IReportEditorService
@@ -23,13 +23,18 @@ namespace KOAHome.Services
     private readonly IHttpContextAccessor _httpContextAccessor;
     private readonly IConfiguration _configuration;
     private readonly IConnectionService _con;
-    private const string CartSession = "CartSession";
-    public ReportEditorService(QLKCL_NEWContext db, IHttpContextAccessor httpContextAccessor, IConfiguration configuration, IConnectionService con)
+    private readonly Func<string, IAiService> _aiServiceFactory;
+    private readonly ILogger<ExpenseIconService> _logger;
+    private readonly FontAwesomeService _validator;
+    public ReportEditorService(QLKCL_NEWContext db, IHttpContextAccessor httpContextAccessor, IConfiguration configuration, IConnectionService con, Func<string, IAiService> aiServiceFactory, ILogger<ExpenseIconService> logger, FontAwesomeService validator)
     {
       _db = db;
       _httpContextAccessor = httpContextAccessor;
       _configuration = configuration;
       _con = con;
+      _aiServiceFactory = aiServiceFactory;
+      _logger = logger;
+      _validator = validator;
     }
     public async Task<string> ExtractGridDataToJson(IFormCollection form)
     {
@@ -104,6 +109,75 @@ namespace KOAHome.Services
       resultList = await _con.Connection_GetDataFromQuery(parameters, sqlStore, connectionString, sqlQuery, sqlParams);
       return resultList;
     }
+    public async Task<string> AIResponse(string provider = "openrouter", string model = "deepseek/deepseek-chat", string systemPrompt = "Hãy trả về DUY NHẤT một JSON object,KHÔNG kèm markdown, KHÔNG kèm text giải thích, đúng format: {}", string request = "")
+    {
 
+      var aiService = _aiServiceFactory(provider);
+      var raw = await aiService.AskOneShotAsync(systemPrompt, request, model);
+
+      var clean = raw.Trim();
+      if (clean.StartsWith("```"))
+      {
+        clean = clean.Replace("```json", "").Replace("```", "").Trim();
+      }
+      _logger.LogInformation("Request: " + request + ", AIResponse: " + clean);
+      return clean;
+    }
+
+    public async Task<IFormCollection> ProcessFormWithAIAsync(IFormCollection form, string aiRequestColumn, string systemPrompt, string provider = "openrouter", string model = "deepseek/deepseek-chat")
+    {
+      // 1. Tách danh sách các cột cần lấy dữ liệu làm request
+      var requestCols = aiRequestColumn.Split(',', StringSplitOptions.TrimEntries | StringSplitOptions.RemoveEmptyEntries);
+
+      // Regex để bắt cấu trúc dòng: grid[X].y_z_w
+      var gridRegex = new Regex(@"^grid\[(?<index>\d+)\]\.(?<column>.+)$");
+
+      // 2. Gom nhóm các key trong Form theo index của từng dòng
+      var rowGroups = form.Keys
+          .Select(key => gridRegex.Match(key))
+          .Where(m => m.Success)
+          .GroupBy(
+              m => m.Groups["index"].Value,
+              m => new { CoreColumn = m.Groups["column"].Value, FullKey = m.Value }
+          );
+
+      // Chuẩn bị danh sách các task xử lý AI song song để tối ưu thời gian
+      var tasks = rowGroups.Select(async group =>
+      {
+        var rowIndex = group.Key;
+
+        // Tạo dictionary chứa dữ liệu của các cột được yêu cầu cho dòng hiện tại
+        var requestData = group
+            .Where(g => requestCols.Contains(g.CoreColumn))
+            .ToDictionary(g => g.CoreColumn, g => form[g.FullKey].ToString());
+
+        // Nếu dòng này không chứa bất kỳ cột nào cần thiết, bỏ qua không gọi AI
+        if (!requestData.Any()) return null;
+
+        // Convert thành chuỗi JSON request dạng: {"content":"Tiền điện tháng 5", "quantity":"1"}
+        string aiRequestJson = JsonConvert.SerializeObject(requestData, Formatting.Indented);
+
+        // Gọi AI xử lý
+        var aiService = _aiServiceFactory(provider);
+        string aiResult = await aiService.AskOneShotAsync(systemPrompt, aiRequestJson, model);
+
+        // Trả về kết quả kèm theo Key cần map lại vào Form
+        return new { TargetKey = $"grid[{rowIndex}].airesponsejson", Value = aiResult };
+      });
+
+      // Chạy song song toàn bộ các dòng
+      var results = await Task.WhenAll(tasks);
+
+      // 3. Tạo FormCollection mới để return (vì IFormCollection gốc là ReadOnly)
+      var newFields = form.ToDictionary(k => k.Key, k => k.Value);
+
+      foreach (var res in results.Where(r => r != null))
+      {
+        // Gán hoặc cập nhật đè cột airesponsejson
+        newFields[res.TargetKey] = res.Value;
+      }
+
+      return new FormCollection(newFields, form.Files);
+    }
   }
 }

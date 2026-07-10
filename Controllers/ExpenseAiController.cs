@@ -14,20 +14,18 @@ namespace AspnetCoreMvcFull.Controllers
     }
 
     [HttpGet]
-    [AllowAnonymous]
     public IActionResult Index()
     {
       return View();
     }
 
     [HttpPost]
-    [AllowAnonymous]
     public async Task<IActionResult> Classify([FromBody] ClassifyRequest req)
     {
       var result = await _expenseIconService.ClassifyAsync(
           req.ExpenseName,
-          string.IsNullOrEmpty(req.Provider) ? "gemini" : req.Provider,
-          string.IsNullOrEmpty(req.Model) ? "gemini-2.0-flash" : req.Model
+          string.IsNullOrEmpty(req.Provider) ? "openrouter" : req.Provider,
+          string.IsNullOrEmpty(req.Model) ? "deepseek/deepseek-chat" : req.Model
       );
       return Json(result);
     }

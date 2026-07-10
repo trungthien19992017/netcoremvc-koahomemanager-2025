@@ -9,17 +9,6 @@ namespace KOAHome.Services
     public string FaIcon { get; set; } = "fa-money-bill-wave";
     public string ColorHex { get; set; } = "#6b7280";
   }
-  public class Expense
-  {
-    public int Id { get; set; }
-    public string ExpenseName { get; set; } = "";
-    public decimal Amount { get; set; }
-    public string Category { get; set; } = "Khác";
-    public string FaIcon { get; set; } = "fa-money-bill-wave"; // icon mặc định trong lúc chờ AI
-    public string ColorHex { get; set; } = "#9ca3af"; // màu xám = "đang chờ phân loại"
-    public string Status { get; set; } = "Pending"; // Pending | Done | Failed
-    public DateTime CreatedAt { get; set; } = DateTime.Now;
-  }
 
   public interface IExpenseIconService
   {
