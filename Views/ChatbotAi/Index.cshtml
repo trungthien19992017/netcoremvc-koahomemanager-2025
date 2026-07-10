@@ -34,6 +34,7 @@
                   { value: 'gemini-2.5-flash-lite', text: 'gemini-2.5-flash-lite' }
               ],
               openrouter: [
+                  { value: 'deepseek/deepseek-v4-flash', text: 'deepseek-v4-flash' },
                   { value: 'deepseek/deepseek-chat', text: 'deepseek-chat' },
                   { value: 'deepseek/deepseek-r1-0528', text: 'deepseek-r1-0528' },
                   { value: 'deepseek/deepseek-r1-0528:free', text: 'deepseek-r1-0528:free' },
@@ -335,15 +336,16 @@
       <div class="form-group">
           <label for="selectedProvider">Chọn hãng AI:</label>
           <select id="selectedProvider" name="selectedProvider" class="form-control">
-              <option value="gemini"selected>Gemini</option>
-              <option value="openrouter">Open Router</option>
+              <option value="gemini">Gemini</option>
+              <option value="openrouter" selected>Open Router</option>
           </select>
       </div>
       <div class="form-group mt-2">
           <label for="selectedModel">Chọn phiên bản AI:</label>
           <select id="selectedModel" name="selectedModel" class="form-control">
-              <option value="gemini-2.5-flash"selected>gemini-2.5-flash</option>
+              <option value="gemini-2.5-flash">gemini-2.5-flash</option>
               <option value="gemini-2.5-flash-lite">gemini-2.5-flash-lite</option>
+              <option value="deepseek/deepseek-v4-flash" selected>deepseek-v4-flash</option>
               <option value="deepseek/deepseek-chat">deepseek-chat</option>
               <option value="deepseek/deepseek-r1-0528">deepseek-r1-0528</option>
               <option value="deepseek/deepseek-r1-0528:free">deepseek-r1-0528:free</option>

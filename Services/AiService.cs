@@ -420,6 +420,7 @@ namespace KOAHome.Services
 
       var modelConfig = new Dictionary<string, double>
       {
+          { "deepseek/deepseek-v4-flash", 0.3 },
           { "deepseek/deepseek-chat", 1.0 },
           { "deepseek/deepseek-r1-0528", 1.0 },
           { "minimax/minimax-m2.5-chat", 0.5 }
