@@ -796,8 +796,8 @@
                               extend: "pdf",
                               text: '<i class="ri-file-pdf-line me-1"></i>Pdf',
                               className: "dropdown-item",
-                              filename: 'exported-pdf',  // Tên file PDF khi tải về
-                              title: 'My Exported PDF',  // Tiêu đề file PDF
+                              filename: config.filename,  // Tên file PDF khi tải về
+                              title: config.title,  // Tiêu đề file PDF
                               orientation: 'landscape',   // Hướng trang (portrait hoặc landscape)
                               pageSize: 'A4',            // Kích thước trang
                               customize: function(doc) {
@@ -817,7 +817,7 @@
                                   };
                                   doc.header = function() {
                                       return {
-                                          text: 'Custom Header',
+                                          text: config.title,
                                           alignment: 'center',
                                           fontSize: 16,
                                           bold: true,
@@ -827,7 +827,7 @@
 
                                   doc.footer = function(currentPage, pageCount) {
                                       return {
-                                          text: 'Page ' + currentPage + ' of ' + pageCount,
+                                          text: 'Trang ' + currentPage + ' của ' + pageCount + ' trang',
                                           alignment: 'center',
                                           fontSize: 10,
                                           margin: [0, 10]
