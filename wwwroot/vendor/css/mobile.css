@@ -119,12 +119,6 @@
 
     }
 
-    textarea.form-control{
-
-        min-height:120px !important;
-
-    }
-
     .input-group-text {
 
         height: 32px;
@@ -262,12 +256,6 @@
       background: #fff;
       border: 1px solid #4F46E5;
       box-shadow: none;
-    }
-
-    table.dataTable textarea.form-control {
-
-        min-height: 40px !important;
-
     }
 
     table.dataTable .form-check-input {
