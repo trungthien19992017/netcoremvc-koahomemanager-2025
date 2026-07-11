@@ -230,119 +230,117 @@
             <!-- Accordion -->
             <!-- phan mo rong de an hien bo loc-->
             <div class="row">
-                <div class="col-md">
-                    <div class="accordion mt-4" id="accordionExample">
-                        <div class="accordion-item active">
-                            <h2 class="accordion-header" id="headingOne">
-                                <button type="button" class="accordion-button collapsed" data-bs-toggle="collapse" data-bs-target="#accordionOne" aria-expanded="true" aria-controls="accordionOne">
-                                    Tìm kiếm nâng cao
-                                </button>
-                            </h2>
-                            <div id="accordionOne" class="accordion-collapse collapse" data-bs-parent="#accordionExample">
-                                <div class="accordion-body">
-                                    @* filter *@
-                                    <form method="get" class="needs-validation" novalidate="" action="/report/viewer-utility/@ReportCode" enctype="multipart/form-data">
-                                        @* report code mac dinh truyen vao bo loc *@
-                                        <div class="row gx-3 gy-2 align-items-center">
-                                            @* xu ly filter dong *@
-                                            @foreach (var filter in listFilterConfig.OrderBy(p => p.orderid).ToList())
-                                            {
-                                                @* name: Key cua filter truyen vao, label: Ten filter, type: Loại filter, value: giá trị filter
-                                                                , colspan: độ rộng filter *@
-                                                string name = filter.code.ToLower();
-                                                string label = filter.name;
-                                                string type = filter.dynamicfieldname;
-                                                var value = listFilterValue.ContainsKey(name) ? listFilterValue[name] : "";
-                                                int colspan = Convert.ToInt32(filter.colspan);
+                <div class="accordion" id="accordionExample">
+                    <div class="accordion-item active">
+                        <h2 class="accordion-header" id="headingOne">
+                            <button type="button" class="accordion-button collapsed" data-bs-toggle="collapse" data-bs-target="#accordionOne" aria-expanded="true" aria-controls="accordionOne">
+                                Tìm kiếm nâng cao
+                            </button>
+                        </h2>
+                        <div id="accordionOne" class="accordion-collapse collapse" data-bs-parent="#accordionExample">
+                            <div class="accordion-body">
+                                @* filter *@
+                                <form method="get" class="needs-validation" novalidate="" action="/report/viewer-utility/@ReportCode" enctype="multipart/form-data">
+                                    @* report code mac dinh truyen vao bo loc *@
+                                    <div class="row gx-3 gy-2 align-items-center">
+                                        @* xu ly filter dong *@
+                                        @foreach (var filter in listFilterConfig.OrderBy(p => p.orderid).ToList())
+                                        {
+                                            @* name: Key cua filter truyen vao, label: Ten filter, type: Loại filter, value: giá trị filter
+                                                            , colspan: độ rộng filter *@
+                                            string name = filter.code.ToLower();
+                                            string label = filter.name;
+                                            string type = filter.dynamicfieldname;
+                                            var value = listFilterValue.ContainsKey(name) ? listFilterValue[name] : "";
+                                            int colspan = Convert.ToInt32(filter.colspan);
 
-                                                @* neu colspan = 0 thi mac dinh = 4, neu khong thi lay colspan *@
-                                                <div class="col-md-@(Convert.ToInt32(filter.colspan) == 0 ? "4" : @filter.colspan) form-floating form-floating-outline mb-6 @(type == "TREEVIEW MULTIPLE" ? "select2-dark form-floating-select2" : "")">
-                                                    @if (type == "TEXT BOX")
+                                            @* neu colspan = 0 thi mac dinh = 4, neu khong thi lay colspan *@
+                                            <div class="col-md-@(Convert.ToInt32(filter.colspan) == 0 ? "4" : @filter.colspan) form-floating form-floating-outline mb-6 @(type == "TREEVIEW MULTIPLE" ? "select2-dark form-floating-select2" : "")">
+                                                @if (type == "TEXT BOX")
+                                                {
+                                                    <input class="form-control form-control-sm" type="text" id="@name" name="@name" value="@value" @(filter.required == true ? "required" : "") />
+                                                }
+                                                else if (type == "DATE BOX")
+                                                {
+                                                    <input class="form-control form-control-sm" type="date" id="@name" name="@name" value="@value" @(filter.required == true ? "required" : "") />
+                                                }
+                                                else if (type == "DATERANGEPICKER")
+                                                {
+                                                    <input class="form-control form-control-sm bs-rangepicker-filter" type="text" id="@name" name="@name" value="@value" @(filter.required == true ? "required" : "") />
+                                                }
+                                                else if (type == "SELECT BOX")
+                                                {
+                                                    @* check selected cho item dung voi gia tri *@
+                                                    var selectList = dynamicServiceSelectOptions[name] as List<SelectListItem> ?? new List<SelectListItem>();
+                                                    @foreach (var item in selectList)
                                                     {
-                                                        <input class="form-control form-control-sm" type="text" id="@name" name="@name" value="@value" @(filter.required == true ? "required" : "") />
-                                                    }
-                                                    else if (type == "DATE BOX")
-                                                    {
-                                                        <input class="form-control form-control-sm" type="date" id="@name" name="@name" value="@value" @(filter.required == true ? "required" : "") />
-                                                    }
-                                                    else if (type == "DATERANGEPICKER")
-                                                    {
-                                                        <input class="form-control form-control-sm bs-rangepicker-filter" type="text" id="@name" name="@name" value="@value" @(filter.required == true ? "required" : "") />
-                                                    }
-                                                    else if (type == "SELECT BOX")
-                                                    {
-                                                        @* check selected cho item dung voi gia tri *@
-                                                        var selectList = dynamicServiceSelectOptions[name] as List<SelectListItem> ?? new List<SelectListItem>();
-                                                        @foreach (var item in selectList)
+                                                        if (value != null)
                                                         {
-                                                            if (value != null)
-                                                            {
-                                                                item.Selected = (item.Value.ToString() == value.ToString()); // currentValue là giá trị đang được chọn
-                                                            }
+                                                            item.Selected = (item.Value.ToString() == value.ToString()); // currentValue là giá trị đang được chọn
                                                         }
-                                                        var selectAttributes = new Dictionary<string, object>
-                                                                                        {
-                                                                                        { "class", "form-select color-dropdown form-select-sm" },
-                                                                                        { "id", name },
-                                                                                        { "name", name }
-                                                                                        };
-
-                                                        // neu bat buoc thi them truong bat buoc
-                                                        if (filter.required == true)
-                                                        {
-                                                            selectAttributes["required"] = "required";
-                                                        }
-
-                                                        @Html.DropDownList(name, selectList, "-- Chọn --", selectAttributes)
                                                     }
-                                                    else if (type == "TREEVIEW MULTIPLE")
+                                                    var selectAttributes = new Dictionary<string, object>
+                                                                                    {
+                                                                                    { "class", "form-select color-dropdown form-select-sm" },
+                                                                                    { "id", name },
+                                                                                    { "name", name }
+                                                                                    };
+
+                                                    // neu bat buoc thi them truong bat buoc
+                                                    if (filter.required == true)
                                                     {
-                                                        @* check selected cho item dung voi gia tri *@
-                                                        var selectList = dynamicServiceSelectOptions[name] as List<SelectListItem> ?? new List<SelectListItem>();
-                                                        @foreach (var item in selectList)
-                                                        {
-                                                            if (value != null)
-                                                            {
-                                                                // split chuoi value thanh List string để xử lý
-                                                                var splitvalue = value.ToString().Split(",", StringSplitOptions.RemoveEmptyEntries);
-                                                                // kiểm tra cac giá trị có khớp không
-                                                                item.Selected = (splitvalue.Any(s => s.Trim().Equals(item.Value.ToString(), StringComparison.OrdinalIgnoreCase))); // currentValue là giá trị đang được chọn
-                                                            }
-                                                        }
-                                                        var selectAttributes = new Dictionary<string, object>
-                                                                                        {
-                                                                                        { "class", "form-select color-dropdown form-select-sm" },
-                                                                                        { "id", name },
-                                                                                        { "name", name },
-                                                                                        { "multiple", "multiple" }
-                                                                                        };
-
-                                                        // neu bat buoc thi them truong bat buoc
-                                                        if (filter.required == true)
-                                                        {
-                                                            selectAttributes["required"] = "required";
-                                                        }
-
-                                                        @Html.DropDownList(name, selectList, "-- Chọn --", selectAttributes)
+                                                        selectAttributes["required"] = "required";
                                                     }
-                                                    <label for="@name">@label</label>
-                                                    <div class="valid-feedback"> Chính xác! </div>
-                                                    <div class="invalid-feedback"> Không được bỏ trống. </div>
-                                                </div>
-                                            }
 
-                                        </div>
-                                        @* end filter *@
-                                        @* nut xem *@
-                                        <div class="row gx-3 gy-2 align-items-center">
-                                            <div class="col-md-12 d-flex justify-content-center">
-                                                <label class="form-label" for="showToastPlacement">&nbsp;</label>
-                                                <button type="submit" id="showToastPlacement" class="btn btn-primary d-block">Xem</button>
+                                                    @Html.DropDownList(name, selectList, "-- Chọn --", selectAttributes)
+                                                }
+                                                else if (type == "TREEVIEW MULTIPLE")
+                                                {
+                                                    @* check selected cho item dung voi gia tri *@
+                                                    var selectList = dynamicServiceSelectOptions[name] as List<SelectListItem> ?? new List<SelectListItem>();
+                                                    @foreach (var item in selectList)
+                                                    {
+                                                        if (value != null)
+                                                        {
+                                                            // split chuoi value thanh List string để xử lý
+                                                            var splitvalue = value.ToString().Split(",", StringSplitOptions.RemoveEmptyEntries);
+                                                            // kiểm tra cac giá trị có khớp không
+                                                            item.Selected = (splitvalue.Any(s => s.Trim().Equals(item.Value.ToString(), StringComparison.OrdinalIgnoreCase))); // currentValue là giá trị đang được chọn
+                                                        }
+                                                    }
+                                                    var selectAttributes = new Dictionary<string, object>
+                                                                                    {
+                                                                                    { "class", "form-select color-dropdown form-select-sm" },
+                                                                                    { "id", name },
+                                                                                    { "name", name },
+                                                                                    { "multiple", "multiple" }
+                                                                                    };
+
+                                                    // neu bat buoc thi them truong bat buoc
+                                                    if (filter.required == true)
+                                                    {
+                                                        selectAttributes["required"] = "required";
+                                                    }
+
+                                                    @Html.DropDownList(name, selectList, "-- Chọn --", selectAttributes)
+                                                }
+                                                <label for="@name">@label</label>
+                                                <div class="valid-feedback"> Chính xác! </div>
+                                                <div class="invalid-feedback"> Không được bỏ trống. </div>
                                             </div>
+                                        }
+
+                                    </div>
+                                    @* end filter *@
+                                    @* nut xem *@
+                                    <div class="row gx-3 gy-2 align-items-center">
+                                        <div class="col-md-12 d-flex justify-content-center">
+                                            <label class="form-label" for="showToastPlacement">&nbsp;</label>
+                                            <button type="submit" id="showToastPlacement" class="btn btn-primary d-block">Xem</button>
                                         </div>
-                                        @* end nut xem *@
-                                    </form>
-                                </div>
+                                    </div>
+                                    @* end nut xem *@
+                                </form>
                             </div>
                         </div>
                     </div>
@@ -474,7 +472,7 @@
                                 @* Cột này sẽ tự động chứa checkbox "Chọn tất cả" *@
                                 <th class="text-center" rowspan="@displayParentLevelNum" data-code="IdCheck" data-index="-1" data-isexport="False" style="min-width:30px"></th>
                                 @* Cột chi tiết mặc định*@
-                                <th class="text-center" rowspan="@displayParentLevelNum" data-code="IdDetail" data-index="0" data-isexport="False" style="min-width:10px"></th>
+                                <th class="text-center" rowspan="@displayParentLevelNum" data-code="IdDetail" data-index="0" data-isexport="False" style="min-width:20px"></th>
                                 @* neu display khong null thi tiep tuc *@
                                 @if (displayList != null)
                                 {
