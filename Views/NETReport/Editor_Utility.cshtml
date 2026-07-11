@@ -795,18 +795,29 @@
                                                               // kiểu ngày
                                                               else if (dateTypeArray.Contains(displayType))
                                                               {
-                                                                  string[] dateFormatArray = ["dd/MM/yyyy", ""];
-                                                                  string dateBoxType = "";
-                                                                  if (displayType == "date" && dateFormatArray.Contains(displayFormat))
-                                                                  {
-                                                                      dateBoxType = "date";
-                                                                  }
-                                                                  else
-                                                                  {
-                                                                      dateBoxType = "datetime-local";
-                                                                  }
+                                                                    string[] dateFormatArray = ["dd/MM/yyyy", ""];
 
-                                                                  <input type="@dateBoxType" class="form-control track-change @FormatHelper.ParseTextAlignToClass(display.textalign)" name="@("grid["+@reportRowIndex+"]."+displayCode)" aria-label="@display.name" value="@value" @(Convert.ToBoolean(display.isreadonly ?? false) ? "readonly" : "") @(display.validationrule != "[]" ? "required" : "")>
+                                                                    string dateBoxType;
+
+                                                                    if (displayType == "date" && dateFormatArray.Contains(displayFormat))
+                                                                    {
+                                                                        dateBoxType = "date";
+                                                                    }
+                                                                    else
+                                                                    {
+                                                                        dateBoxType = "datetime-local";
+                                                                    }
+
+                                                                    string inputValue = Convert.ToString(value);
+
+                                                                    if (dateBoxType == "date"
+                                                                        && !string.IsNullOrWhiteSpace(inputValue)
+                                                                        && DateTime.TryParse(inputValue, out DateTime dt))
+                                                                    {
+                                                                        inputValue = dt.ToString("yyyy-MM-dd");
+                                                                    }
+
+                                                                  <input type="@dateBoxType" class="form-control track-change @FormatHelper.ParseTextAlignToClass(display.textalign)" name="@("grid["+@reportRowIndex+"]."+displayCode)" aria-label="@display.name" value="@inputValue" @(Convert.ToBoolean(display.isreadonly ?? false) ? "readonly" : "") @(display.validationrule != "[]" ? "required" : "")>
                                                               }
                                                               else if (displayType == "combobox")
                                                               {
