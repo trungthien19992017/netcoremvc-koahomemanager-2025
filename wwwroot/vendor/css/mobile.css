@@ -99,8 +99,6 @@
     .form-floating>.form-control,
     .form-floating>.form-select{
 
-        height:46px !important;
-
         min-height:46px !important;
 
         padding-top:1.45rem;
@@ -547,8 +545,6 @@
 
     .form-control,
     .form-select{
-
-        height:30px !important;
 
         font-size:11px !important;
 
