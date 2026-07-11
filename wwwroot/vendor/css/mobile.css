@@ -351,11 +351,9 @@
     }
 
     .dt-search input {
-
         height: 30px !important;
-
+        width: 150px !important;
         font-size: 12px;
-
     }
 
     .dt-length select {
@@ -409,14 +407,6 @@
 
     .dt-layout-row::-webkit-scrollbar {
       display: none;
-    }
-
-    .dt-search {
-      flex: 1;
-    }
-
-    .dt-search input {
-      width: 100% !important;
     }
 
     /*************************************************
