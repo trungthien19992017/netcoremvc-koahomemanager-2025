@@ -573,4 +573,9 @@
 
     }
 
+    /*drag targer slider menu left*/
+    .drag-target {
+      width: 20px !important;
+    }
+
 }
