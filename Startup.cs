@@ -55,7 +55,7 @@ namespace KOAHome
       services.AddDistributedMemoryCache();
       services.AddResponseCaching();
       services.AddSession(options => {
-        options.IdleTimeout = TimeSpan.FromMinutes(20);//You can set Time
+        options.IdleTimeout = TimeSpan.FromMinutes(60);//You can set Time
         options.Cookie.HttpOnly = true;
         options.Cookie.IsEssential = true;
       });
@@ -69,7 +69,7 @@ namespace KOAHome
       {
         options.LoginPath = "/Account/Login";
         options.AccessDeniedPath = "/Account/AccessDenied";
-        options.ExpireTimeSpan = TimeSpan.FromMinutes(30); // tùy chọn RememberMe sẽ ghi đè
+        options.ExpireTimeSpan = TimeSpan.FromMinutes(60); // tùy chọn RememberMe sẽ ghi đè
         options.SlidingExpiration = true;
         options.Cookie.HttpOnly = true;
         options.Cookie.SecurePolicy = CookieSecurePolicy.Always;
