@@ -454,9 +454,10 @@ asp-route-id="@id" data-modal-id="modal-PopupForm" enctype="multipart/form-data"
                                                     }
                                                     else if (child_type == "HTMLEditor")
                                                     {
+                                                        int height = child_field_editoroptionsDict.ContainsKey("height") ? Convert.ToInt32(child_field_editoroptionsDict["height"]) : 200;
                                                         <label for="@child_name" class="htmleditor-form-label"><i class="@iconclass" style="@iconstyle"></i> <span style="@labelstyle">@child_label</span> <span class='text-danger'>@(child_isrequired == true ? "*" : "")</span></label>
                                                         // Quill Editor hiển thị
-                                                        <div id="@("editor-container-"+child_name)" style="height:300px; @inputstyle" class="quill-editor" data-readonly="@(isreadonly == true ? "true" : "false")"></div>
+                                                        <div id="@("editor-container-"+child_name)" style="height:@(height + "px"); @inputstyle" class="quill-editor" data-readonly="@(isreadonly == true ? "true" : "false")"></div>
                                                         // Hidden input để submit
                                                         <input type="hidden" id="@("editor-content-"+child_name)" name="@child_name" value="@child_value" />
                                                     }
@@ -839,9 +840,10 @@ asp-route-id="@id" data-modal-id="modal-PopupForm" enctype="multipart/form-data"
                                         }
                                         else if (type == "HTMLEditor")
                                         {
+                                            int height = field_editoroptionsDict.ContainsKey("height") ? Convert.ToInt32(field_editoroptionsDict["height"]) : 200;
                                             <label for="@name" class="htmleditor-form-label"><span style="@labelstyle">@label</span></label>
                                             // Quill Editor hiển thị
-                                            <div id="@("editor-container-"+name)" style="height:300px; @inputstyle" class="quill-editor" data-readonly="@(isreadonly == true ? "true" : "false")"></div>
+                                            <div id="@("editor-container-"+name)" style="height:@(height + "px"); @inputstyle" class="quill-editor" data-readonly="@(isreadonly == true ? "true" : "false")"></div>
                                             // Hidden input để submit
                                             <input type="hidden" id="@("editor-content-"+name)" name="@name" value="@value" />
                                         }
