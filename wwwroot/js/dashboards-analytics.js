@@ -923,6 +923,10 @@
   const tyLeCacPhongThangRoundChartSeriesString = tyLeCacPhongThangRoundChartElement.getAttribute("data-series");
   const tyLeCacPhongThangRoundChartSeriesArray = tyLeCacPhongThangRoundChartSeriesString.split(",").map(String); // Chuyển chuỗi thành mảng string
   const tyLeCacPhongThangRoundChartTotalString = tyLeCacPhongThangRoundChartElement.getAttribute("data-total").toString();
+  const tyLeCacPhongThangRoundChartColorString = tyLeCacPhongThangRoundChartElement.getAttribute("data-color");
+  const tyLeCacPhongThangRoundChartColorArray = tyLeCacPhongThangRoundChartColorString
+                                                ? tyLeCacPhongThangRoundChartColorString.split(",").map(String)
+                                                : [config.colors.success, config.colors.secondary, config.colors.danger, config.colors.warning]
 
   // Pie chart ty le cac phong trong thang
   const tyLeCacPhongThangRoundChartEl = document.querySelector('#tyLeCacPhongThangRoundChart'),
@@ -934,7 +938,7 @@
       },
       labels: tyLeCacPhongThangRoundChartSeriesArray,
       series: tyLeCacPhongThangRoundChartDataArray,
-      colors: [config.colors.success, config.colors.secondary, config.colors.danger, config.colors.warning],
+      colors: tyLeCacPhongThangRoundChartColorArray,
       stroke: {
         width: 0
       },
