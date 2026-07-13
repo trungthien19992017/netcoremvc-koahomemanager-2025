@@ -76,9 +76,15 @@
             initSelect2();
 
         });
+        
+      function successSound() {
+            const audio = new Audio("/sound/success_sound_effect.mp3");
+            audio.play();
+        }
 
-        function celebrate() {
-              confetti({
+      function celebrate() {
+            successSound();
+            confetti({
               particleCount: 100,
               spread: 70,
               origin: { y: 0.6 }
@@ -2347,6 +2353,8 @@
                 event.preventDefault();
             }
 
+            const audio = new Audio("/sound/bip_sound_effect.mp3");
+            audio.play();
             // 1. Lấy ra element input file dựa vào id truyền vào
             var fileInput = document.getElementById(fileInputId);
             if (!fileInput || fileInput.files.length === 0) {
@@ -2396,6 +2404,7 @@
                             return;
                         }
 
+                        successSound();
                         // TRƯỜNG HỢP 1: isMultiple là false -> Chỉ gán bộ CCCD đầu tiên vào key đích danh ban đầu
                         if (!isMultiple) {
                             var item = response.results[0];
