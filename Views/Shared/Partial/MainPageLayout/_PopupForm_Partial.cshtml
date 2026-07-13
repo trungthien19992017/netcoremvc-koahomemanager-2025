@@ -1102,6 +1102,7 @@ asp-route-id="@id" data-modal-id="modal-PopupForm" enctype="multipart/form-data"
                   contentType: false,
                   success: function (data) {
                       if (data.success) {
+                          celebrate();
                           rplm({
                               title: "Xử lý thành công!",
                               text: "Hành động của bạn đã được xử lý.",

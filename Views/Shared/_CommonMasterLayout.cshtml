@@ -76,6 +76,14 @@
             initSelect2();
 
         });
+
+        function celebrate() {
+              confetti({
+              particleCount: 100,
+              spread: 70,
+              origin: { y: 0.6 }
+            });
+        }
         
 
         // data fill sau khi on change select box
@@ -293,6 +301,7 @@
                   contentType: false, // Để trình duyệt tự động đặt `content-type`
                   success: function (response) {
                       if (response.success) {
+                          celebrate();
                           rplm({
                               title: "Xử lý thành công!",
                               text: "Hành động của bạn đã được xử lý.",
@@ -1253,6 +1262,7 @@
                              contentType: false, // Để trình duyệt tự động đặt `content-type`
                              success: function (response) {
                                  if (response.success) {
+                                     celebrate();
                                      rplm({
                                        title: "Xử lý thành công!",
                                        text: "Hành động của bạn đã được xử lý.",
@@ -2626,6 +2636,7 @@
 
                     // Ưu tiên 1: Có yêu cầu RELOAD trang
                     if (data.reload) {
+                        celebrate();
                         rplm({
                             title: "Xử lý thành công!",
                             text: data.successmessage || "Hành động của bạn đã được xử lý.",
@@ -2650,6 +2661,7 @@
                     }
                     // Ưu tiên 3: Chỉ hiển thị thông báo THÀNH CÔNG thông thường
                     else if (data.successmessage) {
+                        celebrate();
                         rplm({
                             title: "Xử lý thành công!",
                             text: data.successmessage,
