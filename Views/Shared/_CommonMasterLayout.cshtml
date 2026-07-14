@@ -81,6 +81,16 @@
             const audio = new Audio("/sound/success_sound_effect.mp3");
             audio.play();
         }
+      
+      function errorSound() {
+            const audio = new Audio("/sound/error_sound_effect.mp3");
+            audio.play();
+        }
+        
+      function scanSound() {
+            const audio = new Audio("/sound/bip_sound_effect.mp3");
+            audio.play();
+        }
 
       function celebrate() {
             successSound();
@@ -2353,8 +2363,7 @@
                 event.preventDefault();
             }
 
-            const audio = new Audio("/sound/bip_sound_effect.mp3");
-            audio.play();
+            scanSound();
             // 1. Lấy ra element input file dựa vào id truyền vào
             var fileInput = document.getElementById(fileInputId);
             if (!fileInput || fileInput.files.length === 0) {

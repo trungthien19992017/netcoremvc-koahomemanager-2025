@@ -1132,6 +1132,7 @@ asp-route-id="@id" data-modal-id="modal-PopupForm" enctype="multipart/form-data"
                               }
                           });
                       } else {
+                          errorSound();
                           rplm({
                               title: "Lỗi!",
                               text: data.errorMessage || "Có vấn đề xảy ra.",
@@ -1143,6 +1144,7 @@ asp-route-id="@id" data-modal-id="modal-PopupForm" enctype="multipart/form-data"
                       }
                   },
                   error: function (xhr) {
+                      errorSound();
                       rplm({
                           title: "Lỗi!",
                           text: xhr.responseText || "Có vấn đề xảy ra.",

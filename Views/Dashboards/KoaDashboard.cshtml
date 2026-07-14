@@ -56,6 +56,7 @@
             })
             .then(res => res.json())
             .then(data => {
+                celebrate();
                 rplm({
                       title: "Xử lý thành công!",
                       text: data.message,
@@ -69,6 +70,7 @@
                   });
             })
             .catch(err => {
+                errorSound();
                 rplm({
                     title: "Lỗi!",
                     text: err || "Có vấn đề xảy ra.",
