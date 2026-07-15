@@ -7,7 +7,7 @@ namespace KOAHome.Models
   {
     public int UnitId { get; set; }
     public string FullName { get; set; }
-    public string? AvatarImgUrl { get; set; } = "/img/icons/koa/SoftNhaThienLogo.png";
+    public string? AvatarImgUrl { get; set; } = "https://pub-7171d6b031a04e3983a20a87daffce46.r2.dev/SoftNhaThienLogo.png";
     public string? Roles { get; set; } // Lưu danh sách role dưới cắt chuỗi
     public string? Position { get; set; } // Vị trí công việc của người dùng
     public int? SiteId { get; set; } // ID của site nếu có

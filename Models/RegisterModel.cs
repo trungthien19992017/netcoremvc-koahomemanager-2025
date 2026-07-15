@@ -32,7 +32,7 @@ namespace KOAHome.Models
     [DataType(DataType.Password)]
     public string AdminPassword { get; set; }
 
-    public string? AvatarImgUrl { get; set; } = "/img/icons/koa/SoftNhaThienLogo.png";
+    public string? AvatarImgUrl { get; set; } = "https://pub-7171d6b031a04e3983a20a87daffce46.r2.dev/SoftNhaThienLogo.png";
     public string? Position { get; set; } // Vị trí công việc của người dùng
     public int? SiteId { get; set; } // ID của site nếu có
     public string? SiteName { get; set; } // Tên của site nếu có
