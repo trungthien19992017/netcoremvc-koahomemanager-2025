@@ -131,6 +131,7 @@ namespace KOAHome
       services.AddScoped<INetTabPanelService, NetTabPanelService>();
       services.AddScoped<INetFormWizardService, NetFormWizardService>();
       services.AddScoped<IGoogleSheetService, GoogleSheetService>();
+      services.AddScoped<IAccountService, AccountService>();
       services.AddScoped<GeminiService>();
       services.AddScoped<OpenRouterService>();
       services.AddScoped<IExpenseIconService, ExpenseIconService>();

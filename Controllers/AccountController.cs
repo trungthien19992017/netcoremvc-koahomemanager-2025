@@ -24,25 +24,28 @@ namespace KOAHome.Controllers
     private readonly IAttachmentService _att;
 
     private readonly TttConfigContext _dbconfig;
+    private readonly IAccountService _account;
 
     public AccountController(
         UserManager<ApplicationUser> userManager,
         SignInManager<ApplicationUser> signInManager,
         RoleManager<ApplicationRole> roleManager,
         IAttachmentService att,
-        TttConfigContext dbconfig)
+        TttConfigContext dbconfig,
+        IAccountService account)
     {
       _userManager = userManager;
       _signInManager = signInManager;
       _roleManager = roleManager;
       _att = att;
       _dbconfig = dbconfig;
+      _account = account;
     }
 
     [HttpGet]
     public async Task<IActionResult> Login(string returnUrl = null)
     {
-      ViewData["ReturnUrl"] = returnUrl ?? Url.Content("~/Dashboards/KoaDashboard"); // nếu không có thì về "/"
+      ViewData["ReturnUrl"] = returnUrl;// ?? Url.Content("~/Dashboards/KoaDashboard"); // nếu không có thì về "/"
       return View();
     }
 
@@ -87,6 +90,11 @@ namespace KOAHome.Controllers
                       TenantLogoTextUrl = t.Tenantlogotexturl
                     })
               .FirstOrDefault();
+
+          var report = await _account.NET_User_Get(user.Id);
+          string? pageRedirect = report.ContainsKey("pageredirect") ? Convert.ToString(report["pageredirect"]) : "";
+
+          returnUrl = returnUrl ?? pageRedirect ?? Url.Content("~/Dashboards/KoaDashboard");
 
           // thêm các thông tin cơ bản vào cookie
           var identity = new ClaimsIdentity(CookieAuthenticationDefaults.AuthenticationScheme);
