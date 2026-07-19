@@ -485,38 +485,35 @@
         <button id="dashboardFilterBtn" class="btn btn-primary btn-dashboard-filter waves-effect waves-light" data-bs-toggle="offcanvas" data-bs-target="#dashboardFilter"><i class="ri-filter-line"></i></button>
     </div>
 
-    <div class="offcanvas offcanvas-top" tabindex="-1" id="dashboardFilter" style="height:55vh;">
+    <div class="offcanvas offcanvas-top" tabindex="-1" id="dashboardFilter" style="min-height:50vh;">
         <div class="offcanvas-header">
             <h5>Bộ lọc Dashboard</h5>
             <button type="button" class="btn-close" data-bs-dismiss="offcanvas"></button>
         </div>
         <div class="offcanvas-body">
-            <div class="mb-3">
-                <label>Khoảng thời gian</label>
-                <select class="form-select">
-                    <option>Hôm nay</option>
-                    <option>Tuần này</option>
-                    <option selected>Tháng này</option>
-                </select>
-            </div>
-            <div class="mb-3">
-                <label>Chi nhánh</label>
-                <select class="form-select">
-                    <option>Tất cả</option>
-                </select>
-            </div>
-            <div class="mb-3">
-                <label>Phòng (Select2)</label>
-                <select id="filterRooms" class="form-select" multiple data-control="select2">
-                    <option>KOA101</option>
-                    <option>KOA102</option>
-                    <option>KOA103</option>
-                </select>
-            </div>
-            <div class="d-flex justify-content-between">
-                <button class="btn btn-outline-secondary">Xóa bộ lọc</button>
-                <button class="btn btn-primary">Áp dụng</button>
-            </div>
+            <form method="get" class="needs-validation" novalidate="" action="/Dashboards/KoaDashboard" enctype="multipart/form-data">
+                <div class="row">
+                    <div class="col-md-2 form-floating form-floating-outline mb-3 ">
+                        <input class="form-control form-control-sm bs-rangepicker-filter" type="text" id="ngaytk" name="ngaytk" value="01/07/2026 - 31/07/2026" required="">
+                        <label for="ngaytk">Thời gian</label>
+                        <div class="valid-feedback"> Chính xác! </div>
+                        <div class="invalid-feedback"> Không được bỏ trống. </div>
+                    </div>
+                    <div class="col-md-5 form-floating form-floating-outline mb-3 select2-dark form-floating-select2">
+                        <select class="form-select color-dropdown form-select-sm" id="listhomestayid" multiple="multiple" name="listhomestayid">
+                            <option value="">-- Chọn --</option>
+                            <option value="2">KOA Tân Phú</option>
+                            <option value="3">KOA Thủ Đức</option>
+                        </select>
+                        <label for="listhomestayid">Chi nhánh</label>
+                        <div class="valid-feedback"> Chính xác! </div>
+                        <div class="invalid-feedback"> Không được bỏ trống. </div>
+                    </div>
+                </div>
+                <div class="d-flex justify-content-center mt-5">
+                    <button class="btn btn-primary waves-effect waves-light">Áp dụng</button>
+                </div>
+            </form>
         </div>
     </div>
 
