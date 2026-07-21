@@ -1,0 +1,448 @@
+@{
+    ViewData["Title"] = "Dashboard";
+    Layout = "~/Views/Shared/_ContentNavbarLayout.cshtml";
+    
+    // Đọc dữ liệu từ CSDL / Backend truyền qua ViewBag
+    var SimpleCard_ChucMung = ViewBag.SimpleCard_ChucMung as IDictionary<string, object>;
+    var SimpleCard_SoLieuTrongThang = ViewBag.SimpleCard_SoLieuTrongThang as IDictionary<string, object>;
+    var LineChart_DoanhThuCacThang = ViewBag.LineChart_DoanhThuCacThang as IDictionary<string, object>;
+    var ColumnChart_ChiPhiCacThang = ViewBag.ColumnChart_ChiPhiCacThang as IDictionary<string, object>;
+    var ColumnChart_DoanhThuTuan = ViewBag.ColumnChart_DoanhThuTuan as IDictionary<string, object>;
+    var PieChart_TyLeCacPhongTrongThang = ViewBag.PieChart_TyLeCacPhongTrongThang as IDictionary<string, object>;
+    
+    var ListItem_TopDichVuThang = ViewBag.ListItem_TopDichVuThang as List<dynamic>;
+    var ListItem_TyLeKinPhongTuan = ViewBag.ListItem_TyLeKinPhongTuan as List<dynamic>;
+    var ListItem_TopKhachHangGanDay = ViewBag.ListItem_TopKhachHangGanDay as List<dynamic>;
+}
+
+@section VendorStyles {
+    <link rel="stylesheet" href="~/vendor/libs/apex-charts/apex-charts.css" />
+    <style>
+        /* CSS Điều khiển trạng thái Builder trực quan */
+        .widget-box {
+            position: relative;
+            transition: transform 0.15s ease, box-shadow 0.15s ease;
+        }
+        
+        /* Chế độ sửa đổi: Thêm viền nét đứt và đổi con trỏ chuột sang dạng di chuyển */
+        .mode-edit .widget-box {
+            border: 2px dashed #666cff !important;
+            background-color: rgba(102, 108, 255, 0.02);
+            cursor: move;
+        }
+
+        /* Nút kéo giãn góc dưới bên phải */
+        .widget-resize-handle {
+            position: absolute;
+            right: 4px;
+            bottom: 4px;
+            width: 14px;
+            height: 14px;
+            background: linear-gradient(135deg, transparent 50%, #666cff 50%);
+            cursor: se-resize;
+            z-index: 10;
+            display: none;
+            border-bottom-right-radius: 4px;
+        }
+        .mode-edit .widget-resize-handle {
+            display: block;
+        }
+
+        /* Vùng khung trống hiển thị vị trí sắp đặt tiếp theo khi đang drag */
+        .sortable-placeholder {
+            border: 2px dashed #ff9d23 !important;
+            background-color: rgba(255, 157, 35, 0.05) !important;
+            visibility: visible !important;
+            min-height: 150px;
+        }
+        
+        .widget-actions {
+            position: absolute;
+            top: 8px;
+            right: 8px;
+            z-index: 20;
+            display: none;
+        }
+        .mode-edit .widget-actions {
+            display: flex;
+            gap: 4px;
+        }
+        
+        /* Library mẫu thiết kế bên Sidebar */
+        .lib-widget-item {
+            cursor: pointer;
+            transition: all 0.2s ease;
+            border: 1px solid #e5e6e8;
+        }
+        .lib-widget-item:hover {
+            border-color: #666cff;
+            background-color: rgba(102, 108, 255, 0.05);
+            transform: translateY(-2px);
+        }
+    </style>
+}
+
+@section VendorScripts {
+    <script src="~/vendor/libs/apex-charts/apexcharts.js"></script>
+    <!-- Nhúng bộ đôi thư viện DragDrop & Resize tối ưu hiệu năng tốt nhất hiện nay -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Sortable/1.15.2/Sortable.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/interactjs@latest/dist/interact.min.js"></script>
+}
+
+<div class="container-fluid">
+    <!-- Thanh điều khiển chế độ Dashboard -->
+    <div class="card mb-4">
+        <div class="card-body d-flex justify-content-between align-items-center flex-wrap gap-3">
+            <div>
+                <h4 class="mb-1">Hệ thống Cấu hình Dashboard Động</h4>
+                <p class="mb-0 text-muted">Bật "Chế độ sửa" để tự do sắp xếp, thay đổi kích thước hoặc kéo thêm widget từ thư viện.</p>
+            </div>
+            <div class="d-flex gap-2">
+                <div class="btn-group" role="group">
+                    <input type="radio" class="btn-check" name="dashboardMode" id="modeView" checked autocomplete="off">
+                    <label class="btn btn-outline-primary" for="modeView"><i class="ri-eye-line me-1"></i> Chế độ Xem</label>
+
+                    <input type="radio" class="btn-check" name="dashboardMode" id="modeEdit" autocomplete="off">
+                    <label class="btn btn-outline-primary" for="modeEdit"><i class="ri-edit-2-line me-1"></i> Chế độ Sửa</label>
+                </div>
+                
+                <button class="btn btn-primary d-none" id="btnOpenLibrary" data-bs-toggle="offcanvas" data-bs-target="#widgetLibrarySidebar">
+                    <i class="ri-apps-2-add-line me-1"></i> Kho thư viện Widget
+                </button>
+                
+                <button id="btnSaveAll" class="btn btn-success"><i class="ri-save-3-line me-1"></i> Lưu cấu hình</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Khung lưới chứa các Widget hoạt động -->
+    <div id="dashboard-container" class="row gy-4 mode-view">
+        
+        <!-- WIDGET 1: Thư chúc mừng -->
+        <div class="widget-box col-md-4" data-id="SimpleCard_ChucMung" data-type="static" style="min-height: 200px;">
+            <div class="widget-actions">
+                <button class="btn btn-sm btn-icon btn-danger btnRemoveWidget"><i class="ri-delete-bin-line"></i></button>
+                <button class="btn btn-sm btn-icon btn-outline-primary me-1" onclick="openConfigSidebar('w_koa_donut')"><i class="ri-edit-line"></i></button>
+            </div>
+            <div class="card h-100 position-relative overflow-hidden">
+                <div class="card-body text-nowrap">
+                    <h5 class="card-title mb-0 text-wrap">Chúc mừng KOA! 🎉</h5>
+                    <p class="mb-2">Chiến thần doanh thu của tháng</p>
+                    <h4 class="text-primary mb-1">@(SimpleCard_ChucMung?.ContainsKey("TongDoanhThuThang") == true ? SimpleCard_ChucMung["TongDoanhThuThang"] : "0") VND</h4>
+                    <p class="mb-3">@(SimpleCard_ChucMung?.ContainsKey("PhanTramMucTieu") == true ? SimpleCard_ChucMung["PhanTramMucTieu"] : "0")% mục tiêu 🚀</p>
+                    <a href="javascript:;" class="btn btn-sm btn-primary">Xem chi tiết</a>
+                </div>
+                <img src="/img/illustrations/trophy.png" class="position-absolute bottom-0 end-0 me-3 mb-3" width="75" alt="sales view" />
+            </div>
+            <div class="widget-resize-handle"></div>
+        </div>
+
+        <!-- WIDGET 2: Số liệu trong tháng -->
+        <div class="widget-box col-md-8" data-id="SimpleCard_SoLieuTrongThang" data-type="static" style="min-height: 200px;">
+            <div class="widget-actions">
+                <button class="btn btn-sm btn-icon btn-danger btnRemoveWidget"><i class="ri-delete-bin-line"></i></button>
+                <button class="btn btn-sm btn-icon btn-outline-primary me-1" onclick="openConfigSidebar('w_koa_donut')"><i class="ri-edit-line"></i></button>
+            </div>
+            <div class="card h-100">
+                <div class="card-header pb-2">
+                    <h5 class="card-title m-0">Số liệu tổng quan trong tháng</h5>
+                    <p class="small mb-0 text-muted">Doanh thu tăng trưởng ổn định trong tháng này</p>
+                </div>
+                <div class="card-body d-flex align-items-center">
+                    <div class="row w-100 g-4">
+                        <div class="col-md-3 col-6 d-flex align-items-center">
+                            <div class="avatar me-3"><span class="avatar-initial bg-primary rounded"><i class="ri-pie-chart-2-line"></i></span></div>
+                            <div><p class="mb-0 text-muted small">Doanh thu</p><h5 class="mb-0 text-primary">@(SimpleCard_SoLieuTrongThang?.ContainsKey("DoanhThu") == true ? SimpleCard_SoLieuTrongThang["DoanhThu"] : "0")</h5></div>
+                        </div>
+                        <div class="col-md-3 col-6 d-flex align-items-center">
+                            <div class="avatar me-3"><span class="avatar-initial bg-success rounded"><i class="ri-group-line"></i></span></div>
+                            <div><p class="mb-0 text-muted small">Lượt book</p><h5 class="mb-0 text-success">@(SimpleCard_SoLieuTrongThang?.ContainsKey("LuotBook") == true ? SimpleCard_SoLieuTrongThang["LuotBook"] : "0")</h5></div>
+                        </div>
+                        <div class="col-md-3 col-6 d-flex align-items-center">
+                            <div class="avatar me-3"><span class="avatar-initial bg-warning rounded"><i class="ri-macbook-line"></i></span></div>
+                            <div><p class="mb-0 text-muted small">Số giờ</p><h5 class="mb-0 text-warning">@(SimpleCard_SoLieuTrongThang?.ContainsKey("SoGio") == true ? SimpleCard_SoLieuTrongThang["SoGio"] : "0")</h5></div>
+                        </div>
+                        <div class="col-md-3 col-6 d-flex align-items-center">
+                            <div class="avatar me-3"><span class="avatar-initial bg-info rounded"><i class="ri-money-dollar-circle-line"></i></span></div>
+                            <div><p class="mb-0 text-muted small">Chi phí</p><h5 class="mb-0 text-info">@(SimpleCard_SoLieuTrongThang?.ContainsKey("ChiPhi") == true ? SimpleCard_SoLieuTrongThang["ChiPhi"] : "0")</h5></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="widget-resize-handle"></div>
+        </div>
+
+        <!-- WIDGET 3: Danh sách Top dịch vụ -->
+        <div class="widget-box col-md-4" data-id="List_TopDichVuThang" data-type="static" style="min-height: 280px;">
+            <div class="widget-actions">
+                <button class="btn btn-sm btn-icon btn-danger btnRemoveWidget"><i class="ri-delete-bin-line"></i></button>
+                <button class="btn btn-sm btn-icon btn-outline-primary me-1" onclick="openConfigSidebar('w_koa_donut')"><i class="ri-edit-line"></i></button>
+            </div>
+            <div class="card h-100">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center mb-4">
+                        <h5 class="m-0">Top 5 dịch vụ tháng</h5>
+                        <a class="small fw-medium" href="javascript:void(0);">Xem tất cả</a>
+                    </div>
+                    <ul class="p-0 m-0 list-unstyled">
+                        @if (ListItem_TopDichVuThang != null) {
+                            foreach (var row in ListItem_TopDichVuThang.Take(4)) {
+                                <li class="d-flex mb-3 align-items-center pb-1">
+                                    <div class="avatar avatar-sm me-3 bg-light rounded text-center"><i class="ri-service-line text-secondary ri-20px pt-1"></i></div>
+                                    <div class="d-flex w-100 flex-wrap align-items-center justify-content-between gap-2">
+                                        <div>
+                                            <h6 class="mb-0 small">@row.servicename</h6>
+                                            <p class="mb-0 text-muted extra-small">@row.soluotbook lượt đặt</p>
+                                        </div>
+                                        <h6 class="text-success mb-0 small">@row.doanhthu</h6>
+                                    </div>
+                                </li>
+                            }
+                        }
+                    </ul>
+                </div>
+            </div>
+            <div class="widget-resize-handle"></div>
+        </div>
+    </div>
+</div>
+
+<!-- SIDEBAR: THƯ VIỆN CÁC LOẠI WIDGET MẪU CÓ SẴN -->
+<div class="offcanvas offcanvas-end" tabindex="-1" id="widgetLibrarySidebar" aria-labelledby="widgetLibraryLabel">
+    <div class="offcanvas-header border-bottom">
+        <h5 id="widgetLibraryLabel" class="offcanvas-title"><i class="ri-article-line me-1"></i> Thư viện Widget mẫu</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Close"></button>
+    </div>
+    <div class="offcanvas-body bg-light">
+        <p class="text-muted small mb-4">Click chọn cấu hình loại Widget bên dưới để đưa trực tiếp vào màn hình làm việc của Dashboard.</p>
+        
+        <!-- Mẫu 1 -->
+        <div class="card lib-widget-item mb-3" onclick="addNewWidgetFromLibrary('card_info')">
+            <div class="card-body p-3 d-flex align-items-center gap-3">
+                <div class="bg-primary text-white p-2 rounded"><i class="ri-information-line ri-24px"></i></div>
+                <div>
+                    <h6 class="mb-0">Thẻ Card Thông báo Tùy chỉnh</h6>
+                    <small class="text-muted">Hiển thị chữ kèm nút bấm action</small>
+                </div>
+            </div>
+        </div>
+
+        <!-- Mẫu 2 -->
+        <div class="card lib-widget-item mb-3" onclick="addNewWidgetFromLibrary('chart_demo')">
+            <div class="card-body p-3 d-flex align-items-center gap-3">
+                <div class="bg-success text-white p-2 rounded"><i class="ri-bar-chart-box-line ri-24px"></i></div>
+                <div>
+                    <h6 class="mb-0">Biểu đồ Cột Chi phí Tuần</h6>
+                    <small class="text-muted">Tích hợp sẵn bộ vẽ ApexCharts</small>
+                </div>
+            </div>
+        </div>
+
+        <!-- Mẫu 3 -->
+        <div class="card lib-widget-item mb-3" onclick="addNewWidgetFromLibrary('table_demo')">
+            <div class="card-body p-3 d-flex align-items-center gap-3">
+                <div class="bg-warning text-white p-2 rounded"><i class="ri-table-line ri-24px"></i></div>
+                <div>
+                    <h6 class="mb-0">Bảng tiến độ tỷ lệ lấp phòng</h6>
+                    <small class="text-muted">Dạng bảng danh sách tối giản</small>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section PageScripts {
+    <script>
+        let sortableInstance = null;
+
+        // 1. Quản lý Đổi Chế độ View Mode / Edit Mode Luân Phiên Mượt Mà
+        document.getElementById('modeEdit').addEventListener('change', function() {
+            const container = document.getElementById('dashboard-container');
+            container.classList.remove('mode-view');
+            container.classList.add('mode-edit');
+            document.getElementById('btnOpenLibrary').classList.remove('d-none');
+
+            // Kích hoạt tính năng kéo đổi vị trí sắp xếp phân hàng (Grid Sorting) thông qua Sortable
+            initSortableGrid();
+            // Kích hoạt tính năng co giãn kích thước (Resize Grid) thông qua Interact
+            initInteractResize();
+        });
+
+        document.getElementById('modeView').addEventListener('change', function() {
+            const container = document.getElementById('dashboard-container');
+            container.classList.remove('mode-edit');
+            container.classList.add('mode-view');
+            document.getElementById('btnOpenLibrary').classList.add('d-none');
+
+            // Hủy kích hoạt tương tác khi ở chế độ xem thông thường để giải phóng tài nguyên
+            if (sortableInstance) { sortableInstance.destroy(); sortableInstance = null; }
+            interact('.widget-box').unset();
+        });
+
+        // 2. KHỞI TẠO SORTABLE.JS: Kéo thả hoán đổi vị trí cực kỳ mượt mà
+        function initSortableGrid() {
+            const container = document.getElementById('dashboard-container');
+            sortableInstance = new Sortable(container, {
+                animation: 200,
+                draggable: ".widget-box",
+                placeholderClass: "sortable-placeholder",
+                forceFallback: false,
+                onEnd: function () {
+                    console.log("Đã đổi vị trí cấu trúc sắp xếp!");
+                }
+            });
+        }
+
+        // 3. KHỞI TẠO INTERACT.JS RESIZE: Co giãn mượt mà bám sát hệ lưới Grid Bootstrap
+        function initInteractResize() {
+            interact('.widget-box')
+                .resizable({
+                    // Chỉ cho phép kéo co giãn thông qua handle ở góc dưới bên phải hoặc cạnh phải/dưới
+                    edges: { left: false, right: true, bottom: true, top: false },
+                    listeners: {
+                        move(event) {
+                            let target = event.target;
+
+                            // Cập nhật trực tiếp chiều cao thực tế bằng pixel
+                            let newHeight = Math.max(120, event.rect.height);
+                            target.style.minHeight = newHeight + 'px';
+                            target.style.height = newHeight + 'px';
+
+                            // Xử lý thông minh: Tính toán quy đổi pixel chiều rộng ra đơn vị Cột của Bootstrap (Từ 1 tới 12)
+                            let containerWidth = document.getElementById('dashboard-container').clientWidth;
+                            let oneColWidth = containerWidth / 12;
+                            let targetCol = Math.round(event.rect.width / oneColWidth);
+                            targetCol = Math.max(2, Math.min(12, targetCol)); // Giới hạn cột từ 2 đến 12
+
+                            // Thay thế class cũ của Bootstrap bằng giá trị mới tính toán
+                            target.className = target.className.replace(/col-md-\d+/g, `col-md-${targetCol}`);
+                        }
+                    },
+                    modifiers: [
+                        interact.modifiers.restrictSize({
+                            min: { width: 180, height: 120 }
+                        })
+                    ]
+                });
+        }
+
+        // 4. THƯ VIỆN WIDGET: Thêm mới Widget động từ danh sách kho mẫu
+        window.addNewWidgetFromLibrary = function(type) {
+            const container = document.getElementById('dashboard-container');
+            const uniqueId = 'widget_dynamic_' + Date.now();
+
+            const newWidget = document.createElement('div');
+            // Mặc định ban đầu chiếm 4 cột (col-md-4)
+            newWidget.className = 'widget-box col-md-4';
+            newWidget.setAttribute('data-id', uniqueId);
+            newWidget.setAttribute('data-type', type);
+            newWidget.style.minHeight = '240px';
+
+            let innerContent = `
+                <div class="widget-actions">
+                    <button class="btn btn-sm btn-icon btn-danger btnRemoveWidget"><i class="ri-delete-bin-line"></i></button>
+                    <button class="btn btn-sm btn-icon btn-outline-primary me-1" onclick="openConfigSidebar('w_koa_donut')"><i class="ri-edit-line"></i></button>
+                </div>
+                <div class="card h-100">
+                    <div class="card-body">
+            `;
+
+            if (type === 'card_info') {
+                innerContent += `
+                    <h5 class="card-title text-warning">Thông báo vận hành 📋</h5>
+                    <p class="card-text small">Nội dung thông báo tùy chỉnh hệ thống phòng KOA Homestay. Bạn có thể nhấn chỉnh sửa để nhập tham số.</p>
+                    <button class="btn btn-xs btn-outline-warning">Xử lý ngay</button>
+                `;
+            } else if (type === 'chart_demo') {
+                innerContent += `
+                    <h5 class="card-title mb-1">Chi phí tuần này</h5>
+                    <div id="chart_render_${uniqueId}" style="height: 140px; width:100%;"></div>
+                `;
+            } else if (type === 'table_demo') {
+                innerContent += `
+                    <h5 class="card-title mb-2">Trạng thái lấp phòng</h5>
+                    <div class="table-responsive text-nowrap">
+                        <table class="table table-sm table-borderless">
+                            <thead><tr class="small text-muted"><th>Mã phòng</th><th>Tỷ lệ</th></tr></thead>
+                            <tbody class="table-border-bottom-0 small">
+                                <tr><td>KOA-101</td><td><span class="badge bg-label-success">92%</span></td></tr>
+                                <tr><td>KOA-102</td><td><span class="badge bg-label-warning">75%</span></td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                `;
+            }
+
+            innerContent += `
+                    </div>
+                </div>
+                <div class="widget-resize-handle"></div>
+            `;
+
+            newWidget.innerHTML = innerContent;
+            container.appendChild(newWidget);
+
+            // Nếu là dạng biểu đồ, khởi tạo đồ thị ApexCharts chạy ngay lập tức
+            if (type === 'chart_demo') {
+                setTimeout(() => {
+                    const options = {
+                        chart: { type: 'bar', height: '100%', toolbar: {show:false} },
+                        series: [{ name: 'Chi phí', data: [30, 40, 25, 50, 42, 60, 55] }],
+                        xaxis: { categories: ['T2', 'T3', 'T4', 'T5', 'T6', 'T7', 'CN'], labels:{style:{fontSize:'10px'}} },
+                        colors: ['#666cff']
+                    };
+                    new ApexCharts(document.getElementById(`chart_render_${uniqueId}`), options).render();
+                }, 100);
+            }
+
+            // Tự động đóng Sidebar thư viện sau khi chọn xong
+            const sidebarEl = document.getElementById('widgetLibrarySidebar');
+            bootstrap.Offcanvas.getInstance(sidebarEl).hide();
+        };
+
+        // 5. XỬ LÝ XÓA WIDGET KHỎI MÀN HÌNH HÌNH LÀM VIỆC
+        document.addEventListener('click', function (e) {
+            const btnRemove = e.target.closest('.btnRemoveWidget');
+            if (btnRemove) {
+                const widgetBox = btnRemove.closest('.widget-box');
+                if (widgetBox) {
+                    widgetBox.remove();
+                }
+            }
+        });
+
+        // 6. GỬI TOÀN BỘ CẤU HÌNH COMPONENT VỀ SERVER LƯU TRỮ (JSONB)
+        document.getElementById('btnSaveAll').addEventListener('click', function() {
+            const widgetElements = document.querySelectorAll('#dashboard-container .widget-box');
+
+            const layoutPayload = Array.from(widgetElements).map((el, index) => {
+                const classList = el.className;
+                const matchCol = classList.match(/col-md-(\d+)/);
+                const colSize = matchCol ? parseInt(matchCol[1]) : 4;
+
+                return {
+                    id: el.getAttribute('data-id'),
+                    type: el.getAttribute('data-type'),
+                    order: index,
+                    col_md: colSize,
+                    height: el.offsetHeight
+                };
+            });
+
+            fetch('/Dashboards/DragdropComponentReview1', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(layoutPayload)
+            })
+            .then(response => response.json())
+            .then(data => {
+                alert('Đã đồng bộ và lưu cấu hình Dashboard thành công!');
+                console.log('Server response:', data);
+            })
+            .catch(error => {
+                console.error('Lỗi kết nối lưu trữ:', error);
+                alert('Không thể kết nối đến máy chủ.');
+            });
+        });
+    </script>
+}

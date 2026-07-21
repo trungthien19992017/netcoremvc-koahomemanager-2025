@@ -1,0 +1,818 @@
+@{
+    ViewData["Title"] = "Dashboard Builder (SortableJS)";
+    Layout = "~/Views/Shared/_ContentNavbarLayout.cshtml";
+
+    // Du lieu object (Mock/ViewBag)
+    var SimpleCard_ChucMung = ViewBag.SimpleCard_ChucMung as IDictionary<string, object>;
+    var SimpleCard_SoLieuTrongThang = ViewBag.SimpleCard_SoLieuTrongThang as IDictionary<string, object>;
+    var LineChart_DoanhThuCacThang = ViewBag.LineChart_DoanhThuCacThang as IDictionary<string, object>;
+    var ColumnChart_ChiPhiCacThang = ViewBag.ColumnChart_ChiPhiCacThang as IDictionary<string, object>;
+    var ColumnChart_DoanhThuTuan = ViewBag.ColumnChart_DoanhThuTuan as IDictionary<string, object>;
+    var PieChart_TyLeCacPhongTrongThang = ViewBag.PieChart_TyLeCacPhongTrongThang as IDictionary<string, object>;
+
+    // Du lieu list (Mock/ViewBag)
+    var ListItem_TopDichVuThang = ViewBag.ListItem_TopDichVuThang as List<dynamic>;
+    var ListItem_TyLeKinPhongTuan = ViewBag.ListItem_TyLeKinPhongTuan as List<dynamic>;
+    var ListItem_TopKhachHangGanDay = ViewBag.ListItem_TopKhachHangGanDay as List<dynamic>;
+}
+
+@section PageStyles {
+    <style>
+        :root {
+            --primary: #7367f0;
+            --bg: #f5f5f9;
+            --card: #ffffff;
+            --border: #e7e7ea;
+            --text: #3d3d4e;
+            --text-muted: #8a8d93;
+            --success: #28c76f;
+            --danger: #ea5455;
+            --warn: #ff9f43;
+            --info: #00cfe8;
+        }
+
+        /* Layout Grid Builder */
+        .app-dashboard {
+            display: grid;
+            grid-template-columns: 230px 1fr 290px;
+            height: calc(100vh - 120px);
+            gap: 15px;
+        }
+
+            .app-dashboard.mode-view {
+                grid-template-columns: 0 1fr 0;
+            }
+
+                .app-dashboard.mode-view .widget-library,
+                .app-dashboard.mode-view .config-panel {
+                    display: none;
+                }
+
+        .panel-title {
+            font-size: 12px;
+            font-weight: 700;
+            text-transform: uppercase;
+            color: var(--text-muted);
+            letter-spacing: .03em;
+            margin: 0 0 12px;
+        }
+
+        /* Library Panel */
+        .widget-library {
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 16px 12px;
+            overflow-y: auto;
+        }
+
+        .lib-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 10px 11px;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            margin-bottom: 8px;
+            cursor: grab;
+            background: #fafafd;
+            font-size: 13px;
+            transition: .15s;
+        }
+
+            .lib-item:hover {
+                border-color: var(--primary);
+                background: #f1f0fe;
+            }
+
+            .lib-item .ic {
+                width: 28px;
+                height: 28px;
+                border-radius: 6px;
+                flex-shrink: 0;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                color: #fff;
+                font-size: 14px;
+                font-weight: 700;
+            }
+
+            .lib-item .desc {
+                font-size: 10.5px;
+                color: var(--text-muted);
+                display: block;
+                margin-top: 1px;
+            }
+
+        /* Canvas Grid (Sortable Area) */
+        .canvas-wrap {
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+        }
+
+        .toolbar {
+            background: var(--card);
+            border-bottom: 1px solid var(--border);
+            padding: 9px 18px;
+            display: flex;
+            gap: 8px;
+            align-items: center;
+        }
+
+            .toolbar h4 {
+                font-size: 15px;
+                margin: 0;
+                margin-right: auto;
+            }
+
+        .mode-switch {
+            display: flex;
+            background: #eeedf7;
+            border-radius: 7px;
+            padding: 3px;
+            gap: 2px;
+        }
+
+            .mode-switch button {
+                border: none;
+                background: transparent;
+                padding: 6px 12px;
+                border-radius: 5px;
+                font-size: 12.5px;
+                font-weight: 600;
+                cursor: pointer;
+                color: var(--text-muted);
+            }
+
+                .mode-switch button.active {
+                    background: #fff;
+                    color: var(--primary);
+                    box-shadow: 0 1px 3px rgba(0,0,0,.08);
+                }
+
+        .canvas-scroll {
+            flex: 1;
+            overflow: auto;
+            padding: 20px;
+        }
+
+        /* Bootstrap-like Grid Container for SortableJS */
+        #canvas {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 14px 0;
+            margin: 0 -7px;
+            min-height: 400px;
+            border: 1px dashed var(--border);
+            border-radius: 10px;
+            padding: 10px;
+        }
+
+        /* Columns definition based on 12-col grid */
+        .col-w-3 {
+            flex: 0 0 25%;
+            max-width: 25%;
+            padding: 0 7px;
+        }
+
+        .col-w-4 {
+            flex: 0 0 33.3333%;
+            max-width: 33.3333%;
+            padding: 0 7px;
+        }
+
+        .col-w-6 {
+            flex: 0 0 50%;
+            max-width: 50%;
+            padding: 0 7px;
+        }
+
+        .col-w-8 {
+            flex: 0 0 66.6666%;
+            max-width: 66.6666%;
+            padding: 0 7px;
+        }
+
+        .col-w-12 {
+            flex: 0 0 100%;
+            max-width: 100%;
+            padding: 0 7px;
+        }
+
+        .widget {
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            height: 100%;
+            min-height: 180px;
+            transition: box-shadow 0.2s ease;
+        }
+
+            .widget.selected {
+                border-color: var(--primary);
+                box-shadow: 0 0 0 2px rgba(115,103,240,.25);
+            }
+
+        .sortable-ghost {
+            opacity: 0.4;
+            background: #f1f0fe;
+        }
+
+        .sortable-chosen {
+            box-shadow: 0 8px 16px rgba(0,0,0,0.1);
+        }
+
+        .widget-head {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 12px 14px 6px;
+            cursor: grab;
+        }
+
+            .widget-head h5 {
+                font-size: 13px;
+                margin: 0;
+                font-weight: 600;
+            }
+
+            .widget-head .rm {
+                cursor: pointer;
+                color: var(--text-muted);
+                font-size: 14px;
+                border: none;
+                background: none;
+            }
+
+                .widget-head .rm:hover {
+                    color: var(--danger);
+                }
+
+        .app-dashboard.mode-view .widget-head {
+            cursor: default;
+        }
+
+            .app-dashboard.mode-view .widget-head .rm {
+                display: none;
+            }
+
+        .widget-body {
+            flex: 1;
+            padding: 6px 14px 14px;
+            overflow: hidden;
+            position: relative;
+        }
+
+        /* Config Panel */
+        .config-panel {
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 16px 14px;
+            overflow-y: auto;
+        }
+
+        .empty-hint {
+            font-size: 13px;
+            color: var(--text-muted);
+            line-height: 1.6;
+        }
+
+        .field {
+            margin-bottom: 13px;
+        }
+
+            .field label {
+                display: block;
+                font-size: 11.5px;
+                font-weight: 600;
+                margin-bottom: 5px;
+                color: var(--text-muted);
+            }
+
+            .field input[type=text], .field select {
+                width: 100%;
+                padding: 8px 10px;
+                border: 1px solid var(--border);
+                border-radius: 6px;
+                font-size: 13px;
+            }
+
+        .swatches {
+            display: flex;
+            gap: 6px;
+        }
+
+        .swatch {
+            width: 22px;
+            height: 22px;
+            border-radius: 50%;
+            cursor: pointer;
+            border: 2px solid transparent;
+        }
+
+            .swatch.active {
+                border-color: #333;
+            }
+
+        .json-preview {
+            font-size: 10.5px;
+            background: #1e1e2e;
+            color: #c9c9e8;
+            padding: 10px;
+            border-radius: 6px;
+            white-space: pre-wrap;
+            word-break: break-all;
+            max-height: 160px;
+            overflow: auto;
+            margin-top: 6px;
+        }
+
+        /* Elements Rendered Inside Body */
+        .kpi-wrap {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            height: 100%;
+            min-height: 80px;
+        }
+
+            .kpi-wrap .badge {
+                width: 44px;
+                height: 44px;
+                border-radius: 10px;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                color: #fff;
+                font-size: 20px;
+                flex-shrink: 0;
+            }
+
+            .kpi-wrap .num {
+                font-size: 20px;
+                font-weight: 700;
+                line-height: 1.1;
+            }
+
+            .kpi-wrap .lbl {
+                font-size: 12px;
+                color: var(--text-muted);
+            }
+
+        table.mini-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 12px;
+        }
+
+            table.mini-table th {
+                text-align: left;
+                color: var(--text-muted);
+                font-weight: 600;
+                padding: 5px 6px;
+                border-bottom: 1px solid var(--border);
+                font-size: 11px;
+                text-transform: uppercase;
+            }
+
+            table.mini-table td {
+                padding: 6px;
+                border-bottom: 1px dashed var(--border);
+            }
+
+        ul.mini-list {
+            list-style: none;
+            margin: 0;
+            padding: 0;
+            font-size: 12px;
+        }
+
+            ul.mini-list li {
+                padding: 7px 0;
+                border-bottom: 1px dashed var(--border);
+            }
+
+        .mini-list .row-top {
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .mini-list .name {
+            font-weight: 600;
+        }
+
+        .mini-list .val {
+            color: var(--success);
+            font-weight: 700;
+        }
+
+        .progress-track {
+            background: #f0f0f5;
+            border-radius: 4px;
+            height: 5px;
+            margin-top: 4px;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            height: 100%;
+        }
+    </style>
+}
+
+<div class="app-dashboard mode-build" id="appRoot">
+    <!-- 1. THƯ VIỆN WIDGET (Kéo/Click để thêm) -->
+    <aside class="widget-library">
+        <p class="panel-title">Loại widget</p>
+        <div id="libraryList"></div>
+    </aside>
+
+    <!-- 2. CANVAS GRID BUILDER (Sắp xếp bằng SortableJS) -->
+    <main class="canvas-wrap">
+        <div class="toolbar">
+            <h4>Dashboard Builder</h4>
+            <div class="mode-switch">
+                <button id="modeBuildBtn" class="active">🛠 Build</button>
+                <button id="modeViewBtn">👁 View</button>
+            </div>
+            <button class="btn btn-outline-secondary btn-sm" id="btnReset">Khôi phục</button>
+            <button class="btn btn-primary btn-sm" id="btnSave">Lưu cấu hình (JSONB)</button>
+        </div>
+        <div class="canvas-scroll">
+            <div id="canvas"></div>
+        </div>
+    </main>
+
+    <!-- 3. BẢNG CẤU HÌNH CHI TIẾT -->
+    <aside class="config-panel">
+        <p class="panel-title">Cấu hình Widget</p>
+        <div id="configPanelBody">
+            <div class="empty-hint">Chọn 1 widget trên canvas để cấu hình.</div>
+        </div>
+    </aside>
+</div>
+
+@section PageScripts {
+    <!-- ApexCharts CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/apexcharts@3.45.2/dist/apexcharts.min.js"></script>
+    <!-- SortableJS CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.2/Sortable.min.js"></script>
+
+    <script>
+        // Các loại Widget hỗ trợ
+        const WIDGET_KINDS = [
+            { kind: 'kpi_card', name: 'Thẻ số liệu (KPI)', desc: 'Số + icon + nhãn', icon: '#', color: '#28c76f', defaultCol: 3 },
+            { kind: 'donut', name: 'Biểu đồ Donut', desc: 'Tỷ lệ theo danh mục', icon: '◔', color: '#ff9f43', defaultCol: 6 },
+            { kind: 'line', name: 'Biểu đồ Line', desc: 'Xu hướng theo thời gian', icon: '⟋', color: '#7367f0', defaultCol: 6 },
+            { kind: 'bar', name: 'Biểu đồ Bar/Column', desc: 'So sánh theo nhóm', icon: '▥', color: '#00cfe8', defaultCol: 6 },
+            { kind: 'table', name: 'Bảng dữ liệu', desc: 'Table nhiều cột', icon: '▤', color: '#ea5455', defaultCol: 6 },
+            { kind: 'list', name: 'Danh sách xếp hạng', desc: 'List + progress bar', icon: '☰', color: '#7367f0', defaultCol: 6 }
+        ];
+
+        function kindOf(k) { return WIDGET_KINDS.find(t => t.kind === k); }
+
+        // Mock Datasets từ Backend C# / ViewBag
+        const MOCK_DATASETS = {
+            revenue_by_room: {
+                label: 'Doanh thu theo phòng', shape: 'categorical', data: {
+                    labels: ['KOA 101 (TP)', 'KOA 102 (TP)', 'KOA 201 (TP)', 'KOA 101 (TĐ)', 'KOA 102 (TĐ)'],
+                    values: [9524, 10928, 9953, 11386, 10491]
+                }
+            },
+            monthly_revenue_trend: {
+                label: 'Doanh thu 6 tháng gần đây', shape: 'series', data: {
+                    categories: ['T2', 'T3', 'T4', 'T5', 'T6', 'T7'], series: [65434, 126586, 60782, 5695, 36442, 78829]
+                }
+            },
+            monthly_cost_trend: {
+                label: 'Chi phí 6 tháng gần đây', shape: 'series', data: {
+                    categories: ['T2', 'T3', 'T4', 'T5', 'T6', 'T7'], series: [16837, 12817, 3325, 15000, 30062, 34575]
+                }
+            },
+            top_services: {
+                label: 'Top dịch vụ tháng', shape: 'rows', data: {
+                    columns: [{ field: 'name', label: 'Dịch vụ' }, { field: 'qty', label: 'Lượt' }, { field: 'vnd', label: 'Doanh thu' }],
+                    rows: [
+                        { name: 'Book combo giờ', qty: '72', vnd: '19.900.000' },
+                        { name: 'Book qua đêm T5-CN', qty: '37', vnd: '14.800.000' },
+                        { name: 'KM Overnight', qty: '33', vnd: '11.550.000' }
+                    ]
+                }
+            },
+            occupancy_rooms: {
+                label: 'Tỷ lệ kín phòng', shape: 'rows', data: {
+                    columns: [{ field: 'name', label: 'Phòng' }, { field: 'pct', label: 'Tỷ lệ %' }],
+                    rows: [
+                        { name: 'KOA 101 (Tân Phú)', pct: 24.4 },
+                        { name: 'KOA 102 (Tân Phú)', pct: 33.3 },
+                        { name: 'KOA 101 (Thủ Đức)', pct: 23.8 }
+                    ]
+                }
+            }
+        };
+
+        const DATA_SHAPE_BY_KIND = { donut: 'categorical', line: 'series', bar: 'series', table: 'rows', list: 'rows', kpi_card: null };
+
+        function datasetOptionsFor(kind) {
+            const shape = DATA_SHAPE_BY_KIND[kind];
+            if (!shape) return [];
+            return Object.entries(MOCK_DATASETS).filter(([, v]) => v.shape === shape).map(([key, v]) => ({ key, label: v.label }));
+        }
+
+        function getFieldSchema(kind) {
+            const common = [
+                { key: 'title', label: 'Tiêu đề', type: 'text' },
+                { key: 'colSpan', label: 'Độ rộng cột', type: 'select', options: [
+                    { val: 3, lbl: '25% (3/12 cột)' },
+                    { val: 4, lbl: '33% (4/12 cột)' },
+                    { val: 6, lbl: '50% (6/12 cột)' },
+                    { val: 8, lbl: '66% (8/12 cột)' },
+                    { val: 12, lbl: '100% (12/12 cột)' }
+                ]}
+            ];
+            switch (kind) {
+                case 'kpi_card': return [...common,
+                    { key: 'value', label: 'Giá trị', type: 'text' },
+                    { key: 'unit', label: 'Đơn vị / Ghi chú', type: 'text' },
+                    { key: 'icon', label: 'Icon / Emoji', type: 'text' },
+                    { key: 'color', label: 'Màu sắc', type: 'color' }];
+                case 'donut': return [...common, { key: 'dataSource', label: 'Nguồn dữ liệu', type: 'dataset' }];
+                case 'line':
+                case 'bar': return [...common, { key: 'dataSource', label: 'Nguồn dữ liệu', type: 'dataset' }, { key: 'color', label: 'Màu biểu đồ', type: 'color' }];
+                case 'table':
+                case 'list': return [...common, { key: 'dataSource', label: 'Nguồn dữ liệu', type: 'dataset' }];
+                default: return common;
+            }
+        }
+
+        function defaultConfigFor(kind) {
+            const opts = datasetOptionsFor(kind);
+            const t = kindOf(kind);
+            const base = { title: t.name, color: t.color, colSpan: t.defaultCol };
+            switch (kind) {
+                case 'kpi_card': return { ...base, value: '0', unit: '', icon: '#' };
+                default: return { ...base, dataSource: opts[0]?.key || '' };
+            }
+        }
+
+        // STATE
+        let widgets = [];
+        let selectedId = null;
+        let idSeq = 1;
+        let mode = 'build';
+        let sortableInstance = null;
+        const chartInstances = {};
+        const canvasEl = document.getElementById('canvas');
+        const appRoot = document.getElementById('appRoot');
+
+        // 1. RENDER LIBRARY
+        function renderLibrary() {
+            document.getElementById('libraryList').innerHTML = WIDGET_KINDS.map(t => `
+                <div class="lib-item" onclick="addWidget('${t.kind}')">
+                  <span class="ic" style="background:${t.color}">${t.icon}</span>
+                  <span><b>${t.name}</b><span class="desc">${t.desc}</span></span>
+                </div>`).join('');
+        }
+
+        // 2. KHOI TAO SORTABLEJS
+        function initSortable() {
+            if (sortableInstance) sortableInstance.destroy();
+
+            sortableInstance = new Sortable(canvasEl, {
+                animation: 200,
+                handle: '.widget-head',
+                ghostClass: 'sortable-ghost',
+                chosenClass: 'sortable-chosen',
+                disabled: mode === 'view',
+                onEnd: function () {
+                    // Cập nhật lại thứ tự mảng `widgets` theo DOM hiện tại
+                    const newOrderIds = Array.from(canvasEl.children).map(el => el.dataset.id);
+                    widgets.sort((a, b) => newOrderIds.indexOf(a.id) - newOrderIds.indexOf(b.id));
+                }
+            });
+        }
+
+        // 3. ADD & REMOVE WIDGET
+        function addWidget(kind) {
+            if (mode !== 'build') return;
+            const newId = 'w' + (idSeq++);
+            widgets.push({ id: newId, kind, config: defaultConfigFor(kind) });
+            renderCanvas();
+            selectWidget(newId);
+        }
+
+        function removeWidget(id) {
+            widgets = widgets.filter(x => x.id !== id);
+            if (selectedId === id) { selectedId = null; renderConfigPanel(); }
+            renderCanvas();
+        }
+
+        // 4. RENDER CANVAS
+        function renderCanvas() {
+            Object.keys(chartInstances).forEach(k => { chartInstances[k]?.destroy?.(); delete chartInstances[k]; });
+            canvasEl.innerHTML = '';
+
+            widgets.forEach(wdg => {
+                const colSpan = wdg.config.colSpan || 6;
+                const wrapper = document.createElement('div');
+                wrapper.className = `col-w-${colSpan}`;
+                wrapper.dataset.id = wdg.id;
+
+                wrapper.innerHTML = `
+                    <div class="widget ${wdg.id === selectedId ? 'selected' : ''}">
+                        <div class="widget-head">
+                            <h5>${wdg.config.title}</h5>
+                            <button class="rm" title="Xóa">✕</button>
+                        </div>
+                        <div class="widget-body" id="body-${wdg.id}"></div>
+                    </div>`;
+
+                if (mode === 'build') {
+                    wrapper.addEventListener('click', (e) => {
+                        e.stopPropagation();
+                        selectWidget(wdg.id);
+                    });
+                    wrapper.querySelector('.rm').addEventListener('click', ev => {
+                        ev.stopPropagation();
+                        removeWidget(wdg.id);
+                    });
+                }
+
+                canvasEl.appendChild(wrapper);
+                renderWidgetContent(wdg);
+            });
+
+            initSortable();
+        }
+
+        // 5. CONFIG PANEL
+        function selectWidget(id) {
+            selectedId = id;
+            document.querySelectorAll('.widget').forEach(e => {
+                const parent = e.closest('[data-id]');
+                e.classList.toggle('selected', parent && parent.dataset.id === id);
+            });
+            renderConfigPanel();
+        }
+
+        function renderConfigPanel() {
+            const panel = document.getElementById('configPanelBody');
+            const wdg = widgets.find(w => w.id === selectedId);
+            if (!wdg) {
+                panel.innerHTML = `<div class="empty-hint">Chọn 1 widget trên canvas để cấu hình.</div>`;
+                return;
+            }
+
+            const schema = getFieldSchema(wdg.kind);
+            const colors = ['#7367f0', '#28c76f', '#ff9f43', '#ea5455', '#00cfe8'];
+
+            panel.innerHTML = `
+                <p class="panel-title">Loại: ${kindOf(wdg.kind).name}</p>
+                <div id="fieldsHost"></div>
+                <p class="panel-title" style="margin-top:15px;">Cấu hình JSON</p>
+                <div class="json-preview" id="jsonPreview"></div>
+                <button class="btn btn-outline-danger btn-sm w-100 mt-3" id="cfgRemove">Xóa Widget</button>`;
+
+            const host = document.getElementById('fieldsHost');
+            schema.forEach(f => {
+                const wrap = document.createElement('div'); wrap.className = 'field';
+                if (f.type === 'text') {
+                    wrap.innerHTML = `<label>${f.label}</label><input type="text" data-k="${f.key}" value="${wdg.config[f.key] ?? ''}">`;
+                } else if (f.type === 'select') {
+                    wrap.innerHTML = `<label>${f.label}</label><select data-k="${f.key}">
+                        ${f.options.map(o => `<option value="${o.val}" ${wdg.config[f.key] == o.val ? 'selected' : ''}>${o.lbl}</option>`).join('')}</select>`;
+                } else if (f.type === 'color') {
+                    wrap.innerHTML = `<label>${f.label}</label><div class="swatches" data-k="${f.key}">
+                        ${colors.map(c => `<span class="swatch ${wdg.config[f.key] === c ? 'active' : ''}" data-c="${c}" style="background:${c}"></span>`).join('')}</div>`;
+                } else if (f.type === 'dataset') {
+                    const opts = datasetOptionsFor(wdg.kind);
+                    wrap.innerHTML = `<label>${f.label}</label><select data-k="${f.key}">
+                        ${opts.map(o => `<option value="${o.key}" ${wdg.config[f.key] === o.key ? 'selected' : ''}>${o.label}</option>`).join('')}</select>`;
+                }
+                host.appendChild(wrap);
+            });
+
+            host.querySelectorAll('input, select').forEach(inp => {
+                inp.addEventListener('change', () => {
+                    wdg.config[inp.dataset.k] = inp.value;
+                    renderCanvas();
+                    updateJsonPreview(wdg);
+                });
+            });
+
+            host.querySelectorAll('.swatch').forEach(dot => {
+                dot.addEventListener('click', () => {
+                    wdg.config.color = dot.dataset.c;
+                    renderCanvas();
+                    renderConfigPanel();
+                });
+            });
+
+            document.getElementById('cfgRemove').addEventListener('click', () => removeWidget(wdg.id));
+            updateJsonPreview(wdg);
+        }
+
+        function updateJsonPreview(wdg) {
+            document.getElementById('jsonPreview').textContent = JSON.stringify(wdg, null, 2);
+        }
+
+        // 6. RENDER WIDGET CONTENT
+        function renderWidgetContent(wdg) {
+            const body = document.getElementById('body-' + wdg.id);
+            if (!body) return;
+            const ds = wdg.config.dataSource ? MOCK_DATASETS[wdg.config.dataSource] : null;
+
+            switch (wdg.kind) {
+                case 'kpi_card':
+                    body.innerHTML = `<div class="kpi-wrap">
+                        <span class="badge" style="background:${wdg.config.color}">${wdg.config.icon || '#'}</span>
+                        <div><div class="num">${wdg.config.value}</div><div class="lbl">${wdg.config.unit || ''}</div></div>
+                    </div>`;
+                    break;
+                case 'donut':
+                    if (ds) mountChart(body, wdg.id, { chart: { type: 'donut', height: 230 }, series: ds.data.values, labels: ds.data.labels });
+                    break;
+                case 'line':
+                    if (ds) mountChart(body, wdg.id, { chart: { type: 'line', height: 230 }, series: [{ data: ds.data.series }], xaxis: { categories: ds.data.categories }, colors: [wdg.config.color] });
+                    break;
+                case 'bar':
+                    if (ds) mountChart(body, wdg.id, { chart: { type: 'bar', height: 230 }, series: [{ data: ds.data.series }], xaxis: { categories: ds.data.categories }, colors: [wdg.config.color] });
+                    break;
+                case 'table':
+                    if (ds) body.innerHTML = `<table class="mini-table"><thead><tr>${ds.data.columns.map(c => `<th>${c.label}</th>`).join('')}</tr></thead><tbody>${ds.data.rows.map(r => `<tr>${ds.data.columns.map(c => `<td>${r[c.field]}</td>`).join('')}</tr>`).join('')}</tbody></table>`;
+                    break;
+                case 'list':
+                    if (ds) body.innerHTML = `<ul class="mini-list">${ds.data.rows.map(r => `<li><div class="row-top"><span class="name">${r.name}</span><span class="val">${r.pct}%</span></div><div class="progress-track"><div class="progress-fill" style="width:${r.pct}%;background:${wdg.config.color}"></div></div></li>`).join('')}</ul>`;
+                    break;
+            }
+        }
+
+        function mountChart(el, key, options) {
+            if (chartInstances[key]) chartInstances[key].destroy();
+            const chart = new ApexCharts(el, options);
+            chart.render();
+            chartInstances[key] = chart;
+        }
+
+        // 7. BUILD / VIEW MODES
+        document.getElementById('modeBuildBtn').addEventListener('click', () => setMode('build'));
+        document.getElementById('modeViewBtn').addEventListener('click', () => setMode('view'));
+
+        function setMode(m) {
+            mode = m;
+            appRoot.classList.toggle('mode-view', m === 'view');
+            document.getElementById('modeBuildBtn').classList.toggle('active', m === 'build');
+            document.getElementById('modeViewBtn').classList.toggle('active', m === 'view');
+            renderCanvas();
+        }
+
+        // 8. SAVE & RESET
+        document.getElementById('btnSave').addEventListener('click', async () => {
+            // Mảng `widgets` tự động theo đúng thứ tự hiển thị từ trên xuống dưới
+            const payload = widgets.map((w, index) => ({
+                widgetCode: w.kind,
+                displayOrder: index,
+                colSpan: parseInt(w.config.colSpan),
+                configJson: JSON.stringify(w.config)
+            }));
+
+            console.log("Dữ liệu POST gửi về C# Server:", payload);
+
+            fetch('/Dashboards/DragdropComponentReview1', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            })
+            .then(res => res.json())
+            .then(data => alert('Đã lưu cấu hình Dashboard thành công!'))
+            .catch(err => alert('Lỗi kết nối Server! Mở Console Log F12 để kiểm tra.'));
+        });
+
+        document.getElementById('btnReset').addEventListener('click', seedDefaultLayout);
+
+        function seedDefaultLayout() {
+            widgets = [
+                { id: 'w1', kind: 'kpi_card', config: { title: 'Doanh thu', value: '@(SimpleCard_SoLieuTrongThang.ContainsKey("DoanhThu") ? SimpleCard_SoLieuTrongThang["DoanhThu"] : "78.829,k")', unit: 'VND', icon: '₫', color: '#7367f0', colSpan: 3 } },
+                { id: 'w2', kind: 'kpi_card', config: { title: 'Lượt book', value: '@(SimpleCard_SoLieuTrongThang.ContainsKey("LuotBook") ? SimpleCard_SoLieuTrongThang["LuotBook"] : "226")', unit: 'lượt', icon: '☺', color: '#28c76f', colSpan: 3 } },
+                { id: 'w3', kind: 'donut', config: { title: 'Tỷ lệ các phòng', dataSource: 'revenue_by_room', colSpan: 6 } },
+                { id: 'w4', kind: 'line', config: { title: 'Doanh thu tháng', dataSource: 'monthly_revenue_trend', color: '#7367f0', colSpan: 6 } },
+                { id: 'w5', kind: 'bar', config: { title: 'Chi phí tháng', dataSource: 'monthly_cost_trend', color: '#00cfe8', colSpan: 6 } },
+                { id: 'w6', kind: 'table', config: { title: 'Top 5 dịch vụ tháng', dataSource: 'top_services', colSpan: 12 } }
+            ];
+            renderCanvas();
+        }
+
+        // Khởi tạo
+        renderLibrary();
+        seedDefaultLayout();
+    </script>
+}

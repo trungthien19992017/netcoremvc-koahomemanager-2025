@@ -634,6 +634,244 @@ public class DashboardsController : Controller
         .ToDictionary(x => x.Key, x => x.Value)
     ).ToList();
   }
+
+  [HttpGet]
+  public async Task<IActionResult> DashboardBuilder([FromQuery] Dictionary<string, string> parameters)
+  {
+
+    // xu ly bo loc
+    // chuyen parameters thanh Idictionary<string, object>
+    Dictionary<string, object> objParameters = parameters.ToDictionary(kvp => kvp.Key, kvp => (object)kvp.Value);
+
+    // xu ly lay du lieu cho tung widget
+    //khai bao phan tu chua data
+
+    ////////widget simple card Chuc mung
+    ////Tổng doanh thu tháng
+    var SimpleCard_ChucMung = await _widget.Widget_GetObject(objParameters, "HS_Widget_SimpleCard_ChucMung", null);
+    ViewBag.SimpleCard_ChucMung = SimpleCard_ChucMung;
+
+    ////////widget simple cart So lieu trong thang
+    //Doanh thu, luot book, so gio, chi
+    var SimpleCard_SoLieuTrongThang = await _widget.Widget_GetObject(objParameters, "HS_Widget_SimpleCard_SoLieuTrongThang", null);
+    ViewBag.SimpleCard_SoLieuTrongThang = SimpleCard_SoLieuTrongThang;
+
+    ////////line chart doanh thu 6 thang gan day
+    var LineChart_DoanhThuCacThang = await _widget.Widget_GetObject(objParameters, "HS_Widget_LineChart_DoanhThuCacThang", null);
+    ViewBag.LineChart_DoanhThuCacThang = LineChart_DoanhThuCacThang;
+
+    ////////Column chart chi phi 6 thang gan day
+    var ColumnChart_ChiPhiCacThang = await _widget.Widget_GetObject(objParameters, "HS_Widget_ColumnChart_ChiPhiCacThang", null);
+    ViewBag.ColumnChart_ChiPhiCacThang = ColumnChart_ChiPhiCacThang;
+
+    //////// List item Top 5 dịch vụ tháng
+    var ListItem_TopDichVuThang = await _widget.Widget_GetList(objParameters, "HS_Widget_ListItem_TopDichVuThang", null);
+    ViewBag.ListItem_TopDichVuThang = ListItem_TopDichVuThang;
+
+    //////// Pie Chart tỷ lệ các phòng trong tháng
+    var PieChart_TyLeCacPhongTrongThang = await _widget.Widget_GetObject(objParameters, "HS_Widget_PieChart_TyLeCacPhongTrongThang", null);
+    ViewBag.PieChart_TyLeCacPhongTrongThang = PieChart_TyLeCacPhongTrongThang;
+
+    //////// Widget List item ty le kin phong trong tuan
+    var ListItem_TyLeKinPhongTuan = await _widget.Widget_GetList(objParameters, "HS_Widget_ListItem_TyLeKinPhongTuan", null);
+    ViewBag.ListItem_TyLeKinPhongTuan = ListItem_TyLeKinPhongTuan;
+
+    //////// Widget list item Top 5 khách hàng gần đây nhất
+    var ListItem_TopKhachHangGanDay = await _widget.Widget_GetList(objParameters, "HS_Widget_ListItem_TopKhachHangGanDay", null);
+    ViewBag.ListItem_TopKhachHangGanDay = ListItem_TopKhachHangGanDay;
+
+    //////// Column chart Doanh thu tuần
+    var ColumnChart_DoanhThuTuan = await _widget.Widget_GetObject(objParameters, "HS_Widget_ColumnChart_DoanhThuTuan", null);
+    ViewBag.ColumnChart_DoanhThuTuan = ColumnChart_DoanhThuTuan;
+
+    //////// Heat map Trang Thai dat phong trong thang
+    var HeatMap_TrangThaiDatPhongThang = await _widget.Widget_GetList(objParameters, "HS_Widget_HeatMap_trangThaiDatPhongThang", null);
+
+    // B2: nhóm theo DayOfWeekName để tạo từng dòng (series)
+    var grouped = HeatMap_TrangThaiDatPhongThang
+        .GroupBy(d => (string)d.dayofweekname)
+        .Select(g => new
+        {
+          name = g.Key, // SUN, MON,...
+          data = g.Select(item => new {
+            x = (string)item.weekname,
+            y = (decimal)item.revenue
+          }).ToList()
+        }).ToList();
+
+    // B3: truyền ra View qua ViewBag hoặc ViewData
+    ViewBag.HeatMap_TrangThaiDatPhongThang = JsonSerializer.Serialize(grouped);
+
+    return View();
+  }
+
+  [HttpGet]
+  public async Task<IActionResult> DashboardBuilder1([FromQuery] Dictionary<string, string> parameters)
+  {
+
+    return View();
+  }
+
+  [HttpGet]
+  public async Task<IActionResult> DashboardBuilder2([FromQuery] Dictionary<string, string> parameters)
+  {
+
+    // xu ly bo loc
+    // chuyen parameters thanh Idictionary<string, object>
+    Dictionary<string, object> objParameters = parameters.ToDictionary(kvp => kvp.Key, kvp => (object)kvp.Value);
+
+    // xu ly lay du lieu cho tung widget
+    //khai bao phan tu chua data
+
+    ////////widget simple card Chuc mung
+    ////Tổng doanh thu tháng
+    var SimpleCard_ChucMung = await _widget.Widget_GetObject(objParameters, "HS_Widget_SimpleCard_ChucMung", null);
+    ViewBag.SimpleCard_ChucMung = SimpleCard_ChucMung;
+
+    ////////widget simple cart So lieu trong thang
+    //Doanh thu, luot book, so gio, chi
+    var SimpleCard_SoLieuTrongThang = await _widget.Widget_GetObject(objParameters, "HS_Widget_SimpleCard_SoLieuTrongThang", null);
+    ViewBag.SimpleCard_SoLieuTrongThang = SimpleCard_SoLieuTrongThang;
+
+    ////////line chart doanh thu 6 thang gan day
+    var LineChart_DoanhThuCacThang = await _widget.Widget_GetObject(objParameters, "HS_Widget_LineChart_DoanhThuCacThang", null);
+    ViewBag.LineChart_DoanhThuCacThang = LineChart_DoanhThuCacThang;
+
+    ////////Column chart chi phi 6 thang gan day
+    var ColumnChart_ChiPhiCacThang = await _widget.Widget_GetObject(objParameters, "HS_Widget_ColumnChart_ChiPhiCacThang", null);
+    ViewBag.ColumnChart_ChiPhiCacThang = ColumnChart_ChiPhiCacThang;
+
+    //////// List item Top 5 dịch vụ tháng
+    var ListItem_TopDichVuThang = await _widget.Widget_GetList(objParameters, "HS_Widget_ListItem_TopDichVuThang", null);
+    ViewBag.ListItem_TopDichVuThang = ListItem_TopDichVuThang;
+
+    //////// Pie Chart tỷ lệ các phòng trong tháng
+    var PieChart_TyLeCacPhongTrongThang = await _widget.Widget_GetObject(objParameters, "HS_Widget_PieChart_TyLeCacPhongTrongThang", null);
+    ViewBag.PieChart_TyLeCacPhongTrongThang = PieChart_TyLeCacPhongTrongThang;
+
+    //////// Widget List item ty le kin phong trong tuan
+    var ListItem_TyLeKinPhongTuan = await _widget.Widget_GetList(objParameters, "HS_Widget_ListItem_TyLeKinPhongTuan", null);
+    ViewBag.ListItem_TyLeKinPhongTuan = ListItem_TyLeKinPhongTuan;
+
+    //////// Widget list item Top 5 khách hàng gần đây nhất
+    var ListItem_TopKhachHangGanDay = await _widget.Widget_GetList(objParameters, "HS_Widget_ListItem_TopKhachHangGanDay", null);
+    ViewBag.ListItem_TopKhachHangGanDay = ListItem_TopKhachHangGanDay;
+
+    //////// Column chart Doanh thu tuần
+    var ColumnChart_DoanhThuTuan = await _widget.Widget_GetObject(objParameters, "HS_Widget_ColumnChart_DoanhThuTuan", null);
+    ViewBag.ColumnChart_DoanhThuTuan = ColumnChart_DoanhThuTuan;
+
+    //////// Heat map Trang Thai dat phong trong thang
+    var HeatMap_TrangThaiDatPhongThang = await _widget.Widget_GetList(objParameters, "HS_Widget_HeatMap_trangThaiDatPhongThang", null);
+
+    // B2: nhóm theo DayOfWeekName để tạo từng dòng (series)
+    var grouped = HeatMap_TrangThaiDatPhongThang
+        .GroupBy(d => (string)d.dayofweekname)
+        .Select(g => new
+        {
+          name = g.Key, // SUN, MON,...
+          data = g.Select(item => new {
+            x = (string)item.weekname,
+            y = (decimal)item.revenue
+          }).ToList()
+        }).ToList();
+
+    // B3: truyền ra View qua ViewBag hoặc ViewData
+    ViewBag.HeatMap_TrangThaiDatPhongThang = JsonSerializer.Serialize(grouped);
+    return View();
+  }
+
+  [HttpGet]
+  public async Task<IActionResult> DashboardBuilder3([FromQuery] Dictionary<string, string> parameters)
+  {
+
+    // xu ly bo loc
+    // chuyen parameters thanh Idictionary<string, object>
+    Dictionary<string, object> objParameters = parameters.ToDictionary(kvp => kvp.Key, kvp => (object)kvp.Value);
+
+    // xu ly lay du lieu cho tung widget
+    //khai bao phan tu chua data
+
+    ////////widget simple card Chuc mung
+    ////Tổng doanh thu tháng
+    var SimpleCard_ChucMung = await _widget.Widget_GetObject(objParameters, "HS_Widget_SimpleCard_ChucMung", null);
+    ViewBag.SimpleCard_ChucMung = SimpleCard_ChucMung;
+
+    ////////widget simple cart So lieu trong thang
+    //Doanh thu, luot book, so gio, chi
+    var SimpleCard_SoLieuTrongThang = await _widget.Widget_GetObject(objParameters, "HS_Widget_SimpleCard_SoLieuTrongThang", null);
+    ViewBag.SimpleCard_SoLieuTrongThang = SimpleCard_SoLieuTrongThang;
+
+    ////////line chart doanh thu 6 thang gan day
+    var LineChart_DoanhThuCacThang = await _widget.Widget_GetObject(objParameters, "HS_Widget_LineChart_DoanhThuCacThang", null);
+    ViewBag.LineChart_DoanhThuCacThang = LineChart_DoanhThuCacThang;
+
+    ////////Column chart chi phi 6 thang gan day
+    var ColumnChart_ChiPhiCacThang = await _widget.Widget_GetObject(objParameters, "HS_Widget_ColumnChart_ChiPhiCacThang", null);
+    ViewBag.ColumnChart_ChiPhiCacThang = ColumnChart_ChiPhiCacThang;
+
+    //////// List item Top 5 dịch vụ tháng
+    var ListItem_TopDichVuThang = await _widget.Widget_GetList(objParameters, "HS_Widget_ListItem_TopDichVuThang", null);
+    ViewBag.ListItem_TopDichVuThang = ListItem_TopDichVuThang;
+
+    //////// Pie Chart tỷ lệ các phòng trong tháng
+    var PieChart_TyLeCacPhongTrongThang = await _widget.Widget_GetObject(objParameters, "HS_Widget_PieChart_TyLeCacPhongTrongThang", null);
+    ViewBag.PieChart_TyLeCacPhongTrongThang = PieChart_TyLeCacPhongTrongThang;
+
+    //////// Widget List item ty le kin phong trong tuan
+    var ListItem_TyLeKinPhongTuan = await _widget.Widget_GetList(objParameters, "HS_Widget_ListItem_TyLeKinPhongTuan", null);
+    ViewBag.ListItem_TyLeKinPhongTuan = ListItem_TyLeKinPhongTuan;
+
+    //////// Widget list item Top 5 khách hàng gần đây nhất
+    var ListItem_TopKhachHangGanDay = await _widget.Widget_GetList(objParameters, "HS_Widget_ListItem_TopKhachHangGanDay", null);
+    ViewBag.ListItem_TopKhachHangGanDay = ListItem_TopKhachHangGanDay;
+
+    //////// Column chart Doanh thu tuần
+    var ColumnChart_DoanhThuTuan = await _widget.Widget_GetObject(objParameters, "HS_Widget_ColumnChart_DoanhThuTuan", null);
+    ViewBag.ColumnChart_DoanhThuTuan = ColumnChart_DoanhThuTuan;
+
+    //////// Heat map Trang Thai dat phong trong thang
+    var HeatMap_TrangThaiDatPhongThang = await _widget.Widget_GetList(objParameters, "HS_Widget_HeatMap_trangThaiDatPhongThang", null);
+
+    // B2: nhóm theo DayOfWeekName để tạo từng dòng (series)
+    var grouped = HeatMap_TrangThaiDatPhongThang
+        .GroupBy(d => (string)d.dayofweekname)
+        .Select(g => new
+        {
+          name = g.Key, // SUN, MON,...
+          data = g.Select(item => new {
+            x = (string)item.weekname,
+            y = (decimal)item.revenue
+          }).ToList()
+        }).ToList();
+
+    // B3: truyền ra View qua ViewBag hoặc ViewData
+    ViewBag.HeatMap_TrangThaiDatPhongThang = JsonSerializer.Serialize(grouped);
+
+    return View();
+  }
+
+
+  [HttpPost]
+  public IActionResult SaveDynamicConfig([FromBody] DashboardConfigModel model)
+  {
+    if (model == null || string.IsNullOrEmpty(model.Payload))
+    {
+      return BadRequest(new { success = false, message = "Dữ liệu cấu hình trống!" });
+    }
+
+    // Tại đây bạn thực hiện gọi DbContext hoặc Dapper để đẩy vào trường dữ liệu có kiểu JSONB của PostgreSQL hoặc SQL Server.
+    // Ví dụ: _dbContext.Database.ExecuteSqlRaw("UPDATE SystemConfigs SET WidgetJsonData = {0} WHERE Code = 'DASHBOARD_KOA'", model.Payload);
+
+    return Json(new { success = true, message = "Đã lưu trữ thành công chuỗi cấu hình động!" });
+  }
+
+  public class DashboardConfigModel
+  {
+    // Chứa chuỗi chuỗi JSON thô nhận từ trình duyệt
+    public string Payload { get; set; }
+  }
+
   public class CccdResult
   {
     public string IdNumber { get; set; }

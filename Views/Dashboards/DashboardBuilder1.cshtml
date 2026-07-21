@@ -1,0 +1,399 @@
+@{
+    ViewData["Title"] = "Cấu hình Dashboard động";
+    Layout = "~/Views/Shared/_ContentNavbarLayout.cshtml";
+}
+
+@section VendorStyles {
+    <link rel="stylesheet" href="~/vendor/libs/apex-charts/apex-charts.css" />
+    <style>
+        /* CSS Phục vụ cho tính năng Kéo thả và Scale */
+        .widget-wrapper {
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+            position: relative;
+        }
+        /* Style riêng cho chế độ Builder */
+        .mode-build .widget-wrapper {
+            border: 2px dashed #666cff;
+            background-color: rgba(102, 108, 255, 0.05);
+            cursor: move;
+            touch-action: none;
+        }
+
+        .mode-build .widget-resize-handle {
+            position: absolute;
+            right: 5px;
+            bottom: 5px;
+            width: 15px;
+            height: 15px;
+            background-color: #666cff;
+            cursor: se-resize;
+            border-radius: 3px;
+            z-index: 10;
+        }
+
+        .widget-actions {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            z-index: 20;
+            display: none;
+        }
+
+        .mode-build .widget-actions {
+            display: block;
+        }
+
+        .card-img-position {
+            position: absolute;
+            bottom: 0;
+            right: 0;
+            height: 150px;
+        }
+    </style>
+}
+
+@section VendorScripts {
+    <script src="~/vendor/libs/apex-charts/apexcharts.js"></script>
+    <!-- Nhúng thư viện thư viện kéo thả độc lập interact.js theo yêu cầu -->
+    <script src="https://cdn.jsdelivr.net/npm/interactjs@latest/dist/interact.min.js"></script>
+}
+
+<!-- Thanh công cụ điều khiển chế độ hiển thị -->
+<div class="card mb-6">
+    <div class="card-body d-flex justify-content-between align-items-center flex-wrap gap-4">
+        <div>
+            <h4 class="mb-1">Hệ thống Thiết kế Dashboard Động</h4>
+            <p class="mb-0">Tự do thay đổi cấu trúc, thông số widget và kích thước trực quan.</p>
+        </div>
+        <div class="d-flex gap-3">
+            <div class="btn-group" role="group">
+                <input type="radio" class="btn-check" name="btnmode" id="btnViewMode" checked autocomplete="off">
+                <label class="btn btn-outline-primary" for="btnViewMode"><i class="ri-eye-line me-1"></i> Chế độ Xem</label>
+
+                <input type="radio" class="btn-check" name="btnmode" id="btnBuildMode" autocomplete="off">
+                <label class="btn btn-outline-primary" for="btnBuildMode"><i class="ri-settings-3-line me-1"></i> Chế độ Sửa</label>
+            </div>
+            <button id="btnSaveDashboard" class="btn btn-success"><i class="ri-save-line me-1"></i> Lưu cấu hình (JSONB)</button>
+        </div>
+    </div>
+</div>
+
+<!-- Vùng hiển thị danh sách các Widget động -->
+<div id="dashboardContainer" class="row gy-6 mode-view">
+    <!-- Dữ liệu Widget sẽ được render động thông qua Javascript vào đây -->
+</div>
+
+<!-- Offcanvas Sidebar dùng để cấu hình thông số kỹ thuật riêng cho từng Widget khi bấm Sửa -->
+<div class="offcanvas offcanvas-end" tabindex="-1" id="widgetConfigSidebar" aria-labelledby="sidebarLabel">
+    <div class="offcanvas-header border-bottom">
+        <h5 id="sidebarLabel" class="offcanvas-title">Cấu hình thông số Widget</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Close"></button>
+    </div>
+    <div class="offcanvas-body">
+        <input type="hidden" id="configWidgetId" />
+        <div class="mb-4">
+            <label class="form-label" for="configWidgetTitle">Tiêu đề Widget</label>
+            <input type="text" id="configWidgetTitle" class="form-control" />
+        </div>
+        <div id="dynamicFormFields">
+            <!-- Form tùy biến theo loại widget sẽ render tại đây -->
+        </div>
+        <div class="d-grid mt-6">
+            <button id="btnApplyConfig" class="btn btn-primary">Cập nhật thông số</button>
+        </div>
+    </div>
+</div>
+
+@section PageScripts {
+    <script>
+        // 1. Khởi tạo Giả lập dữ liệu chuỗi JSONB ban đầu cho Dashboard số liệu KOA
+        let dashboardWidgets = [
+            {
+                id: "w_koa_chucmung",
+                type: "card_profile",
+                title: "Chúc mừng KOA! 🎉",
+                grid: { col_md: 12, col_lg: 4, height: 210 },
+                config: { main_value: "78.829k VND", sub_value: "131.4% mục tiêu 🚀", image_url: "https://pub-7171d6b031a04e3983a20a87daffce46.r2.dev/koala1.png" }
+            },
+            {
+                id: "w_koa_stats",
+                type: "stats_month",
+                title: "Số liệu trong tháng",
+                grid: { col_md: 12, col_lg: 8, height: 210 },
+                config: { doanhthu: "78.829,k", luotbook: "226", sogio: "2,k", chiphi: "34.575,k" }
+            },
+            {
+                id: "w_koa_donut",
+                type: "donut",
+                title: "Tỷ lệ các phòng trong tháng",
+                grid: { col_md: 12, col_lg: 6, height: 320 },
+                config: {
+                    series: [9524, 10928, 9953, 9210],
+                    labels: ["KOA 101 (Tân Phú)", "KOA 102 (Tân Phú)", "KOA 201 (Tân Phú)", "KOA 302 (Tân Phú)"],
+                    colors: ["#16C47F", "#FFD65A", "#FF9D23", "#F93827"],
+                    total_label: "78.829K"
+                }
+            },
+            {
+                id: "w_koa_line",
+                type: "line",
+                title: "Doanh thu tháng gần đây",
+                grid: { col_md: 12, col_lg: 6, height: 320 },
+                config: {
+                    series: [2500, 4800, 7200, 5100, 9600, 8400],
+                    categories: ["Tháng 1", "Tháng 2", "Tháng 3", "Tháng 4", "Tháng 5", "Tháng 6"]
+                }
+            }
+        ];
+
+        let chartInstances = {}; // Lưu giữ instance của các ApexCharts để tránh rác RAM khi re-render
+
+        // 2. Hàm sinh cấu trúc mã HTML động ứng với từng Widget dựa trên cấu hình cấu hình JSONB
+        function renderDashboard() {
+            const container = document.getElementById('dashboardContainer');
+            container.innerHTML = '';
+
+            dashboardWidgets.forEach(widget => {
+                // Đảm bảo responsive hoàn chỉnh bằng hệ thống grid của Bootstrap (Mobile mặc định col-12)
+                const wrapper = document.createElement('div');
+                wrapper.className = `col-12 col-md-${widget.grid.col_md} col-lg-${widget.grid.col_lg} widget-wrapper`;
+                wrapper.setAttribute('data-id', widget.id);
+                wrapper.style.minHeight = widget.grid.height + 'px';
+
+                let innerHTML = `
+                    <div class="card h-100 p-2">
+                        <div class="card-header d-flex justify-content-between align-items-center pb-2">
+                            <h5 class="card-title m-0">${widget.title}</h5>
+                            <div class="widget-actions">
+                                <button class="btn btn-sm btn-icon btn-outline-primary me-1" onclick="openConfigSidebar('${widget.id}')"><i class="ri-edit-line"></i></button>
+                            </div>
+                        </div>
+                        <div class="card-body" style="height: calc(100% - 50px);">
+                `;
+
+                // Xử lý sinh nội dung HTML linh động theo từng Type Widget
+                if (widget.type === 'card_profile') {
+                    innerHTML += `
+                        <div class="row h-100">
+                            <div class="col-7">
+                                <h4 class="text-primary mb-1">${widget.config.main_value}</h4>
+                                <p class="mb-3">${widget.config.sub_value}</p>
+                                <a href="javascript:;" class="btn btn-xs btn-primary">Chi tiết</a>
+                            </div>
+                            <div class="col-5 position-relative text-center">
+                                <img src="${widget.config.image_url}" class="card-img-position animate__animated animate__bounceIn" />
+                            </div>
+                        </div>
+                    `;
+                } else if (widget.type === 'stats_month') {
+                    innerHTML += `
+                        <div class="row g-4 pt-2">
+                            <div class="col-6 col-sm-3 text-center"><p class="mb-0 text-muted">Doanh thu</p><h5 class="mb-0 text-primary">${widget.config.doanhthu}</h5></div>
+                            <div class="col-6 col-sm-3 text-center"><p class="mb-0 text-muted">Lượt book</p><h5 class="mb-0 text-success">${widget.config.luotbook}</h5></div>
+                            <div class="col-6 col-sm-3 text-center"><p class="mb-0 text-muted">Số giờ</p><h5 class="mb-0 text-warning">${widget.config.sogio}</h5></div>
+                            <div class="col-6 col-sm-3 text-center"><p class="mb-0 text-muted">Chi phí</p><h5 class="mb-0 text-info">${widget.config.chiphi}</h5></div>
+                        </div>
+                    `;
+                } else if (widget.type === 'donut' || widget.type === 'line') {
+                    innerHTML += `<div id="chart_${widget.id}" class="w-100 h-100"></div>`;
+                }
+
+                innerHTML += `
+                        </div>
+                        <div class="widget-resize-handle"></div>
+                    </div>
+                `;
+                wrapper.innerHTML = innerHTML;
+                container.appendChild(wrapper);
+
+                // Tiến hành dựng biểu đồ ApexCharts cho các Widget dạng Chart sau khi Element gắn vào DOM
+                if (widget.type === 'donut') {
+                    setTimeout(() => buildDonutChart(widget), 50);
+                } else if (widget.type === 'line') {
+                    setTimeout(() => buildLineChart(widget), 50);
+                }
+            });
+        }
+
+        // 3. Khởi tạo chi tiết các cấu hình ApexCharts
+        function buildDonutChart(widget) {
+            if (chartInstances[widget.id]) chartInstances[widget.id].destroy();
+            const options = {
+                chart: { type: 'donut', height: '100%', parentHeightOffset: 0 },
+                series: widget.config.series,
+                labels: widget.config.labels,
+                colors: widget.config.colors,
+                legend: { position: 'bottom' },
+                plotOptions: { pie: { donut: { labels: { show: true, total: { show: true, label: 'Tổng', formatter: () => widget.config.total_label } } } } }
+            };
+            chartInstances[widget.id] = new ApexCharts(document.getElementById(`chart_${widget.id}`), options);
+            chartInstances[widget.id].render();
+        }
+
+        function buildLineChart(widget) {
+            if (chartInstances[widget.id]) chartInstances[widget.id].destroy();
+            const options = {
+                chart: { type: 'line', height: '100%', toolbar: { show: false } },
+                stroke: { curve: 'smooth', width: 3 },
+                series: [{ name: 'Doanh thu', data: widget.config.series }],
+                xaxis: { categories: widget.config.categories }
+            };
+            chartInstances[widget.id] = new ApexCharts(document.getElementById(`chart_${widget.id}`), options);
+            chartInstances[widget.id].render();
+        }
+
+        // 4. Quản lý Đổi Chế độ Build Mode / View Mode luân phiên
+        document.getElementById('btnBuildMode').addEventListener('change', function() {
+            const container = document.getElementById('dashboardContainer');
+            container.className = "row gy-6 mode-build";
+            initInteractJS(); // Kích hoạt tương tác kéo & co giãn
+        });
+
+        document.getElementById('btnViewMode').addEventListener('change', function() {
+            const container = document.getElementById('dashboardContainer');
+            container.className = "row gy-6 mode-view";
+            // Hủy liên kết interact để tránh lỗi kéo nhầm khi xem thông thường
+            interact('.widget-wrapper').unset();
+        });
+
+        // 5. Hiện thực Kéo thả & Co giãn kích thước (Scale lớn nhỏ) bằng thư viện Interact.js
+        function initInteractJS() {
+            interact('.widget-wrapper')
+            .resizable({
+                edges: { left: false, right: true, bottom: true, top: false },
+                listeners: {
+                    move(event) {
+                        let target = event.target;
+                        let id = target.getAttribute('data-id');
+                        let widget = dashboardWidgets.find(w => w.id === id);
+
+                        // Cập nhật chiều cao thực tế dựa vào hành vi kéo của người dùng
+                        let newHeight = Math.max(150, event.rect.height);
+                        target.style.minHeight = newHeight + 'px';
+                        widget.grid.height = newHeight;
+
+                        // Tính toán quy đổi kích thước chiều rộng sang ô grid bootstrap (col-md/lg từ 1 -> 12)
+                        let parentWidth = target.parentElement.clientWidth;
+                        let colWidth = parentWidth / 12;
+                        let calculatedCol = Math.round(event.rect.width / colWidth);
+                        calculatedCol = Math.max(2, Math.min(12, calculatedCol)); // Giới hạn col tối thiểu là 2 và tối đa là 12
+
+                        // Áp dụng class Bootstrap mới thay thế class cũ
+                        target.className = target.className.replace(/col-lg-\d+/g, `col-lg-${calculatedCol}`);
+                        widget.grid.col_lg = calculatedCol;
+                        widget.grid.col_md = calculatedCol;
+
+                        // Kích hoạt re-render biểu đồ ngay trong lúc co giãn để biểu đồ fit vừa khít khung mới
+                        if(chartInstances[id]) {
+                            chartInstances[id].windowResizeHandler();
+                        }
+                    }
+                }
+            })
+            .draggable({
+                listeners: {
+                    move(event) {
+                        // Logic hoán đổi vị trí thứ tự các DOM đơn giản trong danh sách row bootstrap
+                        const container = document.getElementById('dashboardContainer');
+                        const target = event.target;
+                        const box = target.getBoundingClientRect();
+                        const centerX = box.left + box.width / 2;
+                        const centerY = box.top + box.height / 2;
+
+                        const siblings = [...container.querySelectorAll('.widget-wrapper:not([data-id="'+target.getAttribute('data-id')+'"])')];
+                        const nextSibling = siblings.find(sibling => {
+                            const sBox = sibling.getBoundingClientRect();
+                            return event.clientX < sBox.left + sBox.width / 2 && event.clientY < sBox.top + sBox.height / 2;
+                        });
+
+                        if(nextSibling) {
+                            container.insertBefore(target, nextSibling);
+                        } else {
+                            container.appendChild(target);
+                        }
+                    },
+                    end(event) {
+                        // Sắp xếp lại mảng dữ liệu gốc `dashboardWidgets` dựa theo thứ tự DOM thật sau khi kéo thả xong
+                        const currentOrder = [...document.getElementById('dashboardContainer').querySelectorAll('.widget-wrapper')].map(el => el.getAttribute('data-id'));
+                        dashboardWidgets.sort((a, b) => currentOrder.indexOf(a.id) - currentOrder.indexOf(b.id));
+                    }
+                }
+            });
+        }
+
+        // 6. Xử lý mở Sidebar cập nhật tham số chi tiết động theo từng kiểu Widget
+        window.openConfigSidebar = function(id) {
+            const widget = dashboardWidgets.find(w => w.id === id);
+            document.getElementById('configWidgetId').value = id;
+            document.getElementById('configWidgetTitle').value = widget.title;
+
+            const dynamicFields = document.getElementById('dynamicFormFields');
+            dynamicFields.innerHTML = ''; // Làm sạch form cũ
+
+            // Dựng form trường dữ liệu phù hợp với loại thuộc tính đang có trong JSON của widget đó
+            if (widget.type === 'card_profile') {
+                dynamicFields.innerHTML = `
+                    <div class="mb-3"><label class="form-label">Giá trị chính</label><input type="text" id="cfg_main" class="form-control" value="${widget.config.main_value}"></div>
+                    <div class="mb-3"><label class="form-label">Mục tiêu phụ</label><input type="text" id="cfg_sub" class="form-control" value="${widget.config.sub_value}"></div>
+                `;
+            } else if (widget.type === 'stats_month') {
+                dynamicFields.innerHTML = `
+                    <div class="mb-3"><label class="form-label">Doanh thu</label><input type="text" id="cfg_dt" class="form-control" value="${widget.config.doanhthu}"></div>
+                    <div class="mb-3"><label class="form-label">Chi phí</label><input type="text" id="cfg_cp" class="form-control" value="${widget.config.chiphi}"></div>
+                `;
+            } else if (widget.type === 'donut') {
+                dynamicFields.innerHTML = `
+                    <div class="mb-3"><label class="form-label">Mảng Dữ liệu (phân tách dấu phẩy)</label><input type="text" id="cfg_series" class="form-control" value="${widget.config.series.join(',')}"></div>
+                    <div class="mb-3"><label class="form-label">Tổng hiển thị giữa dòng</label><input type="text" id="cfg_total" class="form-control" value="${widget.config.total_label}"></div>
+                `;
+            }
+
+            const sidebar = new bootstrap.Offcanvas(document.getElementById('widgetConfigSidebar'));
+            sidebar.show();
+        }
+
+        // Áp dụng lưu tạm cấu hình vừa chỉnh sửa từ form Sidebar vào mảng JSON hiện tại
+        document.getElementById('btnApplyConfig').addEventListener('click', function() {
+            const id = document.getElementById('configWidgetId').value;
+            const widget = dashboardWidgets.find(w => w.id === id);
+
+            widget.title = document.getElementById('configWidgetTitle').value;
+
+            if (widget.type === 'card_profile') {
+                widget.config.main_value = document.getElementById('cfg_main').value;
+                widget.config.sub_value = document.getElementById('cfg_sub').value;
+            } else if (widget.type === 'stats_month') {
+                widget.config.doanhthu = document.getElementById('cfg_dt').value;
+                widget.config.chiphi = document.getElementById('cfg_cp').value;
+            } else if (widget.type === 'donut') {
+                widget.config.series = document.getElementById('cfg_series').value.split(',').map(Number);
+                widget.config.total_label = document.getElementById('cfg_total').value;
+            }
+
+            bootstrap.Offcanvas.getInstance(document.getElementById('widgetConfigSidebar')).hide();
+            renderDashboard(); // Vẽ lại giao diện ngay tức thì
+        });
+
+        // 7. Đồng bộ đẩy chuỗi JSONB về phía Backend Controller khi ấn Lưu
+        document.getElementById('btnSaveDashboard').addEventListener('click', function() {
+            const jsonPayload = JSON.stringify(dashboardWidgets);
+
+            fetch('/Dashboards/SaveDynamicConfig', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ Payload: jsonPayload })
+            })
+            .then(res => res.json())
+            .then(data => {
+                alert("Lưu chuỗi JSONB thiết lập thành công về CSDL!");
+                console.log("Chuỗi JSONB gửi đi:", jsonPayload);
+            })
+            .catch(err => alert("Có lỗi xảy ra trong quá trình lưu dữ liệu."));
+        });
+
+        // Chạy mặc định khi tải trang
+        document.addEventListener("DOMContentLoaded", function() {
+            renderDashboard();
+        });
+    </script>
+}
