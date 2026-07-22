@@ -83,6 +83,10 @@
 
         .widget{position:absolute;background:var(--card);border:1px solid var(--border);border-radius:10px;
           box-shadow:0 1px 3px rgba(0,0,0,.04); display:flex; flex-direction:column; overflow:hidden;}
+        .widget:hover {
+            box-shadow: 0 12px 24px rgba(0,0,0,0.12);
+            transform: translateY(-4px);
+        }
         .widget.selected{border-color:var(--primary); box-shadow:0 0 0 2px rgba(115,103,240,.25);}
         .widget-head{display:flex;align-items:center;justify-content:space-between;padding:10px 14px 4px;cursor:move;touch-action:none;}
         .widget-head h4{font-size:13px;margin:0;font-weight:600;}
@@ -90,7 +94,7 @@
         .widget-head .rm:hover{color:var(--danger);}
         .app.mode-view .widget-head{cursor:default;}
         .app.mode-view .widget-head .rm, .app.mode-view .resize-handle{display:none;}
-        .widget-body{flex:1;padding:6px 14px 14px;overflow:hidden;position:relative;}
+        .widget-body{flex:1;padding:6px 14px 14px;/*overflow:hidden;*/position:relative;}
         .resize-handle{position:absolute;right:0;bottom:0;width:18px;height:18px;cursor:nwse-resize;touch-action:none;
           background:linear-gradient(135deg, transparent 50%, #c9c7d8 50%);border-bottom-right-radius:8px;}
 
@@ -133,6 +137,25 @@
           border-radius:7px;font-size:15px;cursor:pointer;align-items:center;justify-content:center;flex-shrink:0;}
         #drawerBackdrop{display:none;position:fixed;inset:0;background:rgba(20,18,35,.4);z-index:55;}
         #drawerBackdrop.show{display:block;}
+
+        /* koa dashboard css */
+        .card-img-position {
+            position: absolute;
+            block-size: 190px
+        }
+
+        .dashboard-filter .btn-dashboard-filter {
+            position: fixed;
+            z-index: 1080;
+            box-shadow: 0 10px 25px rgba(47, 128, 255, 0.35);
+            inset-block-start: 5rem;
+            inset-inline-end: 1.5rem;
+            background: #2F80FF;
+        }
+
+        .dashboard-filter .btn-dashboard-filter:hover {
+            box-shadow: none !important
+        }
 
         @@media (max-width:1100px){
           .grid-controls{display:none;} /* Ẩn bớt trên màn hình nhỏ nếu hẹp */
@@ -230,7 +253,7 @@
     <script>
       /* =========================================================================
         DASHBOARD BUILDER - widget generic theo LOẠI (donut/line/bar/table/list/
-        heatmap/kpi_card), cấu hình động theo schema riêng từng loại, lưu JSONB.
+        heatmap/emoji_card), cấu hình động theo schema riêng từng loại, lưu JSONB.
         -------------------------------------------------------------------------
         Mapping sang DB (net_dashboard / net_widgetmap / net_widget / net_widgetvalueconfig):
           - widget.kind            -> net_widget.widgetcode (loại widget, có sẵn 7 loại)
@@ -276,13 +299,15 @@
         // 1) LOẠI WIDGET GENERIC
         // ---------------------------------------------------------------------
         const WIDGET_KINDS = [
-          { kind:'kpi_card', name:'Thẻ số liệu (KPI)', desc:'Số + icon + nhãn',      icon:'#',  color:'#28c76f', defaultW:3, defaultH:2, minW:2,minH:2,maxW:5,maxH:3 },
+          { kind:'emoji_card', name:'Thẻ số liệu (emoji)', desc:'Số + icon + nhãn',      icon:'#',  color:'#28c76f', defaultW:3, defaultH:2, minW:2,minH:2,maxW:5,maxH:3 },
           { kind:'donut',    name:'Biểu đồ Donut',     desc:'Tỷ lệ theo danh mục',   icon:'◔',  color:'#ff9f43', defaultW:6, defaultH:5, minW:4,minH:4,maxW:9,maxH:6 },
           { kind:'line',     name:'Biểu đồ Line',      desc:'Xu hướng theo thời gian', icon:'⟋', color:'#7367f0', defaultW:4, defaultH:3, minW:3,minH:2,maxW:6,maxH:4 },
           { kind:'bar',      name:'Biểu đồ Bar/Column',desc:'So sánh theo nhóm',     icon:'▥',  color:'#00cfe8', defaultW:4, defaultH:4, minW:3,minH:3,maxW:8,maxH:5 },
           { kind:'table',    name:'Bảng dữ liệu',      desc:'Table nhiều cột',       icon:'▤',  color:'#ea5455', defaultW:6, defaultH:4, minW:4,minH:3,maxW:12,maxH:6 },
           { kind:'list',     name:'Danh sách xếp hạng',desc:'List + progress bar',   icon:'☰',  color:'#7367f0', defaultW:5, defaultH:4, minW:3,minH:3,maxW:8,maxH:6 },
           { kind:'heatmap',  name:'Heatmap',           desc:'Ma trận cường độ',      icon:'▦',  color:'#00cfe8', defaultW:6, defaultH:5, minW:5,minH:4,maxW:12,maxH:6 },
+          { kind:'large_img_card', name:'Thể số liệu (ảnh lớn)',desc:'Số liệu 1 + 2 + ảnh lớn + nhãn', icon:'#',  color:'#28c76f', defaultW:3, defaultH:2, minW:2,minH:2,maxW:8,maxH:4 },
+          { kind:'multiple_mini_card', name:'Thẻ nhiều chi tiết',desc:'Thẻ nhiều chi tiết',   icon:'☰',  color:'#7367f0', defaultW:5, defaultH:4, minW:3,minH:3,maxW:12,maxH:4 },
         ];
         function kindOf(k){ return WIDGET_KINDS.find(t=>t.kind===k); }
 
@@ -335,9 +360,16 @@
               TUE:[0,0,0,0,0,0,0,0,5465,350,3815,3137,0,0],
               MON:[0,0,0,0,0,0,0,0,3778,1200,4226,4730,650,0],
             }}},
+          monthly_summary_info:{ label:'Số liệu trong tháng', shape:'rows', data:{
+            columns:[{field:'name',label:'Nội dung'},{field:'value',label:'Giá trị'},{field:'faclass',label:'FA Class'}],
+            rows:[
+              {name:'Doanh thu', value:'93.761,k', faclass:'ri-pie-chart-2-line ri-24px', color: "red"},
+              {name:'Lượt book', value:'266,', faclass:'ri-group-line ri-24px', color: "blue"},
+              {name:'Số giờ', value:'2,k', faclass:'ri-macbook-line ri-24px', color: "green"},
+              {name:'Chi phí', value:'34.575,k', faclass:'ri-money-dollar-circle-line ri-24px', color: "yellow"} ]}},
         };
 
-        const DATA_SHAPE_BY_KIND = { donut:'categorical', line:'series', bar:'series', table:'rows', list:'rows', heatmap:'matrix', kpi_card:null };
+        const DATA_SHAPE_BY_KIND = { donut:'categorical', line:'series', bar:'series', table:'rows', list:'rows', heatmap:'matrix', emoji_card:null, large_img_card:null, multiple_mini_card:'rows' };
 
         function datasetOptionsFor(kind){
           const shape = DATA_SHAPE_BY_KIND[kind];
@@ -351,7 +383,7 @@
         function getFieldSchema(kind){
           const common = [{ key:'title', label:'Tiêu đề', type:'text' }];
           switch(kind){
-            case 'kpi_card': return [...common,
+            case 'emoji_card': return [...common,
               { key:'value', label:'Giá trị', type:'text' },
               { key:'unit',  label:'Đơn vị / ghi chú nhỏ', type:'text' },
               { key:'icon',  label:'Icon (1 ký tự/emoji)', type:'text' },
@@ -375,6 +407,17 @@
               { key:'color', label:'Màu nhấn', type:'color' }];
             case 'heatmap': return [...common,
               { key:'dataSource', label:'Nguồn dữ liệu', type:'dataset' }];
+            case 'large_img_card': return [...common,
+              { key:'value1', label:'Nội dung 1', type:'text' },
+              { key:'value2',  label:'Nội dung 2', type:'text' },
+              { key:'imageurl',  label:'Đường dẫn ảnh', type:'text' },
+              { key:'imageheight',  label:'Chiều cao ảnh', type:'text' },
+              { key:'buttontext',  label:'Nội dung button', type:'text' },
+              { key:'buttonurl',  label:'Đường dẫn button', type:'text' },
+              { key:'color', label:'Màu nền icon', type:'color' }];
+            case 'multiple_mini_card': return [...common,
+              { key:'dataSource', label:'Nguồn dữ liệu', type:'dataset' },
+              { key:'subContent', label:'Nội dung nhỏ', type:'checkbox' }];
             default: return common;
           }
         }
@@ -384,13 +427,15 @@
           const t = kindOf(kind);
           const base = { title:t.name, color:t.color };
           switch(kind){
-            case 'kpi_card': return { ...base, value:'0', unit:'', icon:'#' };
+            case 'emoji_card': return { ...base, value:'0', unit:'', icon:'#' };
             case 'donut': return { ...base, dataSource:opts[0]?.key||'', legendPosition:'right' };
             case 'line': return { ...base, dataSource:opts[0]?.key||'', showArea:false };
             case 'bar': return { ...base, dataSource:opts[0]?.key||'', horizontal:false };
             case 'table': return { ...base, dataSource:opts[0]?.key||'' };
             case 'list': return { ...base, dataSource:opts[0]?.key||'', showProgress:true };
             case 'heatmap': return { ...base, dataSource:opts[0]?.key||'' };
+            case 'large_img_card': return { ...base, value1:'0 VND', value2:'0% mục tiêu', imageurl:'https://pub-7171d6b031a04e3983a20a87daffce46.r2.dev/koala1.png', imageheight:'100', buttontext:'Xem', buttonurl: '#', color: 'red' };
+            case 'multiple_mini_card': return { ...base, dataSource:opts[0]?.key||'', subContent: 'Nội dung phụ' };
             default: return base;
           }
         }
@@ -728,10 +773,10 @@
           document.documentElement.style.setProperty('--grid-gap', GAP + 'px');
 
           widgets = [
-            mk('kpi_card', 0,0,3,2, { title:'Doanh thu', value:'78.829,k', unit:'VND', icon:'₫', color:'#7367f0' }),
-            mk('kpi_card', 3,0,3,2, { title:'Lượt book', value:'226', unit:'lượt', icon:'☺', color:'#28c76f' }),
-            mk('kpi_card', 0,2,3,2, { title:'Số giờ', value:'2,k', unit:'giờ', icon:'⏱', color:'#ff9f43' }),
-            mk('kpi_card', 3,2,3,2, { title:'Chi phí', value:'34.575,k', unit:'VND', icon:'⚑', color:'#00cfe8' }),
+            mk('emoji_card', 0,0,3,2, { title:'Doanh thu', value:'78.829,k', unit:'VND', icon:'₫', color:'#7367f0' }),
+            mk('emoji_card', 3,0,3,2, { title:'Lượt book', value:'226', unit:'lượt', icon:'☺', color:'#28c76f' }),
+            mk('emoji_card', 0,2,3,2, { title:'Số giờ', value:'2,k', unit:'giờ', icon:'⏱', color:'#ff9f43' }),
+            mk('emoji_card', 3,2,3,2, { title:'Chi phí', value:'34.575,k', unit:'VND', icon:'⚑', color:'#00cfe8' }),
             mk('donut', 6,0,6,5, { title:'Tỷ lệ các phòng trong tháng', dataSource:'revenue_by_room', legendPosition:'right' }),
             mk('line',  0,4,3,3, { title:'Doanh thu tháng gần đây', dataSource:'monthly_revenue_trend', color:'#7367f0', showArea:true }),
             mk('bar',   3,4,3,3, { title:'Chi phí tháng gần đây', dataSource:'monthly_cost_trend', color:'#00cfe8' }),
@@ -740,6 +785,8 @@
             mk('list',  0,11,6,4, { title:'Tỷ lệ kín phòng trong tuần', dataSource:'occupancy_rooms', showProgress:true, color:'#7367f0' }),
             mk('table', 6,9,6,4, { title:'Top 5 khách hàng gần nhất', dataSource:'top_customers' }),
             mk('heatmap', 6,13,6,5, { title:'Trạng thái đặt phòng 3 tháng', dataSource:'booking_heatmap' }),
+            mk('large_img_card', 0,18,6,3, { title:'Chúc mừng KOA! 🎉', value1:'93.761,k VND', value2:'156.3% mục tiêu 🚀', imageurl:'https://pub-7171d6b031a04e3983a20a87daffce46.r2.dev/koala1.png', imageheight:200, buttontext:'Xem chi tiết', buttonurl: '#', color: 'red' }),
+            mk('multiple_mini_card',  0,21,10,3, { title:'Số liệu trong tháng', dataSource:'monthly_summary_info', subContent: 'Doanh thu tăng 10% 😎 tháng này' }),
           ];
           selectedId = null;
           renderCanvas();
@@ -755,16 +802,18 @@
           if(!body) return;
           const ds = wdg.config.dataSource ? MOCK_DATASETS[wdg.config.dataSource] : null;
           switch(wdg.kind){
-            case 'kpi_card':  return renderKpiCard(body, wdg);
+            case 'emoji_card':  return renderEmojiCard(body, wdg);
             case 'donut':     return ds && renderDonut(body, wdg, ds.data);
             case 'line':      return ds && renderLine(body, wdg, ds.data);
             case 'bar':       return ds && renderBar(body, wdg, ds.data);
             case 'table':     return ds && renderTable(body, wdg, ds.data);
             case 'list':      return ds && renderList(body, wdg, ds.data);
             case 'heatmap':   return ds && renderHeatmap(body, wdg, ds.data);
+            case 'large_img_card':  return renderLargeImgCard(body, wdg);
+            case 'multiple_mini_card':      return ds && renderMultipleMiniCard(body, wdg, ds.data);
           }
         }
-        function renderKpiCard(el, wdg){
+        function renderEmojiCard(el, wdg){
           el.innerHTML = `<div class="kpi-wrap">
             <span class="badge" style="background:${wdg.config.color}">${wdg.config.icon||'#'}</span>
             <div><div class="num">${wdg.config.value}</div><div class="lbl">${wdg.config.unit||''}</div></div>
@@ -817,6 +866,47 @@
               {from:3001,to:5000,color:'#8176f2'},{from:5001,to:9000,color:'#7367f0'}]}}}
           });
         }
+        
+        function renderLargeImgCard(el, wdg){
+          el.innerHTML = `<div class="row">
+             <div class="col-12 col-md-6">
+                  <h4 class="mb-0" style="color:${wdg.config.color}">${wdg.config.value1}</h4>
+                  <p class="mb-2">${wdg.config.value2}</p>
+                  <a href="javascript:;" class="btn btn-sm btn-primary waves-effect waves-light" style="background:${wdg.config.color}">${wdg.config.buttontext}</a>
+             </div>
+             <div class="col-12 col-md-6 text-center">
+                <img src="${wdg.config.imageurl}" class="card-img-position bottom-0 w-auto end-0 scaleX-n1-rtl animate__animated animate__bounceIn" alt="View Profile" style="height: ${wdg.config.imageheight}px">
+             </div>
+          </div>`;
+        }
+
+        function renderMultipleMiniCard(el, wdg, data) {
+          const subtitleHtml = wdg.config?.subContent
+            ? `<div class="widget-subtitle text-muted small mt-0">${wdg.config.subContent}</div>`
+            : '';
+
+          // 2. Render HTML
+          el.innerHTML = `
+            ${subtitleHtml}
+            <div class="row g-6 mt-auto">
+              ${data.rows.map(r => `
+                <div class="col-md-3 col-6">
+                  <div class="d-flex align-items-center">
+                    <div class="avatar">
+                      <div class="avatar-initial rounded shadow-xs" style="background:${r.color || 'var(--bs-primary)'}">
+                        <i class="${r.faclass}"></i>
+                      </div>
+                    </div>
+                    <div class="ms-3">
+                      <p class="mb-0 text-muted small">${r.name}</p>
+                      <h5 class="mb-0 fw-bold">${r.value}</h5>
+                    </div>
+                  </div>
+                </div>
+              `).join('')}
+            </div>`;
+        }
+
         function mountChart(el, key, options){
           if(!el) return;
           if(chartInstances[key]) chartInstances[key].destroy();
