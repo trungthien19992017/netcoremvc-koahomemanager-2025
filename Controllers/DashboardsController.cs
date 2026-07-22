@@ -881,7 +881,60 @@ public class DashboardsController : Controller
   // =============================================================================
 
   [HttpPost]
-  public async Task<IActionResult> SaveLayout([FromQuery] Guid dashboardPageId, [FromBody] List<WidgetLayoutDto> layout)
+  public async Task<IActionResult> SaveLayout(
+      [FromQuery] Guid dashboardPageId,
+      [FromBody] SaveDashboardLayoutRequestDto request)
+  {
+    var a = request.DashboardConfig;
+    if (request == null)
+      return BadRequest("Dữ liệu gửi lên không hợp lệ.");
+
+    // Validate configJson trong danh sách layout
+    if (request.Widgets != null && request.Widgets.Any())
+    {
+      foreach (var item in request.Widgets)
+      {
+        try
+        {
+          if (!string.IsNullOrWhiteSpace(item.ConfigJson))
+            JsonDocument.Parse(item.ConfigJson);
+        }
+        catch (JsonException)
+        {
+          return BadRequest($"configJson không hợp lệ cho widget '{item.WidgetCode}'.");
+        }
+      }
+    }
+
+    //// 1. Cập nhật/Thêm mới danh sách layout (request.Layout)
+    //// ... logic Insert / Update ...
+
+    //// 2. Xóa các widget map được yêu cầu xóa (request.DeletedWidgetMapIds)
+    //if (request.DeletedWidgetMapIds != null && request.DeletedWidgetMapIds.Any())
+    //{
+    //  // Soft delete hoặc Hard delete các ID nằm trong list này
+    //  var itemsToDelete = await _db.NetWidgetMap
+    //      .Where(m => m.DashboardId == dashboardPageId && request.DeletedWidgetMapIds.Contains(m.Id))
+    //      .ToListAsync();
+
+    //  foreach (var item in itemsToDelete)
+    //  {
+    //    item.IsDeleted = true; // Soft delete
+    //                           // _db.NetWidgetMap.Remove(item); // Hoặc Hard delete
+    //  }
+    //}
+
+    //await _db.SaveChangesAsync();
+
+    return Ok(new
+    {
+      savedCount = request.Widgets?.Count ?? 0
+    });
+  }
+
+
+  [HttpPost]
+  public async Task<IActionResult> SaveLayout1([FromQuery] Guid dashboardPageId, [FromBody] List<WidgetLayoutDto1> layout)
   {
     if (layout == null || layout.Count == 0)
       return BadRequest("Layout rỗng.");
@@ -984,7 +1037,30 @@ public class DashboardsController : Controller
   }
 
 
+  public class SaveDashboardLayoutRequestDto
+  {
+    public DashboardConfigDto DashboardConfig { get; set; } = new(); // Hoặc List<string> tùy kiểu dữ liệu ID của bạn
+    public List<WidgetLayoutDto> Widgets { get; set; } = new();
+  }
+
+  public class DashboardConfigDto
+  {
+    public int? GridCols { get; set; }
+    public int? CellHeight { get; set; }
+    public int? GridGap { get; set; }
+  }
+
   public class WidgetLayoutDto
+  {
+    public string WidgetCode { get; set; } = default!;
+    public int PositionX { get; set; }
+    public int PositionY { get; set; }
+    public int Width { get; set; }
+    public int Height { get; set; }
+    public string ConfigJson { get; set; } = default!;
+  }
+
+  public class WidgetLayoutDto1
   {
     public string WidgetCode { get; set; } = default!;
     public int PositionX { get; set; }
