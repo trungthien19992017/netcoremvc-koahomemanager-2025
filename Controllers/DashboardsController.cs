@@ -866,6 +866,110 @@ public class DashboardsController : Controller
     return Json(new { success = true, message = "Đã lưu trữ thành công chuỗi cấu hình động!" });
   }
 
+  // =============================================================================
+  // Controller mẫu nhận layout từ dashboard-builder.html
+  // Payload gửi lên (mỗi phần tử = 1 dòng net_widgetmap):
+  //   [{
+  //     "widgetCode": "donut",              // -> tra net_widget theo widgetcode
+  //     "positionX": 6, "positionY": 0,
+  //     "width": 6, "height": 5,
+  //     "configJson": "{\"title\":\"...\",\"dataSource\":\"revenue_by_room\",...}"
+  //   }, ...]
+  //
+  // Yêu cầu gói: Npgsql.EntityFrameworkCore.PostgreSQL (cột jsonb ánh xạ qua
+  // NpgsqlDbType.Jsonb hoặc đơn giản dùng cột "text"/"jsonb" + JsonDocument).
+  // =============================================================================
+
+  [HttpPost]
+  public async Task<IActionResult> SaveLayout([FromQuery] Guid dashboardPageId, [FromBody] List<WidgetLayoutDto> layout)
+  {
+    if (layout == null || layout.Count == 0)
+      return BadRequest("Layout rỗng.");
+
+    // Validate configJson là JSON hợp lệ trước khi ghi DB, tránh lưu rác vào cột jsonb
+    foreach (var item in layout)
+    {
+      try { JsonDocument.Parse(item.ConfigJson); }
+      catch (JsonException)
+      {
+        return BadRequest($"configJson không hợp lệ cho widget '{item.WidgetCode}'.");
+      }
+    }
+
+    //// Xoá toàn bộ widgetmap cũ của page này rồi ghi lại theo layout mới
+    //// (đơn giản, phù hợp vì builder luôn gửi full state; nếu muốn tối ưu
+    ////  hơn có thể diff theo id thay vì replace-all).
+    //var oldMaps = await _db.NetWidgetMap
+    //    .Where(m => m.DashboardId == dashboardPageId && !m.IsDeleted)
+    //    .ToListAsync();
+    //_db.NetWidgetMap.RemoveRange(oldMaps);
+
+    //foreach (var item in layout)
+    //{
+    //  var widgetType = await _db.NetWidget
+    //      .FirstOrDefaultAsync(w => w.WidgetCode == item.WidgetCode && !w.IsDeleted);
+    //  if (widgetType == null)
+    //    return BadRequest($"Không tìm thấy widget type '{item.WidgetCode}'. Hãy đăng ký trong net_widget trước.");
+
+    //  _db.NetWidgetMap.Add(new NetWidgetMap
+    //  {
+    //    Id = Guid.NewGuid(),
+    //    WidgetItemId = widgetType.Id,
+    //    DashboardId = dashboardPageId,
+    //    PositionX = item.PositionX,
+    //    PositionY = item.PositionY,
+    //    Width = item.Width,
+    //    Height = item.Height,
+    //    ConfigJson = item.ConfigJson,   // cột kiểu jsonb trong Postgres
+    //    CreationTime = DateTime.UtcNow,
+    //    IsDeleted = false,
+    //  });
+    //}
+
+    //await _db.SaveChangesAsync();
+    return Ok(new { saved = layout.Count });
+  }
+
+  // GET /api/Dashboard/GetLayout?dashboardPageId=1
+  [HttpGet("GetLayout")]
+  public async Task<IActionResult> GetLayout([FromQuery] Guid dashboardPageId)
+  {
+    //var result = await _db.NetWidgetMap
+    //    .Where(m => m.DashboardId == dashboardPageId && !m.IsDeleted)
+    //    .Include(m => m.WidgetItem)
+    //    .Select(m => new
+    //    {
+    //      widgetCode = m.WidgetItem.WidgetCode,
+    //      positionX = m.PositionX,
+    //      positionY = m.PositionY,
+    //      width = m.Width,
+    //      height = m.Height,
+    //      // trả thẳng chuỗi jsonb ra cho FE parse lại thành object config
+    //      config = m.ConfigJson,
+    //    })
+    //    .ToListAsync();
+    var result = new { Id = 1 };
+
+    return Ok(result);
+  }
+
+  // -----------------------------------------------------------------------------
+  // Ghi chú migration cột jsonb (Postgres) - thêm vào bảng net_widgetmap nếu chưa có:
+  //
+  //   ALTER TABLE net_widgetmap ADD COLUMN configjson jsonb NULL;
+  //
+  // Trong OnModelCreating của DbContext:
+  //   modelBuilder.Entity<NetWidgetMap>()
+  //       .Property(e => e.ConfigJson)
+  //       .HasColumnType("jsonb");
+  //
+  // Nhờ đó có thể query trực tiếp theo key trong config, ví dụ tìm mọi widget
+  // đang dùng nguồn dữ liệu "revenue_by_room":
+  //
+  //   SELECT * FROM net_widgetmap WHERE configjson->>'dataSource' = 'revenue_by_room';
+  // -----------------------------------------------------------------------------
+
+
   public class DashboardConfigModel
   {
     // Chứa chuỗi chuỗi JSON thô nhận từ trình duyệt
@@ -877,5 +981,16 @@ public class DashboardsController : Controller
     public string IdNumber { get; set; }
     public string FullName { get; set; }
     public string Gender { get; set; }
+  }
+
+
+  public class WidgetLayoutDto
+  {
+    public string WidgetCode { get; set; } = default!;
+    public int PositionX { get; set; }
+    public int PositionY { get; set; }
+    public int Width { get; set; }
+    public int Height { get; set; }
+    public string ConfigJson { get; set; } = default!; // chuỗi JSON thô từ FE
   }
 }

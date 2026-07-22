@@ -631,10 +631,10 @@
         let resultText;
         try{
           // >>> THAY URL NÀY BẰNG ENDPOINT THẬT, VD: /api/Dashboard/1/SaveLayout <<<
-          const res = await fetch('/api/Dashboard/SaveLayout', {
+          const res = await fetch('/Dashboards/SaveLayout', {
             method:'POST', headers:{ 'Content-Type':'application/json' }, body: JSON.stringify(payload)
           });
-          resultText = `POST /api/Dashboard/SaveLayout -> HTTP ${res.status}\n\n` + JSON.stringify(payload, null, 2);
+          resultText = `POST /Dashboards/SaveLayout -> HTTP ${res.status}\n\n` + JSON.stringify(payload, null, 2);
         }catch(err){
           resultText = `[Demo offline - chưa có backend thật nên fetch() lỗi mạng, đây là dữ liệu LẼ RA sẽ được POST]\n\n` + JSON.stringify(payload, null, 2);
         }
@@ -697,14 +697,14 @@
       }
       function renderDonut(el, wdg, data){
         mountChart(el, wdg.id, {
-          chart:{type:'donut', height:'100%'}, series:data.values, labels:data.labels,
+          chart:{type:'donut', height:'80%'}, series:data.values, labels:data.labels,
           legend:{position:wdg.config.legendPosition||'right', fontSize:'11px'}, dataLabels:{enabled:false},
           plotOptions:{pie:{donut:{labels:{show:true,total:{show:true,label:'Tổng'}}}}}
         });
       }
       function renderLine(el, wdg, data){
         mountChart(el, wdg.id, {
-          chart:{type:'line', height:'100%', toolbar:{show:false}, sparkline:{enabled:true}},
+          chart:{type:'line', height:'80%', toolbar:{show:false}, sparkline:{enabled:true}},
           series:[{name:wdg.config.title, data:data.series}],
           stroke:{width:3, curve:'smooth'}, colors:[wdg.config.color],
           fill: wdg.config.showArea ? {type:'gradient', gradient:{opacityFrom:.4, opacityTo:0}} : undefined,
@@ -712,7 +712,7 @@
       }
       function renderBar(el, wdg, data){
         mountChart(el, wdg.id, {
-          chart:{type:'bar', height:'100%', toolbar:{show:false}},
+          chart:{type:'bar', height:'80%', toolbar:{show:false}},
           series:[{name:wdg.config.title, data:data.series}],
           xaxis:{categories:data.categories, labels:{style:{fontSize:'10px'}}},
           plotOptions:{bar:{borderRadius:4, columnWidth:'50%', horizontal:!!wdg.config.horizontal}},
@@ -736,7 +736,7 @@
       function renderHeatmap(el, wdg, data){
         const series = data.days.map(d=>({ name:d, data: data.weekLabels.map((w,i)=>({x:w, y:data.matrix[d][i]})) }));
         mountChart(el, wdg.id, {
-          chart:{type:'heatmap', height:'100%', toolbar:{show:false}}, series, dataLabels:{enabled:false},
+          chart:{type:'heatmap', height:'80%', toolbar:{show:false}}, series, dataLabels:{enabled:false},
           plotOptions:{heatmap:{radius:2, colorScale:{ranges:[
             {from:0,to:1000,color:'#b9b3f8'},{from:1001,to:3000,color:'#9d95f5'},
             {from:3001,to:5000,color:'#8176f2'},{from:5001,to:9000,color:'#7367f0'}]}}}
