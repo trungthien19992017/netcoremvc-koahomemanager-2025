@@ -628,7 +628,6 @@
             return;
           }
           const schema = getFieldSchema(wdg.kind);
-          const colors = ['#7367f0','#28c76f','#ff9f43','#ea5455','#00cfe8'];
           panel.innerHTML = `
             <p class="panel-title">Cấu hình • ${kindOf(wdg.kind).name}</p>
             <div id="fieldsHost"></div>
@@ -646,9 +645,23 @@
             const wrap = document.createElement('div'); wrap.className='field';
             if(f.type==='text'){
               wrap.innerHTML = `<label>${f.label}</label><input type="text" data-k="${f.key}" value="${wdg.config[f.key]??''}">`;
-            } else if(f.type==='color'){
-              wrap.innerHTML = `<label>${f.label}</label><div class="swatches" data-k="${f.key}">
-                ${colors.map(c=>`<span class="swatch ${wdg.config[f.key]===c?'active':''}" data-c="${c}" style="background:${c}"></span>`).join('')}</div>`;
+            } else if (f.type === 'color') {
+                const value = wdg.config[f.key] || "#7367f0";
+                wrap.innerHTML = `
+                    <label>${f.label}</label>
+                    <div class="d-flex align-items-center">
+                        <button
+                            type="button"
+                            id="color-${f.key}"
+                            class="pcr-button dashboard-color-picker"
+                            data-default="${value}">
+                        </button>
+                        <input
+                            type="hidden"
+                            id="${f.key}"
+                            value="${value}">
+                    </div>
+                `;
             } else if(f.type==='select'){
               wrap.innerHTML = `<label>${f.label}</label><select data-k="${f.key}">
                 ${f.options.map(o=>`<option value="${o}" ${wdg.config[f.key]===o?'selected':''}>${o}</option>`).join('')}</select>`;
@@ -686,19 +699,21 @@
               updateJsonPreview(wdg);
             });
           });
-          host.querySelectorAll('.swatches').forEach(sw=>{
-            sw.querySelectorAll('.swatch').forEach(dot=>{
-              dot.addEventListener('click', ()=>{
-                wdg.config[sw.dataset.k] = dot.dataset.c;
-                sw.querySelectorAll('.swatch').forEach(d=>d.classList.toggle('active', d===dot));
-                renderWidgetContent(wdg);
-                updateJsonPreview(wdg);
-              });
-            });
-          });
+          // host.querySelectorAll('.swatches').forEach(sw=>{
+          //   sw.querySelectorAll('.swatch').forEach(dot=>{
+          //     dot.addEventListener('click', ()=>{
+          //       wdg.config[sw.dataset.k] = dot.dataset.c;
+          //       sw.querySelectorAll('.swatch').forEach(d=>d.classList.toggle('active', d===dot));
+          //       renderWidgetContent(wdg);
+          //       updateJsonPreview(wdg);
+          //     });
+          //   });
+          // });
           document.getElementById('cfgRemove').addEventListener('click', ()=> removeWidget(wdg.id));
           updateJsonPreview(wdg);
+          initDashboardBuilderColorPicker(wdg);
         }
+
         function updateJsonPreview(wdg){
           document.getElementById('jsonPreview').textContent = JSON.stringify(wdg.config, null, 2);
         }
@@ -832,12 +847,117 @@
             plotOptions:{pie:{donut:{labels:{show:true,total:{show:true,label:'Tổng'}}}}}
           });
         }
+
         function renderLine(el, wdg, data){
           mountChart(el, wdg.id, {
-            chart:{type:'line', height:'80%', toolbar:{show:false}, sparkline:{enabled:true}},
-            series:[{name:wdg.config.title, data:data.series}],
-            stroke:{width:3, curve:'smooth'}, colors:[wdg.config.color],
-            fill: wdg.config.showArea ? {type:'gradient', gradient:{opacityFrom:.4, opacityTo:0}} : undefined,
+            chart: {
+              height: '60%',
+              type: 'line',
+              parentHeightOffset: 0,
+              toolbar: {
+                show: false
+              }
+            },
+            grid: {
+              borderColor: '#000',
+              strokeDashArray: 6,
+              xaxis: {
+                lines: {
+                  show: true
+                }
+              },
+              yaxis: {
+                lines: {
+                  show: false
+                }
+              },
+              padding: {
+                top: -15,
+                left: -7,
+                right: 9,
+                bottom: -15
+              }
+            },
+            stroke: {
+              width: 3
+            },
+            color: [wdg.config.color],
+            series: [
+              {name:wdg.config.title, data:data.series}
+            ],
+            tooltip: {
+              shared: false,
+              intersect: true,
+              x: {
+                show: false
+              }
+            },
+            xaxis: {
+              labels: {
+                show: true
+              },
+              axisTicks: {
+                show: false
+              },
+              axisBorder: {
+                show: false
+              }
+            },
+            yaxis: {
+              labels: {
+                show: true
+              }
+            },
+            tooltip: {
+              enabled: true,
+              theme: "light"
+            },
+            markers: {
+              size: 6,
+              strokeWidth: 3,
+              strokeColors: 'transparent',
+              strokeWidth: 3,
+              colors: ['transparent'],
+              discrete: [
+                {
+                  seriesIndex: 0,
+                  dataPointIndex: 5,
+                  fillColor: '#000',
+                  strokeColor: '#000',
+                  size: 6,
+                  shape: 'circle'
+                }
+              ],
+              hover: {
+                size: 7
+              }
+            },
+            responsive: [
+              {
+                breakpoint: 1350,
+                options: {
+                  chart: {
+                    height: 80
+                  }
+                }
+              },
+              {
+                breakpoint: 1200,
+                options: {
+                  chart: {
+                    height: 100
+                  }
+                }
+              },
+              {
+                breakpoint: 768,
+                options: {
+                  chart: {
+                    height: 110
+                  }
+                }
+              }
+            ]
           });
         }
         function renderBar(el, wdg, data){
@@ -920,7 +1040,75 @@
           chart.render();
           chartInstances[key] = chart;
         }
+        
+        // other
+        function initDashboardBuilderColorPicker(wdg)
+        {
+          document.querySelectorAll('.dashboard-color-picker').forEach(pickerEl => {
+            const pickerId = pickerEl.id;                  // ví dụ: 'color-background'
+            const fieldId = pickerId.replace('color-', ''); // ví dụ: 'background'
 
+            const inputEl = document.getElementById(fieldId);
+            if (!inputEl) return; // bỏ qua nếu không tìm thấy input ẩn tương ứng
+
+            // mặc định không hiển thị màu
+            let defaultColor; // fallback
+
+            const storedColor = inputEl.value?.trim();
+            const dataDefault = pickerEl.getAttribute('data-default')?.trim();
+
+            // nếu có giá trị màu store trả lên thì lấy
+            if (storedColor) {
+              defaultColor = storedColor;
+            }
+            // nếu không có thì kiểm tra có màu mặc định không? Không có thì lấy màu primary như ban đầu
+            else if (dataDefault) {
+              defaultColor = dataDefault;
+            }
+            
+            // gán giá trị vào input ẩn
+            inputEl.value = defaultColor
+
+            const pickr = Pickr.create({
+              el: '#' + pickerId,
+              theme: 'monolith',
+              default: defaultColor,  // nếu input ẩn có giá trị ban đầu
+              swatches: ["rgba(144, 85, 253, 1)", "rgba(86, 202, 0, 1)", "rgba(255, 76, 81, 1)", "rgba(255, 180, 0, 1)", "rgba(22, 177, 255, 1)"],
+              components: {
+                preview: true,
+                opacity: true,
+                hue: true,
+                interaction: {
+                  hex: true,
+                  rgba: true,
+                  hsla: !0,
+                  hsva: !0,
+                  cmyk: !0,
+                  input: true,
+                  clear: true,
+                  save: true
+                }
+              }
+            });
+
+            pickr.on('save', color => {
+                const hex = color.toHEXA().toString();
+                inputEl.value = hex;
+                wdg.config[fieldId] = hex;
+                renderWidgetContent(wdg);
+                updateJsonPreview(wdg);
+                pickr.hide();
+            });
+
+            pickr.on('change', color => {
+                const hex = color.toHEXA().toString();
+                inputEl.value = hex;
+                wdg.config[fieldId] = hex;
+                renderWidgetContent(wdg);
+                updateJsonPreview(wdg);
+            });
+          });
+        }
         // ---------------------------------------------------------------------
         // Khởi động
         // ---------------------------------------------------------------------
