@@ -462,7 +462,7 @@
         // ---------------------------------------------------------------------
         function renderLibrary(){
           document.getElementById('libraryList').innerHTML = WIDGET_KINDS.map(t=>`
-            <div class="lib-item" draggable="true" data-kind="${t.kind}">
+            <div class="lib-item" onclick="addWidget('${t.kind}',0,0)" draggable="true" data-kind="${t.kind}">
               <span class="ic" style="background:${t.color}">${t.icon}</span>
               <span><b>${t.name}</b><span class="desc">${t.desc}</span></span>
             </div>`).join('');
