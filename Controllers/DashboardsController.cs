@@ -706,8 +706,10 @@ public class DashboardsController : Controller
   }
 
 
+  [Authorize]
   [HttpGet]
-  public async Task<IActionResult> DashboardBuilder4([FromQuery] Dictionary<string, string> parameters)
+  [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)] // Tắt cache mặc định cho action này nếu cần thiết
+  public async Task<IActionResult> DashboardBuilder4(string? dashboardCode, [FromQuery] Dictionary<string, string> parameters)
   {
 
     // xu ly bo loc
@@ -772,6 +774,8 @@ public class DashboardsController : Controller
 
     // B3: truyền ra View qua ViewBag hoặc ViewData
     ViewBag.HeatMap_TrangThaiDatPhongThang = JsonSerializer.Serialize(grouped);
+
+    ViewBag.DashboardCode = dashboardCode;
 
     return View();
   }
@@ -1116,6 +1120,7 @@ public class DashboardsController : Controller
 
   public class DashboardConfigDto
   {
+    public string DashboardCode { get; set; }
     public int? GridCols { get; set; }
     public int? CellHeight { get; set; }
     public int? GridGap { get; set; }
@@ -1124,6 +1129,7 @@ public class DashboardsController : Controller
   public class WidgetLayoutDto
   {
     public string WidgetCode { get; set; } = default!;
+    public string WidgetTypeCode { get; set; } = default!;
     public int PositionX { get; set; }
     public int PositionY { get; set; }
     public int Width { get; set; }

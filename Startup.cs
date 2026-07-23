@@ -270,6 +270,12 @@ namespace KOAHome
               pattern: "formwizard/viewer/{stepperCode}",
               defaults: new { controller = "NETFormWizard", action = "Viewer" }
           );
+        // route cho cấu hình dashboard
+        endpoints.MapControllerRoute(
+              name: "dashboard/config",
+              pattern: "dashboard/config/{dashboardCode}/{id?}",
+              defaults: new { controller = "Dashboards", action = "DashboardBuilder4" }
+          );
       });
     }
   }

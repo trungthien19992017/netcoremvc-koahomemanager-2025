@@ -314,6 +314,7 @@
           { kind:'heatmap',  name:'Heatmap',           desc:'Ma trận cường độ',      icon:'▦',  color:'#00cfe8', defaultW:6, defaultH:5, minW:5,minH:4,maxW:12,maxH:6 },
           { kind:'large_img_card', name:'Thể số liệu (ảnh lớn)',desc:'Số liệu 1 + 2 + ảnh lớn + nhãn', icon:'#',  color:'#28c76f', defaultW:3, defaultH:2, minW:2,minH:2,maxW:8,maxH:4 },
           { kind:'multiple_mini_card', name:'Thẻ nhiều chi tiết',desc:'Thẻ nhiều chi tiết',   icon:'☰',  color:'#7367f0', defaultW:5, defaultH:4, minW:3,minH:3,maxW:12,maxH:4 },
+          { kind:'report', name:'Báo cáo',desc:'Tương tự table',   icon:'☰',  color:'#7367f0', defaultW:5, defaultH:4, minW:3,minH:3,maxW:12,maxH:4 },
         ];
         function kindOf(k){ return WIDGET_KINDS.find(t=>t.kind===k); }
 
@@ -375,7 +376,7 @@
               {name:'Chi phí', value:'34.575,k', faclass:'ri-money-dollar-circle-line ri-24px', color: "yellow"} ]}},
         };
 
-        const DATA_SHAPE_BY_KIND = { donut:'categorical', line:'series', bar:'series', table:'rows', list:'rows', heatmap:'matrix', emoji_card:null, large_img_card:null, multiple_mini_card:'multiple_widget' };
+        const DATA_SHAPE_BY_KIND = { donut:'categorical', line:'series', bar:'series', table:'rows', list:'rows', heatmap:'matrix', emoji_card:null, large_img_card:null, multiple_mini_card:'multiple_widget', report:null };
 
         function datasetOptionsFor(kind){
           const shape = DATA_SHAPE_BY_KIND[kind];
@@ -387,7 +388,7 @@
         // 3) SCHEMA CẤU HÌNH ĐỘNG
         // ---------------------------------------------------------------------
         function getFieldSchema(kind){
-          const common = [{ key:'title', label:'Tiêu đề', type:'text' }];
+          const common = [{ key:'code', label:'Mã', type:'text' },{ key:'title', label:'Tiêu đề', type:'text' }];
           switch(kind){
             case 'emoji_card': return [...common,
               { key:'value', label:'Giá trị', type:'text' },
@@ -424,6 +425,12 @@
             case 'multiple_mini_card': return [...common,
               { key:'dataSource', label:'Nguồn dữ liệu', type:'dataset' },
               { key:'subContent', label:'Nội dung nhỏ', type:'checkbox' }];
+            case 'report': return [...common,
+              { key:'reportcode', label:'Mã báo cáo', type:'text' },
+              { key:'reportname', label:'Tên báo cáo', type:'text' },
+              { key:'reportype',  label:'Loại báo cáo', type:'select', options:['viewer','editor'] },
+              { key:'icon',  label:'Icon (1 ký tự/emoji)', type:'text' },
+              { key:'color', label:'Màu nền icon', type:'color' }];
             default: return common;
           }
         }
@@ -431,7 +438,7 @@
         function defaultConfigFor(kind){
           const opts = datasetOptionsFor(kind);
           const t = kindOf(kind);
-          const base = { title:t.name, color:t.color };
+            const base = { code: kind + '_99_new', title:t.name, color:t.color };
           switch(kind){
             case 'emoji_card': return { ...base, value:'0', unit:'', icon:'#' };
             case 'donut': return { ...base, dataSource:opts[0]?.key||'', legendPosition:'right' };
@@ -442,6 +449,7 @@
             case 'heatmap': return { ...base, dataSource:opts[0]?.key||'' };
             case 'large_img_card': return { ...base, value1:'0 VND', value2:'0% mục tiêu', imageurl:'https://pub-7171d6b031a04e3983a20a87daffce46.r2.dev/koala1.png', imageheight:'100', buttontext:'Xem', buttonurl: '#', color: 'red' };
             case 'multiple_mini_card': return { ...base, dataSource:opts[0]?.key||'', subContent: 'Nội dung phụ' };
+            case 'report': return { ...base, reportcode:'', reporttype:'viewer' };
             default: return base;
           }
         }
@@ -750,13 +758,15 @@
           const payload = {
             // Lưu các chỉ số cấu hình Grid hiện tại của Dashboard
             dashboardConfig: {
+              dashboardCode: '@(ViewBag.DashboardCode ?? "")',
               gridCols: GRID_COLS,
               cellHeight: CELL,
               gridGap: GAP
             },
             // Lưu danh sách các Widget
             widgets: widgets.map(w=>({
-              widgetCode: w.kind,
+              widgetTypeCode: w.kind,
+              widgetCode: w.config.code,
               positionX: w.x, positionY: w.y, width: w.w, height: w.h,
               configJson: JSON.stringify(w.config)
             }))
@@ -794,20 +804,20 @@
           document.documentElement.style.setProperty('--grid-gap', GAP + 'px');
 
           widgets = [
-            mk('emoji_card', 0,0,3,2, { title:'Doanh thu', value:'78.829,k', unit:'VND', icon:'₫', color:'#7367f0' }),
-            mk('emoji_card', 3,0,3,2, { title:'Lượt book', value:'226', unit:'lượt', icon:'☺', color:'#28c76f' }),
-            mk('emoji_card', 0,2,3,2, { title:'Số giờ', value:'2,k', unit:'giờ', icon:'⏱', color:'#ff9f43' }),
-            mk('emoji_card', 3,2,3,2, { title:'Chi phí', value:'34.575,k', unit:'VND', icon:'⚑', color:'#00cfe8' }),
-            mk('donut', 6,0,6,5, { title:'Tỷ lệ các phòng trong tháng', dataSource:'revenue_by_room', legendPosition:'right' }),
-            mk('line',  0,4,3,3, { title:'Doanh thu tháng gần đây', dataSource:'monthly_revenue_trend', color:'#7367f0', showArea:true }),
-            mk('bar',   3,4,3,3, { title:'Chi phí tháng gần đây', dataSource:'monthly_cost_trend', color:'#00cfe8' }),
-            mk('table', 0,7,6,4, { title:'Top 5 dịch vụ tháng', dataSource:'top_services' }),
-            mk('bar',   6,5,4,4, { title:'Doanh thu tuần (T2-CN)', dataSource:'weekly_revenue', color:'#7367f0' }),
-            mk('list',  0,11,6,4, { title:'Tỷ lệ kín phòng trong tuần', dataSource:'occupancy_rooms', showProgress:true, color:'#7367f0' }),
-            mk('table', 6,9,6,4, { title:'Top 5 khách hàng gần nhất', dataSource:'top_customers' }),
-            mk('heatmap', 6,13,6,5, { title:'Trạng thái đặt phòng 3 tháng', dataSource:'booking_heatmap' }),
-            mk('large_img_card', 0,18,6,3, { title:'Chúc mừng KOA! 🎉', value1:'93.761,k VND', value2:'156.3% mục tiêu 🚀', imageurl:'https://pub-7171d6b031a04e3983a20a87daffce46.r2.dev/koala1.png', imageheight:200, buttontext:'Xem chi tiết', buttonurl: '#', color: 'red' }),
-            mk('multiple_mini_card',  0,21,10,3, { title:'Số liệu trong tháng', dataSource:'monthly_summary_info', subContent: 'Doanh thu tăng 10% 😎 tháng này' }),
+            mk('emoji_card', 0,0,3,2, { code: 'emoji_card_doanhthu', title:'Doanh thu', value:'78.829,k', unit:'VND', icon:'₫', color:'#7367f0' }),
+            mk('emoji_card', 3,0,3,2, { code: 'emoji_card_luotbook', title:'Lượt book', value:'226', unit:'lượt', icon:'☺', color:'#28c76f' }),
+            mk('emoji_card', 0,2,3,2, { code: 'emoji_card_sogio', title:'Số giờ', value:'2,k', unit:'giờ', icon:'⏱', color:'#ff9f43' }),
+            mk('emoji_card', 3,2,3,2, { code: 'emoji_card_chiphi', title:'Chi phí', value:'34.575,k', unit:'VND', icon:'⚑', color:'#00cfe8' }),
+            mk('donut', 6,0,6,5, { code: 'donut_tylecacphongtrongthang', title:'Tỷ lệ các phòng trong tháng', dataSource:'revenue_by_room', legendPosition:'right' }),
+            mk('line',  0,4,3,3, { code: 'line_doanhthuthangganday', title:'Doanh thu tháng gần đây', dataSource:'monthly_revenue_trend', color:'#7367f0', showArea:true }),
+            mk('bar',   3,4,3,3, { code: 'bar_chiphithangganday', title:'Chi phí tháng gần đây', dataSource:'monthly_cost_trend', color:'#00cfe8' }),
+            mk('table', 0,7,6,4, { code: 'table_topdichvuthang', title:'Top 5 dịch vụ tháng', dataSource:'top_services' }),
+            mk('bar',   6,5,4,4, { code: 'bar_doanhthutuan', title:'Doanh thu tuần (T2-CN)', dataSource:'weekly_revenue', color:'#7367f0' }),
+            mk('list',  0,11,6,4, { code: 'list_tylekinphongtrongtuan', title:'Tỷ lệ kín phòng trong tuần', dataSource:'occupancy_rooms', showProgress:true, color:'#7367f0' }),
+            mk('table', 6,9,6,4, { code: 'table_topkhachhanggannhat', title:'Top 5 khách hàng gần nhất', dataSource:'top_customers' }),
+            mk('heatmap', 6,13,6,5, { code: 'heatmap_trangthaidatphongcacthang', title:'Trạng thái đặt phòng 3 tháng', dataSource:'booking_heatmap' }),
+            mk('large_img_card', 0,18,6,3, { code: 'large_img_card_tongdoanhthu', title:'Chúc mừng KOA! 🎉', value1:'93.761,k VND', value2:'156.3% mục tiêu 🚀', imageurl:'https://pub-7171d6b031a04e3983a20a87daffce46.r2.dev/koala1.png', imageheight:200, buttontext:'Xem chi tiết', buttonurl: '#', color: 'red' }),
+            mk('multiple_mini_card',  0,21,10,3, { code: 'multiple_mini_card_solieutrongthang', title:'Số liệu trong tháng', dataSource:'monthly_summary_info', subContent: 'Doanh thu tăng 10% 😎 tháng này' }),
           ];
           selectedId = null;
           renderCanvas();
@@ -832,6 +842,7 @@
             case 'heatmap':   return ds && renderHeatmap(body, wdg, ds.data);
             case 'large_img_card':  return renderLargeImgCard(body, wdg);
             case 'multiple_mini_card':      return ds && renderMultipleMiniCard(body, wdg, ds.data);
+            case 'report':     return renderReport(body, wdg);
           }
         }
         function renderEmojiCard(el, wdg){
@@ -972,6 +983,9 @@
         function renderTable(el, wdg, data){
           el.innerHTML = `<table class="mini-table"><thead><tr>${data.columns.map(c=>`<th>${c.label}</th>`).join('')}</tr></thead>
             <tbody>${data.rows.map(r=>`<tr>${data.columns.map(c=>`<td>${r[c.field]}</td>`).join('')}</tr>`).join('')}</tbody></table>`;
+        }
+        function renderReport(el, wdg){
+          loadFormReportViewer(wdg.config.reportcode, "body-"+wdg.id)
         }
         function renderList(el, wdg, data){
           el.innerHTML = `<ul class="mini-list">${data.rows.map(r=>{
