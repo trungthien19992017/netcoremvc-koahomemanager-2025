@@ -366,7 +366,7 @@
               TUE:[0,0,0,0,0,0,0,0,5465,350,3815,3137,0,0],
               MON:[0,0,0,0,0,0,0,0,3778,1200,4226,4730,650,0],
             }}},
-          monthly_summary_info:{ label:'Số liệu trong tháng', shape:'rows', data:{
+          monthly_summary_info:{ label:'Số liệu trong tháng', shape:'multiple_widget', data:{
             columns:[{field:'name',label:'Nội dung'},{field:'value',label:'Giá trị'},{field:'faclass',label:'FA Class'}],
             rows:[
               {name:'Doanh thu', value:'93.761,k', faclass:'ri-pie-chart-2-line ri-24px', color: "red"},
@@ -375,7 +375,7 @@
               {name:'Chi phí', value:'34.575,k', faclass:'ri-money-dollar-circle-line ri-24px', color: "yellow"} ]}},
         };
 
-        const DATA_SHAPE_BY_KIND = { donut:'categorical', line:'series', bar:'series', table:'rows', list:'rows', heatmap:'matrix', emoji_card:null, large_img_card:null, multiple_mini_card:'rows' };
+        const DATA_SHAPE_BY_KIND = { donut:'categorical', line:'series', bar:'series', table:'rows', list:'rows', heatmap:'matrix', emoji_card:null, large_img_card:null, multiple_mini_card:'multiple_widget' };
 
         function datasetOptionsFor(kind){
           const shape = DATA_SHAPE_BY_KIND[kind];
