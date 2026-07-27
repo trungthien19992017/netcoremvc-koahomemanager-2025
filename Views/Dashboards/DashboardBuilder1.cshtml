@@ -1001,7 +1001,7 @@
         // function renderLine(el, wdg, data){
         //   mountChart(el, wdg.id, {
         //     chart: {
-        //       height: '60%',
+        //       height: '80%',
         //       type: 'line',
         //       parentHeightOffset: 0,
         //       toolbar: {
@@ -1571,7 +1571,7 @@
         function getOriginalValueForMarker(key, wdg) {
           switch(key) {
             case 'type': return wdg.kind;
-            case 'height': return wdg.config.chartHeight || '60%';
+            case 'height': return wdg.config.chartHeight || '80%';
             case 'color': return wdg.config.color;
             case 'title': return wdg.config.title;
             case 'series': return wdg.config.series;
@@ -1751,7 +1751,7 @@
           const templates = {
             line: {
               chart: {
-                height: '60%',
+                height: '80%',
                 type: 'line',
                 parentHeightOffset: 0,
                 toolbar: { show: false }
@@ -1782,7 +1782,7 @@
             },
             bar: {
               chart: {
-                height: '60%',
+                height: '80%',
                 type: 'bar',
                 parentHeightOffset: 0,
                 toolbar: { show: false }
@@ -1813,7 +1813,7 @@
             },
             donut: {
               chart: {
-                height: '60%',
+                height: '80%',
                 type: 'donut',
                 parentHeightOffset: 0,
                 toolbar: { show: false }
@@ -1900,7 +1900,7 @@
           // Nếu có custom heatmap options thì xây dựng tương tự
           const baseOptions = {
             chart: {
-              height: '60%',
+              height: '80%',
               type: 'heatmap',
               parentHeightOffset: 0,
               toolbar: { show: false }
