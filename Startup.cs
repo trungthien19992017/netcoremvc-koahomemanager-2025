@@ -69,11 +69,25 @@ namespace KOAHome
       {
         options.LoginPath = "/Account/Login";
         options.AccessDeniedPath = "/Account/AccessDenied";
-        options.ExpireTimeSpan = TimeSpan.FromMinutes(60); // tùy chọn RememberMe sẽ ghi đè
+        options.ExpireTimeSpan = TimeSpan.FromHours(3);
         options.SlidingExpiration = true;
         options.Cookie.HttpOnly = true;
         options.Cookie.SecurePolicy = CookieSecurePolicy.Always;
         options.Cookie.SameSite = SameSiteMode.Strict;
+
+        // Tùy chỉnh URL Redirect để bỏ ReturnUrl nếu đó là trang chủ "/"
+        options.Events.OnRedirectToLogin = context =>
+        {
+          if (context.Request.Path == "/")
+          {
+            context.Response.Redirect(context.RedirectUri.Split("?")[0]); // Chỉ chuyển tới /Account/Login không có QueryString
+          }
+          else
+          {
+            context.Response.Redirect(context.RedirectUri);
+          }
+          return Task.CompletedTask;
+        };
       });
 
       var env = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT");
@@ -132,6 +146,7 @@ namespace KOAHome
       services.AddScoped<INetFormWizardService, NetFormWizardService>();
       services.AddScoped<IGoogleSheetService, GoogleSheetService>();
       services.AddScoped<IAccountService, AccountService>();
+      services.AddScoped<IDashboardService, DashboardService>();
       services.AddScoped<GeminiService>();
       services.AddScoped<OpenRouterService>();
       services.AddScoped<IExpenseIconService, ExpenseIconService>();
@@ -273,8 +288,8 @@ namespace KOAHome
         // route cho cấu hình dashboard
         endpoints.MapControllerRoute(
               name: "dashboard/config",
-              pattern: "dashboard/config/{dashboardCode}/{id?}",
-              defaults: new { controller = "Dashboards", action = "DashboardBuilder4" }
+              pattern: "dashboard/config/{dashboardCode}",
+              defaults: new { controller = "Dashboards", action = "DashboardBuilder" }
           );
       });
     }

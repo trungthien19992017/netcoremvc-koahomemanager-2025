@@ -313,15 +313,6 @@
         let CELL = 70;
         let GAP  = 14;
 
-        const READONLY_MARKERS = {
-          'type': '#type#',
-          'height': '#height#',
-          'color': '#color#',
-          'title': '#title#',
-          'series': '#series#',
-          'colors': '#colors#'
-        };
-
         // Cập nhật các chỉ số GRID_COLS, CELL, GAP trực tiếp trên UI
         function updateGridParam(param, delta){
           if(param === 'GRID_COLS'){
@@ -705,6 +696,8 @@
             <div class="meta-row"><span>height</span><b>${wdg.h}</b></div>
             <p class="panel-title" style="margin-top:18px;">configJson (jsonb sẽ lưu)</p>
             <div class="json-preview" id="jsonPreview"></div>
+            <p class="panel-title" style="margin-top:18px;">configChart (jsonb sẽ lưu)</p>
+            <div class="json-preview" id="chartPreview"></div>
             
             <div id="chart-config-editor"></div>
             
@@ -777,6 +770,7 @@
 
         function updateJsonPreview(wdg){
           document.getElementById('jsonPreview').textContent = JSON.stringify(wdg.config, null, 2);
+          document.getElementById('chartPreview').textContent = JSON.stringify(wdg.chart, null, 2);
         }
 
         // ---------------------------------------------------------------------
@@ -818,10 +812,11 @@
             },
             // Lưu danh sách các Widget
             widgets: widgets.map(w=>({
-              widgetTypeCode: w.kind,
+              kind: w.kind,
               widgetCode: w.config.code,
-              positionX: w.x, positionY: w.y, width: w.w, height: w.h,
-              configJson: JSON.stringify(w.config)
+              x: w.x, y: w.y, w: w.w, h: w.h,
+              config: JSON.stringify(w.config),
+              chart: JSON.stringify(w.chartConfig)
             }))
           };
 
@@ -863,18 +858,6 @@
           idSeq = 1;
 
           widgets = [
-            // mk('emoji_card', 0,0,3,2, { code: 'emoji_card_doanhthu', title:'Doanh thu', value:'78.829,k', unit:'VND', icon:'₫', color:'#7367f0' }),
-            // mk('emoji_card', 3,0,3,2, { code: 'emoji_card_luotbook', title:'Lượt book', value:'226', unit:'lượt', icon:'☺', color:'#28c76f' }),
-            // mk('emoji_card', 0,2,3,2, { code: 'emoji_card_sogio', title:'Số giờ', value:'2,k', unit:'giờ', icon:'⏱', color:'#ff9f43' }),
-            // mk('emoji_card', 3,2,3,2, { code: 'emoji_card_chiphi', title:'Chi phí', value:'34.575,k', unit:'VND', icon:'⚑', color:'#00cfe8' }),
-            // mk('donut', 6,0,6,5, { code: 'donut_tylecacphongtrongthang_test', title:'Tỷ lệ các phòng trong tháng', dataSource:'revenue_by_room', legendPosition:'right' }),
-            // mk('line',  0,4,3,3, { code: 'line_doanhthuthangganday_test', title:'Doanh thu tháng gần đây', dataSource:'monthly_revenue_trend', color:'#7367f0', showArea:true }),
-            // mk('bar',   3,4,3,3, { code: 'bar_chiphithangganday_test', title:'Chi phí tháng gần đây', dataSource:'monthly_cost_trend', color:'#00cfe8' }),
-            // mk('table', 0,7,6,4, { code: 'table_topdichvuthang', title:'Top 5 dịch vụ tháng', dataSource:'top_services' }),
-            // mk('bar',   6,5,4,4, { code: 'bar_doanhthutuan_test', title:'Doanh thu tuần (T2-CN)', dataSource:'weekly_revenue', color:'#7367f0' }),
-            // mk('list',  0,11,6,4, { code: 'list_tylekinphongtrongtuan_test', title:'Tỷ lệ kín phòng trong tuần', dataSource:'occupancy_rooms', showProgress:true, showImage:false, textColor:'#000000', progressColor:'#7367f0' }),
-            // mk('table', 6,9,6,4, { code: 'table_topkhachhanggannhat_test', title:'Top 5 khách hàng gần nhất', dataSource:'top_customers' }),
-            // mk('heatmap', 6,13,6,5, { code: 'heatmap_trangthaidatphongcacthang_test', title:'Trạng thái đặt phòng 3 tháng', dataSource:'booking_heatmap' }),
             mk('large_img_card', 0,0,4,3, { code: 'large_img_card_tongdoanhthu', title:'Chúc mừng KOA! 🎉', value1:'93.761,k VND', value2:'156.3% mục tiêu 🚀', imageurl:'https://pub-7171d6b031a04e3983a20a87daffce46.r2.dev/koala1.png', imageheight:200, buttontext:'Xem chi tiết', buttonurl: '#', color: 'red' }),
             mk('multiple_mini_card',  4,0
             ,8,3, { code: 'multiple_mini_card_solieutrongthang', title:'Số liệu trong tháng', dataSource:'monthly_summary_info', subContent: 'Doanh thu tăng 10% 😎 tháng này' }),
@@ -1172,10 +1155,13 @@
           const target = keys.reduce((current, key) => current?.[key], object);
           if (target && Object.prototype.hasOwnProperty.call(target, lastKey)) delete target[lastKey];
         }
-        function chartConfigForEditor(wdg){ return wdg.config.chartConfig || getChartTemplate(wdg.kind) || {}; }
+        function chartConfigForEditor(wdg)
+        {
+          return wdg.chart; //|| getChartTemplate(wdg.kind) || {};
+        }
         function persistChartValue(wdg, path, value){
-          if (!wdg.config.chartConfig) wdg.config.chartConfig = cloneConfig(getChartTemplate(wdg.kind));
-          setByPath(wdg.config.chartConfig, path, value);
+          // if (!wdg.chart) wdg.chart = cloneConfig(getChartTemplate(wdg.kind));
+          setByPath(wdg.chart, path, value);
           renderWidgetContent(wdg);
           updateJsonPreview(wdg);
         }
@@ -1241,7 +1227,7 @@
             if (Array.isArray(value)) { input = document.createElement('textarea'); input.value = JSON.stringify(value); input.addEventListener('change', () => { try { persistChartValue(wdg, path, JSON.parse(input.value)); } catch (_) { input.classList.add('invalid'); } }); }
             else { input = document.createElement('input'); input.type = typeof value === 'number' ? 'number' : 'text'; input.value = String(value ?? ''); input.addEventListener('change', () => persistChartValue(wdg, path, typeof value === 'boolean' ? input.value === 'true' : typeof value === 'number' ? Number(input.value) : input.value)); }
             row.append(name, input);
-            if (canRemove) { const remove = document.createElement('button'); remove.type = 'button'; remove.className = 'tree-remove'; remove.textContent = '×'; remove.title = 'Xóa thuộc tính'; remove.addEventListener('click', () => { if (!wdg.config.chartConfig) return; deleteByPath(wdg.config.chartConfig, path); renderWidgetContent(wdg); updateJsonPreview(wdg); renderChartConfigEditor(wdg); }); row.appendChild(remove); }
+            if (canRemove) { const remove = document.createElement('button'); remove.type = 'button'; remove.className = 'tree-remove'; remove.textContent = '×'; remove.title = 'Xóa thuộc tính'; remove.addEventListener('click', () => { if (!wdg.chart) return; deleteByPath(wdg.chart, path); renderWidgetContent(wdg); updateJsonPreview(wdg); renderChartConfigEditor(wdg); }); row.appendChild(remove); }
             return row;
           };
           Object.entries(unknown).forEach(([key, value]) => body.appendChild(renderNode(value, key, key)));
@@ -1268,11 +1254,6 @@
         // LEGACY MONACO IMPLEMENTATION (not invoked in v6)
         // =========================================================================
         let jsonEditor = null;
-        const READONLY_CHART_FIELDS = {
-          'code': true, 'title': true, 'color': true, 'series': true, 
-          'labels': true, 'chart': true, 'colors': true, 'type': true, 
-          'height': true
-        };
         const CHART_TEMPLATES = {
           line: {
             grid: { borderColor: '#e0e0e0', strokeDashArray: 6, xaxis: { lines: { show: true } }, yaxis: { lines: { show: false } } },
@@ -1293,584 +1274,254 @@
             dataLabels: { enabled: true }
           }
         };
-      // Cờ đánh dấu để chỉ đăng ký Provider/Command 1 lần duy nhất
-      let isMonacoInitialized = false;
 
-      function initMonacoEditor(wdg) {
-        if (!wdg.kind.match(/^(line|bar|donut|heatmap)$/)) {
-         if (jsonEditor) {
-            const oldModel = jsonEditor.getModel();
-            jsonEditor.dispose();
-            if (oldModel) oldModel.dispose();
-            jsonEditor = null;
-          }
-          document.getElementById('json-editor-container').style.display = 'none';
-          document.getElementById('json-output-container').style.display = 'none';
-          return;
-        }
-
-        require.config({ paths: { vs: 'https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.52.2/min/vs' } });
-        require(['vs/editor/editor.main'], function () {
+  /**
+    * Lấy chart template mặc định theo loại
+    */
+  // function getChartTemplate(chartType) {
+  //   const templates = {
+  //     line: {
+  //       grid: { borderColor: '#000', strokeDashArray: 6, xaxis: { lines: { show: true } }, yaxis: { lines: { show: false } }, padding: { top: -5, left: -7, right: 9, bottom: -5 } },
+  //       stroke: { width: 3 },
+  //       tooltip: { shared: false, intersect: true, x: { show: false }, enabled: true, theme: 'light' },
+  //       xaxis: { labels: { show: true }, axisTicks: { show: false }, axisBorder: { show: false } },
+  //       yaxis: { labels: { show: true } },
+  //       markers: { size: 6, strokeWidth: 3, strokeColors: 'transparent', colors: ['transparent'], hover: { size: 7 } }
+  //     },
+  //     bar: {
+  //       grid: { borderColor: '#f1f1f1', strokeDashArray: 4, padding: { top: -5, left: -7, right: 9, bottom: -5 } },
+  //       plotOptions: { bar: { borderRadius: 4, columnWidth: '45%', distributed: false } },
+  //       dataLabels: { enabled: false },
+  //       xaxis: { labels: { show: true }, axisTicks: { show: false }, axisBorder: { show: false } },
+  //       tooltip: { enabled: true, theme: 'light' }
+  //     },
+  //     donut: {
+  //       legend: { position: 'right' },
+  //       plotOptions: { pie: { donut: { size: '65%', labels: { show: true, total: { show: true, label: 'Tổng' } } } } },
+  //       dataLabels: { enabled: true },
+  //       tooltip: { enabled: true, theme: 'light' }
+  //     }
+  //   };
           
-          // 🧹 1. RESET EDITOR CŨ
-          if (jsonEditor) {
-            const oldModel = jsonEditor.getModel();
-            jsonEditor.dispose(); // Hủy instance editor cũ
-            if (oldModel) oldModel.dispose(); // Hủy model cũ để tránh hoãn bộ nhớ
-          }
+  //   return templates[chartType] || {};
+  // }
 
-          // 🛡️ 2. CHỈ ĐĂNG KÝ COMMAND & PROVIDER NẾU CHƯA ĐĂNG KÝ (Tránh trùng lặp)
-          if (!isMonacoInitialized) {
-            
-            // Toggle Command
-            monaco.editor.registerCommand('toggle-json-boolean', (accessor, range, newValue) => {
-              if (!jsonEditor) return;
-              const model = jsonEditor.getModel();
-              model.pushEditOperations(
-                [],
-                [{ range: monaco.Range.lift(range), text: newValue ? 'true' : 'false' }],
-                () => null
-              );
-            });
-
-            // Inlay Hints Provider
-            monaco.languages.registerInlayHintsProvider('json', {
-              provideInlayHints: function (model, token) {
-                const hints = [];
-                const matches = model.findMatches('\\b(true|false)\\b', false, true, false, null, true);
-
-                for (const match of matches) {
-                  const isTrue = match.matches[0] === 'true';
-                  hints.push({
-                    position: match.range.getStartPosition(),
-                    label: [{
-                      label: isTrue ? '☑️ ' : '🔲 ',
-                      command: {
-                        id: 'toggle-json-boolean',
-                        title: 'Toggle Boolean',
-                        arguments: [match.range, !isTrue]
-                      }
-                    }],
-                    kind: monaco.languages.InlayHintKind.Type,
-                    paddingRight: true
-                  });
-                }
-                return { hints: hints, dispose: () => {} };
-              }
-            });
-
-            // Color Provider
-            monaco.languages.registerColorProvider('json', {
-              provideDocumentColors: function (model) {
-                const matches = model.findMatches('#(?:[0-9a-fA-F]{3}){1,2}\\b', false, true, false, null, true);
-                return matches.map(m => {
-                  const hex = m.matches[0];
-                  const r = parseInt(hex.slice(1, 3), 16) / 255;
-                  const g = parseInt(hex.slice(3, 5), 16) / 255;
-                  const b = parseInt(hex.slice(5, 7), 16) / 255;
-                  return { range: m.range, color: { red: r, green: g, blue: b, alpha: 1 } };
-                });
-              },
-              provideColorPresentations: function (model, colorInfo) {
-                const r = Math.round(colorInfo.color.red * 255).toString(16).padStart(2, '0');
-                const g = Math.round(colorInfo.color.green * 255).toString(16).padStart(2, '0');
-                const b = Math.round(colorInfo.color.blue * 255).toString(16).padStart(2, '0');
-                return [{ label: `#${r}${g}${b}` }];
-              }
-            });
-
-            // JSON Schema Config
-            monaco.languages.json.jsonDefaults.setDiagnosticsOptions({
-              validate: true,
-              schemas: [{
-                uri: "http://myserver/product-schema.json",
-                fileMatch: ["*"],
-                schema: {
-                  $ref: "#/definitions/anyObject",
-                  definitions: {
-                    anyObject: {
-                      type: "object",
-                      properties: {
-                        id: { type: "string" },
-                        product_name: { type: "string" },
-                        category: { type: "string", enum: ["Điện thoại", "Máy tính", "Gia dụng", "Thời trang", "Đồng hồ"] },
-                        status: { type: "string", enum: ["Active", "Pending", "Archived"] },
-                        strokeColors: { type: "string", enum: ["circle", "square", "rectangle", "oval"] }
-                      },
-                      additionalProperties: { $ref: "#/definitions/anyNode" }
-                    },
-                    anyNode: {
-                      anyOf: [
-                        { $ref: "#/definitions/anyObject" },
-                        { type: "array", items: { $ref: "#/definitions/anyNode" } },
-                        { type: "string" },
-                        { type: "number" },
-                        { type: "boolean" }
-                      ]
-                    }
-                  }
-                }
-              }]
-            });
-
-            // Bật cờ để các lần gọi initMonacoEditor sau bỏ qua đoạn đăng ký này
-            isMonacoInitialized = true;
-          }
-
-          // 🚀 3. TẠO TẢI LẠI EDITOR MỚI SẠCH SẼ
-          const chartConfig = wdg.config.chartConfig || CHART_TEMPLATES[wdg.kind] || {};
-          const displayConfig = markReadonlyFields(chartConfig);
-
-          jsonEditor = monaco.editor.create(document.getElementById('json-editor'), {
-            value: JSON.stringify(displayConfig, null, 2),
-            language: 'json',
-            theme: 'vs-dark',
-            automaticLayout: true,
-            minimap: { enabled: false },
-            scrollBeyondLastLine: false,
-            fixedOverflowWidgets: true,
-            colorDecorators: true,
-            inlayHints: { enabled: 'on' }
-          });
-
-          document.getElementById('json-editor-container').style.display = 'block';
-          document.getElementById('json-output-container').style.display = 'block';
-          
-          document.getElementById('btn-apply-chart').onclick = () => applyChartConfig(wdg);
-        });
-      }
-
-        function markReadonlyFields(obj, path = '') {
-          const result = {};
-          for (const key in obj) {
-            const value = obj[key];
-            const isReadonly = READONLY_CHART_FIELDS[key] || (path === 'chart' && (key === 'type' || key === 'height'));
-            
-            if (isReadonly && typeof value === 'string') {
-              result[key] = `#${value}#`;
-            } else if (isReadonly && typeof value === 'number') {
-              result[key] = `#${value}#`;
-            } else if (typeof value === 'object' && value !== null && !Array.isArray(value)) {
-              result[key] = markReadonlyFields(value, key);
-            } else {
-              result[key] = value;
-            }
-          }
-          return result;
-        }
-
-        function restoreReadonlyValues(obj, originalWdg) {
-          const result = {};
-          for (const key in obj) {
-            const value = obj[key];
-            const isReadonly = READONLY_CHART_FIELDS[key];
-            
-            if (isReadonly) {
-              if (key === 'code') result[key] = originalWdg.config.code;
-              else if (key === 'title') result[key] = originalWdg.config.title;
-              else if (key === 'color') result[key] = originalWdg.config.color;
-              else if (key === 'series') result[key] = originalWdg.config.series;
-              else if (key === 'labels') result[key] = originalWdg.config.labels;
-              else if (key === 'chart') result[key] = originalWdg.config.chart || {};
-              else if (key === 'colors') result[key] = originalWdg.config.colors;
-              else result[key] = value;
-            } else if (typeof value === 'object' && value !== null && !Array.isArray(value)) {
-              if (key === 'chart') {
-                result[key] = {};
-                for (const subKey in value) {
-                  if (subKey === 'type' || subKey === 'height') {
-                    result[key][subKey] = originalWdg.config.chart?.[subKey] || value[subKey];
-                  } else {
-                    result[key][subKey] = typeof value[subKey] === 'object' ? restoreReadonlyValues(value[subKey], originalWdg) : value[subKey];
-                  }
-                }
-              } else {
-                result[key] = restoreReadonlyValues(value, originalWdg);
-              }
-            } else {
-              result[key] = value;
-            }
-          }
-          return result;
-        }
-
-        function applyChartConfig(wdg) {
-            if (!jsonEditor) return;
-            const btnApply = document.getElementById('btn-apply-chart');
-            const statusEl = document.getElementById('chart-status');
-            btnApply.disabled = true;
-          
-            try {
-              let parsedConfig = JSON.parse(jsonEditor.getValue());
-              
-              // Khôi phục readonly values từ markers (#type#, #color#, etc)
-              parsedConfig = restoreReadonlyValuesFromMarkers(parsedConfig, wdg);
-              
-              // Lưu vào wdg.config
-              wdg.config.chartConfig = parsedConfig;
-              
-              // Re-render widget với config mới
-              renderWidgetContent(wdg);
-              updateJsonPreview(wdg);
-              
-              // Build & display payload
-              const payload = buildPayload();
-              document.getElementById('json-output').value = JSON.stringify(payload, null, 2);
-              
-              statusEl.textContent = '✓ Chart config applied successfully!';
-              statusEl.className = 'chart-status success';
-            } catch (err) {
-              statusEl.textContent = '✗ JSON Error: ' + err.message;
-              statusEl.className = 'chart-status error';
-            } finally {
-              btnApply.disabled = false;
-            }
-          }
-
-          /**
-         * Restore readonly values từ markers (#type#, #color#, etc)
-         */
-        function restoreReadonlyValuesFromMarkers(obj, wdg) {
-          const result = {};
-          
-          for (const key in obj) {
-            const value = obj[key];
-            
-            // Kiểm tra nếu value là marker string (#something#)
-            if (typeof value === 'string' && value.match(/^#(.+)#$/)) {
-              // Lấy giá trị gốc từ wdg.config
-              result[key] = getOriginalValueForMarker(key, wdg);
-            } else if (isObjectLike(value)) {
-              result[key] = restoreReadonlyValuesFromMarkers(value, wdg);
-            } else {
-              result[key] = value;
-            }
-          }
-          
-          return result;
-        }
-
-        /**
-         * Lấy giá trị gốc từ wdg.config dựa trên marker key
-         */
-        function getOriginalValueForMarker(key, wdg) {
-          switch(key) {
-            case 'type': return wdg.kind;
-            case 'height': return wdg.config.chartHeight || '80%';
-            case 'color': return wdg.config.color;
-            case 'title': return wdg.config.title;
-            case 'series': return wdg.config.series;
-            case 'colors': return [wdg.config.color];
-            case 'labels': return wdg.config.labels;
-            default: return null;
-          }
-        }
-        
-        /**
-         * Tạo Monaco editor display config với markers cho readonly fields
-         */
-        function createDisplayConfigWithMarkers(wdg, chartType) {
-          const template = getChartTemplate(chartType);
-          const chartConfig = wdg.config.chartConfig || template;
-          
-          return markReadonlyFieldsWithMarkers(chartConfig, wdg);
-        }
-        
-        /**
-         * Đánh dấu readonly fields với #marker# values
-         */
-        function markReadonlyFieldsWithMarkers(obj, wdg, path = '') {
-          const result = {};
-          
-          for (const key in obj) {
-            const value = obj[key];
-            const isSystemField = key === 'series' || key === 'labels' || key === 'chart' || key === 'colors';
-            const isChartSubfield = (path === 'chart' && (key === 'type' || key === 'height'));
-            
-            if (isSystemField || key === 'color' || key === 'title' || isChartSubfield) {
-              // Thay thế bằng marker
-              if (key === 'type') result[key] = '#type#';
-              else if (key === 'height') result[key] = '#height#';
-              else if (key === 'color') result[key] = '#color#';
-              else if (key === 'title') result[key] = '#title#';
-              else if (key === 'series') result[key] = '#series#';
-              else if (key === 'colors') result[key] = '#colors#';
-              else if (key === 'labels') result[key] = '#labels#';
-              else if (key === 'chart') {
-                // Xử lý nested chart object
-                result[key] = {};
-                for (const subKey in value) {
-                  if (subKey === 'type' || subKey === 'height') {
-                    result[key][subKey] = `#${subKey}#`;
-                  } else {
-                    result[key][subKey] = value[subKey];
-                  }
-                }
-              }
-            } else if (isObjectLike(value)) {
-              result[key] = markReadonlyFieldsWithMarkers(value, wdg, key);
-            } else {
-              result[key] = value;
-            }
-          }
-          
-          return result;
-        }
-        
-        /**
-         * Lấy chart template mặc định theo loại
-         */
-        function getChartTemplate(chartType) {
-          const templates = {
-            line: {
-              grid: { borderColor: '#000', strokeDashArray: 6, xaxis: { lines: { show: true } }, yaxis: { lines: { show: false } }, padding: { top: -5, left: -7, right: 9, bottom: -5 } },
-              stroke: { width: 3 },
-              tooltip: { shared: false, intersect: true, x: { show: false }, enabled: true, theme: 'light' },
-              xaxis: { labels: { show: true }, axisTicks: { show: false }, axisBorder: { show: false } },
-              yaxis: { labels: { show: true } },
-              markers: { size: 6, strokeWidth: 3, strokeColors: 'transparent', colors: ['transparent'], hover: { size: 7 } }
-            },
-            bar: {
-              grid: { borderColor: '#f1f1f1', strokeDashArray: 4, padding: { top: -5, left: -7, right: 9, bottom: -5 } },
-              plotOptions: { bar: { borderRadius: 4, columnWidth: '45%', distributed: false } },
-              dataLabels: { enabled: false },
-              xaxis: { labels: { show: true }, axisTicks: { show: false }, axisBorder: { show: false } },
-              tooltip: { enabled: true, theme: 'light' }
-            },
-            donut: {
-              legend: { position: 'right' },
-              plotOptions: { pie: { donut: { size: '65%', labels: { show: true, total: { show: true, label: 'Tổng' } } } } },
-              dataLabels: { enabled: true },
-              tooltip: { enabled: true, theme: 'light' }
-            }
-          };
-          
-          return templates[chartType] || {};
-        }
-        
-        /**
-         * Build payload với chartConfigs
-         */
-        function buildPayload() {
-          const dashConfig = {
-            dashboardCode: 'dashboard_koa',
-            gridCols: GRID_COLS,
-            cellHeight: CELL,
-            gridGap: GAP
-          };
-          
-          return {
-            dashboardConfig: dashConfig,
-            widgets: widgets,
-            chartConfigs: widgets
-              .filter(w => w.config.chartConfig)
-              .reduce((acc, w) => {
-                acc[w.id] = w.config.chartConfig;
-                return acc;
-              }, {})
-          };
-        }
-        
-        /**
-         * Hook vào renderConfigPanel để auto-init Monaco
-         */
-        function setupConfigPanelHook() {
-          const originalRenderConfigPanel = renderConfigPanel;
-          renderConfigPanel = function() {
-            originalRenderConfigPanel.apply(this, arguments);
-            const wdg = widgets.find(w => w.id === selectedId);
-            if (wdg) {
-              setTimeout(() => {
-                if (selectedId === wdg.id) initMonacoEditor(wdg);
-              }, 100);
-            }
-          };
-        }
-
-function buildChartOptionsFromTemplate(wdg, data, chartType) {
-  // Base template theo chart type
-  const templates = {
-    line: {
-      chart: {
-        height: '80%',
-        type: 'line',
-        parentHeightOffset: 0,
-        toolbar: { show: false }
-      },
-      grid: {
-        borderColor: '#000',
-        strokeDashArray: 6,
-        xaxis: { lines: { show: true } },
-        yaxis: { lines: { show: false } },
-        padding: { top: -5, left: -7, right: 9, bottom: -5 }
-      },
-      stroke: { width: 3 },
-      fill: { type: wdg.config.showArea ? 'gradient' : 'solid', opacity: wdg.config.showArea ? 0.25 : 1 },
-      colors: [wdg.config.color],
-      series: [{ name: wdg.config.title, data: data.series }],
-      tooltip: { shared: false, intersect: true, x: { show: false }, enabled: true, theme: 'light' },
-      xaxis: { labels: { show: true }, axisTicks: { show: false }, axisBorder: { show: false } },
-      yaxis: { labels: { show: true } },
-      markers: {
-        size: 6, strokeWidth: 3, strokeColors: 'transparent',
-        colors: ['transparent'],
-        discrete: [
-          {
-            seriesIndex: 0,
-            dataPointIndex: 5,
-            fillColor: '#000',
-            strokeColor: '#000',
-            size: 6,
-            shape: 'circle'
-          }
-        ],
-        hover: { size: 7 }
-      }
-    },
-    bar: {
-      chart: {
-        height: '80%',
-        type: 'bar',
-        parentHeightOffset: 0,
-        toolbar: { show: false }
-      },
-      grid: {
-        borderColor: '#f1f1f1',
-        strokeDashArray: 4,
-        padding: { top: -5, left: -7, right: 9, bottom: -5 }
-      },
-      colors: [wdg.config.color],
-      series: [{ name: wdg.config.title, data: data.series }],
-      plotOptions: {
-        bar: { borderRadius: 4, columnWidth: '50%', distributed: false, horizontal: !!wdg.config.horizontal }
-      },
-      dataLabels: { enabled: false },
-      xaxis: {
-        categories: data.categories || [],
-        labels: { show: true, style:{fontSize:'10px'} },
-        axisTicks: { show: false },
-        axisBorder: { show: false }
-      },
-      tooltip: { enabled: true, theme: 'light' }
-    },
-    donut: {
-      chart: {
-        height: '80%',
-        type: 'donut'
-      },
-      labels: data.labels || [],
-      series: data.values || [],
-      colors: data.colors || [],
-      stroke: {
-        width: 0
-      },
-      dataLabels: {
-        enabled: !0
-      },
-      legend: {
-        show: !0,
-        position: 'right',
-        fontSize: '13px',
-        labels: {
-          colors: config.colors.black,
-          useSeriesColors: !1
+  function buildChartOptionsFromTemplate(wdg, data, chartType) {
+    // Base template theo chart type
+    const templates = {
+      line: {
+        chart: {
+          height: '80%',
+          type: 'line',
+          parentHeightOffset: 0,
+          toolbar: { show: false }
         },
+        grid: {
+          borderColor: '#000',
+          strokeDashArray: 6,
+          xaxis: { lines: { show: true } },
+          yaxis: { lines: { show: false } },
+          padding: { top: -5, left: -7, right: 9, bottom: -5 }
+        },
+        stroke: { width: 3 },
+        fill: { type: wdg.config.showArea ? 'gradient' : 'solid', opacity: wdg.config.showArea ? 0.25 : 1 },
+        colors: [wdg.config.color],
+        series: [{ name: wdg.config.title, data: data.series }],
+        tooltip: { shared: false, intersect: true, x: { show: false }, enabled: true, theme: 'light' },
+        xaxis: { labels: { show: true }, axisTicks: { show: false }, axisBorder: { show: false } },
+        yaxis: { labels: { show: true } },
         markers: {
-          offsetY: 0,
-          offsetX: -3,
-          height: 10,
-          width: 10
+          size: 6, strokeWidth: 3, strokeColors: 'transparent',
+          colors: ['transparent'],
+          discrete: [
+            {
+              seriesIndex: 0,
+              dataPointIndex: 5,
+              fillColor: '#000',
+              strokeColor: '#000',
+              size: 6,
+              shape: 'circle'
+            }
+          ],
+          hover: { size: 7 }
+        }
+      },
+      bar: {
+        chart: {
+          height: '80%',
+          type: 'bar',
+          parentHeightOffset: 0,
+          toolbar: { show: false }
         },
-        itemMargin: {
-          vertical: 3,
-          horizontal: 10
-        }
+        grid: {
+          borderColor: '#f1f1f1',
+          strokeDashArray: 4,
+          padding: { top: -5, left: -7, right: 9, bottom: -5 }
+        },
+        colors: [wdg.config.color],
+        series: [{ name: wdg.config.title, data: data.series }],
+        plotOptions: {
+          bar: { borderRadius: 4, columnWidth: '50%', distributed: false, horizontal: !!wdg.config.horizontal }
+        },
+        dataLabels: { enabled: false },
+        xaxis: {
+          categories: data.categories || [],
+          labels: { show: true, style:{fontSize:'10px'} },
+          axisTicks: { show: false },
+          axisBorder: { show: false }
+        },
+        tooltip: { enabled: true, theme: 'light' }
       },
-      tooltip: {
-        style: {
-          color: config.colors.white
-        }
-      },
-      grid: {
-        padding: {
-          top: 0
-        }
-      },
-      plotOptions: {
-        pie: {
-          donut: {
-            size: '70%',
-            labels: {
-              show: !0,
-              value: {
-                fontSize: '22px',
-                fontFamily: 'Inter',
-                color: config.colors.headingColor,
-                fontWeight: 500,
-                offsetY: -20,
-                formatter: function (val) {
-                  return new Intl.NumberFormat('vi-VN').format(parseInt(val)) + 'K';
-                }
-              },
-              name: {
-                offsetY: 20,
-                fontFamily: 'Inter',
-                fontWeight: '500',
-                formatter: function (val) {
-                  return val
-                }
-              },
-              total: {
+      donut: {
+        chart: {
+          height: '80%',
+          type: 'donut'
+        },
+        labels: data.labels || [],
+        series: data.values || [],
+        colors: data.colors || [],
+        stroke: {
+          width: 0
+        },
+        dataLabels: {
+          enabled: !0
+        },
+        legend: {
+          show: !0,
+          position: 'right',
+          fontSize: '13px',
+          labels: {
+            colors: '#000',
+            useSeriesColors: !1
+          },
+          markers: {
+            offsetY: 0,
+            offsetX: -3,
+            height: 10,
+            width: 10
+          },
+          itemMargin: {
+            vertical: 3,
+            horizontal: 10
+          }
+        },
+        tooltip: {
+          style: {
+            color: '#FFF'
+          }
+        },
+        grid: {
+          padding: {
+            top: 0
+          }
+        },
+        plotOptions: {
+          pie: {
+            donut: {
+              size: '70%',
+              labels: {
                 show: !0,
-                fontSize: '15px',
-                fontFamily: 'Inter',
-                label: 'Tổng',
-                formatter: function (e) {
-                    const totalValue = e.globals.seriesTotals.reduce((a, b) => a + b, 0);
-                    return new Intl.NumberFormat('vi-VN').format(parseInt(totalValue)) + 'K';
+                value: {
+                  fontSize: '22px',
+                  fontFamily: 'Inter',
+                  color: '#000',
+                  fontWeight: 500,
+                  offsetY: -20,
+                  formatter: function (val) {
+                    return new Intl.NumberFormat('vi-VN').format(parseInt(val)) + 'K';
+                  }
+                },
+                name: {
+                  offsetY: 20,
+                  fontFamily: 'Inter',
+                  fontWeight: '500',
+                  formatter: function (val) {
+                    return val
+                  }
+                },
+                total: {
+                  show: !0,
+                  fontSize: '15px',
+                  fontFamily: 'Inter',
+                  label: 'Tổng',
+                  formatter: function (e) {
+                      const totalValue = e.globals.seriesTotals.reduce((a, b) => a + b, 0);
+                      return new Intl.NumberFormat('vi-VN').format(parseInt(totalValue)) + 'K';
+                  }
                 }
               }
             }
           }
-        }
+        },
+        responsive: [{
+          breakpoint: 1399,
+          options: {
+            chart: {
+              height: 200
+            }
+          }
+        }, {
+          breakpoint: 420,
+          options: {
+            chart: {
+              height: 300
+            }
+          }
+        }]
       },
-      responsive: [{
-        breakpoint: 1399,
-        options: {
-          chart: {
-            height: 200
+      heatmap: {
+        chart: {
+          height: '80%',
+          type: 'heatmap',
+          parentHeightOffset: 0,
+          toolbar: { show: false }
+        },
+        colors: [wdg.config.color],
+        series: [],
+        xaxis: { categories: data.categories || data.weekLabels || [] },
+        plotOptions: {
+          heatmap: {
+            colorScale: {
+              ranges: data.ranges || [
+                  {from:0,to:1000,color:'#b9b3f8'},
+                  {from:1001,to:3000,color:'#9d95f5'},
+                  {from:3001,to:5000,color:'#8176f2'},
+                  {from:5001,to:9000,color:'#7367f0'}
+              ]
+            }
           }
-        }
-      }, {
-        breakpoint: 420,
-        options: {
-          chart: {
-            height: 300
-          }
-        }
-      }]
-    }
-  };
+        },
+        tooltip: { enabled: true, theme: 'light' }
+      }
+    };
  
-  const baseOptions = templates[chartType] || {};
-  const chartConfig = wdg.config.chartConfig || {};
+    const baseOptions = templates[chartType] || {};
+    const chartConfig = wdg.chart || {};
  
-  // Deep merge: base + override + system lock
-  const finalOptions = deepMergeOptions(baseOptions, chartConfig);
+    // Deep merge: base + override + system lock
+    const finalOptions = deepMergeOptions(baseOptions, chartConfig);
   
-  // Lock system fields (always from wdg config)
-  finalOptions.colors = [wdg.config.color];
-  if (chartType !== 'donut') {
-    finalOptions.series = [{ name: wdg.config.title, data: data.series }];
-  } else {
-    finalOptions.series = data.values || [];
-    finalOptions.labels = data.labels || [];
-    finalOptions.colors = data.colors || [];
-  }
-  finalOptions.chart.type = chartType === 'line' && wdg.config.showArea ? 'area' : chartType;
+    // Lock system fields (always from wdg config)
+    finalOptions.colors = [wdg.config.color];
+    if (chartType == 'donut') {
+      finalOptions.series = data.values || [];
+      finalOptions.labels = data.labels || [];
+      finalOptions.colors = data.colors || [];
+    } else if (chartType == 'heatmap'){
+      const series = data.days.map(d=>({ name:d, data: data.weekLabels.map((w,i)=>({x:w, y:data.matrix[d][i]})) }));
+      finalOptions.colors = [wdg.config.color];
+      finalOptions.series = series;
+      finalOptions.xaxis = finalOptions.xaxis || {};
+      finalOptions.xaxis.categories = data.categories || data.weekLabels || [];
+      finalOptions.chart.type = 'heatmap';
+    }else {
+      finalOptions.series = [{ name: wdg.config.title, data: data.series }];
+    }
+    finalOptions.chart.type = chartType === 'line' && wdg.config.showArea ? 'area' : chartType;
+    wdg.chart = cloneConfig(finalOptions);
  
-  return finalOptions;
-}
+    return finalOptions;
+  }
  
   /**
    * Deep merge options with override
@@ -1898,133 +1549,96 @@ function buildChartOptionsFromTemplate(wdg, data, chartType) {
   }
 
   function renderLine(el, wdg, data) {
-  const options = buildChartOptionsFromTemplate(wdg, data, 'line');
-  mountChart(el, wdg.id, options);
-}
- 
-function renderBar(el, wdg, data) {
-  const options = buildChartOptionsFromTemplate(wdg, data, 'bar');
-  mountChart(el, wdg.id, options);
-}
- 
-function renderDonut(el, wdg, data) {
-  const options = buildChartOptionsFromTemplate(wdg, data, 'donut');
-  mountChart(el, wdg.id, options);
-}
- 
-function renderHeatmap(el, wdg, data) {
-  const series = data.days.map(d=>({ name:d, data: data.weekLabels.map((w,i)=>({x:w, y:data.matrix[d][i]})) }));
-  // Nếu có custom heatmap options thì xây dựng tương tự
-  const baseOptions = {
-    chart: {
-      height: '80%',
-      type: 'heatmap',
-      parentHeightOffset: 0,
-      toolbar: { show: false }
-    },
-    colors: [wdg.config.color],
-    series,
-    xaxis: { categories: data.categories || data.weekLabels || [] },
-    plotOptions: {
-      heatmap: {
-        colorScale: {
-          ranges: data.ranges || [
-              {from:0,to:1000,color:'#b9b3f8'},
-              {from:1001,to:3000,color:'#9d95f5'},
-              {from:3001,to:5000,color:'#8176f2'},
-              {from:5001,to:9000,color:'#7367f0'}
-          ]
-        }
-      }
-    },
-    tooltip: { enabled: true, theme: 'light' }
-  };
- 
-  const chartConfig = wdg.config.chartConfig || {};
-  const finalOptions = deepMergeOptions(baseOptions, chartConfig);
-  
-  // Lock system fields
-  finalOptions.colors = [wdg.config.color];
-  finalOptions.series = series;
-  finalOptions.xaxis = finalOptions.xaxis || {};
-  finalOptions.xaxis.categories = data.categories || data.weekLabels || [];
-  finalOptions.chart.type = 'heatmap';
- 
-  mountChart(el, wdg.id, finalOptions);
-}
- 
-/**
- * renderWidgetContent - gọi hàm render tương ứng dựa vào kind
- * (Đây là hàm dispatcher, cần update nếu chưa có)
- */
-function renderWidgetContent(wdg) {
-  if (!wdg) return;
-  const el = document.querySelector(`.widget[data-id="${wdg.id}"] .widget-body`);
-  if (!el) return;
- 
-  // Lấy data từ MOCK_DATASETS hoặc service
-  const dataKey = wdg.config.dataSource;
-  const data = MOCK_DATASETS[dataKey]?.data || {};
- 
-  // Dispatcher theo kind
-  switch(wdg.kind) {
-    case 'line':
-      renderLine(el, wdg, data);
-      break;
-    case 'bar':
-      renderBar(el, wdg, data);
-      break;
-    case 'donut':
-      renderDonut(el, wdg, data);
-      break;
-    case 'heatmap':
-      renderHeatmap(el, wdg, data);
-      break;
-    case 'emoji_card':
-      renderEmojiCard(el, wdg, data);
-      break;
-    case 'large_img_card':
-      renderLargeImgCard(el, wdg, data);
-      break;
-    case 'multiple_mini_card':
-      renderMultipleMiniCard(el, wdg, data);
-      break;
-    case 'table':
-      renderTable(el, wdg, data);
-      break;
-    case 'list':
-      renderList(el, wdg, data);
-      break;
-    case 'report':
-      renderReport(el, wdg, data);
-      break;
-    case 'button':
-      renderButton(el, wdg);
-      break;
-    default:
-      el.innerHTML = `<div class="empty-hint">Widget type "${wdg.kind}" not supported</div>`;
+    const options = buildChartOptionsFromTemplate(wdg, data, 'line');
+    mountChart(el, wdg.id, options);
   }
-}
  
-/**
- * mountChart - render ApexChart instance
- * (Function này có sẵn rồi, không cần thay đổi)
- */
-function mountChart(el, key, options) {
-  if (!el) return;
-  if (chartInstances[key]) chartInstances[key].destroy();
-  const chart = new ApexCharts(el, options);
-  chart.render();
-  chartInstances[key] = chart;
-}
+  function renderBar(el, wdg, data) {
+    const options = buildChartOptionsFromTemplate(wdg, data, 'bar');
+    mountChart(el, wdg.id, options);
+  }
+ 
+  function renderDonut(el, wdg, data) {
+    const options = buildChartOptionsFromTemplate(wdg, data, 'donut');
+    mountChart(el, wdg.id, options);
+  }
+ 
+  function renderHeatmap(el, wdg, data) {
+    const options = buildChartOptionsFromTemplate(wdg, data, 'heatmap');
+    mountChart(el, wdg.id, options);
+  }
+ 
+  /**
+   * renderWidgetContent - gọi hàm render tương ứng dựa vào kind
+   * (Đây là hàm dispatcher, cần update nếu chưa có)
+   */
+  function renderWidgetContent(wdg) {
+    if (!wdg) return;
+    const el = document.querySelector(`.widget[data-id="${wdg.id}"] .widget-body`);
+    if (!el) return;
+ 
+    // Lấy data từ MOCK_DATASETS hoặc service
+    const dataKey = wdg.config.dataSource;
+    const data = MOCK_DATASETS[dataKey]?.data || {};
+ 
+    // Dispatcher theo kind
+    switch(wdg.kind) {
+      case 'line':
+        renderLine(el, wdg, data);
+        break;
+      case 'bar':
+        renderBar(el, wdg, data);
+        break;
+      case 'donut':
+        renderDonut(el, wdg, data);
+        break;
+      case 'heatmap':
+        renderHeatmap(el, wdg, data);
+        break;
+      case 'emoji_card':
+        renderEmojiCard(el, wdg, data);
+        break;
+      case 'large_img_card':
+        renderLargeImgCard(el, wdg, data);
+        break;
+      case 'multiple_mini_card':
+        renderMultipleMiniCard(el, wdg, data);
+        break;
+      case 'table':
+        renderTable(el, wdg, data);
+        break;
+      case 'list':
+        renderList(el, wdg, data);
+        break;
+      case 'report':
+        renderReport(el, wdg, data);
+        break;
+      case 'button':
+        renderButton(el, wdg);
+        break;
+      default:
+        el.innerHTML = `<div class="empty-hint">Widget type "${wdg.kind}" not supported</div>`;
+    }
+  }
+ 
+  /**
+   * mountChart - render ApexChart instance
+   * (Function này có sẵn rồi, không cần thay đổi)
+   */
+  function mountChart(el, key, options) {
+    if (!el) return;
+    if (chartInstances[key]) chartInstances[key].destroy();
+    const chart = new ApexCharts(el, options);
+    chart.render();
+    chartInstances[key] = chart;
+  }
 
-        // =========================================================================
-        // Khởi động
-        // =========================================================================
-        renderLibrary();
-        seedDefaultLayout();
-        let resizeT;
-        window.addEventListener('resize', ()=>{ clearTimeout(resizeT); resizeT=setTimeout(renderCanvas, 120); });
-        // setupConfigPanelHook();
+  // =========================================================================
+  // Khởi động
+  // =========================================================================
+  renderLibrary();
+  seedDefaultLayout();
+  let resizeT;
+  window.addEventListener('resize', ()=>{ clearTimeout(resizeT); resizeT=setTimeout(renderCanvas, 120); });
     </script>
 }
