@@ -8,6 +8,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc;
 using System.Diagnostics;
+using System.Drawing;
 using System.Text;
 using System.Text.Json;
 using System.Text.RegularExpressions;
@@ -22,13 +23,15 @@ public class DashboardsController : Controller
   private readonly QLKCL_NEWContext _db;
   private readonly IWidgetService _widget;
   private readonly IReportService _reportService;
+  private readonly IConfiguration _configuration;
+  private readonly IConnectionService _con;
   private readonly IGoogleSheetService _googleSheetService;
   private readonly string _tessdataPath;
   private readonly IHttpClientFactory _httpClientFactory;
   private readonly string _googleCloudVisionApiKey;
 
 
-  public DashboardsController(ILogger<DashboardsController> logger, IWidgetService widget, IReportService reportService, IGoogleSheetService googleSheetService, IWebHostEnvironment webHostEnvironment, IHttpClientFactory httpClientFactory, IConfiguration configuration)
+  public DashboardsController(ILogger<DashboardsController> logger, IWidgetService widget, IReportService reportService, IGoogleSheetService googleSheetService, IWebHostEnvironment webHostEnvironment, IHttpClientFactory httpClientFactory, IConfiguration configuration, IConnectionService con)
   {
     _logger = logger;
     _widget = widget;
@@ -37,6 +40,8 @@ public class DashboardsController : Controller
     _tessdataPath = Path.Combine(webHostEnvironment.WebRootPath, "tessdata");
     _httpClientFactory = httpClientFactory;
     _googleCloudVisionApiKey = configuration["Google:CloudVisionApiKey"];
+    _configuration = configuration;
+    _con = con;
   }
 
   public async Task<IActionResult> Index()
@@ -635,76 +640,302 @@ public class DashboardsController : Controller
     ).ToList();
   }
 
+  [Authorize]
   [HttpGet]
-  public async Task<IActionResult> DashboardBuilder([FromQuery] Dictionary<string, string> parameters)
+  [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)] // Tắt cache mặc định cho action này nếu cần thiết
+  public async Task<IActionResult> DashboardBuilder(string? dashboardCode, [FromQuery] Dictionary<string, string> parameters, string siteCode = "KOA")
   {
+    try
+    {
+      string connectionString = _configuration.GetConnectionString("ConfigConnection");
 
-    // xu ly bo loc
-    // chuyen parameters thanh Idictionary<string, object>
-    Dictionary<string, object> objParameters = parameters.ToDictionary(kvp => kvp.Key, kvp => (object)kvp.Value);
+      // Lấy cấu hình dashboard
+      var dashboardConfig = await GetDashboardConfig(dashboardCode, connectionString);
 
-    // xu ly lay du lieu cho tung widget
-    //khai bao phan tu chua data
+      // Lấy danh sách widgets
+      var widgets = await GetDashboardWidgets(dashboardCode, siteCode, connectionString);
 
-    ////////widget simple card Chuc mung
-    ////Tổng doanh thu tháng
-    var SimpleCard_ChucMung = await _widget.Widget_GetObject(objParameters, "HS_Widget_SimpleCard_ChucMung", null);
-    ViewBag.SimpleCard_ChucMung = SimpleCard_ChucMung;
+      ViewBag.DashboardCode = dashboardCode;
+      ViewBag.SiteCode = siteCode;
+      ViewBag.DashboardConfig = dashboardConfig;
+      ViewBag.Widgets = widgets;
 
-    ////////widget simple cart So lieu trong thang
-    //Doanh thu, luot book, so gio, chi
-    var SimpleCard_SoLieuTrongThang = await _widget.Widget_GetObject(objParameters, "HS_Widget_SimpleCard_SoLieuTrongThang", null);
-    ViewBag.SimpleCard_SoLieuTrongThang = SimpleCard_SoLieuTrongThang;
+      return View();
+    }
+    catch (Exception ex)
+    {
+      // Log exception
+      return BadRequest(new { message = ex.Message });
+    }
+  }       /// <summary>
+          /// API: Lấy cấu hình dashboard
+          /// </summary>
+  [HttpGet("api/dashboard/{dashboardCode}")]
+  public async Task<IActionResult> GetDashboard(string dashboardCode)
+  {
+    try
+    {
+      string connectionString = _configuration.GetConnectionString("ConfigConnection");
+      var config = await GetDashboardConfig(dashboardCode, connectionString);
 
-    ////////line chart doanh thu 6 thang gan day
-    var LineChart_DoanhThuCacThang = await _widget.Widget_GetObject(objParameters, "HS_Widget_LineChart_DoanhThuCacThang", null);
-    ViewBag.LineChart_DoanhThuCacThang = LineChart_DoanhThuCacThang;
+      if (config == null)
+        return NotFound(new { message = "Dashboard not found" });
 
-    ////////Column chart chi phi 6 thang gan day
-    var ColumnChart_ChiPhiCacThang = await _widget.Widget_GetObject(objParameters, "HS_Widget_ColumnChart_ChiPhiCacThang", null);
-    ViewBag.ColumnChart_ChiPhiCacThang = ColumnChart_ChiPhiCacThang;
-
-    //////// List item Top 5 dịch vụ tháng
-    var ListItem_TopDichVuThang = await _widget.Widget_GetList(objParameters, "HS_Widget_ListItem_TopDichVuThang", null);
-    ViewBag.ListItem_TopDichVuThang = ListItem_TopDichVuThang;
-
-    //////// Pie Chart tỷ lệ các phòng trong tháng
-    var PieChart_TyLeCacPhongTrongThang = await _widget.Widget_GetObject(objParameters, "HS_Widget_PieChart_TyLeCacPhongTrongThang", null);
-    ViewBag.PieChart_TyLeCacPhongTrongThang = PieChart_TyLeCacPhongTrongThang;
-
-    //////// Widget List item ty le kin phong trong tuan
-    var ListItem_TyLeKinPhongTuan = await _widget.Widget_GetList(objParameters, "HS_Widget_ListItem_TyLeKinPhongTuan", null);
-    ViewBag.ListItem_TyLeKinPhongTuan = ListItem_TyLeKinPhongTuan;
-
-    //////// Widget list item Top 5 khách hàng gần đây nhất
-    var ListItem_TopKhachHangGanDay = await _widget.Widget_GetList(objParameters, "HS_Widget_ListItem_TopKhachHangGanDay", null);
-    ViewBag.ListItem_TopKhachHangGanDay = ListItem_TopKhachHangGanDay;
-
-    //////// Column chart Doanh thu tuần
-    var ColumnChart_DoanhThuTuan = await _widget.Widget_GetObject(objParameters, "HS_Widget_ColumnChart_DoanhThuTuan", null);
-    ViewBag.ColumnChart_DoanhThuTuan = ColumnChart_DoanhThuTuan;
-
-    //////// Heat map Trang Thai dat phong trong thang
-    var HeatMap_TrangThaiDatPhongThang = await _widget.Widget_GetList(objParameters, "HS_Widget_HeatMap_trangThaiDatPhongThang", null);
-
-    // B2: nhóm theo DayOfWeekName để tạo từng dòng (series)
-    var grouped = HeatMap_TrangThaiDatPhongThang
-        .GroupBy(d => (string)d.dayofweekname)
-        .Select(g => new
-        {
-          name = g.Key, // SUN, MON,...
-          data = g.Select(item => new {
-            x = (string)item.weekname,
-            y = (decimal)item.revenue
-          }).ToList()
-        }).ToList();
-
-    // B3: truyền ra View qua ViewBag hoặc ViewData
-    ViewBag.HeatMap_TrangThaiDatPhongThang = JsonSerializer.Serialize(grouped);
-
-    return View();
+      return Ok(config);
+    }
+    catch (Exception ex)
+    {
+      return StatusCode(500, new { message = ex.Message });
+    }
   }
 
+  /// <summary>
+  /// API: Lấy danh sách widgets của dashboard
+  /// </summary>
+  [HttpGet("api/dashboard/{dashboardCode}/widgets")]
+  public async Task<IActionResult> GetWidgets(string dashboardCode, string siteCode = "KOA")
+  {
+    try
+    {
+      string connectionString = _configuration.GetConnectionString("ConfigConnection");
+      var widgets = await GetDashboardWidgets(dashboardCode, siteCode, connectionString);
+
+      return Ok(widgets);
+    }
+    catch (Exception ex)
+    {
+      return StatusCode(500, new { message = ex.Message });
+    }
+  }
+
+  /// <summary>
+  /// API: Lưu cấu hình dashboard
+  /// </summary>
+  [HttpPost("api/dashboard/save")]
+  public async Task<IActionResult> SaveDashboard([FromBody] SaveDashboardRequest request)
+  {
+    try
+    {
+      string connectionString = _configuration.GetConnectionString("ConfigConnection");
+
+      if (string.IsNullOrEmpty(request.DashboardCode))
+        return BadRequest(new { message = "Dashboard code is required" });
+
+      // Lưu dashboard config
+      var dashboardResult = await SaveDashboardConfig(
+          request.DashboardCode,
+          request.DashboardName,
+          request.Options,
+          request.DatasourceId,
+          request.SiteCode,
+          connectionString
+      );
+
+      if (dashboardResult == null)
+        return StatusCode(500, new { message = "Failed to save dashboard" });
+
+      // Lưu từng widget
+      if (request.Widgets != null && request.Widgets.Count > 0)
+      {
+        foreach (var widget in request.Widgets)
+        {
+          await SaveWidgetConfig(widget, connectionString);
+        }
+      }
+
+      return Ok(new { message = "Dashboard saved successfully" });
+    }
+    catch (Exception ex)
+    {
+      return StatusCode(500, new { message = ex.Message });
+    }
+  }
+
+  /// <summary>
+  /// API: Xóa widget khỏi dashboard
+  /// </summary>
+  [HttpDelete("api/dashboard/widget")]
+  public async Task<IActionResult> DeleteWidget([FromQuery] string dashboardCode, [FromQuery] string widgetCode)
+  {
+    try
+    {
+      string connectionString = _configuration.GetConnectionString("ConfigConnection");
+
+      // Xóa widget (soft delete)
+      var parameters = new Dictionary<string, object>
+                {
+                    { "dashboardcode", dashboardCode },
+                    { "widgetcode", widgetCode },
+                    { "userid", GetCurrentUserId() }
+                };
+
+      var (sqlQuery, sqlParams) = await _con.Connection_GetQueryParam(
+          parameters,
+          "net_widget_del",
+          connectionString
+      );
+
+      await _con.Connection_GetSingleDataFromQuery(
+          parameters,
+          "net_widget_del",
+          connectionString,
+          sqlQuery,
+          sqlParams
+      );
+
+      return Ok(new { message = "Widget deleted successfully" });
+    }
+    catch (Exception ex)
+    {
+      return StatusCode(500, new { message = ex.Message });
+    }
+  }
+
+  // ==================== PRIVATE METHODS ====================
+
+  private async Task<IDictionary<string, object>?> GetDashboardConfig(string dashboardCode, string connectionString)
+  {
+    var parameters = new Dictionary<string, object>
+            {
+                { "dashboardcode", dashboardCode }
+            };
+
+    var (sqlQuery, sqlParams) = await _con.Connection_GetQueryParam(
+        parameters,
+        "net_dashboard_sel",
+        connectionString
+    );
+
+    var result = await _con.Connection_GetSingleDataFromQuery(
+        parameters,
+        "net_dashboard_sel",
+        connectionString,
+        sqlQuery,
+        sqlParams
+    );
+
+    return result;
+  }
+
+  private async Task<List<IDictionary<string, object>>> GetDashboardWidgets(
+      string dashboardCode,
+      string siteCode,
+      string connectionString)
+  {
+    var parameters = new Dictionary<string, object>
+            {
+                { "dashboardcode", dashboardCode },
+                { "sitecode", siteCode }
+            };
+
+    var (sqlQuery, sqlParams) = await _con.Connection_GetQueryParam(
+        parameters,
+        "net_widget_sel_by_dashboard",
+        connectionString
+    );
+
+    var result = await _con.Connection_GetDataFromQuery(
+        parameters,
+        "net_widget_sel_by_dashboard",
+        connectionString,
+        sqlQuery,
+        sqlParams
+    );
+
+    return result?
+    .Select(x => (IDictionary<string, object>)x)
+    .ToList()
+    ?? new List<IDictionary<string, object>>();
+  }
+
+  private async Task<IDictionary<string, object>?> SaveDashboardConfig(
+      string dashboardCode,
+      string dashboardName,
+      string options,
+      int? datasourceId,
+      string siteCode,
+      string connectionString)
+  {
+    var parameters = new Dictionary<string, object>
+            {
+                { "dashboardcode", dashboardCode },
+                { "dashboardname", dashboardName ?? dashboardCode },
+                { "options", options ?? "[]" },
+                { "datasourceid", datasourceId ?? (object)DBNull.Value },
+                { "sitecode", siteCode ?? "KOA" },
+                { "userid", GetCurrentUserId() }
+            };
+
+    //var (sqlQuery, sqlParams) = await _con.Connection_GetQueryParam(
+    //    parameters,
+    //    "net_dashboard_ups",
+    //    connectionString
+    //);
+
+    //var result = await _con.Connection_GetSingleDataFromQuery(
+    //    parameters,
+    //    "net_dashboard_ups",
+    //    connectionString,
+    //    sqlQuery,
+    //    sqlParams
+    //);
+
+    //return result;
+    return new Dictionary<string, object>
+    {
+        { "Success", true },
+        { "Id", 1 }
+    };
+  }
+
+  private async Task<IDictionary<string, object>?> SaveWidgetConfig(
+      SaveWidgetRequest widget,
+      string connectionString)
+  {
+    var parameters = new Dictionary<string, object>
+            {
+                { "dashboardcode", widget.DashboardCode },
+                { "widgetcode", widget.WidgetCode },
+                { "templetecode", widget.TemplateCode ?? "" },
+                { "positionx", widget.PositionX },
+                { "positiony", widget.PositionY },
+                { "width", widget.Width },
+                { "height", widget.Height },
+                { "configjson", widget.ConfigJson != null ? JsonSerializer.Serialize(widget.ConfigJson) : "{}" },
+                { "chartconfig", widget.ChartConfig != null ? JsonSerializer.Serialize(widget.ChartConfig) : "{}" },
+                { "sitecode", widget.SiteCode ?? "KOA" },
+                { "userid", GetCurrentUserId() }
+            };
+
+    //var (sqlQuery, sqlParams) = await _con.Connection_GetQueryParam(
+    //    parameters,
+    //    "net_widget_ups",
+    //    connectionString
+    //);
+
+    //var result = await _con.Connection_GetSingleDataFromQuery(
+    //    parameters,
+    //    "net_widget_ups",
+    //    connectionString,
+    //    sqlQuery,
+    //    sqlParams
+    //);
+
+    //return result;
+
+    return new Dictionary<string, object>
+    {
+        { "Success", true },
+        { "Id", 1 }
+    };
+  }
+
+  private long GetCurrentUserId()
+  {
+    // Lấy ID user từ claims/session
+    var userIdClaim = User.FindFirst("UserId")?.Value;
+    return long.TryParse(userIdClaim, out var userId) ? userId : 1;
+  }
 
   [Authorize]
   [HttpGet]
@@ -1135,6 +1366,30 @@ public class DashboardsController : Controller
     public int Width { get; set; }
     public int Height { get; set; }
     public string ConfigJson { get; set; } = default!;
+  }
+
+  public class SaveDashboardRequest
+  {
+    public string DashboardCode { get; set; }
+    public string DashboardName { get; set; }
+    public string Options { get; set; }
+    public int? DatasourceId { get; set; }
+    public string SiteCode { get; set; }
+    public List<SaveWidgetRequest> Widgets { get; set; }
+  }
+
+  public class SaveWidgetRequest
+  {
+    public string DashboardCode { get; set; }
+    public string WidgetCode { get; set; }
+    public string TemplateCode { get; set; }
+    public int PositionX { get; set; }
+    public int PositionY { get; set; }
+    public int Width { get; set; }
+    public int Height { get; set; }
+    public object ConfigJson { get; set; }
+    public object ChartConfig { get; set; }
+    public string SiteCode { get; set; }
   }
 
   public class WidgetLayoutDto1

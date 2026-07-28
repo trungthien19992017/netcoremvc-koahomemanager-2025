@@ -1,836 +1,959 @@
 @{
-    ViewData["Title"] = "Dashboard Builder (SortableJS)";
-    Layout = "~/Views/Shared/_ContentNavbarLayout.cshtml";
+    ViewData["Title"] = "Dashboard Builder (Dynamic)";
+    Layout = "_BlankLayout";
 
-    // Du lieu object (Mock/ViewBag)
-    var SimpleCard_ChucMung = ViewBag.SimpleCard_ChucMung as IDictionary<string, object>;
-    var SimpleCard_SoLieuTrongThang = ViewBag.SimpleCard_SoLieuTrongThang as IDictionary<string, object>;
-    var LineChart_DoanhThuCacThang = ViewBag.LineChart_DoanhThuCacThang as IDictionary<string, object>;
-    var ColumnChart_ChiPhiCacThang = ViewBag.ColumnChart_ChiPhiCacThang as IDictionary<string, object>;
-    var ColumnChart_DoanhThuTuan = ViewBag.ColumnChart_DoanhThuTuan as IDictionary<string, object>;
-    var PieChart_TyLeCacPhongTrongThang = ViewBag.PieChart_TyLeCacPhongTrongThang as IDictionary<string, object>;
-
-    // Du lieu list (Mock/ViewBag)
-    var ListItem_TopDichVuThang = ViewBag.ListItem_TopDichVuThang as List<dynamic>;
-    var ListItem_TyLeKinPhongTuan = ViewBag.ListItem_TyLeKinPhongTuan as List<dynamic>;
-    var ListItem_TopKhachHangGanDay = ViewBag.ListItem_TopKhachHangGanDay as List<dynamic>;
+    // Dữ liệu từ controller
+    var dashboardCode = ViewBag.DashboardCode as string ?? "KoaDashboard";
+    var dashboardConfig = ViewBag.DashboardConfig as IDictionary<string, object>;
+    var widgets = ViewBag.Widgets as List<IDictionary<string, object>>;
 }
 
 @section PageStyles {
     <style>
-       :root{
-          --primary:#7367f0; --bg:#f5f5f9; --card:#ffffff; --border:#e7e7ea;
-          --text:#3d3d4e; --text-muted:#8a8d93; --success:#28c76f; --danger:#ea5455;
-          --warn:#ff9f43; --info:#00cfe8; 
-          --grid-cols: 12;
-          --grid-cell: 70px; 
-          --grid-gap: 14px;
+        :root {
+            --primary: #7367f0;
+            --primary-light: #f1f0fe;
+            --bg: #f5f5f9;
+            --card: #ffffff;
+            --border: #e7e7ea;
+            --text: #3d3d4e;
+            --text-muted: #8a8d93;
+            --success: #28c76f;
+            --danger: #ea5455;
+            --warn: #ff9f43;
+            --info: #00cfe8;
+            --grid-cols: 12;
+            --grid-cell: 70px;
+            --grid-gap: 14px;
+            --shadow-sm: 0 2px 4px rgba(0,0,0,.03);
+            --shadow-md: 0 8px 16px rgba(0,0,0,.06);
+            --shadow-lg: 0 12px 24px rgba(0,0,0,.1);
         }
-        *{box-sizing:border-box;}
-        body{margin:0;font-family:'Segoe UI',Roboto,Helvetica,Arial,sans-serif;background:var(--bg);color:var(--text);}
-        button{font-family:inherit;}
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            font-family: 'Segoe UI',Roboto,Helvetica,Arial,sans-serif;
+            background: var(--bg);
+            color: var(--text);
+        }
+
+        button {
+            font-family: inherit;
+        }
 
         /* ================= LAYOUT ================= */
-        .app{display:grid;grid-template-columns:230px 1fr 290px;height:100vh;}
-        .app.mode-view{grid-template-columns:0 1fr 0;}
-        .app.mode-view .widget-library, .app.mode-view .config-panel, .app.mode-view .grid-controls{display:none;}
-        .panel-title{font-size:12px;font-weight:700;text-transform:uppercase;color:var(--text-muted);letter-spacing:.03em;margin:0 0 12px;}
+        .app {
+            display: grid;
+            grid-template-columns: 230px 1fr 290px;
+            height: 100vh;
+        }
+
+            .app.mode-view {
+                grid-template-columns: 0 1fr 0;
+            }
+
+                .app.mode-view .widget-library, .app.mode-view .config-panel, .app.mode-view .grid-controls {
+                    display: none;
+                }
+
+        .panel-title {
+            font-size: 12px;
+            font-weight: 700;
+            text-transform: uppercase;
+            color: var(--text-muted);
+            letter-spacing: .03em;
+            margin: 0 0 12px;
+        }
 
         /* ================= THƯ VIỆN WIDGET ================= */
-        .widget-library{background:var(--card);border-right:1px solid var(--border);padding:16px 12px;overflow-y:auto;}
-        .lib-item{display:flex;align-items:center;gap:10px;padding:10px 11px;border:1px solid var(--border);border-radius:8px;
-          margin-bottom:8px;cursor:grab;background:#fafafd;font-size:13px;transition:.15s;}
-        .lib-item:hover{border-color:var(--primary);background:#f1f0fe;}
-        .lib-item .ic{width:28px;height:28px;border-radius:6px;flex-shrink:0;display:flex;align-items:center;justify-content:center;
-          color:#fff;font-size:14px;font-weight:700;}
-        .lib-item .desc{font-size:10.5px;color:var(--text-muted);display:block;margin-top:1px;}
-        .lib-item.dragging-source{opacity:.35;}
-        .lib-hint{font-size:11.5px;color:var(--text-muted);line-height:1.6;margin:14px 2px 0;padding-top:12px;border-top:1px dashed var(--border);}
+        .widget-library {
+            background: var(--card);
+            border-right: 1px solid var(--border);
+            padding: 16px 12px;
+            overflow-y: auto;
+        }
+
+        .lib-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 11px 12px;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            margin-bottom: 8px;
+            cursor: grab;
+            background: #fafafd;
+            font-size: 13px;
+            transition: .2s ease-in-out;
+        }
+
+            .lib-item:hover {
+                border-color: var(--primary);
+                background: var(--primary-light);
+                box-shadow: var(--shadow-sm);
+            }
+
+            .lib-item .ic {
+                width: 32px;
+                height: 32px;
+                border-radius: 7px;
+                flex-shrink: 0;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                color: #fff;
+                font-size: 15px;
+                font-weight: 700;
+                box-shadow: 0 2px 8px rgba(115,103,240,.2);
+            }
+
+            .lib-item .desc {
+                font-size: 10.5px;
+                color: var(--text-muted);
+                display: block;
+                margin-top: 1px;
+            }
+
+            .lib-item.dragging-source {
+                opacity: .35;
+            }
+
+        .lib-hint {
+            font-size: 11.5px;
+            color: var(--text-muted);
+            line-height: 1.6;
+            margin: 14px 2px 0;
+            padding-top: 12px;
+            border-top: 1px dashed var(--border);
+        }
 
         /* ================= CANVAS ================= */
-        .canvas-wrap{grid-column:2;display:flex;flex-direction:column;overflow:hidden;}
-        .toolbar{background:var(--card);border-bottom:1px solid var(--border);padding:9px 18px;display:flex;gap:10px;align-items:center;flex-wrap:wrap;}
-        .toolbar h1{font-size:15px;margin:0;margin-right:auto;}
-  
-        /* Cụm điều khiển Grid */
-        .grid-controls{display:flex;align-items:center;gap:8px;background:#f8f8fd;padding:4px 8px;border:1px solid var(--border);border-radius:8px;}
-        .grid-ctrl-item{display:flex;align-items:center;gap:4px;font-size:11.5px;font-weight:600;color:var(--text-muted);}
-        .grid-ctrl-btn{width:22px;height:22px;border:1px solid var(--border);background:#fff;border-radius:4px;cursor:pointer;font-weight:bold;display:flex;align-items:center;justify-content:center;}
-        .grid-ctrl-btn:hover{background:var(--primary);color:#fff;border-color:var(--primary);}
-        .grid-val{min-width:24px;text-align:center;color:var(--primary);font-weight:700;}
-
-        .btn{border:none;border-radius:6px;padding:8px 13px;font-size:12.5px;cursor:pointer;font-weight:600;white-space:nowrap;}
-        .btn-primary{background:var(--primary);color:#fff;}
-        .btn-outline{background:#fff;border:1px solid var(--border);color:var(--text);}
-        .btn-danger-outline{background:#fff;border:1px solid var(--danger);color:var(--danger);}
-        .mode-switch{display:flex;background:#eeedf7;border-radius:7px;padding:3px;gap:2px;}
-        .mode-switch button{border:none;background:transparent;padding:6px 12px;border-radius:5px;font-size:12.5px;font-weight:600;cursor:pointer;color:var(--text-muted);}
-        .mode-switch button.active{background:#fff;color:var(--primary);box-shadow:0 1px 3px rgba(0,0,0,.08);}
-        .mobile-toggle{display:none;}
-
-        .canvas-scroll{flex:1;overflow:auto;padding:20px;}
-        #canvas{position:relative;min-height:900px;
-          background-image:
-            linear-gradient(to right, #eceaf9 1px, transparent 1px),
-            linear-gradient(to bottom, #eceaf9 1px, transparent 1px);
-          background-size: calc((100% - (var(--grid-cols) - 1) * var(--grid-gap)) / var(--grid-cols) + var(--grid-gap)) calc(var(--grid-cell) + var(--grid-gap));
-          border:1px dashed var(--border); border-radius:10px;
+        .canvas-wrap {
+            grid-column: 2;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
         }
-        #canvas.drop-active{background-color:#f1f0fe;}
-        .app.mode-view #canvas{background-image:none;border:none;min-height:0;}
-        #canvas.flow-stack{display:flex;flex-direction:column;gap:var(--grid-gap);min-height:0;}
-        #canvas.flow-stack .widget{position:static !important;width:100% !important;height:auto !important;min-height:220px;}
 
-        .widget{position:absolute;background:var(--card);border:1px solid var(--border);border-radius:10px;
-          box-shadow:0 1px 3px rgba(0,0,0,.04); display:flex; flex-direction:column; overflow:hidden;}
-        .widget.selected{border-color:var(--primary); box-shadow:0 0 0 2px rgba(115,103,240,.25);}
-        .widget-head{display:flex;align-items:center;justify-content:space-between;padding:10px 14px 4px;cursor:move;touch-action:none;}
-        .widget-head h4{font-size:13px;margin:0;font-weight:600;}
-        .widget-head .rm{cursor:pointer;color:var(--text-muted);font-size:14px;border:none;background:none;}
-        .widget-head .rm:hover{color:var(--danger);}
-        .app.mode-view .widget-head{cursor:default;}
-        .app.mode-view .widget-head .rm, .app.mode-view .resize-handle{display:none;}
-        .widget-body{flex:1;padding:6px 14px 14px;overflow:hidden;position:relative;}
-        .resize-handle{position:absolute;right:0;bottom:0;width:18px;height:18px;cursor:nwse-resize;touch-action:none;
-          background:linear-gradient(135deg, transparent 50%, #c9c7d8 50%);border-bottom-right-radius:8px;}
+        .toolbar {
+            background: linear-gradient(135deg, var(--card) 0%, rgba(243,242,254,0.5) 100%);
+            border-bottom: 1px solid var(--border);
+            padding: 12px 20px;
+            display: flex;
+            gap: 10px;
+            align-items: center;
+            flex-wrap: wrap;
+            box-shadow: var(--shadow-sm);
+        }
+
+            .toolbar h1 {
+                font-size: 16px;
+                margin: 0;
+                margin-right: auto;
+                font-weight: 700;
+                color: var(--text);
+                letter-spacing: -.3px;
+            }
+
+        /* Cụm điều khiển Grid */
+        .grid-controls {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            background: #f8f8fd;
+            padding: 6px 10px;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            box-shadow: var(--shadow-sm);
+        }
+
+        .grid-ctrl-item {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            font-size: 11.5px;
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .grid-ctrl-btn {
+            width: 22px;
+            height: 22px;
+            border: 1px solid var(--border);
+            background: #fff;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: bold;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+            .grid-ctrl-btn:hover {
+                background: var(--primary);
+                color: #fff;
+                border-color: var(--primary);
+            }
+
+        .grid-val {
+            min-width: 24px;
+            text-align: center;
+            color: var(--primary);
+            font-weight: 700;
+        }
+
+        .btn {
+            border: none;
+            border-radius: 7px;
+            padding: 9px 15px;
+            font-size: 12.5px;
+            cursor: pointer;
+            font-weight: 600;
+            white-space: nowrap;
+            transition: .2s ease-in-out;
+        }
+
+        .btn-primary {
+            background: var(--primary);
+            color: #fff;
+            box-shadow: var(--shadow-sm);
+        }
+
+            .btn-primary:hover {
+                background: #6954d6;
+                box-shadow: var(--shadow-md);
+                transform: translateY(-1px);
+            }
+
+        .btn-outline {
+            background: #fff;
+            border: 1px solid var(--border);
+            color: var(--text);
+        }
+
+            .btn-outline:hover {
+                background: var(--primary-light);
+                border-color: var(--primary);
+            }
+
+        .btn-danger-outline {
+            background: #fff;
+            border: 1px solid var(--danger);
+            color: var(--danger);
+        }
+
+            .btn-danger-outline:hover {
+                background: rgba(234,84,85,.08);
+            }
+
+        .mode-switch {
+            display: flex;
+            background: #eeedf7;
+            border-radius: 7px;
+            padding: 3px;
+            gap: 2px;
+        }
+
+            .mode-switch button {
+                border: none;
+                background: transparent;
+                padding: 6px 12px;
+                border-radius: 5px;
+                font-size: 12.5px;
+                font-weight: 600;
+                cursor: pointer;
+                color: var(--text-muted);
+            }
+
+                .mode-switch button.active {
+                    background: #fff;
+                    color: var(--primary);
+                    box-shadow: 0 1px 3px rgba(0,0,0,.08);
+                }
+
+        .canvas-scroll {
+            flex: 1;
+            overflow: auto;
+            padding: 20px;
+        }
+
+        #canvas {
+            position: relative;
+            min-height: 900px;
+            background-image: linear-gradient(to right, #f0eefd 1px, transparent 1px), linear-gradient(to bottom, #f0eefd 1px, transparent 1px);
+            background-size: calc((100% - (var(--grid-cols) - 1) * var(--grid-gap)) / var(--grid-cols) + var(--grid-gap)) calc(var(--grid-cell) + var(--grid-gap));
+            border: 1px solid #e9e5f5;
+            border-radius: 10px;
+            box-shadow: var(--shadow-sm);
+        }
+
+            #canvas.drop-active {
+                background-color: var(--primary-light);
+                border-color: var(--primary);
+            }
+
+        .app.mode-view #canvas {
+            background-image: none;
+            border: none;
+            min-height: 0;
+        }
+
+        .widget {
+            position: absolute;
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            box-shadow: var(--shadow-sm);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+            .widget:hover {
+                box-shadow: var(--shadow-lg);
+                transform: translateY(-3px);
+            }
+
+            .widget::before {
+                content: '';
+                position: absolute;
+                top: 0;
+                left: 0;
+                right: 0;
+                height: 4px;
+                background: linear-gradient(90deg, var(--primary), #f1f0fe);
+            }
+
+            .widget.selected {
+                border-color: var(--primary);
+                box-shadow: 0 0 0 2px rgba(115,103,240,.25), var(--shadow-md);
+            }
+
+        .widget-head {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 12px 14px 10px;
+            cursor: move;
+            touch-action: none;
+            border-bottom: 1px solid #f0f0f5;
+        }
+
+            .widget-head h4 {
+                font-size: 13px;
+                margin: 0;
+                font-weight: 700;
+                color: var(--text);
+                letter-spacing: -.2px;
+            }
+
+            .widget-head .rm {
+                cursor: pointer;
+                color: var(--text-muted);
+                font-size: 14px;
+                border: none;
+                background: none;
+            }
+
+                .widget-head .rm:hover {
+                    color: var(--danger);
+                }
+
+        .app.mode-view .widget-head {
+            cursor: default;
+        }
+
+            .app.mode-view .widget-head .rm, .resize-handle {
+                display: none;
+            }
+
+        .widget-body {
+            flex: 1;
+            padding: 6px 14px 14px;
+            position: relative;
+        }
+
+        .resize-handle {
+            position: absolute;
+            right: 0;
+            bottom: 0;
+            width: 18px;
+            height: 18px;
+            cursor: nwse-resize;
+            touch-action: none;
+            background: linear-gradient(135deg, transparent 50%, #c9c7d8 50%);
+            border-bottom-right-radius: 8px;
+        }
 
         /* ================= CONFIG PANEL ================= */
-        .config-panel{background:var(--card);border-left:1px solid var(--border);padding:16px 14px;overflow-y:auto;}
-        .empty-hint{font-size:13px;color:var(--text-muted);line-height:1.6;}
-        .field{margin-bottom:13px;}
-        .field label{display:block;font-size:11.5px;font-weight:600;margin-bottom:5px;color:var(--text-muted);}
-        .field input[type=text], .field select{width:100%;padding:8px 10px;border:1px solid var(--border);border-radius:6px;font-size:13px;}
-        .field-check{display:flex;align-items:center;gap:8px;font-size:12.5px;}
-        .swatches{display:flex;gap:6px;}
-        .swatch{width:22px;height:22px;border-radius:50%;cursor:pointer;border:2px solid transparent;}
-        .swatch.active{border-color:#333;}
-        .meta-row{font-size:11.5px;color:var(--text-muted);display:flex;justify-content:space-between;padding:4px 0;border-bottom:1px dashed var(--border);}
-        .json-preview{font-size:10.5px;background:#1e1e2e;color:#c9c9e8;padding:10px;border-radius:6px;white-space:pre-wrap;word-break:break-all;max-height:160px;overflow:auto;margin-top:6px;}
-
-        /* ================= MINI COMPONENTS ================= */
-        .kpi-wrap{display:flex;align-items:center;gap:12px;height:100%;}
-        .kpi-wrap .badge{width:44px;height:44px;border-radius:10px;display:flex;align-items:center;justify-content:center;color:#fff;font-size:20px;flex-shrink:0;}
-        .kpi-wrap .num{font-size:20px;font-weight:700;line-height:1.1;}
-        .kpi-wrap .lbl{font-size:12px;color:var(--text-muted);}
-
-        table.mini-table{width:100%;border-collapse:collapse;font-size:12px;}
-        table.mini-table th{text-align:left;color:var(--text-muted);font-weight:600;padding:5px 6px;border-bottom:1px solid var(--border);font-size:11px;text-transform:uppercase;}
-        table.mini-table td{padding:6px;border-bottom:1px dashed var(--border);}
-        table.mini-table tr:last-child td{border-bottom:none;}
-
-        ul.mini-list{list-style:none;margin:0;padding:0;font-size:12px;}
-        ul.mini-list li{padding:7px 0;border-bottom:1px dashed var(--border);}
-        ul.mini-list li:last-child{border-bottom:none;}
-        .mini-list .row-top{display:flex;justify-content:space-between;}
-        .mini-list .name{font-weight:600;}
-        .mini-list .val{color:var(--success);font-weight:700;}
-        .progress-track{background:#f0f0f5;border-radius:4px;height:5px;margin-top:4px;overflow:hidden;}
-        .progress-fill{height:100%;}
-
-        /* ================= DRAWER & RESPONSIVE ================= */
-        .drawer-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;}
-        .drawer-close{display:none;border:none;background:#f0f0f5;color:var(--text-muted);width:30px;height:30px;
-          border-radius:7px;font-size:15px;cursor:pointer;align-items:center;justify-content:center;flex-shrink:0;}
-        #drawerBackdrop{display:none;position:fixed;inset:0;background:rgba(20,18,35,.4);z-index:55;}
-        #drawerBackdrop.show{display:block;}
-
-        @@media (max-width:1100px){
-          .grid-controls{display:none;} /* Ẩn bớt trên màn hình nhỏ nếu hẹp */
+        .config-panel {
+            background: linear-gradient(180deg, #fff 0%, rgba(245,245,249,.3) 100%);
+            border-left: 1px solid var(--border);
+            padding: 16px 14px;
+            overflow-y: auto;
         }
 
-        @@media (max-width:900px){
-          .app, .app.mode-view{grid-template-columns:1fr !important;}
-          .mobile-toggle{display:inline-flex;}
-          .widget-library, .config-panel{position:fixed;top:0;bottom:0;width:82vw;max-width:320px;z-index:60;
-            transform:translateX(-110%);transition:transform .22s;box-shadow:0 0 24px rgba(0,0,0,.25);padding: 65px 14px;}
-          .config-panel{left:auto;right:0;transform:translateX(110%);padding: 56px 14px;}
-          .widget-library.open, .config-panel.open{transform:translateX(0) !important;}
-          .drawer-close{display:flex;}
-          .toolbar h1{font-size:13px;}
-          .canvas-scroll{padding:12px;}
+        .empty-hint {
+            font-size: 13px;
+            color: var(--text-muted);
+            line-height: 1.6;
+        }
+
+        .field {
+            margin-bottom: 13px;
+        }
+
+            .field label {
+                display: block;
+                font-size: 11.5px;
+                font-weight: 600;
+                margin-bottom: 5px;
+                color: var(--text-muted);
+            }
+
+            .field input[type=text], .field select {
+                width: 100%;
+                padding: 8px 10px;
+                border: 1px solid var(--border);
+                border-radius: 6px;
+                font-size: 13px;
+            }
+
+        /* ================= DATA PLACEHOLDER ================= */
+        .loading-skeleton {
+            background: linear-gradient(90deg, #f0f0f5 25%, #e7e7ea 50%, #f0f0f5 75%);
+            background-size: 200% 100%;
+            animation: loading 1.5s infinite;
+        }
+
+        @@keyframes loading {
+            0% {
+                background-position: 200% 0;
+            }
+
+            100% {
+                background-position: -200% 0;
+            }
+        }
+
+        /* Thêm CSS cho các card type */
+        .card-kpi {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px;
+            background: var(--primary-light);
+            border-radius: 8px;
+        }
+
+        .card-kpi-value {
+            font-size: 20px;
+            font-weight: 700;
+            color: var(--primary);
+        }
+
+        .card-kpi-label {
+            font-size: 11px;
+            color: var(--text-muted);
         }
     </style>
 }
 
-<div class="app mode-build" id="appRoot">
+<div class="app mode-edit" id="app">
+    <!-- THƯ VIỆN WIDGET -->
+    <div class="widget-library">
+        <div class="panel-title">Widget Library</div>
+        <div id="lib-container"></div>
+        <div class="lib-hint">Kéo thả widget vào canvas để thêm</div>
+    </div>
 
-    <!-- ============ THƯ VIỆN LOẠI WIDGET ============ -->
-    <aside class="widget-library" id="libraryPanel">
-        <div class="drawer-head">
-            <p class="panel-title" style="margin:0;">Loại widget</p>
-            <button class="drawer-close" id="closeLibBtn" title="Đóng">✕</button>
-        </div>
-        <div id="libraryList"></div>
-        <p class="lib-hint">Kéo 1 loại widget vào canvas, sau đó chọn nó để chỉnh "Nguồn dữ liệu" và các thông số riêng ở panel bên phải.</p>
-    </aside>
-
-    <!-- ============ CANVAS ============ -->
-    <main class="canvas-wrap">
+    <!-- CANVAS CHÍNH -->
+    <div class="canvas-wrap">
         <div class="toolbar">
-            <button class="btn btn-outline mobile-toggle" id="btnOpenLib">☰ Widget</button>
-            <h1>Cấu hình Dashboard</h1>
-
-            <!-- BỘ ĐIỀU KHIỂN ĐỘNG CÁC CHỈ SỐ GRID -->
+            <h1>Dashboard Builder</h1>
             <div class="grid-controls">
-                <div class="grid-ctrl-item" title="Số cột tối đa">
-                    <span>Cột:</span>
-                    <button class="grid-ctrl-btn" onclick="updateGridParam('GRID_COLS', -1)">-</button>
-                    <span class="grid-val" id="val_GRID_COLS">12</span>
-                    <button class="grid-ctrl-btn" onclick="updateGridParam('GRID_COLS', 1)">+</button>
-                </div>
-                <div class="grid-ctrl-item" title="Chiều cao 1 ô (px)">
-                    <span>H ô:</span>
-                    <button class="grid-ctrl-btn" onclick="updateGridParam('CELL', -5)">-</button>
-                    <span class="grid-val" id="val_CELL">70</span>
-                    <button class="grid-ctrl-btn" onclick="updateGridParam('CELL', 5)">+</button>
-                </div>
-                <div class="grid-ctrl-item" title="Khoảng cách giữa các ô (px)">
-                    <span>Gap:</span>
-                    <button class="grid-ctrl-btn" onclick="updateGridParam('GAP', -2)">-</button>
-                    <span class="grid-val" id="val_GAP">14</span>
-                    <button class="grid-ctrl-btn" onclick="updateGridParam('GAP', 2)">+</button>
-                </div>
+                <div class="grid-ctrl-item">Cols: <span class="grid-val" id="grid-col-val">12</span></div>
+                <button class="grid-ctrl-btn" onclick="changeGridCols(-1)">−</button>
+                <button class="grid-ctrl-btn" onclick="changeGridCols(1)">+</button>
             </div>
-
             <div class="mode-switch">
-                <button id="modeBuildBtn" class="active">🛠 Build</button>
-                <button id="modeViewBtn">👁 View</button>
+                <button class="active" onclick="switchMode('edit')">✎ Edit</button>
+                <button onclick="switchMode('view')">👁 View</button>
             </div>
-            <button class="btn btn-outline" id="btnReset">Mẫu mặc định</button>
-            <button class="btn btn-primary" id="btnSave">Lưu (POST JSONB)</button>
-            <button class="btn btn-outline mobile-toggle" id="btnOpenCfg">⚙</button>
+            <button class="btn btn-primary" onclick="saveDashboard()">💾 Save</button>
+            <button class="btn btn-outline" onclick="resetLayout()">↻ Reset</button>
         </div>
         <div class="canvas-scroll">
             <div id="canvas"></div>
         </div>
-    </main>
+    </div>
 
-    <!-- ============ CONFIG PANEL ============ -->
-    <aside class="config-panel" id="configPanel">
-        <div class="drawer-head">
-            <p class="panel-title" style="margin:0;">Cấu hình widget</p>
-            <button class="drawer-close" id="closeCfgBtn" title="Đóng">✕</button>
-        </div>
-        <div id="configPanelBody">
-            <div class="empty-hint">Chọn 1 widget trên canvas để cấu hình.</div>
-        </div>
-    </aside>
-
+    <!-- CONFIG PANEL -->
+    <div class="config-panel">
+        <div class="panel-title">Settings</div>
+        <div id="config-panel-content" class="empty-hint">Select a widget to configure</div>
+    </div>
 </div>
-<div id="drawerBackdrop"></div>
-
-<pre id="exportOutput" style="display:none;position:fixed;inset:5%;background:#1e1e2e;color:#c9c9e8;padding:20px;overflow:auto;
-  border-radius:10px;z-index:999;font-size:11.5px;box-shadow:0 10px 40px rgba(0,0,0,.4);white-space:pre-wrap;"></pre>
 
 @section PageScripts {
-    <!-- ApexCharts CDN -->
-    <script src="https://cdn.jsdelivr.net/npm/apexcharts@3.45.2/dist/apexcharts.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/interactjs@1.10.27/dist/interact.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Sortable/1.15.0/Sortable.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/interactjs/1.10.19/interact.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/apexcharts@latest/dist/apexcharts.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pickr/1.8.2/pickr.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/pickr/1.8.2/themes/monolith.min.css" />
 
     <script>
-      /* =========================================================================
-        DASHBOARD BUILDER - widget generic theo LOẠI (donut/line/bar/table/list/
-        heatmap/kpi_card), cấu hình động theo schema riêng từng loại, lưu JSONB.
-        -------------------------------------------------------------------------
-        Mapping sang DB (net_dashboard / net_widgetmap / net_widget / net_widgetvalueconfig):
-          - widget.kind            -> net_widget.widgetcode (loại widget, có sẵn 7 loại)
-          - widget.x/y/w/h         -> net_widgetmap.positionx/positiony/width/height
-          - widget.config (object) -> serialize JSON.stringify() -> lưu vào 1 cột jsonb
-                                        (khuyến nghị dùng jsonb thay vì EAV nếu muốn đơn giản hoá)
-          - MOCK_DATASETS          -> đại diện cho net_service (data source), khi có BE
-                                        thật thì dataSource chính là net_service.code, BE
-                                        sẽ chạy sqlcontent tương ứng và trả JSON cùng shape.
-        ========================================================================= */
-        let GRID_COLS = 12;
-        let CELL = 70;
-        let GAP  = 14;
+        // ===================== STATE & CONFIG =====================
+        const dashboardCode = "@dashboardCode";
+        const siteCode = "@(ViewBag.SiteCode ?? "KOA")";
+        const chartInstances = {};
+        let widgets = [];
+        let selectedWidget = null;
+        let nextWidgetId = 1;
+        let apiBaseUrl = '/api/dashboard';
 
-        // Cập nhật các chỉ số GRID_COLS, CELL, GAP trực tiếp trên UI
-        function updateGridParam(param, delta){
-          if(param === 'GRID_COLS'){
-            GRID_COLS = Math.max(4, Math.min(24, GRID_COLS + delta));
-            document.getElementById('val_GRID_COLS').textContent = GRID_COLS;
-            document.documentElement.style.setProperty('--grid-cols', GRID_COLS);
-          } else if(param === 'CELL'){
-            CELL = Math.max(30, Math.min(200, CELL + delta));
-            document.getElementById('val_CELL').textContent = CELL;
-            document.documentElement.style.setProperty('--grid-cell', CELL + 'px');
-          } else if(param === 'GAP'){
-            GAP = Math.max(0, Math.min(50, GAP + delta));
-            document.getElementById('val_GAP').textContent = GAP;
-            document.documentElement.style.setProperty('--grid-gap', GAP + 'px');
-          }
-  
-          // Đảm bảo không widget nào vượt quá GRID_COLS mới
-          widgets.forEach(w => {
-            if(w.x + w.w > GRID_COLS){
-              if(w.w > GRID_COLS) w.w = GRID_COLS;
-              w.x = Math.max(0, GRID_COLS - w.w);
-            }
-          });
-
-          renderCanvas();
-        }
-
-        // ---------------------------------------------------------------------
-        // 1) LOẠI WIDGET GENERIC
-        // ---------------------------------------------------------------------
-        const WIDGET_KINDS = [
-          { kind:'kpi_card', name:'Thẻ số liệu (KPI)', desc:'Số + icon + nhãn',      icon:'#',  color:'#28c76f', defaultW:3, defaultH:2, minW:2,minH:2,maxW:5,maxH:3 },
-          { kind:'donut',    name:'Biểu đồ Donut',     desc:'Tỷ lệ theo danh mục',   icon:'◔',  color:'#ff9f43', defaultW:6, defaultH:5, minW:4,minH:4,maxW:9,maxH:6 },
-          { kind:'line',     name:'Biểu đồ Line',      desc:'Xu hướng theo thời gian', icon:'⟋', color:'#7367f0', defaultW:4, defaultH:3, minW:3,minH:2,maxW:6,maxH:4 },
-          { kind:'bar',      name:'Biểu đồ Bar/Column',desc:'So sánh theo nhóm',     icon:'▥',  color:'#00cfe8', defaultW:4, defaultH:4, minW:3,minH:3,maxW:8,maxH:5 },
-          { kind:'table',    name:'Bảng dữ liệu',      desc:'Table nhiều cột',       icon:'▤',  color:'#ea5455', defaultW:6, defaultH:4, minW:4,minH:3,maxW:12,maxH:6 },
-          { kind:'list',     name:'Danh sách xếp hạng',desc:'List + progress bar',   icon:'☰',  color:'#7367f0', defaultW:5, defaultH:4, minW:3,minH:3,maxW:8,maxH:6 },
-          { kind:'heatmap',  name:'Heatmap',           desc:'Ma trận cường độ',      icon:'▦',  color:'#00cfe8', defaultW:6, defaultH:5, minW:5,minH:4,maxW:12,maxH:6 },
-        ];
-        function kindOf(k){ return WIDGET_KINDS.find(t=>t.kind===k); }
-
-        // ---------------------------------------------------------------------
-        // 2) NGUỒN DỮ LIỆU MOCK
-        // ---------------------------------------------------------------------
-        const MOCK_DATASETS = {
-          revenue_by_room:{ label:'Doanh thu theo phòng (tháng)', shape:'categorical', data:{
-            labels:['KOA 101 (TP)','KOA 102 (TP)','KOA 201 (TP)','KOA 302 (TP)','KOA 101 (TĐ)','KOA 102 (TĐ)','KOA 201 (TĐ)','KOA 202 (TĐ)'],
-            values:[9524,10928,9953,9210,11386,10491,9140,8197] }},
-          monthly_revenue_trend:{ label:'Doanh thu 6 tháng gần đây', shape:'series', data:{
-            categories:['T2','T3','T4','T5','T6','T7'], series:[65434,126586,60782,5695,36442,78829] }},
-          monthly_cost_trend:{ label:'Chi phí 6 tháng gần đây', shape:'series', data:{
-            categories:['T2','T3','T4','T5','T6','T7'], series:[16837,12817,3325,15000,30062,34575] }},
-          weekly_revenue:{ label:'Doanh thu theo tuần (T2-CN)', shape:'series', data:{
-            categories:['T2','T3','T4','T5','T6','T7','CN'], series:[4730,3137,3950,2358,1600,1815,330] }},
-          top_services:{ label:'Top dịch vụ', shape:'rows', data:{
-            columns:[{field:'name',label:'Dịch vụ'},{field:'qty',label:'Lượt'},{field:'vnd',label:'Doanh thu'}],
-            rows:[
-              {name:'B - Book combo giờ', qty:'72', vnd:'19.900.000'},
-              {name:'B - Book qua đêm T5 - CN', qty:'37', vnd:'14.800.000'},
-              {name:'B - Book combo giờ T7 - CN', qty:'40', vnd:'14.480.000'},
-              {name:'B - KM Overnight', qty:'33', vnd:'11.550.000'},
-              {name:'B - Thêm giờ 50k/1h', qty:'46', vnd:'6.833.333'} ]}},
-          top_customers:{ label:'Top khách hàng gần nhất', shape:'rows', data:{
-            columns:[{field:'name',label:'Khách hàng'},{field:'room',label:'Phòng'},{field:'vnd',label:'Giá trị'}],
-            rows:[
-              {name:'Phan Huỳnh Anh Thư', room:'KOA 101 (Thủ Đức)', vnd:'400.000'},
-              {name:'Nguyễn Trúc Ngân', room:'KOA 102 (Tân Phú)', vnd:'400.000'},
-              {name:'Nguyễn Đăng Hưng', room:'KOA 201 (Thủ Đức)', vnd:'250.000'},
-              {name:'Nguyễn Thị Anh Thư', room:'KOA 102 (Tân Phú)', vnd:'330.000'},
-              {name:'Biện Đức Huy', room:'KOA 201 (Tân Phú)', vnd:'675.000'} ]}},
-          occupancy_rooms:{ label:'Tỷ lệ kín phòng trong tuần', shape:'rows', data:{
-            columns:[{field:'name',label:'Phòng'},{field:'pct',label:'Tỷ lệ %'},{field:'vnd',label:'Doanh thu'}],
-            rows:[
-              {name:'KOA 101 (Tân Phú)', pct:24.4, vnd:'1.980.000'},
-              {name:'KOA 102 (Tân Phú)', pct:24.4, vnd:'2.480.000'},
-              {name:'KOA 201 (Tân Phú)', pct:33.3, vnd:'2.573.000'},
-              {name:'KOA 101 (Thủ Đức)', pct:23.8, vnd:'2.041.000'},
-              {name:'KOA 202 (Thủ Đức)', pct:19.0, vnd:'1.954.000'} ]}},
-          booking_heatmap:{ label:'Trạng thái đặt phòng 3 tháng', shape:'matrix', data:{
-            weekLabels:['T18','T19','T20','T21','T22','T23','T24','T25','T26','T27','T28','T29','T30','T31'],
-            days:['SUN','SAT','FRI','THU','WED','TUE','MON'],
-            matrix:{
-              SUN:[0,0,0,0,0,0,0,4700,730,7080,5910,330,0,0],
-              SAT:[0,0,0,0,0,0,230,2795,1370,6520,6735,1815,0,0],
-              FRI:[0,0,0,0,0,0,0,650,4390,3325,4765,1600,0,0],
-              THU:[0,0,0,0,0,0,0,0,4440,4630,4515,2583,0,0],
-              WED:[0,0,0,0,0,0,600,500,5244,4282,4056,3950,400,0],
-              TUE:[0,0,0,0,0,0,0,0,5465,350,3815,3137,0,0],
-              MON:[0,0,0,0,0,0,0,0,3778,1200,4226,4730,650,0],
-            }}},
+        // Widget template definitions (từ database)
+        const widgetTemplates = {
+            'large_img_card': { name: 'Large Image Card', icon: '#', color: '#28c76f', w: 4, h: 3 },
+            'multiple_mini_card': { name: 'Multiple Mini Cards', icon: '☰', color: '#7367f0', w: 5, h: 4 },
+            'donut': { name: 'Donut Chart', icon: '◉', color: '#ff9f43', w: 6, h: 5 },
+            'line': { name: 'Line Chart', icon: '⚡', color: '#7367f0', w: 6, h: 4 },
+            'bar': { name: 'Bar Chart', icon: '◆', color: '#00cfe8', w: 6, h: 4 },
+            'list': { name: 'List Widget', icon: '≡', color: '#7367f0', w: 6, h: 6 },
+            'table': { name: 'Table', icon: '⊞', color: '#ea5455', w: 8, h: 4 },
+            'heatmap': { name: 'Heatmap', icon: '▦', color: '#00cfe8', w: 6, h: 4 }
         };
 
-        const DATA_SHAPE_BY_KIND = { donut:'categorical', line:'series', bar:'series', table:'rows', list:'rows', heatmap:'matrix', kpi_card:null };
-
-        function datasetOptionsFor(kind){
-          const shape = DATA_SHAPE_BY_KIND[kind];
-          if(!shape) return [];
-          return Object.entries(MOCK_DATASETS).filter(([,v])=>v.shape===shape).map(([key,v])=>({key,label:v.label}));
-        }
-
-        // ---------------------------------------------------------------------
-        // 3) SCHEMA CẤU HÌNH ĐỘNG
-        // ---------------------------------------------------------------------
-        function getFieldSchema(kind){
-          const common = [{ key:'title', label:'Tiêu đề', type:'text' }];
-          switch(kind){
-            case 'kpi_card': return [...common,
-              { key:'value', label:'Giá trị', type:'text' },
-              { key:'unit',  label:'Đơn vị / ghi chú nhỏ', type:'text' },
-              { key:'icon',  label:'Icon (1 ký tự/emoji)', type:'text' },
-              { key:'color', label:'Màu nền icon', type:'color' }];
-            case 'donut': return [...common,
-              { key:'dataSource', label:'Nguồn dữ liệu', type:'dataset' },
-              { key:'legendPosition', label:'Vị trí chú thích', type:'select', options:['right','bottom'] }];
-            case 'line': return [...common,
-              { key:'dataSource', label:'Nguồn dữ liệu', type:'dataset' },
-              { key:'color', label:'Màu đường', type:'color' },
-              { key:'showArea', label:'Tô nền vùng dưới đường', type:'checkbox' }];
-            case 'bar': return [...common,
-              { key:'dataSource', label:'Nguồn dữ liệu', type:'dataset' },
-              { key:'color', label:'Màu cột', type:'color' },
-              { key:'horizontal', label:'Hiển thị dạng cột ngang', type:'checkbox' }];
-            case 'table': return [...common,
-              { key:'dataSource', label:'Nguồn dữ liệu', type:'dataset' }];
-            case 'list': return [...common,
-              { key:'dataSource', label:'Nguồn dữ liệu', type:'dataset' },
-              { key:'showProgress', label:'Hiện thanh tiến độ (nếu có field %)', type:'checkbox' },
-              { key:'color', label:'Màu nhấn', type:'color' }];
-            case 'heatmap': return [...common,
-              { key:'dataSource', label:'Nguồn dữ liệu', type:'dataset' }];
-            default: return common;
-          }
-        }
-
-        function defaultConfigFor(kind){
-          const opts = datasetOptionsFor(kind);
-          const t = kindOf(kind);
-          const base = { title:t.name, color:t.color };
-          switch(kind){
-            case 'kpi_card': return { ...base, value:'0', unit:'', icon:'#' };
-            case 'donut': return { ...base, dataSource:opts[0]?.key||'', legendPosition:'right' };
-            case 'line': return { ...base, dataSource:opts[0]?.key||'', showArea:false };
-            case 'bar': return { ...base, dataSource:opts[0]?.key||'', horizontal:false };
-            case 'table': return { ...base, dataSource:opts[0]?.key||'' };
-            case 'list': return { ...base, dataSource:opts[0]?.key||'', showProgress:true };
-            case 'heatmap': return { ...base, dataSource:opts[0]?.key||'' };
-            default: return base;
-          }
-        }
-
-        // ---------------------------------------------------------------------
-        // 4) STATE & INITIALIZATION
-        // ---------------------------------------------------------------------
-        let widgets = [];        
-        let selectedId = null;
-        let idSeq = 1;
-        let mode = 'build';       
-        const chartInstances = {};
-        const appRoot = document.getElementById('appRoot');
-        const canvasEl = document.getElementById('canvas');
-
-        // ---------------------------------------------------------------------
-        // 5) THƯ VIỆN WIDGET
-        // ---------------------------------------------------------------------
-        function renderLibrary(){
-          document.getElementById('libraryList').innerHTML = WIDGET_KINDS.map(t=>`
-            <div class="lib-item" draggable="true" data-kind="${t.kind}">
-              <span class="ic" style="background:${t.color}">${t.icon}</span>
-              <span><b>${t.name}</b><span class="desc">${t.desc}</span></span>
-            </div>`).join('');
-          document.querySelectorAll('.lib-item').forEach(el=>{
-            el.addEventListener('dragstart', e=>{
-              e.dataTransfer.setData('text/widget-kind', el.dataset.kind);
-              el.classList.add('dragging-source');
-            });
-            el.addEventListener('dragend', ()=> el.classList.remove('dragging-source'));
-          });
-        }
-        canvasEl.addEventListener('dragover', e=>{ if(mode==='build'){ e.preventDefault(); canvasEl.classList.add('drop-active'); } });
-        canvasEl.addEventListener('dragleave', ()=> canvasEl.classList.remove('drop-active'));
-        canvasEl.addEventListener('drop', e=>{
-          e.preventDefault();
-          canvasEl.classList.remove('drop-active');
-          const kind = e.dataTransfer.getData('text/widget-kind');
-          if(!kind || mode!=='build') return;
-          const rect = canvasEl.getBoundingClientRect();
-          const gx = Math.max(0, Math.min(GRID_COLS-1, Math.round((e.clientX-rect.left)/(colWidthPx()+GAP))));
-          const gy = Math.max(0, Math.round((e.clientY-rect.top)/(CELL+GAP)));
-          addWidget(kind, gx, gy);
+        // ===================== KHỞI ĐỘNG =====================
+        document.addEventListener('DOMContentLoaded', async () => {
+            renderLibrary();
+            await loadDashboardData();
+            setupInteract();
+            setupDragAndDrop();
         });
 
-        // ---------------------------------------------------------------------
-        // 6) THÊM / XÓA WIDGET
-        // ---------------------------------------------------------------------
-        function addWidget(kind, x, y){
-          const t = kindOf(kind);
-          let w = Math.min(t.defaultW, GRID_COLS), h = t.defaultH;
-          x = Math.min(x, GRID_COLS - w);
-          if(collides(null, x, y, w, h)){ y = nextFreeRow(); x = 0; }
-          widgets.push({ id:'w'+(idSeq++), kind, x, y, w, h, config: defaultConfigFor(kind) });
-          renderCanvas();
-          selectWidget(widgets[widgets.length-1].id);
-        }
-        function removeWidget(id){
-          widgets = widgets.filter(x=>x.id!==id);
-          if(selectedId===id){ selectedId=null; renderConfigPanel(); }
-          renderCanvas();
-        }
-        function nextFreeRow(){ return widgets.reduce((m,w)=>Math.max(m, w.y+w.h), 0); }
-        function collides(excludeId, x, y, w, h){
-          return widgets.some(o=> o.id!==excludeId && x < o.x+o.w && x+w > o.x && y < o.y+o.h && y+h > o.y);
-        }
+        // ===================== HÀM LOAD DỮ LIỆU =====================
+        async function loadDashboardData() {
+            try {
+                const response = await fetch(`${apiBaseUrl}/${dashboardCode}/widgets?siteCode=${siteCode}`);
+                if (!response.ok) throw new Error('Failed to load widgets');
 
-        // ---------------------------------------------------------------------
-        // 7) GRID <-> PIXEL (TÍNH TOÁN THEO HẰNG SỐ ĐỘNG)
-        // ---------------------------------------------------------------------
-        function colWidthPx(){ return (canvasEl.clientWidth - (GRID_COLS-1)*GAP) / GRID_COLS; }
-        function gridToPixel(x,y,w,h){
-          const cw = colWidthPx();
-          return { left:x*(cw+GAP), top:y*(CELL+GAP), width:w*cw+(w-1)*GAP, height:h*CELL+(h-1)*GAP };
-        }
-        function pixelToGrid(left, top, width, height){
-          const cw = colWidthPx();
-          return {
-            x: Math.round(left/(cw+GAP)), y: Math.round(top/(CELL+GAP)),
-            w: Math.max(1, Math.round((width+GAP)/(cw+GAP))), h: Math.max(1, Math.round((height+GAP)/(CELL+GAP))),
-          };
-        }
+                const data = await response.json();
 
-        // ---------------------------------------------------------------------
-        // 8) RENDER CANVAS
-        // ---------------------------------------------------------------------
-        function renderCanvas(){
-          Object.keys(chartInstances).forEach(k=>{ chartInstances[k]?.destroy?.(); delete chartInstances[k]; });
-          canvasEl.innerHTML = '';
-          const isMobile = window.innerWidth <= 900;
-          const useFlow = mode==='view' && isMobile;
-          canvasEl.classList.toggle('flow-stack', useFlow);
+                // Chuyển đổi từ API response thành widget object
+                // Schema: id, dashboardcode, widgetcode, name, templetecode, storegetdata,
+                //         positionx, positiony, width, height, configjson, chartconfig, etc.
+                widgets = (data || []).map((w, idx) => {
+                    let config = {};
+                    try {
+                        config = JSON.parse(w.configjson || '{}');
+                    } catch (e) {
+                        console.warn('Failed to parse config:', w.configjson);
+                    }
 
-          const ordered = useFlow ? [...widgets].sort((a,b)=> a.y-b.y || a.x-b.x) : widgets;
-          const maxY = Math.max(6, nextFreeRow()+2);
-          canvasEl.style.minHeight = useFlow ? '' : (maxY*(CELL+GAP))+'px';
+                    return {
+                        id: idx + 1,
+                        dbId: w.id,
+                        type: w.templetecode || 'card',
+                        config: config,
+                        x: parseInt(w.positionx) || 0,
+                        y: parseInt(w.positiony) || 0,
+                        w: parseInt(w.width) || 4,
+                        h: parseInt(w.height) || 3,
+                        code: w.widgetcode || '',
+                        dataSource: (config && config.dataSource) || w.storegetdata || ''
+                    };
+                });
 
-          ordered.forEach(wdg=>{
-            const el = document.createElement('div');
-            el.className = 'widget' + (wdg.id===selectedId ? ' selected' : '');
-            if(!useFlow){
-              const pos = gridToPixel(wdg.x, wdg.y, wdg.w, wdg.h);
-              el.style.left=pos.left+'px'; el.style.top=pos.top+'px'; el.style.width=pos.width+'px'; el.style.height=pos.height+'px';
+                nextWidgetId = widgets.length + 1;
+                renderCanvas();
+            } catch (error) {
+                console.error('Error loading dashboard:', error);
+                // Fallback to default empty dashboard
+                renderCanvas();
             }
-            el.dataset.id = wdg.id;
-            el.innerHTML = `
-              <div class="widget-head">
-                <h4>${wdg.config.title}</h4>
-                <button class="rm" title="Xóa widget">✕</button>
-              </div>
-              <div class="widget-body" id="body-${wdg.id}"></div>
-              <div class="resize-handle"></div>`;
-            if(mode==='build'){
-              el.addEventListener('mousedown', ()=> selectWidget(wdg.id));
-              el.querySelector('.rm').addEventListener('click', ev=>{ ev.stopPropagation(); removeWidget(wdg.id); });
-            }
-            canvasEl.appendChild(el);
-            renderWidgetContent(wdg);
-            if(mode==='build' && !useFlow) makeInteractive(el, wdg);
-          });
         }
 
-        // ---------------------------------------------------------------------
-        // 9) INTERACT.JS
-        // ---------------------------------------------------------------------
-        function makeInteractive(el, wdg){
-          interact(el)
-            .draggable({
-              allowFrom:'.widget-head',
-              listeners:{
-                move(event){
-                  el.style.left = ((parseFloat(el.style.left)||0)+event.dx)+'px';
-                  el.style.top  = ((parseFloat(el.style.top)||0)+event.dy)+'px';
-                },
-                end(){
-                  const g = pixelToGrid(parseFloat(el.style.left), parseFloat(el.style.top), el.offsetWidth, el.offsetHeight);
-                  g.x = Math.max(0, Math.min(GRID_COLS-wdg.w, g.x)); g.y = Math.max(0, g.y);
-                  if(!collides(wdg.id, g.x, g.y, wdg.w, wdg.h)){ wdg.x=g.x; wdg.y=g.y; }
-                  renderCanvas();
-                }
-              }
-            })
-            .resizable({
-              edges:{ right:'.resize-handle', bottom:'.resize-handle', bottom_right:'.resize-handle' },
-              listeners:{
-                move(event){ el.style.width=event.rect.width+'px'; el.style.height=event.rect.height+'px'; },
-                end(){
-                  const g = pixelToGrid(parseFloat(el.style.left), parseFloat(el.style.top), el.offsetWidth, el.offsetHeight);
-                  const t = kindOf(wdg.kind);
-                  let w = Math.min(t.maxW, Math.max(t.minW, g.w)); w = Math.min(w, GRID_COLS-wdg.x);
-                  let h = Math.min(t.maxH, Math.max(t.minH, g.h));
-                  if(!collides(wdg.id, wdg.x, wdg.y, w, h)){ wdg.w=w; wdg.h=h; }
-                  renderCanvas();
-                }
-              }
+        // ===================== RENDER LIBRARY =====================
+        function renderLibrary() {
+            const libContainer = document.getElementById('lib-container');
+            libContainer.innerHTML = Object.entries(widgetTemplates)
+                .map(([key, tmpl]) => `
+                    <div class="lib-item" draggable="true" data-type="${key}">
+                        <div class="ic" style="background:${tmpl.color}">${tmpl.icon}</div>
+                        <div>
+                            <strong>${tmpl.name}</strong>
+                            <span class="desc">${tmpl.w}×${tmpl.h}</span>
+                        </div>
+                    </div>
+                `).join('');
+
+            // Kích hoạt drag from library
+            document.querySelectorAll('.lib-item').forEach(el => {
+                el.addEventListener('dragstart', e => {
+                    e.dataTransfer.effectAllowed = 'copy';
+                    e.dataTransfer.setData('type', el.dataset.type);
+                    el.classList.add('dragging-source');
+                });
+                el.addEventListener('dragend', e => el.classList.remove('dragging-source'));
             });
         }
 
-        // ---------------------------------------------------------------------
-        // 10) CHỌN WIDGET + CONFIG PANEL ĐỘNG
-        // ---------------------------------------------------------------------
-        function selectWidget(id){
-          selectedId = id;
-          document.querySelectorAll('.widget').forEach(e=>e.classList.toggle('selected', e.dataset.id===id));
-          renderConfigPanel();
-          if(window.innerWidth<=900) openDrawer('configPanel');
-        }
+        // ===================== RENDER CANVAS =====================
+        function renderCanvas() {
+            const canvas = document.getElementById('canvas');
+            canvas.innerHTML = '';
 
-        function openDrawer(id){
-          closeAllDrawers();
-          document.getElementById(id).classList.add('open');
-          document.getElementById('drawerBackdrop').classList.add('show');
-        }
-        function closeAllDrawers(){
-          document.getElementById('libraryPanel').classList.remove('open');
-          document.getElementById('configPanel').classList.remove('open');
-          document.getElementById('drawerBackdrop').classList.remove('show');
-        }
-        function renderConfigPanel(){
-          const panel = document.getElementById('configPanelBody');
-          const wdg = widgets.find(w=>w.id===selectedId);
-          if(!wdg){
-            panel.innerHTML = `<div class="empty-hint">Chọn 1 widget trên canvas để cấu hình.</div>`;
-            return;
-          }
-          const schema = getFieldSchema(wdg.kind);
-          const colors = ['#7367f0','#28c76f','#ff9f43','#ea5455','#00cfe8'];
-          panel.innerHTML = `
-            <p class="panel-title">Cấu hình • ${kindOf(wdg.kind).name}</p>
-            <div id="fieldsHost"></div>
-            <p class="panel-title" style="margin-top:18px;">Vị trí / kích thước</p>
-            <div class="meta-row"><span>positionx</span><b>${wdg.x}</b></div>
-            <div class="meta-row"><span>positiony</span><b>${wdg.y}</b></div>
-            <div class="meta-row"><span>width</span><b>${wdg.w}</b></div>
-            <div class="meta-row"><span>height</span><b>${wdg.h}</b></div>
-            <p class="panel-title" style="margin-top:18px;">configJson (jsonb sẽ lưu)</p>
-            <div class="json-preview" id="jsonPreview"></div>
-            <button class="btn btn-danger-outline" style="width:100%;margin-top:14px;" id="cfgRemove">Xóa widget này</button>
-          `;
-          const host = document.getElementById('fieldsHost');
-          schema.forEach(f=>{
-            const wrap = document.createElement('div'); wrap.className='field';
-            if(f.type==='text'){
-              wrap.innerHTML = `<label>${f.label}</label><input type="text" data-k="${f.key}" value="${wdg.config[f.key]??''}">`;
-            } else if(f.type==='color'){
-              wrap.innerHTML = `<label>${f.label}</label><div class="swatches" data-k="${f.key}">
-                ${colors.map(c=>`<span class="swatch ${wdg.config[f.key]===c?'active':''}" data-c="${c}" style="background:${c}"></span>`).join('')}</div>`;
-            } else if(f.type==='select'){
-              wrap.innerHTML = `<label>${f.label}</label><select data-k="${f.key}">
-                ${f.options.map(o=>`<option value="${o}" ${wdg.config[f.key]===o?'selected':''}>${o}</option>`).join('')}</select>`;
-            } else if(f.type==='dataset'){
-              const opts = datasetOptionsFor(wdg.kind);
-              wrap.innerHTML = `<label>${f.label} (net_service)</label><select data-k="${f.key}">
-                ${opts.map(o=>`<option value="${o.key}" ${wdg.config[f.key]===o.key?'selected':''}>${o.label}</option>`).join('')}</select>`;
-            } else if(f.type==='checkbox'){
-              wrap.innerHTML = `<label class="field-check"><input type="checkbox" data-k="${f.key}" ${wdg.config[f.key]?'checked':''}> ${f.label}</label>`;
-            }
-            host.appendChild(wrap);
-          });
-          host.querySelectorAll('input[type=text]').forEach(inp=>{
-            inp.addEventListener('input', ()=>{
-              wdg.config[inp.dataset.k] = inp.value;
-              if(inp.dataset.k==='title'){
-                const h4 = document.querySelector(`.widget[data-id="${wdg.id}"] .widget-head h4`);
-                if(h4) h4.textContent = inp.value;
-              }
-              renderWidgetContent(wdg);
-              updateJsonPreview(wdg);
-            });
-          });
-          host.querySelectorAll('select').forEach(sel=>{
-            sel.addEventListener('change', ()=>{
-              wdg.config[sel.dataset.k] = sel.value;
-              renderWidgetContent(wdg);
-              updateJsonPreview(wdg);
-            });
-          });
-          host.querySelectorAll('input[type=checkbox]').forEach(chk=>{
-            chk.addEventListener('change', ()=>{
-              wdg.config[chk.dataset.k] = chk.checked;
-              renderWidgetContent(wdg);
-              updateJsonPreview(wdg);
-            });
-          });
-          host.querySelectorAll('.swatches').forEach(sw=>{
-            sw.querySelectorAll('.swatch').forEach(dot=>{
-              dot.addEventListener('click', ()=>{
-                wdg.config[sw.dataset.k] = dot.dataset.c;
-                sw.querySelectorAll('.swatch').forEach(d=>d.classList.toggle('active', d===dot));
+            widgets.forEach(wdg => {
+                const tmpl = widgetTemplates[wdg.type] || {};
+                const el = document.createElement('div');
+                el.className = 'widget';
+                el.dataset.id = wdg.id;
+                el.innerHTML = `
+                    <div class="widget-head">
+                        <h4>${wdg.config.title || tmpl.name || 'Widget'}</h4>
+                        <button class="rm" onclick="removeWidget(${wdg.id})">×</button>
+                    </div>
+                    <div class="widget-body">
+                        <div class="loading-skeleton" style="height:100%;border-radius:6px;"></div>
+                    </div>
+                    <div class="resize-handle"></div>
+                `;
+
+                el.style.cssText = `
+                    left: ${wdg.x}%;
+                    top: ${wdg.y}%;
+                    width: ${wdg.w}%;
+                    height: ${wdg.h}%;
+                `;
+
+                el.addEventListener('click', () => selectWidget(wdg.id));
+                canvas.appendChild(el);
+
+                // Render widget content
                 renderWidgetContent(wdg);
-                updateJsonPreview(wdg);
-              });
             });
-          });
-          document.getElementById('cfgRemove').addEventListener('click', ()=> removeWidget(wdg.id));
-          updateJsonPreview(wdg);
-        }
-        function updateJsonPreview(wdg){
-          document.getElementById('jsonPreview').textContent = JSON.stringify(wdg.config, null, 2);
         }
 
-        // ---------------------------------------------------------------------
-        // 11) TOGGLE BUILD / VIEW
-        // ---------------------------------------------------------------------
-        document.getElementById('modeBuildBtn').addEventListener('click', ()=> setMode('build'));
-        document.getElementById('modeViewBtn').addEventListener('click', ()=> setMode('view'));
-        function setMode(m){
-          mode = m;
-          appRoot.classList.toggle('mode-view', m==='view');
-          document.getElementById('modeBuildBtn').classList.toggle('active', m==='build');
-          document.getElementById('modeViewBtn').classList.toggle('active', m==='view');
-          closeAllDrawers();
-          requestAnimationFrame(()=> requestAnimationFrame(renderCanvas));
+        // ===================== RENDER WIDGET CONTENT =====================
+        function renderWidgetContent(wdg) {
+            const el = document.querySelector(`[data-id="${wdg.id}"] .widget-body`);
+            if (!el) return;
+
+            const tmpl = widgetTemplates[wdg.type] || {};
+            const config = wdg.config || {};
+
+            switch (wdg.type) {
+                case 'large_img_card':
+                    el.innerHTML = `
+                        <div style="display:flex;gap:14px;height:100%;">
+                            <div style="flex:1;">
+                                <h4 style="color:${config.color || '#000'}">${config.value1 || 'N/A'}</h4>
+                                <p style="font-size:12px;color:#999;">${config.value2 || ''}</p>
+                                <a href="${config.buttonurl || '#'}" class="btn btn-sm"
+                                   style="background:${config.color || '#7367f0'};color:#fff;">
+                                    ${config.buttontext || 'View'}
+                                </a>
+                            </div>
+                            <div style="flex:1;text-align:center;">
+                                <img src="${config.imageurl || ''}" style="max-height:${config.imageheight || 150}px;" />
+                            </div>
+                        </div>`;
+                    break;
+
+                case 'multiple_mini_card':
+                    el.innerHTML = `
+                        <div style="font-size:10px;color:#999;">${config.subContent || 'Multiple metrics'}</div>
+                        <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:8px;margin-top:8px;">
+                            ${[1,2,3,4].map(i => `
+                                <div class="card-kpi">
+                                    <div>
+                                        <div class="card-kpi-label">Metric ${i}</div>
+                                        <div class="card-kpi-value">--</div>
+                                    </div>
+                                </div>
+                            `).join('')}
+                        </div>`;
+                    break;
+
+                case 'donut':
+                case 'line':
+                case 'bar':
+                    el.innerHTML = `<div id="chart-${wdg.id}" style="width:100%;height:100%;"></div>`;
+                    // Render chart after DOM update
+                    setTimeout(() => renderChart(wdg), 100);
+                    break;
+
+                case 'list':
+                    el.innerHTML = `
+                        <div style="font-size:11px;color:#999;margin-bottom:8px;">${config.title || 'List Items'}</div>
+                        <ul style="list-style:none;padding:0;margin:0;font-size:12px;">
+                            ${[1,2,3].map(i => `<li style="padding:6px 0;border-bottom:1px solid #f0f0f5;">Item ${i}</li>`).join('')}
+                        </ul>`;
+                    break;
+
+                default:
+                    el.innerHTML = `<div style="color:#999;text-align:center;padding:20px;">${config.title || 'Empty Widget'}</div>`;
+            }
         }
-        document.getElementById('btnOpenLib').addEventListener('click', ()=>{
-          const el = document.getElementById('libraryPanel');
-          el.classList.contains('open') ? closeAllDrawers() : openDrawer('libraryPanel');
-        });
-        document.getElementById('btnOpenCfg').addEventListener('click', ()=>{
-          const el = document.getElementById('configPanel');
-          el.classList.contains('open') ? closeAllDrawers() : openDrawer('configPanel');
-        });
-        document.getElementById('closeLibBtn').addEventListener('click', closeAllDrawers);
-        document.getElementById('closeCfgBtn').addEventListener('click', closeAllDrawers);
-        document.getElementById('drawerBackdrop').addEventListener('click', closeAllDrawers);
 
-        // ---------------------------------------------------------------------
-        // 12) LƯU - DỮ LIỆU ĐƯỢC GỬI ĐI BAO GỒM CÁC THÔNG SỐ GRID
-        // ---------------------------------------------------------------------
-        async function saveLayout(){
-          const payload = {
-            // Lưu các chỉ số cấu hình Grid hiện tại của Dashboard
-            dashboardConfig: {
-              gridCols: GRID_COLS,
-              cellHeight: CELL,
-              gridGap: GAP
-            },
-            // Lưu danh sách các Widget
-            widgets: widgets.map(w=>({
-              widgetCode: w.kind,
-              positionX: w.x, positionY: w.y, width: w.w, height: w.h,
-              configJson: JSON.stringify(w.config)
-            }))
-          };
+        // ===================== RENDER CHART =====================
+        function renderChart(wdg) {
+            const chartEl = document.getElementById(`chart-${wdg.id}`);
+            if (!chartEl) return;
 
-          let resultText;
-          try{
-            const res = await fetch('/Dashboards/SaveLayout', {
-              method:'POST', headers:{ 'Content-Type':'application/json' }, body: JSON.stringify(payload)
+            const options = {
+                chart: { type: wdg.type, toolbar: { show: false }, height: '100%' },
+                title: { text: wdg.config.title || '' },
+                series: [{ name: 'Data', data: [30, 40, 45, 50, 49, 60, 70] }],
+                xaxis: { categories: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'] }
+            };
+
+            if (chartInstances[wdg.id]) chartInstances[wdg.id].destroy();
+            const chart = new ApexCharts(chartEl, options);
+            chart.render();
+            chartInstances[wdg.id] = chart;
+        }
+
+        // ===================== WIDGET MANAGEMENT =====================
+        function selectWidget(id) {
+            selectedWidget = widgets.find(w => w.id === id);
+            document.querySelectorAll('.widget').forEach(el => el.classList.remove('selected'));
+            document.querySelector(`[data-id="${id}"]`)?.classList.add('selected');
+            updateConfigPanel();
+        }
+
+        async function removeWidget(id) {
+            if (!confirm('Remove this widget?')) return;
+
+            const widget = widgets.find(w => w.id === id);
+            if (widget && widget.code) {
+                try {
+                    // Gọi API để xóa từ database
+                    const response = await fetch(
+                        `${apiBaseUrl}/widget?dashboardCode=${dashboardCode}&widgetCode=${widget.code}`,
+                        { method: 'DELETE' }
+                    );
+
+                    if (!response.ok) {
+                        console.warn('Failed to delete from database:', response.statusText);
+                    }
+                } catch (error) {
+                    console.error('Error deleting widget:', error);
+                }
+            }
+
+            widgets = widgets.filter(w => w.id !== id);
+            renderCanvas();
+            selectedWidget = null;
+            updateConfigPanel();
+        }
+
+        function addWidget(type) {
+            const tmpl = widgetTemplates[type] || {};
+            const newWidget = {
+                id: nextWidgetId++,
+                type: type,
+                config: { title: tmpl.name || 'New Widget' },
+                x: Math.random() * 50,
+                y: Math.random() * 50,
+                w: tmpl.w || 4,
+                h: tmpl.h || 3,
+                code: `widget_${nextWidgetId}`,
+                dataSource: ''
+            };
+            widgets.push(newWidget);
+            renderCanvas();
+            selectWidget(newWidget.id);
+        }
+
+        // ===================== CONFIG PANEL =====================
+        function updateConfigPanel() {
+            const panel = document.getElementById('config-panel-content');
+            if (!selectedWidget) {
+                panel.innerHTML = '<div class="empty-hint">Select a widget to configure</div>';
+                return;
+            }
+
+            const config = selectedWidget.config || {};
+            panel.innerHTML = `
+                <div class="field">
+                    <label>Title</label>
+                    <input type="text" value="${config.title || ''}"
+                           onchange="updateConfig('title', this.value)">
+                </div>
+                <div class="field">
+                    <label>Data Source</label>
+                    <input type="text" value="${selectedWidget.dataSource || ''}"
+                           onchange="updateConfig('dataSource', this.value)">
+                </div>
+                <div class="field">
+                    <label>Color</label>
+                    <input type="text" value="${config.color || '#7367f0'}"
+                           onchange="updateConfig('color', this.value)">
+                </div>
+                <hr style="margin:12px 0;border:none;border-top:1px dashed var(--border);">
+                <div style="font-size:11px;color:var(--text-muted);">
+                    <strong>Position:</strong> X=${selectedWidget.x}% Y=${selectedWidget.y}%<br>
+                    <strong>Size:</strong> ${selectedWidget.w}% × ${selectedWidget.h}%
+                </div>
+            `;
+        }
+
+        function updateConfig(key, value) {
+            if (!selectedWidget) return;
+            if (key === 'dataSource') {
+                selectedWidget.dataSource = value;
+            } else {
+                selectedWidget.config = selectedWidget.config || {};
+                selectedWidget.config[key] = value;
+            }
+            renderWidgetContent(selectedWidget);
+            updateConfigPanel();
+        }
+
+        // ===================== INTERACT.JS (DRAG & RESIZE) =====================
+        function setupInteract() {
+            interact('.widget').resizable({
+                edges: { left: false, right: true, bottom: true, top: false },
+                listeners: {
+                    move(event) {
+                        let { x, y } = event.target.dataset;
+                        x = (parseFloat(x) || 0);
+                        y = (parseFloat(y) || 0);
+
+                        event.target.style.width = event.rect.width + 'px';
+                        event.target.style.height = event.rect.height + 'px';
+                    },
+                    end(event) {
+                        const id = parseInt(event.target.dataset.id);
+                        const wdg = widgets.find(w => w.id === id);
+                        if (wdg && event.target.parentElement) {
+                            const canvas = event.target.parentElement;
+                            wdg.w = (event.target.offsetWidth / canvas.offsetWidth) * 100;
+                            wdg.h = (event.target.offsetHeight / canvas.offsetHeight) * 100;
+                        }
+                    }
+                },
+                modifiers: [
+                    interact.modifiers.restrictSize({
+                        min: { width: 150, height: 100 }
+                    })
+                ]
+            }).draggable({
+                listeners: {
+                    move(event) {
+                        event.target.style.left = event.pageX - event.target.offsetWidth / 2 + 'px';
+                        event.target.style.top = event.pageY - event.target.offsetHeight / 2 + 'px';
+                    },
+                    end(event) {
+                        const id = parseInt(event.target.dataset.id);
+                        const wdg = widgets.find(w => w.id === id);
+                        if (wdg && event.target.parentElement) {
+                            const canvas = event.target.parentElement;
+                            wdg.x = (event.target.offsetLeft / canvas.offsetWidth) * 100;
+                            wdg.y = (event.target.offsetTop / canvas.offsetHeight) * 100;
+                        }
+                    }
+                }
             });
-            resultText = `POST /Dashboards/SaveLayout -> HTTP ${res.status}\n\n` + JSON.stringify(payload, null, 2);
-          }catch(err){
-            resultText = `[Demo offline - chưa có backend thật nên fetch() lỗi mạng, đây là dữ liệu LẼ RA sẽ được POST]\n\n` + JSON.stringify(payload, null, 2);
-          }
-          const out = document.getElementById('exportOutput');
-          out.textContent = resultText + '\n\n// Click ra ngoài để đóng';
-          out.style.display = 'block';
-          out.onclick = ()=> out.style.display='none';
-        }
-        document.getElementById('btnSave').addEventListener('click', saveLayout);
-        document.getElementById('btnReset').addEventListener('click', ()=>{
-          if(confirm('Tải lại mẫu mặc định? Layout hiện tại sẽ mất.')) seedDefaultLayout();
-        });
-
-        // ---------------------------------------------------------------------
-        // 13) MẪU DỰNG SẴN
-        // ---------------------------------------------------------------------
-        function seedDefaultLayout(){
-          GRID_COLS = 12; CELL = 70; GAP = 14;
-          document.getElementById('val_GRID_COLS').textContent = GRID_COLS;
-          document.getElementById('val_CELL').textContent = CELL;
-          document.getElementById('val_GAP').textContent = GAP;
-          document.documentElement.style.setProperty('--grid-cols', GRID_COLS);
-          document.documentElement.style.setProperty('--grid-cell', CELL + 'px');
-          document.documentElement.style.setProperty('--grid-gap', GAP + 'px');
-
-          widgets = [
-            mk('kpi_card', 0,0,3,2, { title:'Doanh thu', value:'78.829,k', unit:'VND', icon:'₫', color:'#7367f0' }),
-            mk('kpi_card', 3,0,3,2, { title:'Lượt book', value:'226', unit:'lượt', icon:'☺', color:'#28c76f' }),
-            mk('kpi_card', 0,2,3,2, { title:'Số giờ', value:'2,k', unit:'giờ', icon:'⏱', color:'#ff9f43' }),
-            mk('kpi_card', 3,2,3,2, { title:'Chi phí', value:'34.575,k', unit:'VND', icon:'⚑', color:'#00cfe8' }),
-            mk('donut', 6,0,6,5, { title:'Tỷ lệ các phòng trong tháng', dataSource:'revenue_by_room', legendPosition:'right' }),
-            mk('line',  0,4,3,3, { title:'Doanh thu tháng gần đây', dataSource:'monthly_revenue_trend', color:'#7367f0', showArea:true }),
-            mk('bar',   3,4,3,3, { title:'Chi phí tháng gần đây', dataSource:'monthly_cost_trend', color:'#00cfe8' }),
-            mk('table', 0,7,6,4, { title:'Top 5 dịch vụ tháng', dataSource:'top_services' }),
-            mk('bar',   6,5,4,4, { title:'Doanh thu tuần (T2-CN)', dataSource:'weekly_revenue', color:'#7367f0' }),
-            mk('list',  0,11,6,4, { title:'Tỷ lệ kín phòng trong tuần', dataSource:'occupancy_rooms', showProgress:true, color:'#7367f0' }),
-            mk('table', 6,9,6,4, { title:'Top 5 khách hàng gần nhất', dataSource:'top_customers' }),
-            mk('heatmap', 6,13,6,5, { title:'Trạng thái đặt phòng 3 tháng', dataSource:'booking_heatmap' }),
-          ];
-          selectedId = null;
-          renderCanvas();
-          renderConfigPanel();
-        }
-        function mk(kind,x,y,w,h,config){ return { id:'w'+(idSeq++), kind, x, y, w, h, config:{...defaultConfigFor(kind), ...config} }; }
-
-        // ---------------------------------------------------------------------
-        // 14) RENDER NỘI DUNG WIDGET
-        // ---------------------------------------------------------------------
-        function renderWidgetContent(wdg){
-          const body = document.getElementById('body-'+wdg.id);
-          if(!body) return;
-          const ds = wdg.config.dataSource ? MOCK_DATASETS[wdg.config.dataSource] : null;
-          switch(wdg.kind){
-            case 'kpi_card':  return renderKpiCard(body, wdg);
-            case 'donut':     return ds && renderDonut(body, wdg, ds.data);
-            case 'line':      return ds && renderLine(body, wdg, ds.data);
-            case 'bar':       return ds && renderBar(body, wdg, ds.data);
-            case 'table':     return ds && renderTable(body, wdg, ds.data);
-            case 'list':      return ds && renderList(body, wdg, ds.data);
-            case 'heatmap':   return ds && renderHeatmap(body, wdg, ds.data);
-          }
-        }
-        function renderKpiCard(el, wdg){
-          el.innerHTML = `<div class="kpi-wrap">
-            <span class="badge" style="background:${wdg.config.color}">${wdg.config.icon||'#'}</span>
-            <div><div class="num">${wdg.config.value}</div><div class="lbl">${wdg.config.unit||''}</div></div>
-          </div>`;
-        }
-        function renderDonut(el, wdg, data){
-          mountChart(el, wdg.id, {
-            chart:{type:'donut', height:'80%'}, series:data.values, labels:data.labels,
-            legend:{position:wdg.config.legendPosition||'right', fontSize:'11px'}, dataLabels:{enabled:false},
-            plotOptions:{pie:{donut:{labels:{show:true,total:{show:true,label:'Tổng'}}}}}
-          });
-        }
-        function renderLine(el, wdg, data){
-          mountChart(el, wdg.id, {
-            chart:{type:'line', height:'80%', toolbar:{show:false}, sparkline:{enabled:true}},
-            series:[{name:wdg.config.title, data:data.series}],
-            stroke:{width:3, curve:'smooth'}, colors:[wdg.config.color],
-            fill: wdg.config.showArea ? {type:'gradient', gradient:{opacityFrom:.4, opacityTo:0}} : undefined,
-          });
-        }
-        function renderBar(el, wdg, data){
-          mountChart(el, wdg.id, {
-            chart:{type:'bar', height:'80%', toolbar:{show:false}},
-            series:[{name:wdg.config.title, data:data.series}],
-            xaxis:{categories:data.categories, labels:{style:{fontSize:'10px'}}},
-            plotOptions:{bar:{borderRadius:4, columnWidth:'50%', horizontal:!!wdg.config.horizontal}},
-            colors:[wdg.config.color], dataLabels:{enabled:false}
-          });
-        }
-        function renderTable(el, wdg, data){
-          el.innerHTML = `<table class="mini-table"><thead><tr>${data.columns.map(c=>`<th>${c.label}</th>`).join('')}</tr></thead>
-            <tbody>${data.rows.map(r=>`<tr>${data.columns.map(c=>`<td>${r[c.field]}</td>`).join('')}</tr>`).join('')}</tbody></table>`;
-        }
-        function renderList(el, wdg, data){
-          el.innerHTML = `<ul class="mini-list">${data.rows.map(r=>{
-            const pctField = data.columns.find(c=>c.field==='pct');
-            const secondaryField = data.columns[1] ? data.columns[1].field : null;
-            return `<li>
-              <div class="row-top"><span class="name">${r.name}</span><span class="val">${r.vnd?r.vnd+' đ':(secondaryField?r[secondaryField]:'')}</span></div>
-              ${(wdg.config.showProgress && pctField) ? `<div class="progress-track"><div class="progress-fill" style="width:${r.pct}%;background:${wdg.config.color}"></div></div>` : ''}
-            </li>`;
-          }).join('')}</ul>`;
-        }
-        function renderHeatmap(el, wdg, data){
-          const series = data.days.map(d=>({ name:d, data: data.weekLabels.map((w,i)=>({x:w, y:data.matrix[d][i]})) }));
-          mountChart(el, wdg.id, {
-            chart:{type:'heatmap', height:'80%', toolbar:{show:false}}, series, dataLabels:{enabled:false},
-            plotOptions:{heatmap:{radius:2, colorScale:{ranges:[
-              {from:0,to:1000,color:'#b9b3f8'},{from:1001,to:3000,color:'#9d95f5'},
-              {from:3001,to:5000,color:'#8176f2'},{from:5001,to:9000,color:'#7367f0'}]}}}
-          });
-        }
-        function mountChart(el, key, options){
-          if(!el) return;
-          if(chartInstances[key]) chartInstances[key].destroy();
-          const chart = new ApexCharts(el, options);
-          chart.render();
-          chartInstances[key] = chart;
         }
 
-        // ---------------------------------------------------------------------
-        // Khởi động
-        // ---------------------------------------------------------------------
-        renderLibrary();
-        seedDefaultLayout();
-        let resizeT;
-        window.addEventListener('resize', ()=>{ clearTimeout(resizeT); resizeT=setTimeout(renderCanvas, 120); });
+        // ===================== DRAG & DROP LƯU VIỆN =====================
+        function setupDragAndDrop() {
+            const canvas = document.getElementById('canvas');
+
+            canvas.addEventListener('dragover', e => {
+                e.preventDefault();
+                canvas.classList.add('drop-active');
+            });
+
+            canvas.addEventListener('dragleave', () => canvas.classList.remove('drop-active'));
+
+            canvas.addEventListener('drop', e => {
+                e.preventDefault();
+                canvas.classList.remove('drop-active');
+                const type = e.dataTransfer.getData('type');
+                if (type) addWidget(type);
+            });
+        }
+
+        // ===================== MODE SWITCH =====================
+        function switchMode(mode) {
+            document.querySelectorAll('.mode-switch button').forEach(btn => btn.classList.remove('active'));
+            event.target.classList.add('active');
+            document.getElementById('app').classList.toggle('mode-view', mode === 'view');
+        }
+
+        // ===================== GRID CONTROLS =====================
+        function changeGridCols(delta) {
+            let cols = parseInt(getComputedStyle(document.documentElement).getPropertyValue('--grid-cols').trim());
+            cols = Math.max(4, Math.min(20, cols + delta));
+            document.documentElement.style.setProperty('--grid-cols', cols);
+            document.getElementById('grid-col-val').textContent = cols;
+        }
+
+        // ===================== SAVE DASHBOARD =====================
+        async function saveDashboard() {
+            try {
+                // Tạo options JSON từ grid settings
+                const gridOptions = {
+                    dashboardCode: dashboardCode,
+                    gridCols: parseInt(getComputedStyle(document.documentElement).getPropertyValue('--grid-cols').trim()),
+                    cellHeight: parseInt(getComputedStyle(document.documentElement).getPropertyValue('--grid-cell').trim()),
+                    gridGap: parseInt(getComputedStyle(document.documentElement).getPropertyValue('--grid-gap').trim()),
+                    backgroundColor: '',
+                    titleSize: '',
+                    titleWeight: '',
+                    titleColor: '',
+                    widgetColor: ''
+                };
+
+                const payload = {
+                    dashboardCode: dashboardCode,
+                    dashboardName: dashboardCode,
+                    options: JSON.stringify([gridOptions]),
+                    datasourceId: null,
+                    siteCode: siteCode,
+                    widgets: widgets.map(w => ({
+                        dashboardCode: dashboardCode,
+                        widgetCode: w.code,
+                        templateCode: w.type,
+                        positionX: Math.round(w.x),
+                        positionY: Math.round(w.y),
+                        width: Math.round(w.w),
+                        height: Math.round(w.h),
+                        configJson: w.config,
+                        chartConfig: {},
+                        siteCode: siteCode
+                    }))
+                };
+
+                const response = await fetch(`${apiBaseUrl}/save`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+
+                if (!response.ok) throw new Error('Failed to save');
+
+                alert('✓ Dashboard saved successfully!');
+            } catch (error) {
+                alert('✗ Save failed: ' + error.message);
+            }
+        }
+
+        // ===================== RESET LAYOUT =====================
+        function resetLayout() {
+            if (!confirm('Reset to default layout?')) return;
+            widgets = [];
+            renderCanvas();
+            selectedWidget = null;
+            updateConfigPanel();
+        }
     </script>
 }
