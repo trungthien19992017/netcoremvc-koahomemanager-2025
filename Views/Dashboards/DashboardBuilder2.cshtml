@@ -1714,13 +1714,18 @@ function buildChartOptionsFromTemplate(wdg, data, chartType) {
       markers: {
         size: 6, strokeWidth: 3, strokeColors: 'transparent',
         colors: ['transparent'],
+        discrete: [
+          {
+            seriesIndex: 0,
+            dataPointIndex: 5,
+            fillColor: '#000',
+            strokeColor: '#000',
+            size: 6,
+            shape: 'circle'
+          }
+        ],
         hover: { size: 7 }
-      },
-      responsive: [
-        { breakpoint: 1350, options: { chart: { height: 80 } } },
-        { breakpoint: 1200, options: { chart: { height: 100 } } },
-        { breakpoint: 768, options: { chart: { height: 110 } } }
-      ]
+      }
     },
     bar: {
       chart: {
@@ -1737,48 +1742,113 @@ function buildChartOptionsFromTemplate(wdg, data, chartType) {
       colors: [wdg.config.color],
       series: [{ name: wdg.config.title, data: data.series }],
       plotOptions: {
-        bar: { borderRadius: 4, columnWidth: '45%', distributed: false, horizontal: !!wdg.config.horizontal }
+        bar: { borderRadius: 4, columnWidth: '50%', distributed: false, horizontal: !!wdg.config.horizontal }
       },
       dataLabels: { enabled: false },
       xaxis: {
         categories: data.categories || [],
-        labels: { show: true },
+        labels: { show: true, style:{fontSize:'10px'} },
         axisTicks: { show: false },
         axisBorder: { show: false }
       },
-      tooltip: { enabled: true, theme: 'light' },
-      responsive: [
-        { breakpoint: 1350, options: { chart: { height: 80 } } },
-        { breakpoint: 1200, options: { chart: { height: 100 } } },
-        { breakpoint: 768, options: { chart: { height: 110 } } }
-      ]
+      tooltip: { enabled: true, theme: 'light' }
     },
     donut: {
       chart: {
         height: '80%',
-        type: 'donut',
-        parentHeightOffset: 0,
-        toolbar: { show: false }
+        type: 'donut'
       },
-      colors: data.colors,
-      series: data.values || [],
       labels: data.labels || [],
-      legend: { position: wdg.config.legendPosition || 'right' },
+      series: data.values || [],
+      colors: data.colors || [],
+      stroke: {
+        width: 0
+      },
+      dataLabels: {
+        enabled: !0
+      },
+      legend: {
+        show: !0,
+        position: 'right',
+        fontSize: '13px',
+        labels: {
+          colors: config.colors.black,
+          useSeriesColors: !1
+        },
+        markers: {
+          offsetY: 0,
+          offsetX: -3,
+          height: 10,
+          width: 10
+        },
+        itemMargin: {
+          vertical: 3,
+          horizontal: 10
+        }
+      },
+      tooltip: {
+        style: {
+          color: config.colors.white
+        }
+      },
+      grid: {
+        padding: {
+          top: 0
+        }
+      },
       plotOptions: {
         pie: {
           donut: {
-            size: '65%',
-            labels: { show: true, total: { show: true, label: 'Tổng' } }
+            size: '70%',
+            labels: {
+              show: !0,
+              value: {
+                fontSize: '22px',
+                fontFamily: 'Inter',
+                color: config.colors.headingColor,
+                fontWeight: 500,
+                offsetY: -20,
+                formatter: function (val) {
+                  return new Intl.NumberFormat('vi-VN').format(parseInt(val)) + 'K';
+                }
+              },
+              name: {
+                offsetY: 20,
+                fontFamily: 'Inter',
+                fontWeight: '500',
+                formatter: function (val) {
+                  return val
+                }
+              },
+              total: {
+                show: !0,
+                fontSize: '15px',
+                fontFamily: 'Inter',
+                label: 'Tổng',
+                formatter: function (e) {
+                    const totalValue = e.globals.seriesTotals.reduce((a, b) => a + b, 0);
+                    return new Intl.NumberFormat('vi-VN').format(parseInt(totalValue)) + 'K';
+                }
+              }
+            }
           }
         }
       },
-      dataLabels: { enabled: true },
-      tooltip: { enabled: true, theme: 'light' },
-      responsive: [
-        { breakpoint: 1350, options: { chart: { height: 80 } } },
-        { breakpoint: 1200, options: { chart: { height: 100 } } },
-        { breakpoint: 768, options: { chart: { height: 110 } } }
-      ]
+      responsive: [{
+        breakpoint: 1399,
+        options: {
+          chart: {
+            height: 200
+          }
+        }
+      }, {
+        breakpoint: 420,
+        options: {
+          chart: {
+            height: 300
+          }
+        }
+      }]
     }
   };
  
