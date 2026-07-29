@@ -1,3 +1,4 @@
+@using System.Text.Json
 @{
 
     ViewData["Title"] = "Dashboard Builder (SortableJS)";
@@ -7,7 +8,13 @@
     var dashboardConfig = ViewBag.DashboardConfig as IDictionary<string, object>;
     var widgets = ViewBag.Widgets as IDictionary<string, object>;
 
-    var a = 1;
+    var dashboardOptions = dashboardConfig?["options"]?.ToString();
+
+    JsonElement dashboardOptionJson = default;
+    if (!string.IsNullOrEmpty(dashboardOptions))
+    {
+        dashboardOptionJson = JsonSerializer.Deserialize<JsonElement>(dashboardOptions);
+    }
 }
 
 @section PageStyles {
@@ -942,9 +949,11 @@
                                               thật thì dataSource chính là net_service.code, BE
                                               sẽ chạy sqlcontent tương ứng và trả JSON cùng shape.
               ========================================================================= */
-              let GRID_COLS = 12;
-              let CELL = 70;
-              let GAP  = 14;
+              const options = @Html.Raw(JsonSerializer.Serialize(dashboardOptionJson));
+
+              let GRID_COLS = options.gridCols ?? 12;
+              let CELL      = options.cellHeight ?? 70;
+              let GAP       = options.gridGap ?? 14;
 
               // Cập nhật các chỉ số GRID_COLS, CELL, GAP trực tiếp trên UI
               function updateGridParam(param, delta){
@@ -1513,7 +1522,6 @@
               // 13) MẪU DỰNG SẴN
               // ---------------------------------------------------------------------
               function seedDefaultLayout(){
-                GRID_COLS = 12; CELL = 70; GAP = 14;
                 document.getElementById('val_GRID_COLS').textContent = GRID_COLS;
                 document.getElementById('val_CELL').textContent = CELL;
                 document.getElementById('val_GAP').textContent = GAP;
