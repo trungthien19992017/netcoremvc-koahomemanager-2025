@@ -174,6 +174,7 @@ namespace KOAHome.Services
       return data == null ? null : JsonNode.Parse(data.ToString()) as JsonObject;
     }
 
+
     public async Task ValidateWidget(JsonObject widget)
     {
       var kind = DashboardMapper.Text(widget["kind"]);
