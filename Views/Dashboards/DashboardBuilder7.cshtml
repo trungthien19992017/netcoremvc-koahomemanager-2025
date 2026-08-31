@@ -1,0 +1,2250 @@
+@using System.Text.Json
+@{
+    ViewData["Title"] = "Cấu hình Dashboard động";
+    Layout = "_BlankLayout";
+    var dashboardConfig = ViewBag.DashboardConfig as IDictionary<string, object>;
+    var widgetResult = ViewBag.Widgets as IDictionary<string, object>;
+    JsonElement ReadJson(object value, string fallback)
+    {
+        if (value is JsonElement element) return element;
+        return JsonSerializer.Deserialize<JsonElement>(value?.ToString() ?? fallback);
+    }
+    var dashboardOptionJson = ReadJson(dashboardConfig != null && dashboardConfig.TryGetValue("options", out var optionValue) ? optionValue : null, "{}");
+    var initialWidgetsJson = ReadJson(widgetResult != null && widgetResult.TryGetValue("data", out var widgetValue) ? widgetValue : null, "[]");
+    var datasetsJson = (JsonElement)ViewBag.WidgetDatasets;
+}
+
+@section PageStyles {
+    <link rel="stylesheet" href="~/css/dashboard-builder.css" asp-append-version="true" />
+    <style>
+        :root {
+            --primary: #7367f0;
+            --primary-light: #f1f0fe;
+            --bg: #f5f5f9;
+            --card: #ffffff;
+            --border: #e7e7ea;
+            --text: #3d3d4e;
+            --text-muted: #8a8d93;
+            --success: #28c76f;
+            --danger: #ea5455;
+            --warn: #ff9f43;
+            --info: #00cfe8;
+            --grid-cols: 12;
+            --grid-cell: 70px;
+            --grid-gap: 14px;
+            --shadow-sm: 0 2px 4px rgba(0,0,0,.03);
+            --shadow-md: 0 8px 16px rgba(0,0,0,.06);
+            --shadow-lg: 0 12px 24px rgba(0,0,0,.1);
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            font-family: 'Segoe UI',Roboto,Helvetica,Arial,sans-serif;
+            background: var(--bg);
+            color: var(--text);
+        }
+
+        button {
+            font-family: inherit;
+        }
+
+        /* ================= LAYOUT ================= */
+        .app {
+            display: grid;
+            grid-template-columns: 230px 1fr 290px;
+            height: 100vh;
+        }
+
+            .app.mode-view {
+                grid-template-columns: 0 1fr 0;
+            }
+
+                .app.mode-view .widget-library, .app.mode-view .config-panel, .app.mode-view .grid-controls {
+                    display: none;
+                }
+
+        .panel-title {
+            font-size: 12px;
+            font-weight: 700;
+            text-transform: uppercase;
+            color: var(--text-muted);
+            letter-spacing: .03em;
+            margin: 0 0 12px;
+        }
+
+        /* ================= THƯ VIỆN WIDGET ================= */
+        .widget-library {
+            background: var(--card);
+            border-right: 1px solid var(--border);
+            padding: 16px 12px;
+            overflow-y: auto;
+        }
+
+        .lib-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 11px 12px;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            margin-bottom: 8px;
+            cursor: grab;
+            background: #fafafd;
+            font-size: 13px;
+            transition: .2s ease-in-out;
+        }
+
+            .lib-item:hover {
+                border-color: var(--primary);
+                background: var(--primary-light);
+                box-shadow: var(--shadow-sm);
+            }
+
+            .lib-item .ic {
+                width: 32px;
+                height: 32px;
+                border-radius: 7px;
+                flex-shrink: 0;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                color: #fff;
+                font-size: 15px;
+                font-weight: 700;
+                box-shadow: 0 2px 8px rgba(115,103,240,.2);
+            }
+
+            .lib-item .desc {
+                font-size: 10.5px;
+                color: var(--text-muted);
+                display: block;
+                margin-top: 1px;
+            }
+
+            .lib-item.dragging-source {
+                opacity: .35;
+            }
+
+        .lib-hint {
+            font-size: 11.5px;
+            color: var(--text-muted);
+            line-height: 1.6;
+            margin: 14px 2px 0;
+            padding-top: 12px;
+            border-top: 1px dashed var(--border);
+        }
+
+        /* ================= CANVAS ================= */
+        .canvas-wrap {
+            grid-column: 2;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        .toolbar {
+            background: linear-gradient(135deg, var(--card) 0%, rgba(243,242,254,0.5) 100%);
+            border-bottom: 1px solid var(--border);
+            padding: 12px 20px;
+            display: flex;
+            gap: 10px;
+            align-items: center;
+            flex-wrap: wrap;
+            box-shadow: var(--shadow-sm);
+        }
+
+            .toolbar h1 {
+                font-size: 16px;
+                margin: 0;
+                margin-right: auto;
+                font-weight: 700;
+                color: var(--text);
+                letter-spacing: -.3px;
+            }
+
+        /* Cụm điều khiển Grid */
+        .grid-controls {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            background: #f8f8fd;
+            padding: 6px 10px;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            box-shadow: var(--shadow-sm);
+        }
+
+        .grid-ctrl-item {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            font-size: 11.5px;
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .grid-ctrl-btn {
+            width: 22px;
+            height: 22px;
+            border: 1px solid var(--border);
+            background: #fff;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: bold;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+            .grid-ctrl-btn:hover {
+                background: var(--primary);
+                color: #fff;
+                border-color: var(--primary);
+            }
+
+        .grid-val {
+            min-width: 24px;
+            text-align: center;
+            color: var(--primary);
+            font-weight: 700;
+        }
+
+        .btn {
+            border: none;
+            border-radius: 7px;
+            padding: 9px 15px;
+            font-size: 12.5px;
+            cursor: pointer;
+            font-weight: 600;
+            white-space: nowrap;
+            transition: .2s ease-in-out;
+        }
+
+        .btn-primary {
+            background: var(--primary);
+            color: #fff;
+            box-shadow: var(--shadow-sm);
+        }
+
+            .btn-primary:hover {
+                background: #6954d6;
+                box-shadow: var(--shadow-md);
+                transform: translateY(-1px);
+            }
+
+        .btn-outline {
+            background: #fff;
+            border: 1px solid var(--border);
+            color: var(--text);
+        }
+
+            .btn-outline:hover {
+                background: var(--primary-light);
+                border-color: var(--primary);
+            }
+
+        .btn-danger-outline {
+            background: #fff;
+            border: 1px solid var(--danger);
+            color: var(--danger);
+        }
+
+            .btn-danger-outline:hover {
+                background: rgba(234,84,85,.08);
+            }
+
+        ; .mode-switch {
+            display: flex;
+            background: #eeedf7;
+            border-radius: 7px;
+            padding: 3px;
+            gap: 2px;
+        }
+
+        .mode-switch button {
+            border: none;
+            background: transparent;
+            padding: 6px 12px;
+            border-radius: 5px;
+            font-size: 12.5px;
+            font-weight: 600;
+            cursor: pointer;
+            color: var(--text-muted);
+        }
+
+            .mode-switch button.active {
+                background: #fff;
+                color: var(--primary);
+                box-shadow: 0 1px 3px rgba(0,0,0,.08);
+            }
+
+        .mobile-toggle {
+            display: none;
+        }
+
+        .canvas-scroll {
+            flex: 1;
+            overflow: auto;
+            padding: 20px;
+        }
+
+        #canvas {
+            position: relative;
+            min-height: 900px;
+            background-image: linear-gradient(to right, #f0eefd 1px, transparent 1px), linear-gradient(to bottom, #f0eefd 1px, transparent 1px);
+            background-size: calc((100% - (var(--grid-cols) - 1) * var(--grid-gap)) / var(--grid-cols) + var(--grid-gap)) calc(var(--grid-cell) + var(--grid-gap));
+            border: 1px solid #e9e5f5;
+            border-radius: 10px;
+            box-shadow: var(--shadow-sm);
+        }
+
+            #canvas.drop-active {
+                background-color: var(--primary-light);
+                border-color: var(--primary);
+            }
+
+        .app.mode-view #canvas {
+            background-image: none;
+            border: none;
+            min-height: 0;
+        }
+
+        #canvas.flow-stack {
+            display: flex;
+            flex-direction: column;
+            gap: var(--grid-gap);
+            min-height: 0;
+        }
+
+            #canvas.flow-stack .widget {
+                position: static !important;
+                width: 100% !important;
+                height: auto !important;
+                min-height: 220px;
+            }
+
+        .widget {
+            position: absolute;
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            box-shadow: var(--shadow-sm);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+            .widget:hover {
+                box-shadow: var(--shadow-lg);
+                transform: translateY(-3px);
+            }
+
+            .widget::before {
+                content: '';
+                position: absolute;
+                top: 0;
+                left: 0;
+                right: 0;
+                height: 4px;
+                background: linear-gradient(90deg, var(--primary), #f1f0fe);
+            }
+
+            .widget.selected {
+                border-color: var(--primary);
+                box-shadow: 0 0 0 2px rgba(115,103,240,.25), var(--shadow-md);
+            }
+
+        .widget-head {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 12px 14px 10px;
+            cursor: move;
+            touch-action: none;
+            border-bottom: 1px solid #f0f0f5;
+        }
+
+            .widget-head h4 {
+                font-size: 13px;
+                margin: 0;
+                font-weight: 700;
+                color: var(--text);
+                letter-spacing: -.2px;
+            }
+
+            .widget-head .rm {
+                cursor: pointer;
+                color: var(--text-muted);
+                font-size: 14px;
+                border: none;
+                background: none;
+            }
+
+                .widget-head .rm:hover {
+                    color: var(--danger);
+                }
+
+        .app.mode-view .widget-head {
+            cursor: default;
+        }
+
+            .app.mode-view .widget-head .rm, .app.mode-view .resize-handle {
+                display: none;
+            }
+
+        .widget-title {
+            font-weight: 800;
+            text-transform: uppercase;
+            background: linear-gradient(90deg, #1e3c72 0%, #2a5298 50%, #1e3c72 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            letter-spacing: 2px;
+            text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.1);
+            opacity: 0;
+            transform: translateY(-20px);
+            animation: fadeInTitle 1s ease forwards;
+            line-height: 1.5rem;
+        }
+
+        .widget-body {
+            flex: 1;
+            padding: 6px 14px 14px; /*overflow:hidden;*/
+            position: relative;
+        }
+
+        .resize-handle {
+            position: absolute;
+            right: 0;
+            bottom: 0;
+            width: 18px;
+            height: 18px;
+            cursor: nwse-resize;
+            touch-action: none;
+            background: linear-gradient(135deg, transparent 50%, #c9c7d8 50%);
+            border-bottom-right-radius: 8px;
+        }
+
+        /* ================= CONFIG PANEL ================= */
+        .config-panel {
+            background: linear-gradient(180deg, #fff 0%, rgba(245,245,249,.3) 100%);
+            border-left: 1px solid var(--border);
+            padding: 16px 14px;
+            overflow-y: auto;
+        }
+
+        .empty-hint {
+            font-size: 13px;
+            color: var(--text-muted);
+            line-height: 1.6;
+        }
+
+        .field {
+            margin-bottom: 13px;
+        }
+
+            .field label {
+                display: block;
+                font-size: 11.5px;
+                font-weight: 600;
+                margin-bottom: 5px;
+                color: var(--text-muted);
+            }
+
+            .field input[type=text], .field select {
+                width: 100%;
+                padding: 8px 10px;
+                border: 1px solid var(--border);
+                border-radius: 6px;
+                font-size: 13px;
+            }
+
+        .field-check {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 12.5px;
+        }
+
+        .swatches {
+            display: flex;
+            gap: 6px;
+        }
+
+        .swatch {
+            width: 22px;
+            height: 22px;
+            border-radius: 50%;
+            cursor: pointer;
+            border: 2px solid transparent;
+        }
+
+            .swatch.active {
+                border-color: #333;
+            }
+
+        .meta-row {
+            font-size: 11.5px;
+            color: var(--text-muted);
+            display: flex;
+            justify-content: space-between;
+            padding: 4px 0;
+            border-bottom: 1px dashed var(--border);
+        }
+
+        .json-preview {
+            font-size: 10.5px;
+            background: #1e1e2e;
+            color: #c9c9e8;
+            padding: 10px;
+            border-radius: 6px;
+            white-space: pre-wrap;
+            word-break: break-all;
+            max-height: 160px;
+            overflow: auto;
+            margin-top: 6px;
+        }
+
+        .schema-editor {
+            margin-top: 14px;
+            border-top: 1px solid var(--border);
+            padding-top: 14px;
+        }
+
+        .schema-group {
+            border: 1px solid var(--border);
+            border-radius: 7px;
+            margin: 8px 0;
+            background: #fff;
+        }
+
+            .schema-group summary {
+                cursor: pointer;
+                padding: 9px 10px;
+                font-size: 12px;
+                font-weight: 700;
+                color: var(--text);
+            }
+
+        .schema-group-body {
+            padding: 4px 10px 10px;
+        }
+
+        .schema-field {
+            margin: 9px 0;
+        }
+
+            .schema-field label {
+                display: block;
+                font-size: 11px;
+                font-weight: 600;
+                color: var(--text-muted);
+                margin-bottom: 4px;
+            }
+
+            .schema-field input[type=text], .schema-field input[type=number], .schema-field select, .schema-field textarea {
+                width: 100%;
+                padding: 7px 8px;
+                border: 1px solid var(--border);
+                border-radius: 6px;
+                font: inherit;
+                font-size: 12px;
+            }
+
+            .schema-field input[type=range] {
+                width: 100%;
+                accent-color: var(--primary);
+            }
+
+        .schema-inline {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+        }
+
+            .schema-inline input[type=color] {
+                width: 36px;
+                height: 30px;
+                padding: 2px;
+                border: 1px solid var(--border);
+                border-radius: 5px;
+            }
+
+            .schema-inline output {
+                font-size: 11px;
+                color: var(--text-muted);
+                min-width: 36px;
+                text-align: right;
+            }
+
+        .schema-switch {
+            display: flex !important;
+            align-items: center;
+            gap: 8px;
+            font-size: 12px !important;
+            color: var(--text) !important;
+            cursor: pointer;
+        }
+
+        .tree-node {
+            margin: 7px 0 0 8px;
+            padding-left: 8px;
+            border-left: 1px solid #e7e7ea;
+        }
+
+            .tree-node summary {
+                cursor: pointer;
+                font-size: 11px;
+                font-weight: 600;
+                color: var(--text-muted);
+            }
+
+        .tree-leaf {
+            display: grid;
+            grid-template-columns: minmax(72px,.65fr) minmax(0,1fr) auto;
+            gap: 5px;
+            align-items: center;
+            margin: 6px 0;
+        }
+
+            .tree-leaf label {
+                font-size: 10.5px;
+                overflow-wrap: anywhere;
+                color: var(--text-muted);
+            }
+
+            .tree-leaf input, .tree-leaf textarea {
+                min-width: 0;
+                padding: 5px 6px;
+                border: 1px solid var(--border);
+                border-radius: 5px;
+                font: inherit;
+                font-size: 11px;
+            }
+
+            .tree-leaf textarea {
+                min-height: 56px;
+                resize: vertical;
+            }
+
+        .tree-remove, .tree-add {
+            border: 1px solid var(--border);
+            background: #fff;
+            color: var(--text-muted);
+            border-radius: 5px;
+            padding: 4px 6px;
+            font-size: 10px;
+            cursor: pointer;
+        }
+
+            .tree-remove:hover {
+                color: var(--danger);
+                border-color: var(--danger);
+            }
+
+        .tree-add {
+            margin: 7px 0;
+            color: var(--primary);
+            border-color: #cbc8fa;
+        }
+        /* ================= MINI COMPONENTS ================= */
+        .kpi-wrap {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            height: 100%;
+        }
+
+            .kpi-wrap .badge {
+                width: 48px;
+                height: 48px;
+                border-radius: 10px;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                color: #fff;
+                font-size: 22px;
+                flex-shrink: 0;
+                box-shadow: 0 4px 12px rgba(0,0,0,.15);
+            }
+
+            .kpi-wrap .num {
+                font-size: 20px;
+                font-weight: 700;
+                line-height: 1.1;
+            }
+
+            .kpi-wrap .lbl {
+                font-size: 12px;
+                color: var(--text-muted);
+            }
+
+        table.mini-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 12px;
+        }
+
+            table.mini-table th {
+                text-align: left;
+                color: var(--text-muted);
+                font-weight: 600;
+                padding: 5px 6px;
+                border-bottom: 1px solid var(--border);
+                font-size: 11px;
+                text-transform: uppercase;
+            }
+
+            table.mini-table td {
+                padding: 6px;
+                border-bottom: 1px dashed var(--border);
+            }
+
+            table.mini-table tr:last-child td {
+                border-bottom: none;
+            }
+
+        ul.mini-list {
+            list-style: none;
+            margin: 0;
+            padding: 0;
+            font-size: 12px;
+        }
+
+            ul.mini-list li {
+                padding: 7px 0;
+                border-bottom: 1px dashed var(--border);
+            }
+
+                ul.mini-list li:last-child {
+                    border-bottom: none;
+                }
+
+        .mini-list .row-top {
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .mini-list .name {
+            font-weight: 600;
+        }
+
+        .mini-list .val {
+            color: var(--success);
+            font-weight: 700;
+        }
+
+        .progress-track {
+            background: #f0f0f5;
+            border-radius: 4px;
+            height: 5px;
+            margin-top: 4px;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            height: 100%;
+        }
+
+        /* ================= DRAWER & RESPONSIVE ================= */
+        .drawer-head {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 12px;
+        }
+
+        .drawer-close {
+            display: none;
+            border: none;
+            background: #f0f0f5;
+            color: var(--text-muted);
+            width: 30px;
+            height: 30px;
+            border-radius: 7px;
+            font-size: 15px;
+            cursor: pointer;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+
+        #drawerBackdrop {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(20,18,35,.4);
+            z-index: 55;
+        }
+
+            #drawerBackdrop.show {
+                display: block;
+            }
+
+        /* koa dashboard css */
+        .card-img-position {
+            position: absolute;
+            block-size: 190px
+        }
+
+        .dashboard-filter .btn-dashboard-filter {
+            position: fixed;
+            z-index: 1080;
+            box-shadow: 0 10px 25px rgba(47, 128, 255, 0.35);
+            inset-block-start: 5rem;
+            inset-inline-end: 1.5rem;
+            background: #2F80FF;
+        }
+
+            .dashboard-filter .btn-dashboard-filter:hover {
+                box-shadow: none !important
+            }
+
+        @@media (max-width:1100px) {
+            .grid-controls {
+                display: none;
+            }
+            /* Ẩn bớt trên màn hình nhỏ nếu hẹp */
+        }
+
+        @@media (max-width:900px) {
+            .app, .app.mode-view {
+                grid-template-columns: 1fr !important;
+            }
+
+            .mobile-toggle {
+                display: inline-flex;
+            }
+
+            .widget-library, .config-panel {
+                position: fixed;
+                top: 0;
+                bottom: 0;
+                width: 82vw;
+                max-width: 320px;
+                z-index: 60;
+                transform: translateX(-110%);
+                transition: transform .22s;
+                box-shadow: 0 0 24px rgba(0,0,0,.25);
+                padding: 65px 14px;
+            }
+
+            .config-panel {
+                left: auto;
+                right: 0;
+                transform: translateX(110%);
+                padding: 56px 14px;
+            }
+
+                .widget-library.open, .config-panel.open {
+                    transform: translateX(0) !important;
+                }
+
+            .drawer-close {
+                display: flex;
+            }
+
+            .toolbar h1 {
+                font-size: 13px;
+            }
+
+            .canvas-scroll {
+                padding: 12px;
+            }
+        }
+        .dataset-status { margin: 0 0 12px; padding: 10px 14px; border: 1px solid #dce6df; border-radius: 8px; background: #f0faf4; font-size: 12px; }
+        .dataset-status.warning { background: #fff8e6; border-color: #efdcac; }
+        .dataset-notice { color: #8a641f; font-size: 11px; line-height: 1.4; padding-top: 4px; }
+        .widget-body .empty-hint { padding: 24px 10px; }
+        .app { grid-template-columns: 230px minmax(0, 1fr) 290px; }
+    </style>
+}
+
+@Html.AntiForgeryToken()
+<div class="app mode-build" id="appRoot">
+
+    <!-- ============ THƯ VIỆN LOẠI WIDGET ============ -->
+    <aside class="widget-library" id="libraryPanel">
+        <div class="drawer-head">
+            <p class="panel-title" style="margin:0;">Loại widget</p>
+            <button class="drawer-close" id="closeLibBtn" title="Đóng">✕</button>
+        </div>
+        <div id="libraryList"></div>
+        <p class="lib-hint">Kéo 1 loại widget vào canvas, sau đó chọn nó để chỉnh "Nguồn dữ liệu" và các thông số riêng ở panel bên phải.</p>
+    </aside>
+
+    <!-- ============ CANVAS ============ -->
+    <main class="canvas-wrap">
+        <div class="toolbar">
+            <button class="btn btn-outline mobile-toggle" id="btnOpenLib">☰ Widget</button>
+            <a href="/Dashboards/KoaDashboard" class="btn btn-primary waves-effect waves-light"><i class="ri-arrow-left-line"></i></a>
+            <h1>Cấu hình Dashboard</h1>
+
+            <!-- BỘ ĐIỀU KHIỂN ĐỘNG CÁC CHỈ SỐ GRID -->
+            <div class="grid-controls">
+                <div class="grid-ctrl-item" title="Số cột tối đa">
+                    <span>Cột:</span>
+                    <button class="grid-ctrl-btn" onclick="updateGridParam('GRID_COLS', -1)">-</button>
+                    <span class="grid-val" id="val_GRID_COLS">12</span>
+                    <button class="grid-ctrl-btn" onclick="updateGridParam('GRID_COLS', 1)">+</button>
+                </div>
+                <div class="grid-ctrl-item" title="Chiều cao 1 ô (px)">
+                    <span>H ô:</span>
+                    <button class="grid-ctrl-btn" onclick="updateGridParam('CELL', -5)">-</button>
+                    <span class="grid-val" id="val_CELL">70</span>
+                    <button class="grid-ctrl-btn" onclick="updateGridParam('CELL', 5)">+</button>
+                </div>
+                <div class="grid-ctrl-item" title="Khoảng cách giữa các ô (px)">
+                    <span>Gap:</span>
+                    <button class="grid-ctrl-btn" onclick="updateGridParam('GAP', -2)">-</button>
+                    <span class="grid-val" id="val_GAP">14</span>
+                    <button class="grid-ctrl-btn" onclick="updateGridParam('GAP', 2)">+</button>
+                </div>
+            </div>
+
+            <div class="mode-switch">
+                <button id="modeBuildBtn" class="active">🛠 Build</button>
+                <button id="modeViewBtn">👁 View</button>
+            </div>
+            <button class="btn btn-outline" id="btnReset">Hoàn tác bố cục</button>
+            <button class="btn btn-primary" id="btnSave">Lưu cấu hình</button>
+            <button class="btn btn-outline mobile-toggle" id="btnOpenCfg">⚙</button>
+        </div>
+        <div class="canvas-scroll">
+            <div id="datasetStatus" class="dataset-status" role="status"></div>
+            <div id="canvas"></div>
+        </div>
+    </main>
+
+    <!-- ============ CONFIG PANEL ============ -->
+    <aside class="config-panel" id="configPanel">
+        <div class="drawer-head">
+            <p class="panel-title" style="margin:0;">Cấu hình widget</p>
+            <button class="drawer-close" id="closeCfgBtn" title="Đóng">✕</button>
+        </div>
+        <div id="configPanelBody">
+            <div class="empty-hint">Chọn 1 widget trên canvas để cấu hình.</div>
+        </div>
+    </aside>
+
+</div>
+<div id="drawerBackdrop"></div>
+
+<pre id="exportOutput" style="display:none;position:fixed;inset:5%;background:#1e1e2e;color:#c9c9e8;padding:20px;overflow:auto;
+  border-radius:10px;z-index:999;font-size:11.5px;box-shadow:0 10px 40px rgba(0,0,0,.4);white-space:pre-wrap;"></pre>
+
+@section PageScripts {
+    <script src="~/js/dashboard-builder.js" asp-append-version="true"></script>
+    <!-- ApexCharts CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/apexcharts@3.45.2/dist/apexcharts.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/interactjs@1.10.27/dist/interact.min.js"></script>
+
+    <script>
+              // Layout and data are loaded separately; financial values are never used as layout defaults.
+              const rawOptions = @Html.Raw(JsonSerializer.Serialize(dashboardOptionJson));
+              const options = (Array.isArray(rawOptions) ? rawOptions[0] : rawOptions) || {};
+              const initialWidgets = @Html.Raw(JsonSerializer.Serialize(initialWidgetsJson));
+              const rawDatasets = @Html.Raw(JsonSerializer.Serialize(datasetsJson));
+              const datasetLoadError = @Html.Raw(JsonSerializer.Serialize((string)ViewBag.DatasetLoadError));
+              const dashboardCode = @Html.Raw(JsonSerializer.Serialize((string)ViewBag.DashboardCode));
+              const clampNumber = (value, min, max, fallback) => Number.isFinite(Number(value)) ? Math.max(min, Math.min(max, Number(value))) : fallback;
+              let GRID_COLS = clampNumber(options.gridCols ?? 12, 4, 24, 12);
+              let CELL = clampNumber(options.cellHeight ?? 70, 30, 200, 70);
+              let GAP = clampNumber(options.gridGap ?? 14, 0, 50, 14);
+              const originalGrid = { cols: GRID_COLS, cell: CELL, gap: GAP };
+              const DATASETS = rawDatasets;
+              const escapeHtml = Dashboard6UI.escapeHtml;
+              const safeUrl = Dashboard6UI.safeUrl;
+              const safeColor = value => CSS.supports('color', String(value)) ? String(value) : '#7367f0';
+
+              // Cập nhật các chỉ số GRID_COLS, CELL, GAP trực tiếp trên UI
+              function updateGridParam(param, delta){
+                if(param === 'GRID_COLS'){
+                  GRID_COLS = Math.max(4, Math.min(24, GRID_COLS + delta));
+                  document.getElementById('val_GRID_COLS').textContent = GRID_COLS;
+                  document.documentElement.style.setProperty('--grid-cols', GRID_COLS);
+                } else if(param === 'CELL'){
+                  CELL = Math.max(30, Math.min(200, CELL + delta));
+                  document.getElementById('val_CELL').textContent = CELL;
+                  document.documentElement.style.setProperty('--grid-cell', CELL + 'px');
+                } else if(param === 'GAP'){
+                  GAP = Math.max(0, Math.min(50, GAP + delta));
+                  document.getElementById('val_GAP').textContent = GAP;
+                  document.documentElement.style.setProperty('--grid-gap', GAP + 'px');
+                }
+
+                // Đảm bảo không widget nào vượt quá GRID_COLS mới
+                widgets.forEach(w => {
+                  if(w.x + w.w > GRID_COLS){
+                    if(w.w > GRID_COLS) w.w = GRID_COLS;
+                    w.x = Math.max(0, GRID_COLS - w.w);
+                  }
+                });
+
+                renderCanvas();
+              }
+
+              // ---------------------------------------------------------------------
+              // 1) LOẠI WIDGET GENERIC
+              // ---------------------------------------------------------------------
+              const WIDGET_KINDS = @Html.Raw(JsonSerializer.Serialize((JsonElement)ViewBag.WidgetTemplates));
+              function kindOf(k){ return WIDGET_KINDS.find(t=>t.kind===k); }
+
+              // ---------------------------------------------------------------------
+              // 2) DỮ LIỆU TỪ STORE
+              // ---------------------------------------------------------------------
+              const DATA_SHAPE_BY_KIND = { donut:'categorical', line:'series', bar:'series', table:'rows', list:'rows', heatmap:'matrix', emoji_card:null, large_img_card:'object', multiple_mini_card:'multiple_widget', report:null, button:null };
+
+              function datasetOptionsFor(kind){
+                const shape = DATA_SHAPE_BY_KIND[kind];
+                if(!shape) return [];
+                return Object.entries(DATASETS).filter(([,v])=>v.shape===shape).map(([key,v])=>({key,label:v.label}));
+              }
+
+              // ---------------------------------------------------------------------
+              // 3) SCHEMA CẤU HÌNH ĐỘNG
+              // ---------------------------------------------------------------------
+              function getFieldSchema(kind){
+                const common = [{ key:'code', label:'Mã', type:'text' },{ key:'title', label:'Tiêu đề', type:'text' }];
+                switch(kind){
+                  case 'emoji_card': return [...common,
+                    { key:'value', label:'Giá trị', type:'text' },
+                    { key:'unit',  label:'Đơn vị / ghi chú nhỏ', type:'text' },
+                    { key:'icon',  label:'Icon (1 ký tự/emoji)', type:'text' },
+                    { key:'color', label:'Màu nền icon', type:'color' }];
+                  case 'donut': return [...common,
+                    
+                    { key:'legendPosition', label:'Vị trí chú thích', type:'select', options:['right','bottom'] }];
+                  case 'line': return [...common,
+                    
+                    { key:'color', label:'Màu đường', type:'color' },
+                    { key:'showArea', label:'Tô nền vùng dưới đường', type:'checkbox' }];
+                  case 'bar': return [...common,
+                    
+                    { key:'color', label:'Màu cột', type:'color' },
+                    { key:'horizontal', label:'Hiển thị dạng cột ngang', type:'checkbox' }];
+                  case 'table': return [...common,
+                    ];
+                  case 'list': return [...common,
+                    
+                    { key:'showProgress', label:'Hiện thanh tiến độ (nếu có field %)', type:'checkbox' },
+                    { key:'showImage', label:'Hiện hình ảnh', type:'checkbox' },
+                    { key:'textColor', label:'Màu chữ', type:'color' },
+                    { key:'progressColor', label:'Màu tiến độ', type:'color' }];
+                  case 'heatmap': return [...common,
+                    ];
+                  case 'large_img_card': return [...common,
+                    
+                    { key:'imageurl',  label:'Đường dẫn ảnh', type:'text' },
+                    { key:'imageheight',  label:'Chiều cao ảnh', type:'text' },
+                    { key:'buttontext',  label:'Nội dung button', type:'text' },
+                    { key:'buttonurl',  label:'Đường dẫn button', type:'text' },
+                    { key:'color', label:'Màu nền icon', type:'color' }];
+                  case 'multiple_mini_card': return [...common,
+                    
+                    { key:'subContent', label:'Nội dung nhỏ', type:'text' }];
+                  case 'report': return [...common,
+                    { key:'reportcode', label:'Mã báo cáo', type:'text' },
+                    { key:'reportname', label:'Tên báo cáo', type:'text' },
+                    { key:'reportype',  label:'Loại báo cáo', type:'select', options:['viewer','editor'] },
+                    { key:'icon',  label:'Icon (1 ký tự/emoji)', type:'text' },
+                    { key:'color', label:'Màu nền icon', type:'color' }];
+                  case 'button': return [...common,
+                    { key:'value', label:'Nội dung', type:'text' },
+                    { key:'url',  label:'Đường dẫn', type:'text' },
+                    { key:'background',  label:'Màu nền', type:'color' },
+                    { key:'textColor', label:'Màu chữ', type:'color' },
+                    { key:'target',  label:'Kiểu chuyển trang', type:'select', options:['_self','_blank'] }];
+                  default: return common;
+                }
+              }
+
+              function defaultConfigFor(kind){
+                const opts = [];
+                const t = kindOf(kind);
+                  const base = { code: kind + '_' + crypto.randomUUID().replaceAll('-', ''), title:t.name, color:t.color, dataBinding:Dashboard6UI.defaults(kind) };
+                switch(kind){
+                  case 'emoji_card': return { ...base, value:'0', unit:'', icon:'#' };
+                  case 'donut': return { ...base, legendPosition:'right' };
+                  case 'line': return { ...base, showArea:false };
+                  case 'bar': return { ...base, horizontal:false };
+                  case 'table': return { ...base,  };
+                  case 'list': return { ...base, showProgress:false, showImage:false };
+                  case 'heatmap': return { ...base,  };
+                  case 'large_img_card': return { ...base, imageurl:'https://pub-7171d6b031a04e3983a20a87daffce46.r2.dev/koala1.png', imageheight:'100', buttontext:'Xem', buttonurl: '#', color: 'red' };
+                  case 'multiple_mini_card': return { ...base, subContent: 'Nội dung phụ' };
+                  case 'report': return { ...base, reportcode:'', reporttype:'viewer' };
+                  case 'button': return { ...base, value:'Nút', url:'#', background:'red', textColor:'#FFFFFF', target:'_self' };
+                  default: return base;
+                }
+              }
+
+              // ---------------------------------------------------------------------
+              // 4) STATE & INITIALIZATION
+              // ---------------------------------------------------------------------
+              let widgets = [];
+              let selectedId = null;
+              let idSeq = 1;
+              let mode = 'build';
+              const chartInstances = {};
+              const appRoot = document.getElementById('appRoot');
+              const canvasEl = document.getElementById('canvas');
+
+              // ---------------------------------------------------------------------
+              // 5) THƯ VIỆN WIDGET
+              // ---------------------------------------------------------------------
+              function renderLibrary(){
+                document.getElementById('libraryList').innerHTML = WIDGET_KINDS.map(t=>`
+                  <div class="lib-item" onclick="addWidget('${t.kind}',0,0)" draggable="true" data-kind="${t.kind}">
+                    <span class="ic" style="background:${t.color}">${t.icon}</span>
+                    <span><b>${t.name}</b><span class="desc">${t.desc}</span></span>
+                  </div>`).join('');
+                document.querySelectorAll('.lib-item').forEach(el=>{
+                  el.addEventListener('dragstart', e=>{
+                    e.dataTransfer.setData('text/widget-kind', el.dataset.kind);
+                    el.classList.add('dragging-source');
+                  });
+                  el.addEventListener('dragend', ()=> el.classList.remove('dragging-source'));
+                });
+              }
+              canvasEl.addEventListener('dragover', e=>{ if(mode==='build'){ e.preventDefault(); canvasEl.classList.add('drop-active'); } });
+              canvasEl.addEventListener('dragleave', ()=> canvasEl.classList.remove('drop-active'));
+              canvasEl.addEventListener('drop', e=>{
+                e.preventDefault();
+                canvasEl.classList.remove('drop-active');
+                const kind = e.dataTransfer.getData('text/widget-kind');
+                if(!kind || mode!=='build') return;
+                const rect = canvasEl.getBoundingClientRect();
+                const gx = Math.max(0, Math.min(GRID_COLS-1, Math.round((e.clientX-rect.left)/(colWidthPx()+GAP))));
+                const gy = Math.max(0, Math.round((e.clientY-rect.top)/(CELL+GAP)));
+                addWidget(kind, gx, gy);
+              });
+
+              // ---------------------------------------------------------------------
+              // 6) THÊM / XÓA WIDGET
+              // ---------------------------------------------------------------------
+              function addWidget(kind, x, y){
+                const t = kindOf(kind);
+                let w = Math.min(t.defaultW, GRID_COLS), h = t.defaultH;
+                x = Math.min(x, GRID_COLS - w);
+                if(collides(null, x, y, w, h)){ y = nextFreeRow(); x = 0; }
+                widgets.push({ id:'new-'+crypto.randomUUID(), kind, x, y, w, h, config: defaultConfigFor(kind) });
+                renderCanvas();
+                selectWidget(widgets[widgets.length-1].id);
+              }
+              function removeWidget(id){
+                Dashboard6UI.clearDraft(id);
+                widgets = widgets.filter(x=>x.id!==id);
+                if(selectedId===id){ selectedId=null; renderConfigPanel(); }
+                renderCanvas();
+              }
+              function nextFreeRow(){ return widgets.reduce((m,w)=>Math.max(m, w.y+w.h), 0); }
+              function collides(excludeId, x, y, w, h){
+                return widgets.some(o=> o.id!==excludeId && x < o.x+o.w && x+w > o.x && y < o.y+o.h && y+h > o.y);
+              }
+
+              // ---------------------------------------------------------------------
+              // 7) GRID <-> PIXEL (TÍNH TOÁN THEO HẰNG SỐ ĐỘNG)
+              // ---------------------------------------------------------------------
+              function colWidthPx(){ return (canvasEl.clientWidth - (GRID_COLS-1)*GAP) / GRID_COLS; }
+              function gridToPixel(x,y,w,h){
+                const cw = colWidthPx();
+                return { left:x*(cw+GAP), top:y*(CELL+GAP), width:w*cw+(w-1)*GAP, height:h*CELL+(h-1)*GAP };
+              }
+              function pixelToGrid(left, top, width, height){
+                const cw = colWidthPx();
+                return {
+                  x: Math.round(left/(cw+GAP)), y: Math.round(top/(CELL+GAP)),
+                  w: Math.max(1, Math.round((width+GAP)/(cw+GAP))), h: Math.max(1, Math.round((height+GAP)/(CELL+GAP))),
+                };
+              }
+
+              // ---------------------------------------------------------------------
+              // 8) RENDER CANVAS
+              // ---------------------------------------------------------------------
+              function renderCanvas(){
+                Object.keys(chartInstances).forEach(k=>{ chartInstances[k]?.destroy?.(); delete chartInstances[k]; });
+                canvasEl.innerHTML = '';
+                const isMobile = window.innerWidth <= 900;
+                const useFlow = mode==='view' && isMobile;
+                canvasEl.classList.toggle('flow-stack', useFlow);
+
+                const ordered = useFlow ? [...widgets].sort((a,b)=> a.y-b.y || a.x-b.x) : widgets;
+                const maxY = Math.max(6, nextFreeRow()+2);
+                canvasEl.style.minHeight = useFlow ? '' : (maxY*(CELL+GAP))+'px';
+
+                ordered.forEach(wdg=>{
+                  const el = document.createElement('div');
+                  el.className = 'widget' + (wdg.id===selectedId ? ' selected' : '');
+                  if(!useFlow){
+                    const pos = gridToPixel(wdg.x, wdg.y, wdg.w, wdg.h);
+                    el.style.left=pos.left+'px'; el.style.top=pos.top+'px'; el.style.width=pos.width+'px'; el.style.height=pos.height+'px';
+                  }
+                  el.dataset.id = wdg.id;
+                  el.innerHTML = `
+                    <div class="widget-head">
+                      <h4 class="widget-title">${escapeHtml(wdg.config.title)}</h4>
+                      <button class="rm" title="Xóa widget">✕</button>
+                    </div>
+                    <div class="widget-body" id="body-${wdg.id}"></div>
+                    <div class="resize-handle"></div>`;
+                  if(mode==='build'){
+                    el.addEventListener('mousedown', ()=> selectWidget(wdg.id));
+                    el.querySelector('.rm').addEventListener('click', ev=>{ ev.stopPropagation(); removeWidget(wdg.id); });
+                  }
+                  canvasEl.appendChild(el);
+                  renderWidgetContent(wdg);
+                  if(mode==='build' && !useFlow) makeInteractive(el, wdg);
+                });
+              }
+
+              // ---------------------------------------------------------------------
+              // 9) INTERACT.JS
+              // ---------------------------------------------------------------------
+              function makeInteractive(el, wdg){
+                interact(el)
+                  .draggable({
+                    allowFrom:'.widget-head',
+                    listeners:{
+                      move(event){
+                        el.style.left = ((parseFloat(el.style.left)||0)+event.dx)+'px';
+                        el.style.top  = ((parseFloat(el.style.top)||0)+event.dy)+'px';
+                      },
+                      end(){
+                        const g = pixelToGrid(parseFloat(el.style.left), parseFloat(el.style.top), el.offsetWidth, el.offsetHeight);
+                        g.x = Math.max(0, Math.min(GRID_COLS-wdg.w, g.x)); g.y = Math.max(0, g.y);
+                        if(!collides(wdg.id, g.x, g.y, wdg.w, wdg.h)){ wdg.x=g.x; wdg.y=g.y; }
+                        renderCanvas();
+                      }
+                    }
+                  })
+                  .resizable({
+                    edges:{ right:'.resize-handle', bottom:'.resize-handle', bottom_right:'.resize-handle' },
+                    listeners:{
+                      move(event){ el.style.width=event.rect.width+'px'; el.style.height=event.rect.height+'px'; },
+                      end(){
+                        const g = pixelToGrid(parseFloat(el.style.left), parseFloat(el.style.top), el.offsetWidth, el.offsetHeight);
+                        const t = kindOf(wdg.kind);
+                        let w = Math.min(t.maxW, Math.max(t.minW, g.w)); w = Math.min(w, GRID_COLS-wdg.x);
+                        let h = Math.min(t.maxH, Math.max(t.minH, g.h));
+                        if(!collides(wdg.id, wdg.x, wdg.y, w, h)){ wdg.w=w; wdg.h=h; }
+                        renderCanvas();
+                      }
+                    }
+                  });
+              }
+
+              // ---------------------------------------------------------------------
+              // 10) CHỌN WIDGET + CONFIG PANEL ĐỘNG
+              // ---------------------------------------------------------------------
+              function selectWidget(id){
+                selectedId = id;
+                document.querySelectorAll('.widget').forEach(e=>e.classList.toggle('selected', e.dataset.id===id));
+                renderConfigPanel();
+                if(window.innerWidth<=900) openDrawer('configPanel');
+              }
+
+              function openDrawer(id){
+                closeAllDrawers();
+                document.getElementById(id).classList.add('open');
+                document.getElementById('drawerBackdrop').classList.add('show');
+              }
+              function closeAllDrawers(){
+                document.getElementById('libraryPanel').classList.remove('open');
+                document.getElementById('configPanel').classList.remove('open');
+                document.getElementById('drawerBackdrop').classList.remove('show');
+              }
+              function renderConfigPanel(){
+                const panel = document.getElementById('configPanelBody');
+                const wdg = widgets.find(w=>w.id===selectedId);
+                if(!wdg){
+                  panel.innerHTML = `<div class="empty-hint">Chọn 1 widget trên canvas để cấu hình.</div>`;
+                  return;
+                }
+                const schema = getFieldSchema(wdg.kind).filter(f => f.key !== 'dataSource');
+                panel.innerHTML = `
+                  <p class="panel-title">Cấu hình • ${kindOf(wdg.kind).name}</p>
+                  <div id="fieldsHost"></div>
+                  <p class="panel-title" style="margin-top:18px;">Vị trí / kích thước</p>
+                  <div class="meta-row"><span>positionx</span><b>${wdg.x}</b></div>
+                  <div class="meta-row"><span>positiony</span><b>${wdg.y}</b></div>
+                  <div class="meta-row"><span>width</span><b>${wdg.w}</b></div>
+                  <div class="meta-row"><span>height</span><b>${wdg.h}</b></div>
+                  <p class="panel-title" style="margin-top:18px;">configJson (jsonb sẽ lưu)</p>
+                  <div class="json-preview" id="jsonPreview"></div>
+                  <p class="panel-title" style="margin-top:18px;">configChart (jsonb sẽ lưu)</p>
+                  <div class="json-preview" id="chartPreview"></div>
+
+                  <div id="chart-config-editor"></div>
+
+                  <button class="btn btn-danger-outline" style="width:100%;margin-top:14px;" id="cfgRemove">Xóa widget này</button>
+                `;
+                const host = document.getElementById('fieldsHost');
+                schema.forEach(f=>{
+                  const wrap = document.createElement('div'); wrap.className='field';
+                  if(f.type==='text'){
+                    wrap.innerHTML = `<label>${f.label}</label><input type="text" data-k="${f.key}" value="${escapeHtml(wdg.config[f.key]??'')}">`;
+                  } else if (f.type === 'color') {
+                      const value = wdg.config[f.key] || "#7367f0";
+                      wrap.innerHTML = `
+                          <label>${f.label}</label>
+                          <div class="d-flex align-items-center">
+                              <button
+                                  type="button"
+                                  id="color-${f.key}"
+                                  class="pcr-button dashboard-color-picker"
+                                  data-default="${escapeHtml(value)}">
+                              </button>
+                              <input
+                                  type="hidden"
+                                  id="${f.key}"
+                                  value="${escapeHtml(value)}">
+                          </div>
+                      `;
+                  } else if(f.type==='select'){
+                    wrap.innerHTML = `<label>${f.label}</label><select data-k="${f.key}">
+                      ${f.options.map(o=>`<option value="${o}" ${wdg.config[f.key]===o?'selected':''}>${o}</option>`).join('')}</select>`;
+                  } else if(f.type==='dataset'){
+                    const opts = datasetOptionsFor(wdg.kind);
+                    wrap.innerHTML = `<label>${f.label} (store)</label><select data-k="${f.key}">
+                      <option value="">— Chọn nguồn dữ liệu —</option>${opts.map(o=>`<option value="${escapeHtml(o.key)}" ${wdg.config[f.key]===o.key?'selected':''}>${escapeHtml(o.label)}</option>`).join('')}</select>`;
+                  } else if(f.type==='checkbox'){
+                    wrap.innerHTML = `<label class="field-check"><input type="checkbox" data-k="${f.key}" ${wdg.config[f.key]?'checked':''}> ${f.label}</label>`;
+                  }
+                  host.appendChild(wrap);
+                });
+                host.querySelectorAll('input[type=text]').forEach(inp=>{
+                  inp.addEventListener('input', ()=>{
+                    wdg.config[inp.dataset.k] = inp.value;
+                    if(inp.dataset.k==='title'){
+                      const h4 = document.querySelector(`.widget[data-id="${wdg.id}"] .widget-head h4`);
+                      if(h4) h4.textContent = inp.value;
+                    }
+                    renderWidgetContent(wdg);
+                    updateJsonPreview(wdg);
+                  });
+                });
+                host.querySelectorAll('select').forEach(sel=>{
+                  sel.addEventListener('change', ()=>{
+                    wdg.config[sel.dataset.k] = sel.value;
+                    if(sel.dataset.k === 'legendPosition' && wdg.chart) setByPath(wdg.chart, 'legend.position', sel.value);
+                    renderWidgetContent(wdg);
+                    updateJsonPreview(wdg);
+                  });
+                });
+                host.querySelectorAll('input[type=checkbox]').forEach(chk=>{
+                  chk.addEventListener('change', ()=>{
+                    wdg.config[chk.dataset.k] = chk.checked;
+                    if(chk.dataset.k === 'horizontal' && wdg.chart) setByPath(wdg.chart, 'plotOptions.bar.horizontal', chk.checked);
+                    renderWidgetContent(wdg);
+                    updateJsonPreview(wdg);
+                  });
+                });
+                document.getElementById('cfgRemove').addEventListener('click', ()=> removeWidget(wdg.id));
+                updateJsonPreview(wdg);
+                initDashboardBuilderColorPicker(wdg);
+                renderChartConfigEditor(wdg);
+                Dashboard6UI.editor(panel, wdg, {
+                  allowedStores: options.allowedStores || [],
+                  invalidate(){ DATASETS[wdg.config.code]={status:'error',notice:'Cấu hình nguồn đã đổi. Chạy thử để cập nhật dữ liệu.',data:{}}; renderWidgetContent(wdg); },
+                  changed(){ updateJsonPreview(wdg); },
+                  render(){ renderWidgetContent(wdg); },
+                  rebuild(){ renderConfigPanel(); },
+                  result(dataset){ if(widgets.includes(wdg)){ DATASETS[wdg.config.code]=dataset; renderWidgetContent(wdg); } },
+                  async preview(widget){
+                    const form=new FormData(); form.append('dashboardCode',dashboardCode);
+                    form.append('widget',JSON.stringify({kind:widget.kind,config:widget.config}));
+                    form.append('__RequestVerificationToken',document.querySelector('input[name="__RequestVerificationToken"]')?.value || '');
+                    const response=await fetch('/Dashboards/PreviewWidget',{method:'POST',body:form});
+                    if(response.status===403)throw Error('Không có quyền chạy thử dashboard này.');
+                    const result=await response.json(); if(!response.ok)throw Error(result.errorMessage || 'Không chạy được nguồn.');
+                    return result;
+                  }
+                });
+              }
+
+              function updateJsonPreview(wdg){
+                document.getElementById('jsonPreview').textContent = JSON.stringify(wdg.config, null, 2);
+                document.getElementById('chartPreview').textContent = JSON.stringify(wdg.chart, null, 2);
+              }
+
+              // ---------------------------------------------------------------------
+              // 11) TOGGLE BUILD / VIEW
+              // ---------------------------------------------------------------------
+              document.getElementById('modeBuildBtn').addEventListener('click', ()=> setMode('build'));
+              document.getElementById('modeViewBtn').addEventListener('click', ()=> setMode('view'));
+              function setMode(m){
+                mode = m;
+                appRoot.classList.toggle('mode-view', m==='view');
+                document.getElementById('modeBuildBtn').classList.toggle('active', m==='build');
+                document.getElementById('modeViewBtn').classList.toggle('active', m==='view');
+                closeAllDrawers();
+                requestAnimationFrame(()=> requestAnimationFrame(renderCanvas));
+              }
+              document.getElementById('btnOpenLib').addEventListener('click', ()=>{
+                const el = document.getElementById('libraryPanel');
+                el.classList.contains('open') ? closeAllDrawers() : openDrawer('libraryPanel');
+              });
+              document.getElementById('btnOpenCfg').addEventListener('click', ()=>{
+                const el = document.getElementById('configPanel');
+                el.classList.contains('open') ? closeAllDrawers() : openDrawer('configPanel');
+              });
+              document.getElementById('closeLibBtn').addEventListener('click', closeAllDrawers);
+              document.getElementById('closeCfgBtn').addEventListener('click', closeAllDrawers);
+              document.getElementById('drawerBackdrop').addEventListener('click', closeAllDrawers);
+
+              function saveLayout() {
+                if (Dashboard6UI.hasDrafts()) { alert('Hãy áp dụng cấu hình JSON nâng cao đang sửa trước khi lưu.'); return; }
+                // 1. Chuẩn bị dữ liệu JSON
+                const codes = widgets.map(w => w.config?.code?.trim());
+                if (codes.some(code => !code) || new Set(codes).size !== codes.length) {
+                  alert('Mỗi widget cần có mã riêng, không để trống hoặc trùng mã.'); return;
+                }
+
+                const optionsJson = JSON.stringify({
+                  ...options,
+                  gridCols: GRID_COLS,
+                  cellHeight: CELL,
+                  gridGap: GAP
+                });
+
+                const widgetsJson = JSON.stringify(widgets.map(w => ({
+                  id: w.id,
+                  kind: w.kind,
+                  widgetCode: w.config?.code,
+                  x: w.x,
+                  y: w.y,
+                  w: w.w,
+                  h: w.h,
+                  config: w.config,
+                  chart: chartForSave(w.chart)
+                })));
+
+                // 2. Đưa dữ liệu vào FormData
+                var formData = new FormData();
+                formData.append("dashboardCode", dashboardCode);
+                formData.append("options", optionsJson);
+                formData.append("widgets", widgetsJson);
+
+                // Lấy AntiforgeryToken nếu backend có yêu cầu Validate
+                var antiforgeryToken = document.querySelector('input[name="__RequestVerificationToken"]')?.value;
+                formData.append('__RequestVerificationToken', antiforgeryToken || '');
+                document.getElementById('btnSave').disabled = true;
+
+                // 3. Gọi AJAX theo phong cách handleAjaxConfirmed
+                $.ajax({
+                  url: '/Dashboards/SaveLayout7', // Thay đúng URL Controller của bạn
+                  type: 'POST',
+                  data: formData,
+                  processData: false, // Bắt buộc khi dùng FormData
+                  contentType: false, // Bắt buộc khi dùng FormData
+                  success: function (response) {
+                    if (response.success) {
+                      celebrate();
+                      rplm({
+                        title: "Lưu giao diện thành công!",
+                        text: "Cấu hình Dashboard đã được cập nhật.",
+                        type: "success",
+                        timer: 2000,
+                        confirmButtonText: 'Xác nhận',
+                        html: true
+                      }, function () {
+                        location.reload();
+                      });
+                    } else {
+                      rplm({
+                        title: "Lỗi!",
+                        text: escapeHtml(response.errorMessage || "Không thể lưu cấu hình Dashboard."),
+                        type: "error",
+                        timer: 2000,
+                        confirmButtonText: 'Xác nhận',
+                        html: true
+                      });
+                    }
+                  },
+                  complete: function () { document.getElementById('btnSave').disabled = false; },
+                  error: function (xhr) {
+                    rplm({
+                      title: "Lỗi!",
+                      text: escapeHtml(xhr.responseJSON?.errorMessage || "Lỗi khi kết nối đến máy chủ."),
+                      type: "error",
+                      timer: 2000,
+                      confirmButtonText: 'Xác nhận',
+                      html: true
+                    });
+                  }
+                });
+              }
+              document.getElementById('btnSave').addEventListener('click', saveLayout);
+              document.getElementById('btnReset').addEventListener('click', ()=>{
+                if(confirm('Hoàn tác các thay đổi bố cục chưa lưu?')) seedDefaultLayout();
+              });
+
+              // ---------------------------------------------------------------------
+              // 13) MẪU DỰNG SẴN
+              // ---------------------------------------------------------------------
+              function chartForSave(chart) {
+                if (!chart) return null;
+                const saved = cloneConfig(chart);
+                delete saved.series; delete saved.labels; delete saved.colors;
+                if (saved.xaxis) delete saved.xaxis.categories;
+                return saved;
+              }
+              function seedDefaultLayout(){
+                widgets.forEach(w => Dashboard6UI.clearDraft(w.id));
+                GRID_COLS = originalGrid.cols; CELL = originalGrid.cell; GAP = originalGrid.gap;
+                document.getElementById('val_GRID_COLS').textContent = GRID_COLS;
+                document.getElementById('val_CELL').textContent = CELL;
+                document.getElementById('val_GAP').textContent = GAP;
+                document.documentElement.style.setProperty('--grid-cols', GRID_COLS);
+                document.documentElement.style.setProperty('--grid-cell', CELL + 'px');
+                document.documentElement.style.setProperty('--grid-gap', GAP + 'px');
+
+                idSeq = 1;
+
+                widgets = cloneConfig(Array.isArray(initialWidgets) ? initialWidgets : []).map(w => {
+                  w.id = String(w.id || 'new-' + crypto.randomUUID());
+                  w.config ||= {};
+                  delete w.config.dataSource;
+                  if (w.kind === 'large_img_card') { delete w.config.value1; delete w.config.value2; }
+                  return w;
+                });
+                selectedId = null;
+                renderCanvas();
+                renderConfigPanel();
+              }
+              // function mk(kind,x,y,w,h,config){ return { id:'new-'+crypto.randomUUID(), kind, x, y, w, h, config:{...defaultConfigFor(kind), ...config} }; }
+
+              const fmt = (value,wdg) => Dashboard6UI.format(value,wdg.config);
+              function renderEmojiCard(el, wdg, data){
+                el.innerHTML = `<div class="kpi-wrap"><span class="badge" style="background:${safeColor(wdg.config.color)}">${escapeHtml(data.icon ?? wdg.config.icon ?? '#')}</span><div><div class="num">${escapeHtml(fmt(data.value ?? wdg.config.value,wdg))}</div><div class="lbl">${escapeHtml(data.unit ?? wdg.config.unit)}</div></div></div>`;
+              }
+              function renderTable(el, wdg, data){
+                el.innerHTML = `<table class="mini-table"><thead><tr>${data.columns.map(c => `<th>${escapeHtml(c.label || c.field)}</th>`).join('')}</tr></thead><tbody>${data.rows.map(r => `<tr>${data.columns.map(c => `<td>${escapeHtml(typeof r[c.field] === 'number' ? fmt(r[c.field],wdg) : r[c.field])}</td>`).join('')}</tr>`).join('')}</tbody></table>`;
+              }
+              function renderReport(el, wdg, data){ renderTable(el,wdg,data); }
+              function renderList(el, wdg, data){
+                el.innerHTML = `<ul class="mini-list p-0 m-0">${data.rows.map(r => {
+                  const pct = Math.min(100, Math.max(0, Number(r.pct) || 0));
+                  return `<li class="d-flex mb-6">${wdg.config.showImage && safeUrl(r.image) ? `<div class="avatar flex-shrink-0 bg-lightest rounded me-3"><img src="${escapeHtml(safeUrl(r.image))}" alt=""></div>` : ''}<div class="d-flex w-100 flex-wrap align-items-center justify-content-between gap-2"><div class="me-2"><p class="mb-0 fw-bold" style="color:${safeColor(wdg.config.textColor)}">${escapeHtml(r.name)}</p><p class="mb-0">${escapeHtml(r.description)}</p></div><div><p class="mb-2 fw-bold">${escapeHtml(fmt(r.value,wdg))}</p>${wdg.config.showProgress && r.pct != null ? `<div class="progress bg-label-primary" style="height:4px"><div class="progress-bar" style="width:${pct}%;background:${safeColor(wdg.config.progressColor)}" role="progressbar" aria-valuenow="${pct}" aria-valuemin="0" aria-valuemax="100"></div></div>` : ''}</div></div></li>`;
+                }).join('')}</ul>`;
+              }
+              function renderLargeImgCard(el, wdg, data){
+                const img=data.imageurl || wdg.config.imageurl;
+                el.innerHTML = `<div class="row"><div class="col-12 col-md-6"><h4 class="mb-0" style="color:${safeColor(wdg.config.color)}">${escapeHtml(fmt(data.value1 ?? data.value,wdg))}</h4><p class="mb-2">${escapeHtml(data.value2)}</p>${safeUrl(wdg.config.buttonurl) ? `<a class="btn btn-sm btn-primary" href="${escapeHtml(safeUrl(wdg.config.buttonurl))}">${escapeHtml(wdg.config.buttontext || 'Xem')}</a>` : ''}</div><div class="col-12 col-md-6 text-center">${safeUrl(img) ? `<img src="${escapeHtml(safeUrl(img))}" alt="" style="height:${clampNumber(wdg.config.imageheight, 30, 300, 100)}px">` : ''}</div></div>`;
+              }
+              function renderMultipleMiniCard(el, wdg, data){
+                el.innerHTML = `${wdg.config.subContent ? `<div class="widget-subtitle text-muted small">${escapeHtml(wdg.config.subContent)}</div>` : ''}<div class="row g-6 mt-auto">${data.rows.map(r => `<div class="col-md-3 col-6"><div class="d-flex align-items-center"><div class="avatar"><div class="avatar-initial rounded shadow-xs" style="background:${safeColor(r.color)}"><i class="${escapeHtml(r.faclass)}"></i></div></div><div class="ms-3"><p class="mb-0 text-muted small">${escapeHtml(r.name)}</p><h5 class="mb-0 fw-bold">${escapeHtml(typeof r.value==='number'?fmt(r.value,wdg):r.value)}</h5></div></div></div>`).join('')}</div>`;
+              }
+              function renderButton(el, wdg, data){
+                el.innerHTML = `<a class="btn" href="${escapeHtml(safeUrl(data.url ?? wdg.config.url) || '#')}" target="${wdg.config.target === '_blank' ? '_blank' : '_self'}" rel="noopener noreferrer" style="background:${safeColor(wdg.config.background)};color:${safeColor(wdg.config.textColor)}">${escapeHtml(data.value ?? wdg.config.value)}</a>`;
+              }
+              // other
+              function initDashboardBuilderColorPicker(wdg)
+              {
+                document.querySelectorAll('.dashboard-color-picker').forEach(pickerEl => {
+                  const pickerId = pickerEl.id;                  // ví dụ: 'color-background'
+                  const fieldId = pickerId.replace('color-', ''); // ví dụ: 'background'
+
+                  const inputEl = document.getElementById(fieldId);
+                  if (!inputEl) return; // bỏ qua nếu không tìm thấy input ẩn tương ứng
+
+                  // mặc định không hiển thị màu
+                  let defaultColor; // fallback
+
+                  const storedColor = inputEl.value?.trim();
+                  const dataDefault = pickerEl.getAttribute('data-default')?.trim();
+
+                  // nếu có giá trị màu store trả lên thì lấy
+                  if (storedColor) {
+                    defaultColor = storedColor;
+                  }
+                  // nếu không có thì kiểm tra có màu mặc định không? Không có thì lấy màu primary như ban đầu
+                  else if (dataDefault) {
+                    defaultColor = dataDefault;
+                  }
+
+                  // gán giá trị vào input ẩn
+                  inputEl.value = defaultColor
+
+                  const pickr = Pickr.create({
+                    el: '#' + pickerId,
+                    theme: 'monolith',
+                    default: defaultColor,  // nếu input ẩn có giá trị ban đầu
+                    swatches: ["rgba(144, 85, 253, 1)", "rgba(86, 202, 0, 1)", "rgba(255, 76, 81, 1)", "rgba(255, 180, 0, 1)", "rgba(22, 177, 255, 1)"],
+                    components: {
+                      preview: true,
+                      opacity: true,
+                      hue: true,
+                      interaction: {
+                        hex: true,
+                        rgba: true,
+                        hsla: !0,
+                        hsva: !0,
+                        cmyk: !0,
+                        input: true,
+                        clear: true,
+                        save: true
+                      }
+                    }
+                  });
+
+                  pickr.on('save', color => {
+                      const hex = color.toHEXA().toString();
+                      inputEl.value = hex;
+                      wdg.config[fieldId] = hex;
+                      renderWidgetContent(wdg);
+                      updateJsonPreview(wdg);
+                      pickr.hide();
+                  });
+
+                  pickr.on('change', color => {
+                      const hex = color.toHEXA().toString();
+                      inputEl.value = hex;
+                      wdg.config[fieldId] = hex;
+                      renderWidgetContent(wdg);
+                      updateJsonPreview(wdg);
+                  });
+                });
+              }
+              // =========================================================================
+              // SCHEMA-DRIVEN CHART CONFIG EDITOR
+              // The UI renderer is generic: adding a field means changing schema data,
+              // not adding a new form branch for each chart type.
+              // =========================================================================
+              const COMMON_CHART_SCHEMA = [
+                { title:'Khung & hoạt ảnh', fields:[
+                  {path:'chart.animations.enabled', label:'Bật hoạt ảnh', type:'boolean', default:true},
+                  {path:'chart.animations.speed', label:'Tốc độ hoạt ảnh', type:'range', min:100, max:2000, step:100, suffix:'ms', default:800},
+                  {path:'chart.toolbar.show', label:'Hiện toolbar', type:'boolean', default:false},
+                  {path:'chart.zoom.enabled', label:'Cho phép zoom', type:'boolean', default:false},
+                  {path:'chart.background', label:'Màu nền chart', type:'color', default:'#ffffff'},
+                  {path:'chart.foreColor', label:'Màu chữ mặc định', type:'color', default:'#3d3d4e'}
+                ]},
+                { title:'Legend', fields:[
+                  {path:'legend.show', label:'Hiện chú thích', type:'boolean', default:true},
+                  {path:'legend.position', label:'Vị trí', type:'select', options:['top','right','bottom','left'], default:'right'},
+                  {path:'legend.horizontalAlign', label:'Canh ngang', type:'select', options:['left','center','right'], default:'center'},
+                  {path:'legend.fontSize', label:'Cỡ chữ', type:'range', min:9, max:20, step:1, suffix:'px', default:12},
+                  {path:'legend.offsetX', label:'Lệch ngang', type:'number', min:-100, max:100, step:1, default:0},
+                  {path:'legend.offsetY', label:'Lệch dọc', type:'number', min:-100, max:100, step:1, default:0}
+                ]},
+                { title:'Tooltip & data label', fields:[
+                  {path:'tooltip.enabled', label:'Hiện tooltip', type:'boolean', default:true},
+                  {path:'tooltip.shared', label:'Tooltip dùng chung', type:'boolean', default:false},
+                  {path:'tooltip.intersect', label:'Tooltip theo điểm giao', type:'boolean', default:true},
+                  {path:'tooltip.followCursor', label:'Tooltip theo con trỏ', type:'boolean', default:false},
+                  {path:'tooltip.theme', label:'Giao diện tooltip', type:'select', options:['light','dark'], default:'light'},
+                  {path:'dataLabels.enabled', label:'Hiện nhãn dữ liệu', type:'boolean', default:false},
+                  {path:'dataLabels.offsetX', label:'Lệch nhãn ngang', type:'number', min:-40, max:40, step:1, default:0},
+                  {path:'dataLabels.offsetY', label:'Lệch nhãn dọc', type:'number', min:-40, max:40, step:1, default:0}
+                ]},
+                { title:'Lưới', fields:[
+                  {path:'grid.show', label:'Hiện lưới', type:'boolean', default:true},
+                  {path:'grid.borderColor', label:'Màu lưới', type:'color', default:'#e0e0e0'},
+                  {path:'grid.strokeDashArray', label:'Nét đứt', type:'number', min:0, max:20, step:1, default:0},
+                  {path:'grid.position', label:'Vị trí lưới', type:'select', options:['back','front'], default:'back'},
+                  {path:'grid.padding.top', label:'Padding trên', type:'number', min:-30, max:60, step:1, default:0},
+                  {path:'grid.padding.bottom', label:'Padding dưới', type:'number', min:-30, max:60, step:1, default:0}
+                ]}
+              ];
+              const AXIS_SCHEMA = [{ title:'Trục X & Y', fields:[
+                {path:'xaxis.labels.show', label:'Hiện nhãn trục X', type:'boolean', default:true},
+                {path:'xaxis.labels.rotate', label:'Xoay nhãn X', type:'number', min:-90, max:90, step:15, default:0},
+                {path:'xaxis.labels.trim', label:'Cắt nhãn X dài', type:'boolean', default:true},
+                {path:'xaxis.axisBorder.show', label:'Hiện đường trục X', type:'boolean', default:false},
+                {path:'xaxis.axisTicks.show', label:'Hiện tick trục X', type:'boolean', default:false},
+                {path:'yaxis.labels.show', label:'Hiện nhãn trục Y', type:'boolean', default:true},
+                {path:'yaxis.decimalsInFloat', label:'Số lẻ trục Y', type:'number', min:0, max:6, step:1, default:0},
+                {path:'yaxis.forceNiceScale', label:'Thang Y đẹp', type:'boolean', default:true},
+                {path:'yaxis.opposite', label:'Đưa trục Y sang phải', type:'boolean', default:false}
+              ]}];
+              const CHART_CONFIG_SCHEMAS = {
+                line: [
+                  { title:'Đường & vùng', fields:[
+                    {path:'stroke.width', label:'Độ dày đường', type:'range', min:1, max:12, step:1, default:3},
+                    {path:'stroke.curve', label:'Kiểu đường', type:'select', options:['straight','smooth','stepline'], default:'straight'},
+                    {path:'stroke.lineCap', label:'Đầu nét', type:'select', options:['butt','round','square'], default:'butt'},
+                    {path:'stroke.dashArray', label:'Nét đứt', type:'number', min:0, max:30, step:1, default:0},
+                    {path:'fill.type', label:'Kiểu tô vùng', type:'select', options:['solid','gradient','pattern'], default:'solid'},
+                    {path:'fill.opacity', label:'Độ trong vùng', type:'range', min:0, max:1, step:.05, default:1},
+                    {path:'fill.gradient.shadeIntensity', label:'Cường độ gradient', type:'range', min:0, max:1, step:.05, default:.4}
+                  ]},
+                  { title:'Marker', fields:[
+                    {path:'markers.size', label:'Kích thước điểm', type:'range', min:0, max:16, step:1, default:6},
+                    {path:'markers.strokeWidth', label:'Viền điểm', type:'range', min:0, max:8, step:1, default:3},
+                    {path:'markers.shape', label:'Dạng điểm', type:'select', options:['circle','square'], default:'circle'},
+                    {path:'markers.hover.size', label:'Điểm khi hover', type:'range', min:0, max:20, step:1, default:7}
+                  ]}, ...AXIS_SCHEMA, ...COMMON_CHART_SCHEMA
+                ],
+                bar: [
+                  { title:'Cột', fields:[
+                    {path:'plotOptions.bar.horizontal', label:'Cột ngang', type:'boolean', default:false},
+                    {path:'plotOptions.bar.distributed', label:'Mỗi cột một màu', type:'boolean', default:false},
+                    {path:'plotOptions.bar.borderRadius', label:'Bo góc', type:'range', min:0, max:30, step:1, default:4},
+                    {path:'plotOptions.bar.columnWidth', label:'Độ rộng cột', type:'range', min:10, max:100, step:5, suffix:'%', default:45},
+                    {path:'plotOptions.bar.barHeight', label:'Chiều cao cột ngang', type:'range', min:10, max:100, step:5, suffix:'%', default:70},
+                    {path:'plotOptions.bar.dataLabels.position', label:'Vị trí nhãn', type:'select', options:['top','center','bottom'], default:'top'}
+                  ]}, ...AXIS_SCHEMA, ...COMMON_CHART_SCHEMA
+                ],
+                donut: [
+                  { title:'Pie / Donut', fields:[
+                    {path:'plotOptions.pie.expandOnClick', label:'Phóng to khi click', type:'boolean', default:true},
+                    {path:'plotOptions.pie.customScale', label:'Tỷ lệ pie', type:'range', min:.5, max:1.5, step:.05, default:1},
+                    {path:'plotOptions.pie.startAngle', label:'Góc bắt đầu', type:'number', min:-360, max:360, step:5, default:0},
+                    {path:'plotOptions.pie.endAngle', label:'Góc kết thúc', type:'number', min:-360, max:360, step:5, default:360},
+                    {path:'plotOptions.pie.donut.size', label:'Kích thước lỗ', type:'range', min:20, max:85, step:5, suffix:'%', default:65},
+                    {path:'plotOptions.pie.donut.labels.show', label:'Hiện nhãn giữa', type:'boolean', default:true},
+                    {path:'plotOptions.pie.donut.labels.name.show', label:'Hiện tên ở giữa', type:'boolean', default:true},
+                    {path:'plotOptions.pie.donut.labels.value.show', label:'Hiện giá trị ở giữa', type:'boolean', default:true},
+                    {path:'plotOptions.pie.donut.labels.total.show', label:'Hiện tổng', type:'boolean', default:true},
+                    {path:'dataLabels.minAngleToShowLabel', label:'Góc tối thiểu hiện nhãn', type:'number', min:0, max:90, step:1, default:10}
+                  ]}, ...COMMON_CHART_SCHEMA
+                ],
+                heatmap: [
+                  { title:'Heatmap', fields:[
+                    {path:'plotOptions.heatmap.radius', label:'Bo góc ô', type:'range', min:0, max:20, step:1, default:2},
+                    {path:'plotOptions.heatmap.enableShades', label:'Dùng sắc độ', type:'boolean', default:true},
+                    {path:'plotOptions.heatmap.shadeIntensity', label:'Cường độ sắc độ', type:'range', min:0, max:1, step:.05, default:.5},
+                    {path:'plotOptions.heatmap.reverseNegativeShade', label:'Đảo sắc độ âm', type:'boolean', default:false},
+                    {path:'plotOptions.heatmap.distributed', label:'Thang màu từng hàng', type:'boolean', default:false},
+                    {path:'plotOptions.heatmap.useFillColorAsStroke', label:'Dùng màu nền làm viền', type:'boolean', default:false},
+                    {path:'plotOptions.heatmap.colorScale.min', label:'Giá trị màu thấp nhất', type:'number', min:0, max:1000000, step:1, default:0},
+                    {path:'plotOptions.heatmap.colorScale.max', label:'Giá trị màu cao nhất', type:'number', min:0, max:1000000, step:1, default:9000},
+                    {path:'plotOptions.heatmap.colorScale.ranges', label:'Dải màu (JSON)', type:'json', default:[]}
+                  ]}, ...COMMON_CHART_SCHEMA
+                ]
+              };
+              const SYSTEM_CHART_ROOTS = new Set(['chart', 'series', 'labels', 'colors']);
+
+              function cloneConfig(value){ return JSON.parse(JSON.stringify(value || {})); }
+              function getByPath(object, path){ return path.split('.').reduce((current, key) => current?.[key], object); }
+              function setByPath(object, path, value){
+                const keys = path.split('.');
+                const lastKey = keys.pop();
+                const target = keys.reduce((current, key) => (current[key] ||= {}), object);
+                target[lastKey] = value;
+              }
+              function deleteByPath(object, path){
+                const keys = path.split('.');
+                const lastKey = keys.pop();
+                const target = keys.reduce((current, key) => current?.[key], object);
+                if (target && Object.prototype.hasOwnProperty.call(target, lastKey)) delete target[lastKey];
+              }
+              function chartConfigForEditor(wdg)
+              {
+                return wdg.chart; //|| getChartTemplate(wdg.kind) || {};
+              }
+              function persistChartValue(wdg, path, value){
+                // if (!wdg.chart) wdg.chart = cloneConfig(getChartTemplate(wdg.kind));
+                setByPath(wdg.chart, path, value);
+                renderWidgetContent(wdg);
+                updateJsonPreview(wdg);
+              }
+              function editorValue(config, field){
+                const value = getByPath(config, field.path);
+                if (value === undefined) return field.default;
+                if (field.type === 'range' && typeof value === 'string' && field.suffix && value.endsWith(field.suffix)) return Number(value.slice(0, -field.suffix.length));
+                return value;
+              }
+              function createSchemaField(wdg, config, field){
+                const wrap = document.createElement('div');
+                wrap.className = 'schema-field';
+                const value = editorValue(config, field);
+                const label = document.createElement('label');
+                label.textContent = field.label;
+                wrap.appendChild(label);
+                let input;
+                if (field.type === 'boolean') {
+                  input = document.createElement('input'); input.type = 'checkbox'; input.checked = !!value;
+                  label.className = 'schema-switch'; label.textContent = '';
+                  label.append(input, document.createTextNode(field.label)); wrap.replaceChildren(label);
+                  input.addEventListener('change', () => persistChartValue(wdg, field.path, input.checked));
+                } else if (field.type === 'select') {
+                  input = document.createElement('select');
+                  field.options.forEach(option => { const el = document.createElement('option'); el.value = option; el.textContent = option; el.selected = option === value; input.appendChild(el); });
+                  input.addEventListener('change', () => persistChartValue(wdg, field.path, input.value)); wrap.appendChild(input);
+                } else if (field.type === 'color') {
+                  const row = document.createElement('div'); row.className = 'schema-inline';
+                  input = document.createElement('input'); input.type = 'color'; input.value = /^#[0-9a-f]{6}$/i.test(value) ? value : field.default;
+                  const code = document.createElement('output'); code.value = input.value; code.textContent = input.value;
+                  input.addEventListener('input', () => { code.value = input.value; code.textContent = input.value; persistChartValue(wdg, field.path, input.value); });
+                  row.append(input, code); wrap.appendChild(row);
+                } else if (field.type === 'range') {
+                  const row = document.createElement('div'); row.className = 'schema-inline';
+                  input = document.createElement('input'); input.type = 'range'; input.min = field.min; input.max = field.max; input.step = field.step || 1; input.value = value;
+                  const output = document.createElement('output'); output.textContent = `${input.value}${field.suffix || ''}`;
+                  input.addEventListener('input', () => { output.textContent = `${input.value}${field.suffix || ''}`; persistChartValue(wdg, field.path, field.suffix ? `${input.value}${field.suffix}` : Number(input.value)); });
+                  row.append(input, output); wrap.appendChild(row);
+                } else {
+                  input = document.createElement('input'); input.type = 'number'; input.min = field.min; input.max = field.max; input.step = field.step || 1; input.value = value;
+                  input.addEventListener('change', () => persistChartValue(wdg, field.path, Number(input.value))); wrap.appendChild(input);
+                }
+                return wrap;
+              }
+              function renderUnknownTree(wdg, config, host, knownRoots){
+                const unknown = Object.fromEntries(Object.entries(config).filter(([key]) => !knownRoots.has(key) && !SYSTEM_CHART_ROOTS.has(key)));
+                const details = document.createElement('details'); details.className = 'schema-group';
+                const summary = document.createElement('summary'); summary.textContent = 'Trường mở rộng'; details.appendChild(summary);
+                const body = document.createElement('div'); body.className = 'schema-group-body'; details.appendChild(body);
+                const renderNode = (value, path, key, canRemove = true) => {
+                  const isObject = value && typeof value === 'object' && !Array.isArray(value);
+                  if (isObject) {
+                    const node = document.createElement('details'); node.className = 'tree-node'; node.open = path.split('.').length < 2;
+                    const title = document.createElement('summary'); title.textContent = key; node.appendChild(title);
+                    Object.entries(value).forEach(([childKey, childValue]) => node.appendChild(renderNode(childValue, `${path}.${childKey}`, childKey)));
+                    const add = document.createElement('button'); add.type = 'button'; add.className = 'tree-add'; add.textContent = '+ Thuộc tính';
+                    add.addEventListener('click', () => { const name = prompt('Tên thuộc tính mới'); if (name && !/[.]/.test(name)) { persistChartValue(wdg, `${path}.${name}`, ''); renderChartConfigEditor(wdg); } });
+                    node.appendChild(add); return node;
+                  }
+                  const row = document.createElement('div'); row.className = 'tree-leaf';
+                  const name = document.createElement('label'); name.textContent = key;
+                  let input;
+                  if (Array.isArray(value)) { input = document.createElement('textarea'); input.value = JSON.stringify(value); input.addEventListener('change', () => { try { persistChartValue(wdg, path, JSON.parse(input.value)); } catch (_) { input.classList.add('invalid'); } }); }
+                  else { input = document.createElement('input'); input.type = typeof value === 'number' ? 'number' : 'text'; input.value = String(value ?? ''); input.addEventListener('change', () => persistChartValue(wdg, path, typeof value === 'boolean' ? input.value === 'true' : typeof value === 'number' ? Number(input.value) : input.value)); }
+                  row.append(name, input);
+                  if (canRemove) { const remove = document.createElement('button'); remove.type = 'button'; remove.className = 'tree-remove'; remove.textContent = '×'; remove.title = 'Xóa thuộc tính'; remove.addEventListener('click', () => { if (!wdg.chart) return; deleteByPath(wdg.chart, path); renderWidgetContent(wdg); updateJsonPreview(wdg); renderChartConfigEditor(wdg); }); row.appendChild(remove); }
+                  return row;
+                };
+                Object.entries(unknown).forEach(([key, value]) => body.appendChild(renderNode(value, key, key)));
+                const addRoot = document.createElement('button'); addRoot.type = 'button'; addRoot.className = 'tree-add'; addRoot.textContent = '+ Thuộc tính cấp cao';
+                addRoot.addEventListener('click', () => { const name = prompt('Tên thuộc tính mới'); if (name && !/[.]/.test(name)) { persistChartValue(wdg, name, ''); renderChartConfigEditor(wdg); } });
+                body.appendChild(addRoot); host.appendChild(details);
+              }
+              function renderChartConfigEditor(wdg){
+                const host = document.getElementById('chart-config-editor');
+                if (!host) return;
+                host.replaceChildren();
+                const groups = CHART_CONFIG_SCHEMAS[wdg.kind];
+                if (!groups) return;
+                const shell = document.createElement('section'); shell.className = 'schema-editor';
+                const title = document.createElement('p'); title.className = 'panel-title'; title.textContent = 'Tùy chỉnh biểu đồ'; shell.appendChild(title);
+                const config = chartConfigForEditor(wdg);
+                const knownRoots = new Set();
+                groups.forEach((group, index) => { const details = document.createElement('details'); details.className = 'schema-group'; details.open = index === 0; const summary = document.createElement('summary'); summary.textContent = group.title; const body = document.createElement('div'); body.className = 'schema-group-body'; group.fields.forEach(field => { knownRoots.add(field.path.split('.')[0]); body.appendChild(createSchemaField(wdg, config, field)); }); details.append(summary, body); shell.appendChild(details); });
+                host.appendChild(shell);
+                renderUnknownTree(wdg, config, shell, knownRoots);
+              }
+
+              // =========================================================================
+              // LEGACY MONACO IMPLEMENTATION (not invoked in v6)
+              // =========================================================================
+              let jsonEditor = null;
+              const CHART_TEMPLATES = {
+                line: {
+                  grid: { borderColor: '#e0e0e0', strokeDashArray: 6, xaxis: { lines: { show: true } }, yaxis: { lines: { show: false } } },
+                  stroke: { width: 3, curve: 'smooth' },
+                  tooltip: { shared: false, intersect: true },
+                  xaxis: { labels: { show: true }, axisTicks: { show: false }, axisBorder: { show: false } },
+                  yaxis: { labels: { show: true } },
+                  markers: { size: 6, strokeWidth: 3, strokeColors: 'transparent', hover: { size: 7 } }
+                },
+                bar: {
+                  grid: { borderColor: '#f1f1f1', strokeDashArray: 4 },
+                  plotOptions: { bar: { borderRadius: 4, columnWidth: '45%', distributed: false } },
+                  dataLabels: { enabled: false }
+                },
+                donut: {
+                  legend: { position: 'right' },
+                  plotOptions: { pie: { donut: { size: '65%', labels: { show: true, total: { show: true, label: 'Tổng' } } } } },
+                  dataLabels: { enabled: true }
+                }
+              };
+
+        /**
+          * Lấy chart template mặc định theo loại
+          */
+        // function getChartTemplate(chartType) {
+        //   const templates = {
+        //     line: {
+        //       grid: { borderColor: '#000', strokeDashArray: 6, xaxis: { lines: { show: true } }, yaxis: { lines: { show: false } }, padding: { top: -5, left: -7, right: 9, bottom: -5 } },
+        //       stroke: { width: 3 },
+        //       tooltip: { shared: false, intersect: true, x: { show: false }, enabled: true, theme: 'light' },
+        //       xaxis: { labels: { show: true }, axisTicks: { show: false }, axisBorder: { show: false } },
+        //       yaxis: { labels: { show: true } },
+        //       markers: { size: 6, strokeWidth: 3, strokeColors: 'transparent', colors: ['transparent'], hover: { size: 7 } }
+        //     },
+        //     bar: {
+        //       grid: { borderColor: '#f1f1f1', strokeDashArray: 4, padding: { top: -5, left: -7, right: 9, bottom: -5 } },
+        //       plotOptions: { bar: { borderRadius: 4, columnWidth: '45%', distributed: false } },
+        //       dataLabels: { enabled: false },
+        //       xaxis: { labels: { show: true }, axisTicks: { show: false }, axisBorder: { show: false } },
+        //       tooltip: { enabled: true, theme: 'light' }
+        //     },
+        //     donut: {
+        //       legend: { position: 'right' },
+        //       plotOptions: { pie: { donut: { size: '65%', labels: { show: true, total: { show: true, label: 'Tổng' } } } } },
+        //       dataLabels: { enabled: true },
+        //       tooltip: { enabled: true, theme: 'light' }
+        //     }
+        //   };
+
+        //   return templates[chartType] || {};
+        // }
+
+        function buildChartOptionsFromTemplate(wdg, data, chartType) {
+          // Base template theo chart type
+          const templates = {
+            line: {
+              chart: {
+                height: '80%',
+                type: 'line',
+                parentHeightOffset: 0,
+                toolbar: { show: false }
+              },
+              grid: {
+                borderColor: '#000',
+                strokeDashArray: 6,
+                xaxis: { lines: { show: true } },
+                yaxis: { lines: { show: false } },
+                padding: { top: -5, left: -7, right: 9, bottom: -5 }
+              },
+              stroke: { width: 3 },
+              fill: { type: wdg.config.showArea ? 'gradient' : 'solid', opacity: wdg.config.showArea ? 0.25 : 1 },
+              colors: [wdg.config.color],
+              series: [{ name: wdg.config.title, data: data.series }],
+              tooltip: { shared: false, intersect: true, x: { show: false }, enabled: true, theme: 'light' },
+              xaxis: { labels: { show: true }, axisTicks: { show: false }, axisBorder: { show: false } },
+              yaxis: { labels: { show: true } },
+              markers: {
+                size: 6, strokeWidth: 3, strokeColors: 'transparent',
+                colors: ['transparent'],
+                discrete: [
+                  {
+                    seriesIndex: 0,
+                    dataPointIndex: 5,
+                    fillColor: '#000',
+                    strokeColor: '#000',
+                    size: 6,
+                    shape: 'circle'
+                  }
+                ],
+                hover: { size: 7 }
+              }
+            },
+            bar: {
+              chart: {
+                height: '80%',
+                type: 'bar',
+                parentHeightOffset: 0,
+                toolbar: { show: false }
+              },
+              grid: {
+                borderColor: '#f1f1f1',
+                strokeDashArray: 4,
+                padding: { top: -5, left: -7, right: 9, bottom: -5 }
+              },
+              colors: [wdg.config.color],
+              series: [{ name: wdg.config.title, data: data.series }],
+              plotOptions: {
+                bar: { borderRadius: 4, columnWidth: '50%', distributed: false, horizontal: !!wdg.config.horizontal }
+              },
+              dataLabels: { enabled: false },
+              xaxis: {
+                categories: data.categories || [],
+                labels: { show: true, style:{fontSize:'10px'} },
+                axisTicks: { show: false },
+                axisBorder: { show: false }
+              },
+              tooltip: { enabled: true, theme: 'light' }
+            },
+            donut: {
+              chart: {
+                height: '80%',
+                type: 'donut'
+              },
+              labels: data.labels || [],
+              series: data.values || [],
+              colors: data.colors || [],
+              stroke: {
+                width: 0
+              },
+              dataLabels: {
+                enabled: !0
+              },
+              legend: {
+                show: !0,
+                position: wdg.config.legendPosition || 'right',
+                fontSize: '13px',
+                labels: {
+                  colors: '#000',
+                  useSeriesColors: !1
+                },
+                markers: {
+                  offsetY: 0,
+                  offsetX: -3,
+                  height: 10,
+                  width: 10
+                },
+                itemMargin: {
+                  vertical: 3,
+                  horizontal: 10
+                }
+              },
+              tooltip: {
+                style: {
+                  color: '#FFF'
+                }
+              },
+              grid: {
+                padding: {
+                  top: 0
+                }
+              },
+              plotOptions: {
+                pie: {
+                  donut: {
+                    size: '70%',
+                    labels: {
+                      show: !0,
+                      value: {
+                        fontSize: '22px',
+                        fontFamily: 'Inter',
+                        color: '#000',
+                        fontWeight: 500,
+                        offsetY: -20,
+                        formatter: function (val) {
+                          return fmt(Number(val),wdg);
+                        }
+                      },
+                      name: {
+                        offsetY: 20,
+                        fontFamily: 'Inter',
+                        fontWeight: '500',
+                        formatter: function (val) {
+                          return val
+                        }
+                      },
+                      total: {
+                        show: !0,
+                        fontSize: '15px',
+                        fontFamily: 'Inter',
+                        label: 'Tổng',
+                        formatter: function (e) {
+                            const totalValue = e.globals.seriesTotals.reduce((a, b) => a + b, 0);
+                            return fmt(totalValue,wdg);
+                        }
+                      }
+                    }
+                  }
+                }
+              },
+              responsive: [{
+                breakpoint: 1399,
+                options: {
+                  chart: {
+                    height: 200
+                  }
+                }
+              }, {
+                breakpoint: 420,
+                options: {
+                  chart: {
+                    height: 300
+                  }
+                }
+              }]
+            },
+            heatmap: {
+              chart: {
+                height: '80%',
+                type: 'heatmap',
+                parentHeightOffset: 0,
+                toolbar: { show: false }
+              },
+              colors: [wdg.config.color],
+              series: [],
+              xaxis: { categories: data.categories || data.weekLabels || [] },
+              plotOptions: {
+                heatmap: {
+                  colorScale: {
+                    ranges: data.ranges || [
+                        {from:0,to:1000,color:'#b9b3f8'},
+                        {from:1001,to:3000,color:'#9d95f5'},
+                        {from:3001,to:5000,color:'#8176f2'},
+                        {from:5001,to:9000,color:'#7367f0'}
+                    ]
+                  }
+                }
+              },
+              tooltip: { enabled: true, theme: 'light' }
+            }
+          };
+
+          const baseOptions = templates[chartType] || {};
+          const chartConfig = wdg.chart || {};
+          const savedOverrides = chartForSave(chartConfig) || {};
+
+          // Deep merge: base + override + system lock
+          const finalOptions = deepMergeOptions(baseOptions, savedOverrides);
+
+          // Lock system fields (always from wdg config)
+          finalOptions.colors = [wdg.config.color];
+          if (chartType == 'donut') {
+            finalOptions.series = data.values || [];
+            finalOptions.labels = data.labels || [];
+            finalOptions.colors = data.colors || [];
+          } else if (chartType == 'heatmap'){
+            const series = data.days.map(d=>({ name:d, data: data.weekLabels.map((w,i)=>({x:w, y:data.matrix[d][i]})) }));
+            finalOptions.colors = [wdg.config.color];
+            finalOptions.series = series;
+            finalOptions.xaxis = finalOptions.xaxis || {};
+            finalOptions.xaxis.categories = data.categories || data.weekLabels || [];
+            finalOptions.chart.type = 'heatmap';
+          }else {
+            finalOptions.series = data.series || [];
+            finalOptions.xaxis ||= {};
+            finalOptions.xaxis.categories = data.categories || [];
+          }
+          finalOptions.chart.type = chartType === 'line' && wdg.config.showArea ? 'area' : chartType;
+          finalOptions.yaxis ||= {};
+          if (!Array.isArray(finalOptions.yaxis) && chartType !== 'heatmap') { finalOptions.yaxis.labels ||= {}; finalOptions.yaxis.labels.formatter = value => fmt(Number(value),wdg); }
+          finalOptions.tooltip ||= {}; finalOptions.tooltip.y ||= {}; finalOptions.tooltip.y.formatter = value => fmt(value,wdg);
+          if(chartType !== 'donut') { finalOptions.dataLabels ||= {}; finalOptions.dataLabels.formatter = value => fmt(value,wdg); }
+          wdg.chart = chartForSave(finalOptions);
+
+          return finalOptions;
+        }
+
+        /**
+         * Deep merge options with override
+         */
+        function deepMergeOptions(target, ...sources) {
+          if (!sources.length) return target;
+          const source = sources.shift();
+
+          if (isObjectLike(target) && isObjectLike(source)) {
+            for (const key of Object.keys(source)) {
+              if (['__proto__', 'prototype', 'constructor'].includes(key)) continue;
+              if (isObjectLike(source[key])) {
+                if (!target[key]) target[key] = {};
+                deepMergeOptions(target[key], source[key]);
+              } else {
+                target[key] = source[key];
+              }
+            }
+          }
+          return deepMergeOptions(target, ...sources);
+        }
+
+        function isObjectLike(item) {
+          return item && typeof item === 'object' && !Array.isArray(item);
+        }
+
+        function renderLine(el, wdg, data) {
+          const options = buildChartOptionsFromTemplate(wdg, data, 'line');
+          mountChart(el, wdg.id, options);
+        }
+
+        function renderBar(el, wdg, data) {
+          const options = buildChartOptionsFromTemplate(wdg, data, 'bar');
+          mountChart(el, wdg.id, options);
+        }
+
+        function renderDonut(el, wdg, data) {
+          const options = buildChartOptionsFromTemplate(wdg, data, 'donut');
+          mountChart(el, wdg.id, options);
+        }
+
+        function renderHeatmap(el, wdg, data) {
+          const options = buildChartOptionsFromTemplate(wdg, data, 'heatmap');
+          mountChart(el, wdg.id, options);
+        }
+
+        /**
+         * renderWidgetContent - gọi hàm render tương ứng dựa vào kind
+         * (Đây là hàm dispatcher, cần update nếu chưa có)
+         */
+        function renderWidgetContent(wdg) {
+          if (!wdg) return;
+          const el = document.querySelector(`.widget[data-id="${wdg.id}"] .widget-body`);
+          if (!el) return;
+
+          if (chartInstances[wdg.id]) { chartInstances[wdg.id].destroy(); delete chartInstances[wdg.id]; }
+          el.replaceChildren();
+          const dataKey = wdg.config.code;
+          const dataset = DATASETS[dataKey];
+          const needsDataset = !!wdg.config.dataBinding || !['emoji_card', 'button'].includes(wdg.kind);
+          if (needsDataset && (!dataset || dataset.status !== 'ready')) {
+            const message = datasetLoadError || dataset?.notice || (dataset?.status === 'empty' ? 'Chưa có dữ liệu trong kỳ thống kê.' : 'Chưa có nguồn dữ liệu cho widget này.');
+            el.innerHTML = `<div class="empty-hint">${escapeHtml(message)}</div>`;
+            wdg.chart ||= {};
+            return;
+          }
+          const data = dataset?.data || {};
+
+          // Dispatcher theo kind
+          switch(wdg.kind) {
+            case 'line':
+              renderLine(el, wdg, data);
+              break;
+            case 'bar':
+              renderBar(el, wdg, data);
+              break;
+            case 'donut':
+              renderDonut(el, wdg, data);
+              break;
+            case 'heatmap':
+              renderHeatmap(el, wdg, data);
+              break;
+            case 'emoji_card':
+              renderEmojiCard(el, wdg, data);
+              break;
+            case 'large_img_card':
+              renderLargeImgCard(el, wdg, data);
+              break;
+            case 'multiple_mini_card':
+              renderMultipleMiniCard(el, wdg, data);
+              break;
+            case 'table':
+              renderTable(el, wdg, data);
+              break;
+            case 'list':
+              renderList(el, wdg, data);
+              break;
+            case 'report':
+              renderReport(el, wdg, data);
+              break;
+            case 'button':
+              renderButton(el, wdg, data);
+              break;
+            default:
+              el.innerHTML = `<div class="empty-hint">Loại widget "${escapeHtml(wdg.kind)}" chưa được hỗ trợ.</div>`;
+          }
+          if (dataset?.notice) {
+            const notice = document.createElement('div'); notice.className = 'dataset-notice'; notice.textContent = dataset.notice; el.appendChild(notice);
+          }
+        }
+
+        /**
+         * mountChart - render ApexChart instance
+         * (Function này có sẵn rồi, không cần thay đổi)
+         */
+        function mountChart(el, key, options) {
+          if (!el) return;
+          if (chartInstances[key]) chartInstances[key].destroy();
+          const chart = new ApexCharts(el, options);
+          chart.render().catch(() => {
+            if (chartInstances[key] !== chart) return;
+            el.innerHTML = '<div class="empty-hint">Không thể vẽ biểu đồ với dữ liệu hiện tại.</div>';
+          });
+          chartInstances[key] = chart;
+        }
+
+        // =========================================================================
+        // Khởi động
+        // =========================================================================
+        const status = document.getElementById('datasetStatus');
+        const datasetCount = Object.keys(DATASETS).length;
+        const unavailable = Object.values(DATASETS).filter(d => d.status !== 'ready').length;
+        status.textContent = datasetLoadError || (datasetCount ? `Nguồn cấu hình riêng · ${datasetCount} widget${unavailable ? ` · ${unavailable} nguồn chưa có dữ liệu hoặc lỗi` : ''}` : 'Chọn widget → Dữ liệu để cấu hình nguồn và ánh xạ.');
+        status.classList.toggle('warning', !!datasetLoadError || unavailable > 0 || !datasetCount);
+        renderLibrary();
+        seedDefaultLayout();
+        let resizeT;
+        window.addEventListener('resize', ()=>{ clearTimeout(resizeT); resizeT=setTimeout(renderCanvas, 120); });
+    </script>
+}

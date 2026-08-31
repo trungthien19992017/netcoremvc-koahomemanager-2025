@@ -1,13 +1,16 @@
 using AspnetCoreMvcFull.Models;
+using Google.Api;
 using KOAHome.EntityFramework;
 using KOAHome.Models;
 using KOAHome.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Options;
 using Microsoft.SqlServer.Server;
 using System.Diagnostics;
 using System.Text;
 using System.Text.Json;
+using System.Text.Json.Nodes;
 using System.Text.RegularExpressions;
 
 namespace AspnetCoreMvcFull.Controllers;
@@ -25,6 +28,7 @@ public class DashboardsController : Controller
   private readonly string _tessdataPath;
   private readonly IHttpClientFactory _httpClientFactory;
   private readonly string _googleCloudVisionApiKey;
+  long UserId => long.TryParse(User.FindFirst("UserID")?.Value, out var id) ? id : 0;
 
 
   public DashboardsController(ILogger<DashboardsController> logger, IWidgetService widget, IReportService reportService, IGoogleSheetService googleSheetService, IWebHostEnvironment webHostEnvironment, IHttpClientFactory httpClientFactory, IConfiguration configuration, IConnectionService con, IDashboardService dashboard)
@@ -877,6 +881,99 @@ public class DashboardsController : Controller
     {
       // Log exception
       return BadRequest(new { message = ex.Message });
+    }
+  }
+
+  [Authorize]
+  [HttpGet]
+  [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]
+  public async Task<IActionResult> DashboardBuilder7(string dashboardCode = "KoaDashboard7")
+  {
+    if (UserId <= 0) return Forbid();
+    try
+    {
+      var state = await _dashboard.NET_DashboardConfig_Get2(dashboardCode);
+      if (state == null)
+        return Forbid();
+      var widgets = (JsonArray)state["widgets"];
+      var datasets = new JsonObject();
+      try
+      {
+        var raw = await _widget.Widget_GetDashboardData(dashboardCode, UserId);
+        foreach (JsonObject w in widgets)
+        {
+          var code = DashboardMapper.Text(w["config"]?["code"]);
+          datasets[code] = await _dashboard.Normalize(w, raw[code] as JsonObject);
+        }
+      }
+      catch (Exception ex) {
+        _logger.LogWarning("Dashboard6 load failed: {Type}", ex.GetType().Name);
+        ViewBag.DatasetLoadError = "Không tải được dữ liệu; có thể chỉnh cấu hình và chạy thử từng widget.";
+      }
+      ViewBag.DashboardCode = dashboardCode;
+      ViewBag.DashboardConfig = new Dictionary<string, object> {
+        { "options", state["options"].ToJsonString() }
+      };
+      ViewBag.Widgets = new Dictionary<string, object> { { "data", widgets.ToJsonString() } };
+      ViewBag.WidgetDatasets = JsonSerializer.SerializeToElement(datasets);
+      ViewBag.WidgetTemplates = JsonSerializer.SerializeToElement(state["templates"]);
+      return View();
+    }
+    catch (Exception ex) {
+      _logger.LogWarning("Dashboard6 configuration failed: {Type}", ex.GetType().Name);
+      return StatusCode(500, "Không tải được cấu hình DashboardBuilder6.");
+    }
+  }
+
+  [ValidateAntiForgeryToken]
+  [RequestSizeLimit(1048576)]
+  public async Task<IActionResult> PreviewWidget([FromForm] string dashboardCode, [FromForm] string widget, [FromForm] string filters = "{}")
+  {
+    if (UserId <= 0) return Forbid();
+    try
+    {
+      if (await _dashboard.NET_DashboardConfig_Get2(dashboardCode) == null)
+        return Forbid();
+      var w = JsonNode.Parse(widget) as JsonObject ?? throw new FormatException("Widget không hợp lệ.");
+      await _dashboard.ValidateWidget(w);
+      var filter = JsonNode.Parse(filters) as JsonObject ?? throw new FormatException("Bộ lọc phải là object JSON.");
+      var key = DashboardMapper.Text(w["config"]?["code"]);
+      var result = await _widget.Widget_GetDashboardData(dashboardCode, UserId, w, filter);
+      var source = result[key] as JsonObject;
+      return Json(new {
+        success = source != null && source["error"] == null,
+        raw = source?["data"],
+        dataset = await _dashboard.Normalize(w, source),
+        errorMessage = source?["error"]
+      });
+    }
+    catch (Exception ex) when (ex is FormatException or JsonException) {
+      return BadRequest(new { success = false, errorMessage = ex.Message });
+    }
+    catch (Exception ex) {
+      _logger.LogWarning("Dashboard6 preview failed: {Type}", ex.GetType().Name);
+      return StatusCode(500, new { success = false, errorMessage = "Không chạy được nguồn. Kiểm tra cấu hình hoặc thử lại." });
+    }
+  }
+
+  [Authorize]
+  [HttpPost]
+  [ValidateAntiForgeryToken]
+  public async Task<IActionResult> SaveLayout7([FromForm] string dashboardCode, [FromForm] string options, [FromForm] string widgets)
+  {
+    if (UserId <= 0)
+      return Forbid();
+    try
+    {
+      await _dashboard.NET_DashboardConfig_ups2(dashboardCode, UserId, JsonNode.Parse(options) as JsonObject ?? throw new FormatException("Options không hợp lệ."), JsonNode.Parse(widgets) as JsonArray ?? throw new FormatException("Widgets không hợp lệ."));
+      return Json(new { success = true });
+    }
+    catch (Exception ex) when (ex is FormatException or JsonException) {
+      return BadRequest(new { success = false, errorMessage = ex.Message });
+    }
+    catch (Exception ex) {
+      _logger.LogWarning("Dashboard save failed: {Type}", ex.GetType().Name);
+      return StatusCode(500, new { success = false, errorMessage = "Không thể lưu; thay đổi đã được hoàn tác." });
     }
   }
 

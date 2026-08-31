@@ -1,11 +1,9 @@
 
-using Microsoft.EntityFrameworkCore;
 using KOAHome.EntityFramework;
-using Microsoft.Data.SqlClient;
-using System.Dynamic;
-using System.Text;
-using System.Data;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Memory;
+using System.Data;
+using System.Text.Json.Nodes;
 
 namespace KOAHome.Services
 {
@@ -13,6 +11,7 @@ namespace KOAHome.Services
   {
     public Task<IDictionary<string, object>> Widget_GetObject(Dictionary<string, object> parameters, string sqlStore, string? connectionString);
     public Task<List<dynamic>> Widget_GetList(Dictionary<string, object> parameters, string sqlStore, string? connectionString);
+    public Task<JsonObject> Widget_GetDashboardData(string dashboardCode, long userId, JsonObject preview = null, JsonObject filters = null);
   }
   public class WidgetService : IWidgetService
   {
@@ -74,5 +73,24 @@ namespace KOAHome.Services
       return resultList;
     }
 
+    public async Task<JsonObject> Widget_GetDashboardData(string dashboardCode, long userId, JsonObject preview = null, JsonObject filters = null)
+    {
+      string connectionString = _configuration.GetConnectionString("ConfigConnection");
+      string sqlStore = "net_dashboard_get_all_widgets2";
+      var parameters = new Dictionary<string, object>
+      {
+        ["dashboardcode"] = dashboardCode,
+        ["userid"] = userId,
+        ["previewwidget"] = (object)preview?.ToJsonString() ?? DBNull.Value,
+        ["filters"] = filters?.ToJsonString() ?? "{}"
+      };
+      var (sqlQuery, sqlParams) = await _con.Connection_GetQueryParam(parameters, sqlStore, connectionString);
+
+      var result = await _con.Connection_GetSingleDataFromQuery(parameters, sqlStore, connectionString, sqlQuery, sqlParams);
+
+      var data = result.ContainsKey("result_json") ? Convert.ToString(result["result_json"]) ?? "{}" : "{}";
+
+      return data == null ? null : JsonNode.Parse(data.ToString()) as JsonObject;
+    }
   }
 }

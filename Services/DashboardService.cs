@@ -1,10 +1,7 @@
 using KOAHome.EntityFramework;
 using KOAHome.Models;
 using Microsoft.Extensions.Options;
-using Minio;
-using Minio.DataModel.Args;
-using Newtonsoft.Json;
-using System.Data;
+using System.Text.Json.Nodes;
 
 namespace KOAHome.Services
 {
@@ -14,9 +11,13 @@ namespace KOAHome.Services
     public Task<IDictionary<string, object>?> NET_DashboardConfig_Get(string dashboardCode);
     public Task<IDictionary<string, object>?> NET_WidgetConfig_Get(string dashboardCode);
     public Task<List<dynamic>> NET_DashboardConfig_ups(Dictionary<string, object> parameters, string? dashboardCode, string sqlStore, string? connectionString);
+    public Task<JsonObject> NET_DashboardConfig_Get2(string dashboardCode);
+    public Task<List<dynamic>> NET_DashboardConfig_ups2(string code, long userId, JsonObject options, JsonArray widgets);
+    public Task ValidateWidget(JsonObject widget);
+    public Task<JsonObject> Normalize(JsonObject widget, JsonObject source);
 
   }
-  public class DashboardService : IDashboardService
+  public partial class DashboardService : IDashboardService
   {
     private readonly QLKCL_NEWContext _db;
     private readonly IHttpContextAccessor _httpContextAccessor;
@@ -158,5 +159,88 @@ namespace KOAHome.Services
       return resultList;
     }
 
+    public async Task<JsonObject> NET_DashboardConfig_Get2(string dashboardCode)
+    {
+      string connectionString = _configuration.GetConnectionString("ConfigConnection");
+      string sqlStore = "net_dashboard_sel2";
+      var parameters = new Dictionary<string, object>();
+      parameters.Add("dashboardcode", dashboardCode);
+      var (sqlQuery, sqlParams) = await _con.Connection_GetQueryParam(parameters, sqlStore, connectionString);
+
+      var result = await _con.Connection_GetSingleDataFromQuery(parameters, sqlStore, connectionString, sqlQuery, sqlParams);
+
+      var data = result.ContainsKey("data") ? Convert.ToString(result["data"]) ?? "{}" : "{}";
+
+      return data == null ? null : JsonNode.Parse(data.ToString()) as JsonObject;
+    }
+
+    public async Task ValidateWidget(JsonObject widget)
+    {
+      var kind = DashboardMapper.Text(widget["kind"]);
+      if (!DashboardMapper.Kinds.Contains(kind)) throw new FormatException("Loại widget không hỗ trợ.");
+      var config = widget["config"] as JsonObject ?? throw new FormatException("Thiếu cấu hình widget.");
+      var code = DashboardMapper.Text(config["code"]);
+      if (code is "__proto__" or "constructor" or "prototype" || !System.Text.RegularExpressions.Regex.IsMatch(code, "^[a-zA-Z0-9_-]{1,160}$")) throw new FormatException("Mã widget chỉ gồm chữ, số, dấu gạch ngang/gạch dưới; tối đa 160 ký tự và không dùng tên hệ thống.");
+      if (config["dataBinding"] is not JsonObject binding)
+      {
+        if (kind is "button" or "emoji_card") return;
+        throw new FormatException("Widget chưa có cấu hình nguồn dữ liệu.");
+      }
+      if (DashboardMapper.Text(binding["version"]) != "1" || DashboardMapper.Text(binding["type"]) is not ("store" or "sqlcontent" or "json")) throw new FormatException("Loại nguồn hoặc phiên bản cấu hình không hợp lệ.");
+      var content = DashboardMapper.Text(binding["content"]);
+      if (string.IsNullOrWhiteSpace(content) || System.Text.Encoding.UTF8.GetByteCount(content) > 262144) throw new FormatException("Nội dung nguồn không được rỗng hoặc vượt 256 KB.");
+      if (binding["parameters"] != null && binding["parameters"] is not JsonArray) throw new FormatException("Tham số phải là mảng JSON.");
+      if (binding["mapping"] != null && binding["mapping"] is not JsonObject) throw new FormatException("Ánh xạ phải là object JSON.");
+      if (DashboardMapper.Text(binding["type"]) == "json") JsonNode.Parse(content);
+    }
+    public async Task<JsonObject> Normalize(JsonObject widget, JsonObject source)
+    {
+      var config = (JsonObject)widget["config"];
+      var result = new JsonObject { ["label"] = DashboardMapper.Text(config["title"]), ["shape"] = source?["shape"]?.DeepClone(), ["data"] = new JsonObject() };
+      if (source == null || source["error"] != null)
+      {
+        result["status"] = "error"; result["notice"] = source?["error"]?.DeepClone() ?? JsonValue.Create("Không nhận được kết quả từ nguồn."); return result;
+      }
+      try
+      {
+        var kind = DashboardMapper.Text(widget["kind"]);
+        var data = config["dataBinding"] is JsonObject binding ? DashboardMapper.Map(kind, binding, source["data"]) : new JsonObject();
+        result["data"] = data;
+        result["status"] = DashboardMapper.Empty(kind, data) ? "empty" : "ready";
+        result["notice"] = DashboardMapper.Empty(kind, data) ? "Nguồn không có dữ liệu hiển thị." : "";
+      }
+      catch (Exception ex) when (ex is FormatException or InvalidOperationException or System.Text.Json.JsonException or OverflowException)
+      {
+        result["status"] = "error"; result["notice"] = "Ánh xạ chưa hợp lệ: " + ex.Message;
+      }
+      return result;
+    }
+
+    public async Task<List<dynamic>> NET_DashboardConfig_ups2(string code, long userId, JsonObject options, JsonArray widgets)
+    {
+      string connectionString = _configuration.GetConnectionString("ConfigConnection");
+      string sqlStore = "net_dashboard_ups2";
+      var parameters = new Dictionary<string, object>()
+      {
+        ["dashboardcode"] = code,
+        ["userid"] = userId,
+        ["options"] = options.ToJsonString(),
+        ["widgets"] = widgets.ToJsonString()
+      };
+      // neu khong truyen connect string thi se lay connection string mac dinh
+      if (connectionString == null)
+      {
+        connectionString = _configuration.GetConnectionString("ConfigConnection"); // Thay thế bằng chuỗi kết nối của bạn
+      }
+      // chuyen thanh cau query tu store va param truyen vao
+      var (sqlQuery, sqlParams) = await _con.Connection_GetQueryParam(parameters, sqlStore, connectionString);
+
+      var resultList = new List<dynamic>();
+
+      // xu ly lay du lieu dua truyen store va param truyen vao
+      resultList = await _con.Connection_GetDataFromQuery(parameters, sqlStore, connectionString, sqlQuery, sqlParams);
+
+      return resultList;
+    }
   }
 }
