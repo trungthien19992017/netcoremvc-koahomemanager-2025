@@ -1015,6 +1015,7 @@ namespace KOAHome.Controllers
       };
 
       if (result.Success) return Json(response);
+      _logger.LogInformation(request.Payload.GetRawText());
       return StatusCode(result.IsConcurrencyConflict ? StatusCodes.Status409Conflict : StatusCodes.Status400BadRequest, response);
     }
 
