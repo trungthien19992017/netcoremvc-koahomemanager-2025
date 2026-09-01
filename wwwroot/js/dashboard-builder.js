@@ -63,9 +63,24 @@
     }
     function select(parent,label,values,value,onchange){const input=field(parent,label,'select');values.forEach(([v,t])=>input.add(new Option(t,v)));input.value=value;input.onchange=()=>onchange(input.value);return input;}
     function note(parent,text){const p=document.createElement('p');p.className='b6-note';p.textContent=text;parent.appendChild(p);return p;}
-    select(source,'Loại dữ liệu',[['store','store — Procedure'],['sqlcontent','sqlcontent — Truy vấn đọc'],['json','json — Dữ liệu tĩnh']],binding.type,value=>{binding.type=value;change();renderSourceHelp();});
+    select(source, 'Loại dữ liệu', [['store', 'store — Procedure'], ['sqlcontent', 'sqlcontent — Truy vấn đọc'], ['json', 'json — Dữ liệu tĩnh']], binding.type, value => {
+      binding.type = value;
+
+      if (value === 'json' && binding.result?.mode === 'direct') {
+        binding.mapping = {};
+      }
+
+      change();
+      renderSourceHelp();
+    });
     const content=field(source,'Nội dung nguồn','textarea');content.rows=7;content.spellcheck=false;content.value=binding.content || '';
-    content.oninput=()=>{binding.content=content.value;change();};
+    content.oninput = () => {
+      binding.content = content.value;
+
+      syncTableColumnsFromJson();
+      renderMapping();
+      change();
+    };
     const help=note(source,'');
     function renderSourceHelp(){help.textContent=binding.type==='store'?'Nhập schema.tên_store. Tham số cấu hình bên dưới; không nhập CALL. Chỉ gọi store đã được duyệt cho dashboard.':binding.type==='sqlcontent'?'Một SELECT/WITH đọc dữ liệu, không có dấu ; hoặc chú thích. Tham số dùng {{_ten}}. Tối đa 5.000 dòng / 8 giây.':'Nhập JSON thật. Nội dung JSON sẽ được lưu làm nguồn tĩnh.';}
     renderSourceHelp();
@@ -92,8 +107,60 @@
     const path=field(controls,'Đường dẫn gốc');path.value=binding.result.path||'$';path.placeholder='$ hoặc $[0] hoặc $.rows';path.onchange=()=>{binding.result.path=path.value;change();};
     const parse=field(controls,'Cột gốc chứa chuỗi JSON cần parse');parse.type='checkbox';parse.checked=!!binding.result.parseJson;parse.onchange=()=>{binding.result.parseJson=parse.checked;change();};
     const order=field(controls,'Cột sắp xếp dòng (tùy chọn)');order.value=binding.result.orderBy||'';order.onchange=()=>{binding.result.orderBy=order.value;change();};
-    const maps=document.createElement('div');controls.appendChild(maps);
-    function renderMapping(){maps.replaceChildren();const mode=binding.result.mode;
+    const maps = document.createElement('div'); controls.appendChild(maps);
+    function syncTableColumnsFromJson() {
+      const isJsonTable =
+        binding.type === 'json' &&
+        ['table', 'report'].includes(widget.kind);
+
+      if (!isJsonTable) return false;
+
+      try {
+        const sourceData = JSON.parse(binding.content || '{}');
+
+        if (!Array.isArray(sourceData.columns)) return false;
+
+        const newColumns = sourceData.columns
+          .filter(column =>
+            column &&
+            typeof column.field === 'string' &&
+            column.field.trim() !== ''
+          )
+          .map(column => ({
+            field: column.field.trim(),
+            label: String(column.label || column.field),
+            type: column.type || 'auto'
+          }));
+
+        if (newColumns.length === 0) return false;
+
+        binding.columns = newColumns;
+
+        const validFields = new Set(
+          newColumns.map(column => column.field)
+        );
+
+        // Xóa các mapping cũ không còn thuộc danh sách cột mới.
+        Object.keys(binding.mapping || {}).forEach(key => {
+          if (!validFields.has(key)) {
+            delete binding.mapping[key];
+          }
+        });
+
+        // direct không sử dụng mapping.
+        if (binding.result?.mode === 'direct') {
+          binding.mapping = {};
+        }
+
+        return true;
+      } catch {
+        return false;
+      }
+    }
+    function renderMapping() {
+      syncTableColumnsFromJson();
+      maps.replaceChildren();
+      const mode = binding.result.mode;
       if(mode==='direct'){note(maps,'Nguồn phải trả đúng hợp đồng của widget. Thiếu trường/sai kiểu sẽ được báo khi chạy thử.');}
       else if(mode==='items'){
         binding.items ||= [];
@@ -110,9 +177,46 @@
       }
       else {
         const available=fields(rawCache.get(code));const list=document.createElement('datalist');list.id='b6-fields-'+code.replace(/[^a-zA-Z0-9]/g,'');available.forEach(s=>list.appendChild(new Option(s,s)));maps.appendChild(list);
-        let specs=targets[widget.kind] || Object.keys(binding.mapping).map(k=>[k,k]);
-        if(mode==='object' && ['line','bar'].includes(widget.kind)) specs=[['categories','Mảng nhãn trục X'],['series','Mảng series / giá trị','number']];
-        if(mode==='object' && widget.kind==='heatmap') specs=[['weekLabels','Nhãn trục X'],['days','Nhãn trục Y'],['matrix','Object ma trận']];
+        let specs;
+
+        if (
+          ['table', 'report'].includes(widget.kind) &&
+          Array.isArray(binding.columns) &&
+          binding.columns.length > 0
+        ) {
+          // Bảng lấy danh sách trường đích từ cấu hình cột hiện tại.
+          specs = binding.columns
+            .filter(column =>
+              column &&
+              typeof column.field === 'string' &&
+              column.field.trim() !== ''
+            )
+            .map(column => [
+              column.field.trim(),
+              column.label || column.field,
+              column.type || 'auto'
+            ]);
+        } else {
+          // Các widget khác vẫn sử dụng hợp đồng trường cố định.
+          specs =
+            targets[widget.kind] ||
+            Object.keys(binding.mapping).map(key => [key, key, 'auto']);
+        }
+
+        if (mode === 'object' && ['line', 'bar'].includes(widget.kind)) {
+          specs = [
+            ['categories', 'Mảng nhãn trục X'],
+            ['series', 'Mảng series / giá trị', 'number']
+          ];
+        }
+
+        if (mode === 'object' && widget.kind === 'heatmap') {
+          specs = [
+            ['weekLabels', 'Nhãn trục X'],
+            ['days', 'Nhãn trục Y'],
+            ['matrix', 'Object ma trận']
+          ];
+        }
         specs.forEach(([key,label,type])=>{
           const line=document.createElement('div');line.className='b6-map';maps.appendChild(line);
           const input=field(line,label+' → '+key);input.setAttribute('list',list.id);input.placeholder=mode==='rows'?'Chọn / nhập tên cột':'Đường dẫn trường hoặc mảng';input.value=binding.mapping[key]?.field || '';

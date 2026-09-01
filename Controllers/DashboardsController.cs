@@ -641,258 +641,258 @@ public class DashboardsController : Controller
     ).ToList();
   }
 
-  [Authorize]
-  [HttpGet]
-  [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)] // Tắt cache mặc định cho action này nếu cần thiết
-  public async Task<IActionResult> DashboardBuilder(string? dashboardCode, [FromQuery] Dictionary<string, string> parameters, string siteCode = "KOA")
-  {
-    try
-    {
-      var dashboardConfig = await _dashboard.NET_DashboardConfig_Get(dashboardCode);
-      var widgets = await _dashboard.NET_WidgetConfig_Get(dashboardCode);
-      ViewBag.DashboardCode = dashboardCode;
-      ViewBag.DashboardConfig = dashboardConfig;
-      ViewBag.Widgets = widgets;
+  //[Authorize]
+  //[HttpGet]
+  //[ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)] // Tắt cache mặc định cho action này nếu cần thiết
+  //public async Task<IActionResult> DashboardBuilder(string? dashboardCode, [FromQuery] Dictionary<string, string> parameters, string siteCode = "KOA")
+  //{
+  //  try
+  //  {
+  //    var dashboardConfig = await _dashboard.NET_DashboardConfig_Get(dashboardCode);
+  //    var widgets = await _dashboard.NET_WidgetConfig_Get(dashboardCode);
+  //    ViewBag.DashboardCode = dashboardCode;
+  //    ViewBag.DashboardConfig = dashboardConfig;
+  //    ViewBag.Widgets = widgets;
 
-      return View();
-    }
-    catch (Exception ex)
-    {
-      // Log exception
-      return BadRequest(new { message = ex.Message });
-    }
-  }
+  //    return View();
+  //  }
+  //  catch (Exception ex)
+  //  {
+  //    // Log exception
+  //    return BadRequest(new { message = ex.Message });
+  //  }
+  //}
 
 
-  [HttpPost]
-  public async Task<IActionResult> SaveLayout([FromForm] DashboardConfigDto request)
-  {
-    if (request.Widgets == null)
-      return BadRequest("Layout rỗng.");
+  //[HttpPost]
+  //public async Task<IActionResult> SaveLayout([FromForm] DashboardConfigDto request)
+  //{
+  //  if (request.Widgets == null)
+  //    return BadRequest("Layout rỗng.");
 
-    var parameters = new Dictionary<string, object>();
-    parameters.Add("dashboardcode", request.DashboardCode);
-    parameters.Add("options", request.Options);
-    parameters.Add("widgets", request.Widgets);
+  //  var parameters = new Dictionary<string, object>();
+  //  parameters.Add("dashboardcode", request.DashboardCode);
+  //  parameters.Add("options", request.Options);
+  //  parameters.Add("widgets", request.Widgets);
 
-    var resultList = await _dashboard.NET_DashboardConfig_ups(parameters, request.DashboardCode, "net_dashboard_ups", null);
+  //  var resultList = await _dashboard.NET_DashboardConfig_ups(parameters, request.DashboardCode, "net_dashboard_ups", null);
 
-    //kiem tra du lieu success tra ve
-    var success_return = resultList
-    .Where(item => ((IDictionary<string, object>)item).ContainsKey("success"))
-    .Select(item => ((IDictionary<string, object>)item)["success"])
-    .FirstOrDefault();
+  //  //kiem tra du lieu success tra ve
+  //  var success_return = resultList
+  //  .Where(item => ((IDictionary<string, object>)item).ContainsKey("success"))
+  //  .Select(item => ((IDictionary<string, object>)item)["success"])
+  //  .FirstOrDefault();
 
-    var errormessage_return = resultList
-    .Where(item => ((IDictionary<string, object>)item).ContainsKey("errormessage"))
-    .Select(item => ((IDictionary<string, object>)item)["errormessage"])
-    .FirstOrDefault();
+  //  var errormessage_return = resultList
+  //  .Where(item => ((IDictionary<string, object>)item).ContainsKey("errormessage"))
+  //  .Select(item => ((IDictionary<string, object>)item)["errormessage"])
+  //  .FirstOrDefault();
 
-    bool success = false;
-    string? errorMessage = null;
-    if (success_return != null && bool.TryParse(success_return.ToString(), out bool issuccess))
-    {
-      success = (bool)success_return;
-      if (errormessage_return != null && errormessage_return.ToString() != "")
-      {
-        errorMessage = errormessage_return.ToString();
-      }
-      if (success == true)
-      {
-        return Json(new { success = true });
-      }
-      else
-      {
-        return Json(new { success = false, errorMessage = errorMessage ?? "Có lỗi trong quá trình xử lý" });
-      }
-    }
-    else
-    {
-      return Json(new { success = false, errorMessage = "Store chưa trả về giá trị success." });
-    }
-  }
+  //  bool success = false;
+  //  string? errorMessage = null;
+  //  if (success_return != null && bool.TryParse(success_return.ToString(), out bool issuccess))
+  //  {
+  //    success = (bool)success_return;
+  //    if (errormessage_return != null && errormessage_return.ToString() != "")
+  //    {
+  //      errorMessage = errormessage_return.ToString();
+  //    }
+  //    if (success == true)
+  //    {
+  //      return Json(new { success = true });
+  //    }
+  //    else
+  //    {
+  //      return Json(new { success = false, errorMessage = errorMessage ?? "Có lỗi trong quá trình xử lý" });
+  //    }
+  //  }
+  //  else
+  //  {
+  //    return Json(new { success = false, errorMessage = "Store chưa trả về giá trị success." });
+  //  }
+  //}
 
-  [Authorize]
-  [HttpGet]
-  [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)] // Tắt cache mặc định cho action này nếu cần thiết
-  public async Task<IActionResult> DashboardBuilder4(string? dashboardCode, [FromQuery] Dictionary<string, string> parameters)
-  {
+  //[Authorize]
+  //[HttpGet]
+  //[ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)] // Tắt cache mặc định cho action này nếu cần thiết
+  //public async Task<IActionResult> DashboardBuilder4(string? dashboardCode, [FromQuery] Dictionary<string, string> parameters)
+  //{
 
-    // xu ly bo loc
-    // chuyen parameters thanh Idictionary<string, object>
-    Dictionary<string, object> objParameters = parameters.ToDictionary(kvp => kvp.Key, kvp => (object)kvp.Value);
+  //  // xu ly bo loc
+  //  // chuyen parameters thanh Idictionary<string, object>
+  //  Dictionary<string, object> objParameters = parameters.ToDictionary(kvp => kvp.Key, kvp => (object)kvp.Value);
 
-    // xu ly lay du lieu cho tung widget
-    //khai bao phan tu chua data
+  //  // xu ly lay du lieu cho tung widget
+  //  //khai bao phan tu chua data
 
-    ////////widget simple card Chuc mung
-    ////Tổng doanh thu tháng
-    var SimpleCard_ChucMung = await _widget.Widget_GetObject(objParameters, "HS_Widget_SimpleCard_ChucMung", null);
-    ViewBag.SimpleCard_ChucMung = SimpleCard_ChucMung;
+  //  ////////widget simple card Chuc mung
+  //  ////Tổng doanh thu tháng
+  //  var SimpleCard_ChucMung = await _widget.Widget_GetObject(objParameters, "HS_Widget_SimpleCard_ChucMung", null);
+  //  ViewBag.SimpleCard_ChucMung = SimpleCard_ChucMung;
 
-    ////////widget simple cart So lieu trong thang
-    //Doanh thu, luot book, so gio, chi
-    var SimpleCard_SoLieuTrongThang = await _widget.Widget_GetObject(objParameters, "HS_Widget_SimpleCard_SoLieuTrongThang", null);
-    ViewBag.SimpleCard_SoLieuTrongThang = SimpleCard_SoLieuTrongThang;
+  //  ////////widget simple cart So lieu trong thang
+  //  //Doanh thu, luot book, so gio, chi
+  //  var SimpleCard_SoLieuTrongThang = await _widget.Widget_GetObject(objParameters, "HS_Widget_SimpleCard_SoLieuTrongThang", null);
+  //  ViewBag.SimpleCard_SoLieuTrongThang = SimpleCard_SoLieuTrongThang;
 
-    ////////line chart doanh thu 6 thang gan day
-    var LineChart_DoanhThuCacThang = await _widget.Widget_GetObject(objParameters, "HS_Widget_LineChart_DoanhThuCacThang", null);
-    ViewBag.LineChart_DoanhThuCacThang = LineChart_DoanhThuCacThang;
+  //  ////////line chart doanh thu 6 thang gan day
+  //  var LineChart_DoanhThuCacThang = await _widget.Widget_GetObject(objParameters, "HS_Widget_LineChart_DoanhThuCacThang", null);
+  //  ViewBag.LineChart_DoanhThuCacThang = LineChart_DoanhThuCacThang;
 
-    ////////Column chart chi phi 6 thang gan day
-    var ColumnChart_ChiPhiCacThang = await _widget.Widget_GetObject(objParameters, "HS_Widget_ColumnChart_ChiPhiCacThang", null);
-    ViewBag.ColumnChart_ChiPhiCacThang = ColumnChart_ChiPhiCacThang;
+  //  ////////Column chart chi phi 6 thang gan day
+  //  var ColumnChart_ChiPhiCacThang = await _widget.Widget_GetObject(objParameters, "HS_Widget_ColumnChart_ChiPhiCacThang", null);
+  //  ViewBag.ColumnChart_ChiPhiCacThang = ColumnChart_ChiPhiCacThang;
 
-    //////// List item Top 5 dịch vụ tháng
-    var ListItem_TopDichVuThang = await _widget.Widget_GetList(objParameters, "HS_Widget_ListItem_TopDichVuThang", null);
-    ViewBag.ListItem_TopDichVuThang = ListItem_TopDichVuThang;
+  //  //////// List item Top 5 dịch vụ tháng
+  //  var ListItem_TopDichVuThang = await _widget.Widget_GetList(objParameters, "HS_Widget_ListItem_TopDichVuThang", null);
+  //  ViewBag.ListItem_TopDichVuThang = ListItem_TopDichVuThang;
 
-    //////// Pie Chart tỷ lệ các phòng trong tháng
-    var PieChart_TyLeCacPhongTrongThang = await _widget.Widget_GetObject(objParameters, "HS_Widget_PieChart_TyLeCacPhongTrongThang", null);
-    ViewBag.PieChart_TyLeCacPhongTrongThang = PieChart_TyLeCacPhongTrongThang;
+  //  //////// Pie Chart tỷ lệ các phòng trong tháng
+  //  var PieChart_TyLeCacPhongTrongThang = await _widget.Widget_GetObject(objParameters, "HS_Widget_PieChart_TyLeCacPhongTrongThang", null);
+  //  ViewBag.PieChart_TyLeCacPhongTrongThang = PieChart_TyLeCacPhongTrongThang;
 
-    //////// Widget List item ty le kin phong trong tuan
-    var ListItem_TyLeKinPhongTuan = await _widget.Widget_GetList(objParameters, "HS_Widget_ListItem_TyLeKinPhongTuan", null);
-    ViewBag.ListItem_TyLeKinPhongTuan = ListItem_TyLeKinPhongTuan;
+  //  //////// Widget List item ty le kin phong trong tuan
+  //  var ListItem_TyLeKinPhongTuan = await _widget.Widget_GetList(objParameters, "HS_Widget_ListItem_TyLeKinPhongTuan", null);
+  //  ViewBag.ListItem_TyLeKinPhongTuan = ListItem_TyLeKinPhongTuan;
 
-    //////// Widget list item Top 5 khách hàng gần đây nhất
-    var ListItem_TopKhachHangGanDay = await _widget.Widget_GetList(objParameters, "HS_Widget_ListItem_TopKhachHangGanDay", null);
-    ViewBag.ListItem_TopKhachHangGanDay = ListItem_TopKhachHangGanDay;
+  //  //////// Widget list item Top 5 khách hàng gần đây nhất
+  //  var ListItem_TopKhachHangGanDay = await _widget.Widget_GetList(objParameters, "HS_Widget_ListItem_TopKhachHangGanDay", null);
+  //  ViewBag.ListItem_TopKhachHangGanDay = ListItem_TopKhachHangGanDay;
 
-    //////// Column chart Doanh thu tuần
-    var ColumnChart_DoanhThuTuan = await _widget.Widget_GetObject(objParameters, "HS_Widget_ColumnChart_DoanhThuTuan", null);
-    ViewBag.ColumnChart_DoanhThuTuan = ColumnChart_DoanhThuTuan;
+  //  //////// Column chart Doanh thu tuần
+  //  var ColumnChart_DoanhThuTuan = await _widget.Widget_GetObject(objParameters, "HS_Widget_ColumnChart_DoanhThuTuan", null);
+  //  ViewBag.ColumnChart_DoanhThuTuan = ColumnChart_DoanhThuTuan;
 
-    //////// Heat map Trang Thai dat phong trong thang
-    var HeatMap_TrangThaiDatPhongThang = await _widget.Widget_GetList(objParameters, "HS_Widget_HeatMap_trangThaiDatPhongThang", null);
+  //  //////// Heat map Trang Thai dat phong trong thang
+  //  var HeatMap_TrangThaiDatPhongThang = await _widget.Widget_GetList(objParameters, "HS_Widget_HeatMap_trangThaiDatPhongThang", null);
 
-    // B2: nhóm theo DayOfWeekName để tạo từng dòng (series)
-    var grouped = HeatMap_TrangThaiDatPhongThang
-        .GroupBy(d => (string)d.dayofweekname)
-        .Select(g => new
-        {
-          name = g.Key, // SUN, MON,...
-          data = g.Select(item => new {
-            x = (string)item.weekname,
-            y = (decimal)item.revenue
-          }).ToList()
-        }).ToList();
+  //  // B2: nhóm theo DayOfWeekName để tạo từng dòng (series)
+  //  var grouped = HeatMap_TrangThaiDatPhongThang
+  //      .GroupBy(d => (string)d.dayofweekname)
+  //      .Select(g => new
+  //      {
+  //        name = g.Key, // SUN, MON,...
+  //        data = g.Select(item => new {
+  //          x = (string)item.weekname,
+  //          y = (decimal)item.revenue
+  //        }).ToList()
+  //      }).ToList();
 
-    // B3: truyền ra View qua ViewBag hoặc ViewData
-    ViewBag.HeatMap_TrangThaiDatPhongThang = JsonSerializer.Serialize(grouped);
+  //  // B3: truyền ra View qua ViewBag hoặc ViewData
+  //  ViewBag.HeatMap_TrangThaiDatPhongThang = JsonSerializer.Serialize(grouped);
 
-    ViewBag.DashboardCode = dashboardCode;
+  //  ViewBag.DashboardCode = dashboardCode;
 
-    return View();
-  }
+  //  return View();
+  //}
 
-  [HttpGet]
-  public async Task<IActionResult> DashboardBuilder1([FromQuery] Dictionary<string, string> parameters)
-  {
+  //[HttpGet]
+  //public async Task<IActionResult> DashboardBuilder1([FromQuery] Dictionary<string, string> parameters)
+  //{
 
-    return View();
-  }
+  //  return View();
+  //}
 
-  [HttpGet]
-  public async Task<IActionResult> DashboardBuilder2([FromQuery] Dictionary<string, string> parameters)
-  {
+  //[HttpGet]
+  //public async Task<IActionResult> DashboardBuilder2([FromQuery] Dictionary<string, string> parameters)
+  //{
 
-    // xu ly bo loc
-    // chuyen parameters thanh Idictionary<string, object>
-    Dictionary<string, object> objParameters = parameters.ToDictionary(kvp => kvp.Key, kvp => (object)kvp.Value);
+  //  // xu ly bo loc
+  //  // chuyen parameters thanh Idictionary<string, object>
+  //  Dictionary<string, object> objParameters = parameters.ToDictionary(kvp => kvp.Key, kvp => (object)kvp.Value);
 
-    // xu ly lay du lieu cho tung widget
-    //khai bao phan tu chua data
+  //  // xu ly lay du lieu cho tung widget
+  //  //khai bao phan tu chua data
 
-    ////////widget simple card Chuc mung
-    ////Tổng doanh thu tháng
-    var SimpleCard_ChucMung = await _widget.Widget_GetObject(objParameters, "HS_Widget_SimpleCard_ChucMung", null);
-    ViewBag.SimpleCard_ChucMung = SimpleCard_ChucMung;
+  //  ////////widget simple card Chuc mung
+  //  ////Tổng doanh thu tháng
+  //  var SimpleCard_ChucMung = await _widget.Widget_GetObject(objParameters, "HS_Widget_SimpleCard_ChucMung", null);
+  //  ViewBag.SimpleCard_ChucMung = SimpleCard_ChucMung;
 
-    ////////widget simple cart So lieu trong thang
-    //Doanh thu, luot book, so gio, chi
-    var SimpleCard_SoLieuTrongThang = await _widget.Widget_GetObject(objParameters, "HS_Widget_SimpleCard_SoLieuTrongThang", null);
-    ViewBag.SimpleCard_SoLieuTrongThang = SimpleCard_SoLieuTrongThang;
+  //  ////////widget simple cart So lieu trong thang
+  //  //Doanh thu, luot book, so gio, chi
+  //  var SimpleCard_SoLieuTrongThang = await _widget.Widget_GetObject(objParameters, "HS_Widget_SimpleCard_SoLieuTrongThang", null);
+  //  ViewBag.SimpleCard_SoLieuTrongThang = SimpleCard_SoLieuTrongThang;
 
-    ////////line chart doanh thu 6 thang gan day
-    var LineChart_DoanhThuCacThang = await _widget.Widget_GetObject(objParameters, "HS_Widget_LineChart_DoanhThuCacThang", null);
-    ViewBag.LineChart_DoanhThuCacThang = LineChart_DoanhThuCacThang;
+  //  ////////line chart doanh thu 6 thang gan day
+  //  var LineChart_DoanhThuCacThang = await _widget.Widget_GetObject(objParameters, "HS_Widget_LineChart_DoanhThuCacThang", null);
+  //  ViewBag.LineChart_DoanhThuCacThang = LineChart_DoanhThuCacThang;
 
-    ////////Column chart chi phi 6 thang gan day
-    var ColumnChart_ChiPhiCacThang = await _widget.Widget_GetObject(objParameters, "HS_Widget_ColumnChart_ChiPhiCacThang", null);
-    ViewBag.ColumnChart_ChiPhiCacThang = ColumnChart_ChiPhiCacThang;
+  //  ////////Column chart chi phi 6 thang gan day
+  //  var ColumnChart_ChiPhiCacThang = await _widget.Widget_GetObject(objParameters, "HS_Widget_ColumnChart_ChiPhiCacThang", null);
+  //  ViewBag.ColumnChart_ChiPhiCacThang = ColumnChart_ChiPhiCacThang;
 
-    //////// List item Top 5 dịch vụ tháng
-    var ListItem_TopDichVuThang = await _widget.Widget_GetList(objParameters, "HS_Widget_ListItem_TopDichVuThang", null);
-    ViewBag.ListItem_TopDichVuThang = ListItem_TopDichVuThang;
+  //  //////// List item Top 5 dịch vụ tháng
+  //  var ListItem_TopDichVuThang = await _widget.Widget_GetList(objParameters, "HS_Widget_ListItem_TopDichVuThang", null);
+  //  ViewBag.ListItem_TopDichVuThang = ListItem_TopDichVuThang;
 
-    //////// Pie Chart tỷ lệ các phòng trong tháng
-    var PieChart_TyLeCacPhongTrongThang = await _widget.Widget_GetObject(objParameters, "HS_Widget_PieChart_TyLeCacPhongTrongThang", null);
-    ViewBag.PieChart_TyLeCacPhongTrongThang = PieChart_TyLeCacPhongTrongThang;
+  //  //////// Pie Chart tỷ lệ các phòng trong tháng
+  //  var PieChart_TyLeCacPhongTrongThang = await _widget.Widget_GetObject(objParameters, "HS_Widget_PieChart_TyLeCacPhongTrongThang", null);
+  //  ViewBag.PieChart_TyLeCacPhongTrongThang = PieChart_TyLeCacPhongTrongThang;
 
-    //////// Widget List item ty le kin phong trong tuan
-    var ListItem_TyLeKinPhongTuan = await _widget.Widget_GetList(objParameters, "HS_Widget_ListItem_TyLeKinPhongTuan", null);
-    ViewBag.ListItem_TyLeKinPhongTuan = ListItem_TyLeKinPhongTuan;
+  //  //////// Widget List item ty le kin phong trong tuan
+  //  var ListItem_TyLeKinPhongTuan = await _widget.Widget_GetList(objParameters, "HS_Widget_ListItem_TyLeKinPhongTuan", null);
+  //  ViewBag.ListItem_TyLeKinPhongTuan = ListItem_TyLeKinPhongTuan;
 
-    //////// Widget list item Top 5 khách hàng gần đây nhất
-    var ListItem_TopKhachHangGanDay = await _widget.Widget_GetList(objParameters, "HS_Widget_ListItem_TopKhachHangGanDay", null);
-    ViewBag.ListItem_TopKhachHangGanDay = ListItem_TopKhachHangGanDay;
+  //  //////// Widget list item Top 5 khách hàng gần đây nhất
+  //  var ListItem_TopKhachHangGanDay = await _widget.Widget_GetList(objParameters, "HS_Widget_ListItem_TopKhachHangGanDay", null);
+  //  ViewBag.ListItem_TopKhachHangGanDay = ListItem_TopKhachHangGanDay;
 
-    //////// Column chart Doanh thu tuần
-    var ColumnChart_DoanhThuTuan = await _widget.Widget_GetObject(objParameters, "HS_Widget_ColumnChart_DoanhThuTuan", null);
-    ViewBag.ColumnChart_DoanhThuTuan = ColumnChart_DoanhThuTuan;
+  //  //////// Column chart Doanh thu tuần
+  //  var ColumnChart_DoanhThuTuan = await _widget.Widget_GetObject(objParameters, "HS_Widget_ColumnChart_DoanhThuTuan", null);
+  //  ViewBag.ColumnChart_DoanhThuTuan = ColumnChart_DoanhThuTuan;
 
-    //////// Heat map Trang Thai dat phong trong thang
-    var HeatMap_TrangThaiDatPhongThang = await _widget.Widget_GetList(objParameters, "HS_Widget_HeatMap_trangThaiDatPhongThang", null);
+  //  //////// Heat map Trang Thai dat phong trong thang
+  //  var HeatMap_TrangThaiDatPhongThang = await _widget.Widget_GetList(objParameters, "HS_Widget_HeatMap_trangThaiDatPhongThang", null);
 
-    // B2: nhóm theo DayOfWeekName để tạo từng dòng (series)
-    var grouped = HeatMap_TrangThaiDatPhongThang
-        .GroupBy(d => (string)d.dayofweekname)
-        .Select(g => new
-        {
-          name = g.Key, // SUN, MON,...
-          data = g.Select(item => new {
-            x = (string)item.weekname,
-            y = (decimal)item.revenue
-          }).ToList()
-        }).ToList();
+  //  // B2: nhóm theo DayOfWeekName để tạo từng dòng (series)
+  //  var grouped = HeatMap_TrangThaiDatPhongThang
+  //      .GroupBy(d => (string)d.dayofweekname)
+  //      .Select(g => new
+  //      {
+  //        name = g.Key, // SUN, MON,...
+  //        data = g.Select(item => new {
+  //          x = (string)item.weekname,
+  //          y = (decimal)item.revenue
+  //        }).ToList()
+  //      }).ToList();
 
-    // B3: truyền ra View qua ViewBag hoặc ViewData
-    ViewBag.HeatMap_TrangThaiDatPhongThang = JsonSerializer.Serialize(grouped);
-    return View();
-  }
+  //  // B3: truyền ra View qua ViewBag hoặc ViewData
+  //  ViewBag.HeatMap_TrangThaiDatPhongThang = JsonSerializer.Serialize(grouped);
+  //  return View();
+  //}
 
-  [Authorize]
-  [HttpGet]
-  [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)] // Tắt cache mặc định cho action này nếu cần thiết
-  public async Task<IActionResult> DashboardBuilder3(string? dashboardCode, [FromQuery] Dictionary<string, string> parameters, string siteCode = "KOA")
-  {
-    try
-    {
-      var dashboardConfig = await _dashboard.NET_DashboardConfig_Get(dashboardCode);
-      var widgets = await _dashboard.NET_WidgetConfig_Get(dashboardCode);
-      ViewBag.DashboardCode = dashboardCode;
-      ViewBag.DashboardConfig = dashboardConfig;
-      ViewBag.Widgets = widgets;
+  //[Authorize]
+  //[HttpGet]
+  //[ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)] // Tắt cache mặc định cho action này nếu cần thiết
+  //public async Task<IActionResult> DashboardBuilder3(string? dashboardCode, [FromQuery] Dictionary<string, string> parameters, string siteCode = "KOA")
+  //{
+  //  try
+  //  {
+  //    var dashboardConfig = await _dashboard.NET_DashboardConfig_Get(dashboardCode);
+  //    var widgets = await _dashboard.NET_WidgetConfig_Get(dashboardCode);
+  //    ViewBag.DashboardCode = dashboardCode;
+  //    ViewBag.DashboardConfig = dashboardConfig;
+  //    ViewBag.Widgets = widgets;
 
-      return View();
-    }
-    catch (Exception ex)
-    {
-      // Log exception
-      return BadRequest(new { message = ex.Message });
-    }
-  }
+  //    return View();
+  //  }
+  //  catch (Exception ex)
+  //  {
+  //    // Log exception
+  //    return BadRequest(new { message = ex.Message });
+  //  }
+  //}
 
   [Authorize]
   [HttpGet]
   [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]
-  public async Task<IActionResult> DashboardBuilder7(string dashboardCode = "KoaDashboard7")
+  public async Task<IActionResult> DashboardBuilder(string dashboardCode = "KoaDashboard6")
   {
     if (UserId <= 0) return Forbid();
     try
     {
-      var state = await _dashboard.NET_DashboardConfig_Get2(dashboardCode);
+      var state = await _dashboard.NET_DashboardConfig_Get(dashboardCode);
       if (state == null)
         return Forbid();
       var widgets = (JsonArray)state["widgets"];
@@ -932,7 +932,7 @@ public class DashboardsController : Controller
     if (UserId <= 0) return Forbid();
     try
     {
-      if (await _dashboard.NET_DashboardConfig_Get2(dashboardCode) == null)
+      if (await _dashboard.NET_DashboardConfig_Get(dashboardCode) == null)
         return Forbid();
       var w = JsonNode.Parse(widget) as JsonObject ?? throw new FormatException("Widget không hợp lệ.");
       await _dashboard.ValidateWidget(w);
@@ -959,13 +959,13 @@ public class DashboardsController : Controller
   [Authorize]
   [HttpPost]
   [ValidateAntiForgeryToken]
-  public async Task<IActionResult> SaveLayout7([FromForm] string dashboardCode, [FromForm] string options, [FromForm] string widgets)
+  public async Task<IActionResult> SaveLayout([FromForm] string dashboardCode, [FromForm] string options, [FromForm] string widgets)
   {
     if (UserId <= 0)
       return Forbid();
     try
     {
-      await _dashboard.NET_DashboardConfig_ups2(dashboardCode, UserId, JsonNode.Parse(options) as JsonObject ?? throw new FormatException("Options không hợp lệ."), JsonNode.Parse(widgets) as JsonArray ?? throw new FormatException("Widgets không hợp lệ."));
+      await _dashboard.NET_DashboardConfig_ups(dashboardCode, UserId, JsonNode.Parse(options) as JsonObject ?? throw new FormatException("Options không hợp lệ."), JsonNode.Parse(widgets) as JsonArray ?? throw new FormatException("Widgets không hợp lệ."));
       return Json(new { success = true });
     }
     catch (Exception ex) when (ex is FormatException or JsonException) {

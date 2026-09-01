@@ -15,4 +15,11 @@
 .b6-run { width:100%; margin:12px 0 2px; }
 .config-panel details { margin:10px 0; }
 .config-panel details pre { max-width:100%; overflow:auto; font-size:11px; }
+.widget-data-icon {
+  display: block;
+  width: 24px;
+  height: 24px;
+  object-fit: contain;
+  border-radius: 4px;
+}
 @media(max-width:900px){.config-panel{width:min(92vw,400px);min-width:0}}

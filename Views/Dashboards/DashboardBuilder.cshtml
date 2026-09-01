@@ -1,23 +1,21 @@
 @using System.Text.Json
 @{
-
-    ViewData["Title"] = "Dashboard Builder (SortableJS)";
+    ViewData["Title"] = "Cấu hình Dashboard động";
     Layout = "_BlankLayout";
-
-    // Du lieu object (Mock/ViewBag)
     var dashboardConfig = ViewBag.DashboardConfig as IDictionary<string, object>;
-    var widgets = ViewBag.Widgets as IDictionary<string, object>;
-
-    var dashboardOptions = dashboardConfig?["options"]?.ToString();
-
-    JsonElement dashboardOptionJson = default;
-    if (!string.IsNullOrEmpty(dashboardOptions))
+    var widgetResult = ViewBag.Widgets as IDictionary<string, object>;
+    JsonElement ReadJson(object value, string fallback)
     {
-        dashboardOptionJson = JsonSerializer.Deserialize<JsonElement>(dashboardOptions);
+        if (value is JsonElement element) return element;
+        return JsonSerializer.Deserialize<JsonElement>(value?.ToString() ?? fallback);
     }
+    var dashboardOptionJson = ReadJson(dashboardConfig != null && dashboardConfig.TryGetValue("options", out var optionValue) ? optionValue : null, "{}");
+    var initialWidgetsJson = ReadJson(widgetResult != null && widgetResult.TryGetValue("data", out var widgetValue) ? widgetValue : null, "[]");
+    var datasetsJson = (JsonElement)ViewBag.WidgetDatasets;
 }
 
 @section PageStyles {
+    <link rel="stylesheet" href="~/css/dashboard-builder.css" asp-append-version="true" />
     <style>
         :root {
             --primary: #7367f0;
@@ -857,9 +855,39 @@
                 padding: 12px;
             }
         }
+
+        .dataset-status {
+            margin: 0 0 12px;
+            padding: 10px 14px;
+            border: 1px solid #dce6df;
+            border-radius: 8px;
+            background: #f0faf4;
+            font-size: 12px;
+        }
+
+            .dataset-status.warning {
+                background: #fff8e6;
+                border-color: #efdcac;
+            }
+
+        .dataset-notice {
+            color: #8a641f;
+            font-size: 11px;
+            line-height: 1.4;
+            padding-top: 4px;
+        }
+
+        .widget-body .empty-hint {
+            padding: 24px 10px;
+        }
+
+        .app {
+            grid-template-columns: 230px minmax(0, 1fr) 290px;
+        }
     </style>
 }
 
+@Html.AntiForgeryToken()
 <div class="app mode-build" id="appRoot">
 
     <!-- ============ THƯ VIỆN LOẠI WIDGET ============ -->
@@ -905,11 +933,12 @@
                 <button id="modeBuildBtn" class="active">🛠 Build</button>
                 <button id="modeViewBtn">👁 View</button>
             </div>
-            <button class="btn btn-outline" id="btnReset">Mẫu mặc định</button>
-            <button class="btn btn-primary" id="btnSave">Lưu (POST JSONB)</button>
+            <button class="btn btn-outline" id="btnReset">Hoàn tác bố cục</button>
+            <button class="btn btn-primary" id="btnSave">Lưu cấu hình</button>
             <button class="btn btn-outline mobile-toggle" id="btnOpenCfg">⚙</button>
         </div>
         <div class="canvas-scroll">
+            <div id="datasetStatus" class="dataset-status" role="status"></div>
             <div id="canvas"></div>
         </div>
     </main>
@@ -932,28 +961,28 @@
   border-radius:10px;z-index:999;font-size:11.5px;box-shadow:0 10px 40px rgba(0,0,0,.4);white-space:pre-wrap;"></pre>
 
 @section PageScripts {
+    <script src="~/js/dashboard-builder.js" asp-append-version="true"></script>
     <!-- ApexCharts CDN -->
     <script src="https://cdn.jsdelivr.net/npm/apexcharts@3.45.2/dist/apexcharts.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/interactjs@1.10.27/dist/interact.min.js"></script>
 
-    <script>       /* =========================================================================
-              DASHBOARD BUILDER - widget generic theo LOẠI (donut/line/bar/table/list/
-              heatmap/emoji_card), cấu hình động theo schema riêng từng loại, lưu JSONB.
-              -------------------------------------------------------------------------
-              Mapping sang DB (net_dashboard / net_widgetmap / net_widget / net_widgetvalueconfig):
-                - widget.kind            -> net_widget.widgetcode (loại widget, có sẵn 7 loại)
-                - widget.x/y/w/h         -> net_widgetmap.positionx/positiony/width/height
-                - widget.config (object) -> serialize JSON.stringify() -> lưu vào 1 cột jsonb
-                                              (khuyến nghị dùng jsonb thay vì EAV nếu muốn đơn giản hoá)
-                - MOCK_DATASETS          -> đại diện cho net_service (data source), khi có BE
-                                              thật thì dataSource chính là net_service.code, BE
-                                              sẽ chạy sqlcontent tương ứng và trả JSON cùng shape.
-              ========================================================================= */
-              const options = @Html.Raw(JsonSerializer.Serialize(dashboardOptionJson));
-
-              let GRID_COLS = options.gridCols ?? 12;
-              let CELL      = options.cellHeight ?? 70;
-              let GAP       = options.gridGap ?? 14;
+    <script>
+              // Layout and data are loaded separately; financial values are never used as layout defaults.
+              const rawOptions = @Html.Raw(JsonSerializer.Serialize(dashboardOptionJson));
+              const options = (Array.isArray(rawOptions) ? rawOptions[0] : rawOptions) || {};
+              const initialWidgets = @Html.Raw(JsonSerializer.Serialize(initialWidgetsJson));
+              const rawDatasets = @Html.Raw(JsonSerializer.Serialize(datasetsJson));
+              const datasetLoadError = @Html.Raw(JsonSerializer.Serialize((string)ViewBag.DatasetLoadError));
+              const dashboardCode = @Html.Raw(JsonSerializer.Serialize((string)ViewBag.DashboardCode));
+              const clampNumber = (value, min, max, fallback) => Number.isFinite(Number(value)) ? Math.max(min, Math.min(max, Number(value))) : fallback;
+              let GRID_COLS = clampNumber(options.gridCols ?? 12, 4, 24, 12);
+              let CELL = clampNumber(options.cellHeight ?? 70, 30, 200, 70);
+              let GAP = clampNumber(options.gridGap ?? 14, 0, 50, 14);
+              const originalGrid = { cols: GRID_COLS, cell: CELL, gap: GAP };
+              const DATASETS = rawDatasets;
+              const escapeHtml = Dashboard6UI.escapeHtml;
+              const safeUrl = Dashboard6UI.safeUrl;
+              const safeColor = value => CSS.supports('color', String(value)) ? String(value) : '#7367f0';
 
               // Cập nhật các chỉ số GRID_COLS, CELL, GAP trực tiếp trên UI
               function updateGridParam(param, delta){
@@ -985,86 +1014,18 @@
               // ---------------------------------------------------------------------
               // 1) LOẠI WIDGET GENERIC
               // ---------------------------------------------------------------------
-              const WIDGET_KINDS = [
-                { kind:'emoji_card', name:'Thẻ số liệu (emoji)', desc:'Số + icon + nhãn',      icon:'#',  color:'#28c76f', defaultW:3, defaultH:2, minW:2,minH:2,maxW:5,maxH:3 },
-                { kind:'donut',    name:'Biểu đồ Donut',     desc:'Tỷ lệ theo danh mục',   icon:'◔',  color:'#ff9f43', defaultW:6, defaultH:5, minW:4,minH:4,maxW:9,maxH:6 },
-                { kind:'line',     name:'Biểu đồ Line',      desc:'Xu hướng theo thời gian', icon:'⟋', color:'#7367f0', defaultW:4, defaultH:3, minW:3,minH:2,maxW:6,maxH:4 },
-                { kind:'bar',      name:'Biểu đồ Bar/Column',desc:'So sánh theo nhóm',     icon:'▥',  color:'#00cfe8', defaultW:4, defaultH:4, minW:3,minH:3,maxW:8,maxH:5 },
-                { kind:'table',    name:'Bảng dữ liệu',      desc:'Table nhiều cột',       icon:'▤',  color:'#ea5455', defaultW:6, defaultH:4, minW:4,minH:3,maxW:12,maxH:6 },
-                { kind:'list',     name:'Danh sách xếp hạng',desc:'List + progress bar',   icon:'☰',  color:'#7367f0', defaultW:5, defaultH:4, minW:3,minH:3,maxW:8,maxH:6 },
-                { kind:'heatmap',  name:'Heatmap',           desc:'Ma trận cường độ',      icon:'▦',  color:'#00cfe8', defaultW:6, defaultH:5, minW:5,minH:4,maxW:12,maxH:6 },
-                { kind:'large_img_card', name:'Thể số liệu (ảnh lớn)',desc:'Số liệu 1 + 2 + ảnh lớn + nhãn', icon:'#',  color:'#28c76f', defaultW:3, defaultH:2, minW:2,minH:2,maxW:8,maxH:4 },
-                { kind:'multiple_mini_card', name:'Thẻ nhiều chi tiết',desc:'Thẻ nhiều chi tiết',   icon:'☰',  color:'#7367f0', defaultW:5, defaultH:4, minW:3,minH:3,maxW:12,maxH:4 },
-                { kind:'report', name:'Báo cáo',desc:'Tương tự table',   icon:'☰',  color:'#7367f0', defaultW:5, defaultH:4, minW:3,minH:3,maxW:12,maxH:4 },
-                { kind:'button', name:'Button', desc:'Nút xử lý',      icon:'#',  color:'#28c76f', defaultW:2, defaultH:1, minW:1,minH:1,maxW:6,maxH:2 },
-              ];
+              const WIDGET_KINDS = @Html.Raw(JsonSerializer.Serialize((JsonElement)ViewBag.WidgetTemplates));
               function kindOf(k){ return WIDGET_KINDS.find(t=>t.kind===k); }
 
               // ---------------------------------------------------------------------
-              // 2) NGUỒN DỮ LIỆU MOCK
+              // 2) DỮ LIỆU TỪ STORE
               // ---------------------------------------------------------------------
-              const MOCK_DATASETS = {
-                revenue_by_room:{ label:'Doanh thu theo phòng (tháng)', shape:'categorical', data:{
-                  labels:['KOA 101 (TP)','KOA 102 (TP)','KOA 201 (TP)','KOA 302 (TP)','KOA 101 (TĐ)','KOA 102 (TĐ)','KOA 201 (TĐ)','KOA 202 (TĐ)'],
-                  values:[9524,10928,9953,9210,11386,10491,9140,8197],
-                  colors:['#16C47F','#FFD65A','#FF9D23','#F93827','#3A59D1','#3D90D7','#7AC6D2','#B5FCCD'] }},
-                monthly_revenue_trend:{ label:'Doanh thu 6 tháng gần đây', shape:'series', data:{
-                  categories:['T2','T3','T4','T5','T6','T7'], series:[65434,126586,60782,5695,36442,78829] }},
-                monthly_cost_trend:{ label:'Chi phí 6 tháng gần đây', shape:'series', data:{
-                  categories:['T2','T3','T4','T5','T6','T7'], series:[16837,12817,3325,15000,30062,34575] }},
-                weekly_revenue:{ label:'Doanh thu theo tuần (T2-CN)', shape:'series', data:{
-                  categories:['T2','T3','T4','T5','T6','T7','CN'], series:[4730,3137,3950,2358,1600,1815,330] }},
-                top_services:{ label:'Top dịch vụ', shape:'rows', data:{
-                  columns:[{field:'name',label:'Dịch vụ'},{field:'qty',label:'Lượt'},{field:'vnd',label:'Doanh thu'},{field:'image',label:'Ảnh'}],
-                  rows:[
-                    {name:'B - Book combo giờ', description:'80 lượt', qty:'72', vnd:'19.900.000', image:'/img/ServiceImage/Combo2Tieng.png'},
-                    {name:'B - Book qua đêm T5 - CN', description:'59 lượt', qty:'37', vnd:'14.800.000', image:'/img/ServiceImage/Combo2Tieng.png'},
-                    {name:'B - Book combo giờ T7 - CN', description:'45 lượt', qty:'40', vnd:'14.480.000', image:'/img/ServiceImage/QuaDem.png'},
-                    {name:'B - KM Overnight', description:'45 lượt', qty:'33', vnd:'11.550.000', image:'/img/ServiceImage/QuaDem.png'},
-                    {name:'B - Thêm giờ 50k/1h', description:'45 lượt', qty:'46', vnd:'6.833.333', image:'/img/ServiceImage/ThemGio.png'} ]}},
-                top_customers:{ label:'Top khách hàng gần nhất', shape:'rows', data:{
-                  columns:[{field:'name',label:'Khách hàng'},{field:'date',label:'Lịch'},{field:'room',label:'Phòng'},{field:'vnd',label:'Giá trị'}],
-                  rows:[
-                    {name:'Phan Huỳnh Anh Thư', date: '22:00 22/07/2026 - 23:00 22/07/2026', room:'<span class="badge" style="background:#ffe2e3;color:#ff4c51">KOA 101 (Thủ Đức)</span>', vnd:'400.000'},
-                    {name:'Nguyễn Trúc Ngân', date: '22:00 21/07/2026 - 23:00 21/07/2026', room:'<span class="badge" style="background:#e4f7d6;color:#56ca00">KOA 102 (Tân Phú)</span>', vnd:'400.000'},
-                    {name:'Nguyễn Đăng Hưng', date: '15:00 21/07/2026 - 20:00 21/07/2026', room:'<span class="badge" style="background:#ede4ff;color:#8c57ff">KOA 201 (Thủ Đức)</span>', vnd:'250.000'},
-                    {name:'Nguyễn Thị Anh Thư', date: '17:00 21/07/2026 - 19:00 21/07/2026', room:'<span class="badge" style="background:#e4f7d6;color:#56ca00">KOA 102 (Tân Phú)</span>', vnd:'330.000'},
-                    {name:'Biện Đức Huy', date: '22:00 21/07/2026 - 23:00 21/07/2026', room:'<span class="badge" style="background:#ecedee;color:#8a8d93">KOA 201 (Tân Phú)</span>', vnd:'675.000'} ]}},
-                occupancy_rooms:{ label:'Tỷ lệ kín phòng trong tuần', shape:'rows', data:{
-                  columns:[{field:'name',label:'Phòng'},{field:'pct',label:'Tỷ lệ %'},{field:'vnd',label:'Doanh thu'},{field:'image',label:'Ảnh'}],
-                  rows:[
-                    {name:'KOA 101 (Tân Phú) (5 giờ)', description:'Tỷ lệ kín phòng 3.0%', pct:24.4, vnd:'1.980.000', image:'/img/icons/room/room101.png'},
-                    {name:'KOA 102 (Tân Phú) (19 giờ)', description:'Tỷ lệ kín phòng 11.3%', pct:24.4, vnd:'2.480.000', image:'/img/icons/room/room102.png'},
-                    {name:'KOA 201 (Tân Phú) (8 giờ)', description:'Tỷ lệ kín phòng 4.8%', pct:33.3, vnd:'2.573.000', image:'/img/icons/room/room201.png'},
-                    {name:'KOA 101 (Thủ Đức) (12 giờ)', description:'Tỷ lệ kín phòng 7.1%', pct:23.8, vnd:'2.041.000', image:'/img/ServiceImage/QuaDem.png'},
-                    {name:'KOA 202 (Thủ Đức) (15 giờ)', description:'Tỷ lệ kín phòng 7.7%', pct:19.0, vnd:'1.954.000', image:'/img/icons/room/room302.png'} ]}},
-                booking_heatmap:{ label:'Trạng thái đặt phòng 3 tháng', shape:'matrix', data:{
-                  weekLabels:['T18','T19','T20','T21','T22','T23','T24','T25','T26','T27','T28','T29','T30','T31'],
-                  days:['SUN','SAT','FRI','THU','WED','TUE','MON'],
-                  matrix:{
-                    SUN:[0,0,0,0,0,0,0,4700,730,7080,5910,330,0,0],
-                    SAT:[0,0,0,0,0,0,230,2795,1370,6520,6735,1815,0,0],
-                    FRI:[0,0,0,0,0,0,0,650,4390,3325,4765,1600,0,0],
-                    THU:[0,0,0,0,0,0,0,0,4440,4630,4515,2583,0,0],
-                    WED:[0,0,0,0,0,0,600,500,5244,4282,4056,3950,400,0],
-                    TUE:[0,0,0,0,0,0,0,0,5465,350,3815,3137,0,0],
-                    MON:[0,0,0,0,0,0,0,0,3778,1200,4226,4730,650,0],
-                  }}},
-                monthly_summary_info:{ label:'Số liệu trong tháng', shape:'multiple_widget', data:{
-                  columns:[{field:'name',label:'Nội dung'},{field:'value',label:'Giá trị'},{field:'faclass',label:'FA Class'}],
-                  rows:[
-                    {name:'Doanh thu', value:'93.761,k', faclass:'ri-pie-chart-2-line ri-24px', color: "red"},
-                    {name:'Lượt book', value:'266,', faclass:'ri-group-line ri-24px', color: "blue"},
-                    {name:'Số giờ', value:'2,k', faclass:'ri-macbook-line ri-24px', color: "green"},
-                    {name:'Chi phí', value:'34.575,k', faclass:'ri-money-dollar-circle-line ri-24px', color: "yellow"} ]}},
-              };
-
-              const DATA_SHAPE_BY_KIND = { donut:'categorical', line:'series', bar:'series', table:'rows', list:'rows', heatmap:'matrix', emoji_card:null, large_img_card:null, multiple_mini_card:'multiple_widget', report:null, button:null };
+              const DATA_SHAPE_BY_KIND = { donut:'categorical', line:'series', bar:'series', table:'rows', list:'rows', heatmap:'matrix', emoji_card:null, large_img_card:'object', multiple_mini_card:'multiple_widget', report:null, button:null };
 
               function datasetOptionsFor(kind){
                 const shape = DATA_SHAPE_BY_KIND[kind];
                 if(!shape) return [];
-                return Object.entries(MOCK_DATASETS).filter(([,v])=>v.shape===shape).map(([key,v])=>({key,label:v.label}));
+                return Object.entries(DATASETS).filter(([,v])=>v.shape===shape).map(([key,v])=>({key,label:v.label}));
               }
 
               // ---------------------------------------------------------------------
@@ -1079,37 +1040,36 @@
                     { key:'icon',  label:'Icon (1 ký tự/emoji)', type:'text' },
                     { key:'color', label:'Màu nền icon', type:'color' }];
                   case 'donut': return [...common,
-                    { key:'dataSource', label:'Nguồn dữ liệu', type:'dataset' },
+
                     { key:'legendPosition', label:'Vị trí chú thích', type:'select', options:['right','bottom'] }];
                   case 'line': return [...common,
-                    { key:'dataSource', label:'Nguồn dữ liệu', type:'dataset' },
+
                     { key:'color', label:'Màu đường', type:'color' },
                     { key:'showArea', label:'Tô nền vùng dưới đường', type:'checkbox' }];
                   case 'bar': return [...common,
-                    { key:'dataSource', label:'Nguồn dữ liệu', type:'dataset' },
+
                     { key:'color', label:'Màu cột', type:'color' },
                     { key:'horizontal', label:'Hiển thị dạng cột ngang', type:'checkbox' }];
                   case 'table': return [...common,
-                    { key:'dataSource', label:'Nguồn dữ liệu', type:'dataset' }];
+                    ];
                   case 'list': return [...common,
-                    { key:'dataSource', label:'Nguồn dữ liệu', type:'dataset' },
+
                     { key:'showProgress', label:'Hiện thanh tiến độ (nếu có field %)', type:'checkbox' },
                     { key:'showImage', label:'Hiện hình ảnh', type:'checkbox' },
                     { key:'textColor', label:'Màu chữ', type:'color' },
                     { key:'progressColor', label:'Màu tiến độ', type:'color' }];
                   case 'heatmap': return [...common,
-                    { key:'dataSource', label:'Nguồn dữ liệu', type:'dataset' }];
+                    ];
                   case 'large_img_card': return [...common,
-                    { key:'value1', label:'Nội dung 1', type:'text' },
-                    { key:'value2',  label:'Nội dung 2', type:'text' },
+
                     { key:'imageurl',  label:'Đường dẫn ảnh', type:'text' },
                     { key:'imageheight',  label:'Chiều cao ảnh', type:'text' },
                     { key:'buttontext',  label:'Nội dung button', type:'text' },
                     { key:'buttonurl',  label:'Đường dẫn button', type:'text' },
                     { key:'color', label:'Màu nền icon', type:'color' }];
                   case 'multiple_mini_card': return [...common,
-                    { key:'dataSource', label:'Nguồn dữ liệu', type:'dataset' },
-                    { key:'subContent', label:'Nội dung nhỏ', type:'checkbox' }];
+
+                    { key:'subContent', label:'Nội dung nhỏ', type:'text' }];
                   case 'report': return [...common,
                     { key:'reportcode', label:'Mã báo cáo', type:'text' },
                     { key:'reportname', label:'Tên báo cáo', type:'text' },
@@ -1127,19 +1087,19 @@
               }
 
               function defaultConfigFor(kind){
-                const opts = datasetOptionsFor(kind);
+                const opts = [];
                 const t = kindOf(kind);
-                  const base = { code: kind + '_99_new', title:t.name, color:t.color };
+                  const base = { code: kind + '_' + crypto.randomUUID().replaceAll('-', ''), title:t.name, color:t.color, dataBinding:Dashboard6UI.defaults(kind) };
                 switch(kind){
                   case 'emoji_card': return { ...base, value:'0', unit:'', icon:'#' };
-                  case 'donut': return { ...base, dataSource:opts[0]?.key||'', legendPosition:'right' };
-                  case 'line': return { ...base, dataSource:opts[0]?.key||'', showArea:false };
-                  case 'bar': return { ...base, dataSource:opts[0]?.key||'', horizontal:false };
-                  case 'table': return { ...base, dataSource:opts[0]?.key||'' };
-                  case 'list': return { ...base, dataSource:opts[0]?.key||'', showProgress:false, showImage:false };
-                  case 'heatmap': return { ...base, dataSource:opts[0]?.key||'' };
-                  case 'large_img_card': return { ...base, value1:'0 VND', value2:'0% mục tiêu', imageurl:'https://pub-7171d6b031a04e3983a20a87daffce46.r2.dev/koala1.png', imageheight:'100', buttontext:'Xem', buttonurl: '#', color: 'red' };
-                  case 'multiple_mini_card': return { ...base, dataSource:opts[0]?.key||'', subContent: 'Nội dung phụ' };
+                  case 'donut': return { ...base, legendPosition:'right' };
+                  case 'line': return { ...base, showArea:false };
+                  case 'bar': return { ...base, horizontal:false };
+                  case 'table': return { ...base,  };
+                  case 'list': return { ...base, showProgress:false, showImage:false };
+                  case 'heatmap': return { ...base,  };
+                  case 'large_img_card': return { ...base, imageurl:'https://pub-7171d6b031a04e3983a20a87daffce46.r2.dev/koala1.png', imageheight:'100', buttontext:'Xem', buttonurl: '#', color: 'red' };
+                  case 'multiple_mini_card': return { ...base, subContent: 'Nội dung phụ' };
                   case 'report': return { ...base, reportcode:'', reporttype:'viewer' };
                   case 'button': return { ...base, value:'Nút', url:'#', background:'red', textColor:'#FFFFFF', target:'_self' };
                   default: return base;
@@ -1195,11 +1155,12 @@
                 let w = Math.min(t.defaultW, GRID_COLS), h = t.defaultH;
                 x = Math.min(x, GRID_COLS - w);
                 if(collides(null, x, y, w, h)){ y = nextFreeRow(); x = 0; }
-                widgets.push({ id:'w'+(idSeq++), kind, x, y, w, h, config: defaultConfigFor(kind) });
+                widgets.push({ id:'new-'+crypto.randomUUID(), kind, x, y, w, h, config: defaultConfigFor(kind) });
                 renderCanvas();
                 selectWidget(widgets[widgets.length-1].id);
               }
               function removeWidget(id){
+                Dashboard6UI.clearDraft(id);
                 widgets = widgets.filter(x=>x.id!==id);
                 if(selectedId===id){ selectedId=null; renderConfigPanel(); }
                 renderCanvas();
@@ -1249,7 +1210,7 @@
                   el.dataset.id = wdg.id;
                   el.innerHTML = `
                     <div class="widget-head">
-                      <h4 class="widget-title">${wdg.config.title}</h4>
+                      <h4 class="widget-title">${escapeHtml(wdg.config.title)}</h4>
                       <button class="rm" title="Xóa widget">✕</button>
                     </div>
                     <div class="widget-body" id="body-${wdg.id}"></div>
@@ -1327,7 +1288,7 @@
                   panel.innerHTML = `<div class="empty-hint">Chọn 1 widget trên canvas để cấu hình.</div>`;
                   return;
                 }
-                const schema = getFieldSchema(wdg.kind);
+                const schema = getFieldSchema(wdg.kind).filter(f => f.key !== 'dataSource');
                 panel.innerHTML = `
                   <p class="panel-title">Cấu hình • ${kindOf(wdg.kind).name}</p>
                   <div id="fieldsHost"></div>
@@ -1349,7 +1310,7 @@
                 schema.forEach(f=>{
                   const wrap = document.createElement('div'); wrap.className='field';
                   if(f.type==='text'){
-                    wrap.innerHTML = `<label>${f.label}</label><input type="text" data-k="${f.key}" value="${wdg.config[f.key]??''}">`;
+                    wrap.innerHTML = `<label>${f.label}</label><input type="text" data-k="${f.key}" value="${escapeHtml(wdg.config[f.key]??'')}">`;
                   } else if (f.type === 'color') {
                       const value = wdg.config[f.key] || "#7367f0";
                       wrap.innerHTML = `
@@ -1359,12 +1320,12 @@
                                   type="button"
                                   id="color-${f.key}"
                                   class="pcr-button dashboard-color-picker"
-                                  data-default="${value}">
+                                  data-default="${escapeHtml(value)}">
                               </button>
                               <input
                                   type="hidden"
                                   id="${f.key}"
-                                  value="${value}">
+                                  value="${escapeHtml(value)}">
                           </div>
                       `;
                   } else if(f.type==='select'){
@@ -1372,8 +1333,8 @@
                       ${f.options.map(o=>`<option value="${o}" ${wdg.config[f.key]===o?'selected':''}>${o}</option>`).join('')}</select>`;
                   } else if(f.type==='dataset'){
                     const opts = datasetOptionsFor(wdg.kind);
-                    wrap.innerHTML = `<label>${f.label} (net_service)</label><select data-k="${f.key}">
-                      ${opts.map(o=>`<option value="${o.key}" ${wdg.config[f.key]===o.key?'selected':''}>${o.label}</option>`).join('')}</select>`;
+                    wrap.innerHTML = `<label>${f.label} (store)</label><select data-k="${f.key}">
+                      <option value="">— Chọn nguồn dữ liệu —</option>${opts.map(o=>`<option value="${escapeHtml(o.key)}" ${wdg.config[f.key]===o.key?'selected':''}>${escapeHtml(o.label)}</option>`).join('')}</select>`;
                   } else if(f.type==='checkbox'){
                     wrap.innerHTML = `<label class="field-check"><input type="checkbox" data-k="${f.key}" ${wdg.config[f.key]?'checked':''}> ${f.label}</label>`;
                   }
@@ -1393,6 +1354,7 @@
                 host.querySelectorAll('select').forEach(sel=>{
                   sel.addEventListener('change', ()=>{
                     wdg.config[sel.dataset.k] = sel.value;
+                    if(sel.dataset.k === 'legendPosition' && wdg.chart) setByPath(wdg.chart, 'legend.position', sel.value);
                     renderWidgetContent(wdg);
                     updateJsonPreview(wdg);
                   });
@@ -1400,6 +1362,7 @@
                 host.querySelectorAll('input[type=checkbox]').forEach(chk=>{
                   chk.addEventListener('change', ()=>{
                     wdg.config[chk.dataset.k] = chk.checked;
+                    if(chk.dataset.k === 'horizontal' && wdg.chart) setByPath(wdg.chart, 'plotOptions.bar.horizontal', chk.checked);
                     renderWidgetContent(wdg);
                     updateJsonPreview(wdg);
                   });
@@ -1408,6 +1371,23 @@
                 updateJsonPreview(wdg);
                 initDashboardBuilderColorPicker(wdg);
                 renderChartConfigEditor(wdg);
+                Dashboard6UI.editor(panel, wdg, {
+                  allowedStores: options.allowedStores || [],
+                  invalidate(){ DATASETS[wdg.config.code]={status:'error',notice:'Cấu hình nguồn đã đổi. Chạy thử để cập nhật dữ liệu.',data:{}}; renderWidgetContent(wdg); },
+                  changed(){ updateJsonPreview(wdg); },
+                  render(){ renderWidgetContent(wdg); },
+                  rebuild(){ renderConfigPanel(); },
+                  result(dataset){ if(widgets.includes(wdg)){ DATASETS[wdg.config.code]=dataset; renderWidgetContent(wdg); } },
+                  async preview(widget){
+                    const form=new FormData(); form.append('dashboardCode',dashboardCode);
+                    form.append('widget',JSON.stringify({kind:widget.kind,config:widget.config}));
+                    form.append('__RequestVerificationToken',document.querySelector('input[name="__RequestVerificationToken"]')?.value || '');
+                    const response=await fetch('/Dashboards/PreviewWidget',{method:'POST',body:form});
+                    if(response.status===403)throw Error('Không có quyền chạy thử dashboard này.');
+                    const result=await response.json(); if(!response.ok)throw Error(result.errorMessage || 'Không chạy được nguồn.');
+                    return result;
+                  }
+                });
               }
 
               function updateJsonPreview(wdg){
@@ -1441,16 +1421,22 @@
               document.getElementById('drawerBackdrop').addEventListener('click', closeAllDrawers);
 
               function saveLayout() {
+                if (Dashboard6UI.hasDrafts()) { alert('Hãy áp dụng cấu hình JSON nâng cao đang sửa trước khi lưu.'); return; }
                 // 1. Chuẩn bị dữ liệu JSON
-                const dashboardCode = '@(ViewBag.DashboardCode ?? "")';
+                const codes = widgets.map(w => w.config?.code?.trim());
+                if (codes.some(code => !code) || new Set(codes).size !== codes.length) {
+                  alert('Mỗi widget cần có mã riêng, không để trống hoặc trùng mã.'); return;
+                }
 
                 const optionsJson = JSON.stringify({
+                  ...options,
                   gridCols: GRID_COLS,
                   cellHeight: CELL,
                   gridGap: GAP
                 });
 
                 const widgetsJson = JSON.stringify(widgets.map(w => ({
+                  id: w.id,
                   kind: w.kind,
                   widgetCode: w.config?.code,
                   x: w.x,
@@ -1458,7 +1444,7 @@
                   w: w.w,
                   h: w.h,
                   config: w.config,
-                  chart: w.chart
+                  chart: chartForSave(w.chart)
                 })));
 
                 // 2. Đưa dữ liệu vào FormData
@@ -1469,6 +1455,8 @@
 
                 // Lấy AntiforgeryToken nếu backend có yêu cầu Validate
                 var antiforgeryToken = document.querySelector('input[name="__RequestVerificationToken"]')?.value;
+                formData.append('__RequestVerificationToken', antiforgeryToken || '');
+                document.getElementById('btnSave').disabled = true;
 
                 // 3. Gọi AJAX theo phong cách handleAjaxConfirmed
                 $.ajax({
@@ -1493,7 +1481,7 @@
                     } else {
                       rplm({
                         title: "Lỗi!",
-                        text: response.errorMessage || "Không thể lưu cấu hình Dashboard.",
+                        text: escapeHtml(response.errorMessage || "Không thể lưu cấu hình Dashboard."),
                         type: "error",
                         timer: 2000,
                         confirmButtonText: 'Xác nhận',
@@ -1501,10 +1489,11 @@
                       });
                     }
                   },
-                  error: function () {
+                  complete: function () { document.getElementById('btnSave').disabled = false; },
+                  error: function (xhr) {
                     rplm({
                       title: "Lỗi!",
-                      text: "Lỗi khi kết nối đến máy chủ.",
+                      text: escapeHtml(xhr.responseJSON?.errorMessage || "Lỗi khi kết nối đến máy chủ."),
                       type: "error",
                       timer: 2000,
                       confirmButtonText: 'Xác nhận',
@@ -1515,13 +1504,22 @@
               }
               document.getElementById('btnSave').addEventListener('click', saveLayout);
               document.getElementById('btnReset').addEventListener('click', ()=>{
-                if(confirm('Tải lại mẫu mặc định? Layout hiện tại sẽ mất.')) seedDefaultLayout();
+                if(confirm('Hoàn tác các thay đổi bố cục chưa lưu?')) seedDefaultLayout();
               });
 
               // ---------------------------------------------------------------------
               // 13) MẪU DỰNG SẴN
               // ---------------------------------------------------------------------
+              function chartForSave(chart) {
+                if (!chart) return null;
+                const saved = cloneConfig(chart);
+                delete saved.series; delete saved.labels; delete saved.colors;
+                if (saved.xaxis) delete saved.xaxis.categories;
+                return saved;
+              }
               function seedDefaultLayout(){
+                widgets.forEach(w => Dashboard6UI.clearDraft(w.id));
+                GRID_COLS = originalGrid.cols; CELL = originalGrid.cell; GAP = originalGrid.gap;
                 document.getElementById('val_GRID_COLS').textContent = GRID_COLS;
                 document.getElementById('val_CELL').textContent = CELL;
                 document.getElementById('val_GAP').textContent = GAP;
@@ -1531,99 +1529,85 @@
 
                 idSeq = 1;
 
-                widgets = @Html.Raw(widgets.ContainsKey("data") ? widgets["data"] : "[]");
+                widgets = cloneConfig(Array.isArray(initialWidgets) ? initialWidgets : []).map(w => {
+                  w.id = String(w.id || 'new-' + crypto.randomUUID());
+                  w.config ||= {};
+                  delete w.config.dataSource;
+                  if (w.kind === 'large_img_card') { delete w.config.value1; delete w.config.value2; }
+                  return w;
+                });
                 selectedId = null;
                 renderCanvas();
                 renderConfigPanel();
               }
-              // function mk(kind,x,y,w,h,config){ return { id:'w'+(idSeq++), kind, x, y, w, h, config:{...defaultConfigFor(kind), ...config} }; }
+              // function mk(kind,x,y,w,h,config){ return { id:'new-'+crypto.randomUUID(), kind, x, y, w, h, config:{...defaultConfigFor(kind), ...config} }; }
 
-              function renderEmojiCard(el, wdg){
-                el.innerHTML = `<div class="kpi-wrap">
-                  <span class="badge" style="background:${wdg.config.color}">${wdg.config.icon||'#'}</span>
-                  <div><div class="num">${wdg.config.value}</div><div class="lbl">${wdg.config.unit||''}</div></div>
-                </div>`;
-              }
-              function renderTable(el, wdg, data){
-                el.innerHTML = `<table class="mini-table"><thead><tr>${data.columns.map(c=>`<th>${c.label ?? ''}</th>`).join('')}</tr></thead>
-                  <tbody>${data.rows.map(r=>`<tr>${data.columns.map(c=>`<td>${r[c.field] ?? ''}</td>`).join('')}</tr>`).join('')}</tbody></table>`;
-              }
-              function renderReport(el, wdg){
-                if (typeof window.loadFormReportViewer !== 'function') {
-                  el.innerHTML = '<div class="empty-hint">Report viewer chưa được tích hợp trong bản HTML demo.</div>';
-                  return;
+              const fmt = (value,wdg) => Dashboard6UI.format(value,wdg.config);
+              function renderIcon(value, fallback = '#') {
+                const icon = String(value || '').trim();
+
+                // 1. URL ảnh an toàn: chỉ chấp nhận URL mà safeUrl() cho phép.
+                const imageUrl = safeUrl(icon);
+
+                if (imageUrl) {
+                  return `
+                    <img
+                      src="${escapeHtml(imageUrl)}"
+                      alt=""
+                      class="widget-data-icon"
+                      loading="lazy"
+                    >`;
                 }
-                loadFormReportViewer(wdg.config.reportcode, "body-"+wdg.id)
+
+                // 2. Font Awesome class.
+                const isFontAwesome =
+                  icon.length <= 120 &&
+                  /^(?:fa|fas|far|fal|fab|fa-solid|fa-regular|fa-brands)(?:\s+fa-[a-z0-9-]+)+$/i.test(icon);
+
+                if (isFontAwesome) {
+                  return `<i class="${escapeHtml(icon)}" aria-hidden="true"></i>`;
+                }
+
+                // 3. Emoji hoặc ký tự thông thường.
+                return escapeHtml(icon || fallback);
               }
-              function renderList(el, wdg, data){
-                el.innerHTML = `<ul class="mini-list p-0 m-0">${data.rows.map(r=>{
-                  const pctField = data.columns.find(c=>c.field==='pct');
-                  const secondaryField = data.columns[1] ? data.columns[1].field : null;
-                  return `<li class="d-flex mb-6">
-                    ${(wdg.config.showImage && r.image) ? `<div class="avatar flex-shrink-0 bg-lightest rounded me-3">
-                        <img src="${r.image}" alt="zipcar">
-                    </div>` : ''}
-                    <div class="d-flex w-100 flex-wrap align-items-center justify-content-between gap-2">
-                        <div class="me-2">
-                            <p class="mb-0 fw-bold" style="color:${wdg.config.textColor}">${r.name}</p>
-                            ${(r.description) ? `<p class="mb-0">${r.description}</p>` : ''}
+              function renderEmojiCard(el, wdg, data) {
+                const icon = data.icon ?? wdg.config.icon ?? '#';
 
-                        </div>
-                        <div>
-                            <p class="mb-2 fw-bold" style="color:${wdg.config.textColor}">${r.vnd?r.vnd+' đ':(secondaryField?r[secondaryField]:'')}</p>
-                              ${(wdg.config.showProgress && pctField) ? `<div class="progress bg-label-primary" style="height: 4px">
-                                  <div class="progress-bar" style="width: ${r.pct}%;background:${wdg.config.progressColor}" role="progressbar" aria-valuenow="${r.pct}" aria-valuemin="0" aria-valuemax="100"></div>
-                              </div>` : ''}
-                        </div>
-                    </div>
-                  </li>`;
-                }).join('')}</ul>`;
-              }
-
-              function renderLargeImgCard(el, wdg){
-                el.innerHTML = `<div class="row">
-                   <div class="col-12 col-md-6">
-                        <h4 class="mb-0" style="color:${wdg.config.color}">${wdg.config.value1}</h4>
-                        <p class="mb-2">${wdg.config.value2}</p>
-                        <a href="javascript:;" class="btn btn-sm btn-primary waves-effect waves-light" style="background:${wdg.config.color}">${wdg.config.buttontext}</a>
-                   </div>
-                   <div class="col-12 col-md-6 text-center">
-                      <img src="${wdg.config.imageurl}" class="card-img-position bottom-0 w-auto end-0 scaleX-n1-rtl animate__animated animate__bounceIn" alt="View Profile" style="height: ${wdg.config.imageheight}px">
-                   </div>
-                </div>`;
-              }
-
-              function renderMultipleMiniCard(el, wdg, data) {
-                const subtitleHtml = wdg.config?.subContent
-                  ? `<div class="widget-subtitle text-muted small mt-0">${wdg.config.subContent}</div>`
-                  : '';
-
-                // 2. Render HTML
                 el.innerHTML = `
-                  ${subtitleHtml}
-                  <div class="row g-6 mt-auto">
-                    ${data.rows.map(r => `
-                      <div class="col-md-3 col-6">
-                        <div class="d-flex align-items-center">
-                          <div class="avatar">
-                            <div class="avatar-initial rounded shadow-xs" style="background:${r.color || 'var(--bs-primary)'}">
-                              <i class="${r.faclass}"></i>
-                            </div>
-                          </div>
-                          <div class="ms-3">
-                            <p class="mb-0 text-muted small">${r.name}</p>
-                            <h5 class="mb-0 fw-bold">${r.value}</h5>
-                          </div>
-                        </div>
+                  <div class="kpi-wrap">
+                    <span class="badge" style="background:${safeColor(wdg.config.color)}">
+                      ${renderIcon(icon)}
+                    </span>
+                    <div>
+                      <div class="num">
+                        ${escapeHtml(fmt(data.value ?? wdg.config.value, wdg))}
                       </div>
-                    `).join('')}
+                      <div class="lbl">
+                        ${escapeHtml(data.unit ?? wdg.config.unit)}
+                      </div>
+                    </div>
                   </div>`;
               }
-
-              function renderButton(el, wdg){
-                el.innerHTML = `<a class="btn waves-effect waves-light" href="${wdg.config.url}" style="background:${wdg.config.background};color:${wdg.config.textColor}">
-                    ${wdg.config.value}
-                </a>`;
+              function renderTable(el, wdg, data){
+                el.innerHTML = `<table class="mini-table"><thead><tr>${data.columns.map(c => `<th>${escapeHtml(c.label || c.field)}</th>`).join('')}</tr></thead><tbody>${data.rows.map(r => `<tr>${data.columns.map(c => `<td>${escapeHtml(typeof r[c.field] === 'number' ? fmt(r[c.field],wdg) : r[c.field])}</td>`).join('')}</tr>`).join('')}</tbody></table>`;
+              }
+              function renderReport(el, wdg, data){ renderTable(el,wdg,data); }
+              function renderList(el, wdg, data){
+                el.innerHTML = `<ul class="mini-list p-0 m-0">${data.rows.map(r => {
+                  const pct = Math.min(100, Math.max(0, Number(r.pct) || 0));
+                  return `<li class="d-flex mb-6">${wdg.config.showImage && safeUrl(r.image) ? `<div class="avatar flex-shrink-0 bg-lightest rounded me-3"><img src="${escapeHtml(safeUrl(r.image))}" alt=""></div>` : ''}<div class="d-flex w-100 flex-wrap align-items-center justify-content-between gap-2"><div class="me-2"><p class="mb-0 fw-bold" style="color:${safeColor(wdg.config.textColor)}">${escapeHtml(r.name)}</p><p class="mb-0">${escapeHtml(r.description)}</p></div><div><p class="mb-2 fw-bold">${escapeHtml(fmt(r.value,wdg))}</p>${wdg.config.showProgress && r.pct != null ? `<div class="progress bg-label-primary" style="height:4px"><div class="progress-bar" style="width:${pct}%;background:${safeColor(wdg.config.progressColor)}" role="progressbar" aria-valuenow="${pct}" aria-valuemin="0" aria-valuemax="100"></div></div>` : ''}</div></div></li>`;
+                }).join('')}</ul>`;
+              }
+              function renderLargeImgCard(el, wdg, data){
+                const img=data.imageurl || wdg.config.imageurl;
+                el.innerHTML = `<div class="row"><div class="col-12 col-md-6"><h4 class="mb-0" style="color:${safeColor(wdg.config.color)}">${escapeHtml(fmt(data.value1 ?? data.value,wdg))}</h4><p class="mb-2">${escapeHtml(data.value2)}</p>${safeUrl(wdg.config.buttonurl) ? `<a class="btn btn-sm btn-primary" href="${escapeHtml(safeUrl(wdg.config.buttonurl))}">${escapeHtml(wdg.config.buttontext || 'Xem')}</a>` : ''}</div><div class="col-12 col-md-6 text-center">${safeUrl(img) ? `<img src="${escapeHtml(safeUrl(img))}" alt="" style="height:${clampNumber(wdg.config.imageheight, 30, 300, 100)}px">` : ''}</div></div>`;
+              }
+              function renderMultipleMiniCard(el, wdg, data){
+                el.innerHTML = `${wdg.config.subContent ? `<div class="widget-subtitle text-muted small">${escapeHtml(wdg.config.subContent)}</div>` : ''}<div class="row g-6 mt-auto">${data.rows.map(r => `<div class="col-md-3 col-6"><div class="d-flex align-items-center"><div class="avatar"><div class="avatar-initial rounded shadow-xs" style="background:${safeColor(r.color)}"><i class="${escapeHtml(r.faclass)}"></i></div></div><div class="ms-3"><p class="mb-0 text-muted small">${escapeHtml(r.name)}</p><h5 class="mb-0 fw-bold">${escapeHtml(typeof r.value==='number'?fmt(r.value,wdg):r.value)}</h5></div></div></div>`).join('')}</div>`;
+              }
+              function renderButton(el, wdg, data){
+                el.innerHTML = `<a class="btn" href="${escapeHtml(safeUrl(data.url ?? wdg.config.url) || '#')}" target="${wdg.config.target === '_blank' ? '_blank' : '_self'}" rel="noopener noreferrer" style="background:${safeColor(wdg.config.background)};color:${safeColor(wdg.config.textColor)}">${escapeHtml(data.value ?? wdg.config.value)}</a>`;
               }
               // other
               function initDashboardBuilderColorPicker(wdg)
@@ -2050,7 +2034,7 @@
               },
               legend: {
                 show: !0,
-                position: 'right',
+                position: wdg.config.legendPosition || 'right',
                 fontSize: '13px',
                 labels: {
                   colors: '#000',
@@ -2090,7 +2074,7 @@
                         fontWeight: 500,
                         offsetY: -20,
                         formatter: function (val) {
-                          return new Intl.NumberFormat('vi-VN').format(parseInt(val)) + 'K';
+                          return fmt(Number(val),wdg);
                         }
                       },
                       name: {
@@ -2108,7 +2092,7 @@
                         label: 'Tổng',
                         formatter: function (e) {
                             const totalValue = e.globals.seriesTotals.reduce((a, b) => a + b, 0);
-                            return new Intl.NumberFormat('vi-VN').format(parseInt(totalValue)) + 'K';
+                            return fmt(totalValue,wdg);
                         }
                       }
                     }
@@ -2159,9 +2143,10 @@
 
           const baseOptions = templates[chartType] || {};
           const chartConfig = wdg.chart || {};
+          const savedOverrides = chartForSave(chartConfig) || {};
 
           // Deep merge: base + override + system lock
-          const finalOptions = deepMergeOptions(baseOptions, chartConfig);
+          const finalOptions = deepMergeOptions(baseOptions, savedOverrides);
 
           // Lock system fields (always from wdg config)
           finalOptions.colors = [wdg.config.color];
@@ -2177,10 +2162,16 @@
             finalOptions.xaxis.categories = data.categories || data.weekLabels || [];
             finalOptions.chart.type = 'heatmap';
           }else {
-            finalOptions.series = [{ name: wdg.config.title, data: data.series }];
+            finalOptions.series = data.series || [];
+            finalOptions.xaxis ||= {};
+            finalOptions.xaxis.categories = data.categories || [];
           }
           finalOptions.chart.type = chartType === 'line' && wdg.config.showArea ? 'area' : chartType;
-          wdg.chart = cloneConfig(finalOptions);
+          finalOptions.yaxis ||= {};
+          if (!Array.isArray(finalOptions.yaxis) && chartType !== 'heatmap') { finalOptions.yaxis.labels ||= {}; finalOptions.yaxis.labels.formatter = value => fmt(Number(value),wdg); }
+          finalOptions.tooltip ||= {}; finalOptions.tooltip.y ||= {}; finalOptions.tooltip.y.formatter = value => fmt(value,wdg);
+          if(chartType !== 'donut') { finalOptions.dataLabels ||= {}; finalOptions.dataLabels.formatter = value => fmt(value,wdg); }
+          wdg.chart = chartForSave(finalOptions);
 
           return finalOptions;
         }
@@ -2239,9 +2230,18 @@
           const el = document.querySelector(`.widget[data-id="${wdg.id}"] .widget-body`);
           if (!el) return;
 
-          // Lấy data từ MOCK_DATASETS hoặc service
-          const dataKey = wdg.config.dataSource;
-          const data = MOCK_DATASETS[dataKey]?.data || {};
+          if (chartInstances[wdg.id]) { chartInstances[wdg.id].destroy(); delete chartInstances[wdg.id]; }
+          el.replaceChildren();
+          const dataKey = wdg.config.code;
+          const dataset = DATASETS[dataKey];
+          const needsDataset = !!wdg.config.dataBinding || !['emoji_card', 'button'].includes(wdg.kind);
+          if (needsDataset && (!dataset || dataset.status !== 'ready')) {
+            const message = datasetLoadError || dataset?.notice || (dataset?.status === 'empty' ? 'Chưa có dữ liệu trong kỳ thống kê.' : 'Chưa có nguồn dữ liệu cho widget này.');
+            el.innerHTML = `<div class="empty-hint">${escapeHtml(message)}</div>`;
+            wdg.chart ||= {};
+            return;
+          }
+          const data = dataset?.data || {};
 
           // Dispatcher theo kind
           switch(wdg.kind) {
@@ -2276,10 +2276,13 @@
               renderReport(el, wdg, data);
               break;
             case 'button':
-              renderButton(el, wdg);
+              renderButton(el, wdg, data);
               break;
             default:
-              el.innerHTML = `<div class="empty-hint">Widget type "${wdg.kind}" not supported</div>`;
+              el.innerHTML = `<div class="empty-hint">Loại widget "${escapeHtml(wdg.kind)}" chưa được hỗ trợ.</div>`;
+          }
+          if (dataset?.notice) {
+            const notice = document.createElement('div'); notice.className = 'dataset-notice'; notice.textContent = dataset.notice; el.appendChild(notice);
           }
         }
 
@@ -2291,13 +2294,21 @@
           if (!el) return;
           if (chartInstances[key]) chartInstances[key].destroy();
           const chart = new ApexCharts(el, options);
-          chart.render();
+          chart.render().catch(() => {
+            if (chartInstances[key] !== chart) return;
+            el.innerHTML = '<div class="empty-hint">Không thể vẽ biểu đồ với dữ liệu hiện tại.</div>';
+          });
           chartInstances[key] = chart;
         }
 
         // =========================================================================
         // Khởi động
         // =========================================================================
+        const status = document.getElementById('datasetStatus');
+        const datasetCount = Object.keys(DATASETS).length;
+        const unavailable = Object.values(DATASETS).filter(d => d.status !== 'ready').length;
+        status.textContent = datasetLoadError || (datasetCount ? `Nguồn cấu hình riêng · ${datasetCount} widget${unavailable ? ` · ${unavailable} nguồn chưa có dữ liệu hoặc lỗi` : ''}` : 'Chọn widget → Dữ liệu để cấu hình nguồn và ánh xạ.');
+        status.classList.toggle('warning', !!datasetLoadError || unavailable > 0 || !datasetCount);
         renderLibrary();
         seedDefaultLayout();
         let resizeT;
