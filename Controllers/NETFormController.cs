@@ -1,7 +1,9 @@
 using AspnetCoreMvcFull.Models;
 using KOAHome.EntityFramework;
 using KOAHome.Helpers;
+using KOAHome.Models;
 using KOAHome.Services;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Mvc;
@@ -12,6 +14,7 @@ using Npgsql;
 using System.Diagnostics;
 using System.Text;
 using System.Text.Json;
+using System.Text.Json.Nodes;
 using System.Text.RegularExpressions;
 
 namespace KOAHome.Controllers
@@ -24,6 +27,7 @@ namespace KOAHome.Controllers
     private readonly IAttachmentService _att;
     private readonly IReportService _report;
     private readonly IFormService _form;
+    private readonly IFormBuilderService _formBuilder;
     private readonly IActionService _action;
     private readonly IWidgetService _widget;
     private readonly IDRDatasourceService _datasrc;
@@ -32,7 +36,7 @@ namespace KOAHome.Controllers
     private readonly IHttpClientFactory _httpClientFactory;
     private readonly string _googleCloudVisionApiKey;
 
-    public NETFormController(QLKCL_NEWContext db, ILogger<NETFormController> logger, IReportEditorService re, IAttachmentService att, IReportService report, IFormService form, IActionService action, IWidgetService widget, IDRDatasourceService datasrc, INetServiceService netService, IConnectionService con, IHttpClientFactory httpClientFactory, IConfiguration configuration)
+    public NETFormController(QLKCL_NEWContext db, ILogger<NETFormController> logger, IReportEditorService re, IAttachmentService att, IReportService report, IFormService form, IFormBuilderService formBuilder, IActionService action, IWidgetService widget, IDRDatasourceService datasrc, INetServiceService netService, IConnectionService con, IHttpClientFactory httpClientFactory, IConfiguration configuration)
     {
       _db = db;
       _logger = logger;
@@ -40,6 +44,7 @@ namespace KOAHome.Controllers
       _att = att;
       _report = report;
       _form = form;
+      _formBuilder = formBuilder;
       _action = action;
       _widget = widget;
       _datasrc = datasrc;
@@ -922,6 +927,135 @@ namespace KOAHome.Controllers
       {
         return Json(new { success = false, errorMessage = ex.Message });
       }
+    }
+    [Authorize]
+    [HttpGet]
+    [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]
+    public IActionResult FormBuilder(string FormCode = "HS_Booking_NhapKhachNhanh", bool CreateNew = false)
+    {
+      if (string.IsNullOrWhiteSpace(FormCode))
+      {
+        ViewData["ErrorMessage"] = "Không tồn tại mã biểu mẫu";
+        return View();
+      }
+
+      ViewData["FormCode"] = FormCode.Trim();
+      ViewData["CreateNew"] = CreateNew;
+      return View();
+    }
+
+    [Authorize]
+    [HttpGet]
+    [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]
+    public async Task<IActionResult> FormBuilderData(string FormCode, CancellationToken cancellationToken)
+    {
+      if (string.IsNullOrWhiteSpace(FormCode))
+        return BadRequest(new { success = false, errorMessage = "Mã biểu mẫu không được để trống." });
+
+      var result = await _formBuilder.GetFormBuilderDataAsync(FormCode.Trim(), GetCurrentUserId(), cancellationToken);
+      if (!result.Success)
+      {
+        var missingForm = result.ErrorMessage?.Contains("Không tìm thấy biểu mẫu", StringComparison.OrdinalIgnoreCase) == true;
+        return StatusCode(missingForm ? StatusCodes.Status404NotFound : StatusCodes.Status500InternalServerError,
+          new { success = false, errorMessage = result.ErrorMessage, formCode = FormCode });
+      }
+
+      return Json(new
+      {
+        success = true,
+        errorMessage = result.ErrorMessage,
+        formCode = result.FormCode,
+        data = result.ConfigJson
+      });
+    }
+
+    [Authorize]
+    [HttpGet]
+    [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]
+    public async Task<IActionResult> FormBuilderCatalog(CancellationToken cancellationToken)
+    {
+      var result = await _formBuilder.GetFormBuilderCatalogAsync(GetCurrentSiteId(), GetCurrentUserId(), cancellationToken);
+      if (!result.Success)
+        return BadRequest(new { success = false, errorMessage = result.ErrorMessage });
+
+      return Json(new { success = true, errorMessage = result.ErrorMessage, data = result.CatalogJson });
+    }
+
+    [Authorize]
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    [RequestSizeLimit(FormBuilderPayloadValidator.MaxPayloadBytes + 65536)]
+    public async Task<IActionResult> FormBuilderSave([FromBody] FormBuilderSaveRequest request, CancellationToken cancellationToken)
+    {
+      var userId = GetCurrentUserId();
+      if (!userId.HasValue)
+        return Unauthorized(new { success = false, errorMessage = "Không xác định được người dùng đang đăng nhập." });
+
+      if (request == null)
+        return BadRequest(new { success = false, errorMessage = "Thiếu payload cấu hình." });
+
+      var validationError = FormBuilderPayloadValidator.Validate(request.Payload);
+      if (validationError != null)
+        return BadRequest(new { success = false, errorMessage = validationError });
+
+      var result = await _formBuilder.SaveFormBuilderAsync(request.Payload, userId.Value, cancellationToken);
+      var response = new
+      {
+        success = result.Success,
+        errorMessage = result.ErrorMessage,
+        formId = result.FormId,
+        formCode = result.FormCode,
+        versionId = result.VersionId,
+        version = result.Version,
+        status = result.Status,
+        savedFieldCount = result.SavedFieldCount,
+        savedServiceCount = result.SavedServiceCount,
+        warnings = result.Warnings,
+        lastModificationTime = result.LastModificationTime
+      };
+
+      if (result.Success) return Json(response);
+      return StatusCode(result.IsConcurrencyConflict ? StatusCodes.Status409Conflict : StatusCodes.Status400BadRequest, response);
+    }
+
+    [Authorize]
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> FormBuilderPublish([FromBody] FormBuilderPublishRequest request, CancellationToken cancellationToken)
+    {
+      var userId = GetCurrentUserId();
+      if (!userId.HasValue)
+        return Unauthorized(new { success = false, errorMessage = "Không xác định được người dùng đang đăng nhập." });
+      if (request.FormId <= 0 || request.VersionId <= 0)
+        return BadRequest(new { success = false, errorMessage = "Form ID và Version ID không hợp lệ." });
+
+      var result = await _formBuilder.PublishFormBuilderAsync(request, userId.Value, cancellationToken);
+      var response = new
+      {
+        success = result.Success,
+        errorMessage = result.ErrorMessage,
+        formId = result.FormId,
+        formCode = result.FormCode,
+        versionId = result.VersionId,
+        version = result.Version,
+        status = result.Status,
+        warnings = result.Warnings,
+        lastModificationTime = result.LastModificationTime
+      };
+
+      if (result.Success) return Json(response);
+      return StatusCode(result.IsConcurrencyConflict ? StatusCodes.Status409Conflict : StatusCodes.Status400BadRequest, response);
+    }
+
+    private int? GetCurrentUserId()
+    {
+      var raw = User.FindFirst("UserID")?.Value ?? User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+      return int.TryParse(raw, out var userId) ? userId : null;
+    }
+
+    private int? GetCurrentSiteId()
+    {
+      return int.TryParse(User.FindFirst("SiteId")?.Value, out var siteId) ? siteId : null;
     }
   }
 }

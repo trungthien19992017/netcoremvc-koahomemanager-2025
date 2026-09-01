@@ -136,6 +136,7 @@ namespace KOAHome
       services.AddScoped<IAttachmentService, AttachmentService>();
       services.AddScoped<IReportService, ReportService>();
       services.AddScoped<IFormService, FormService>();
+      services.AddScoped<IFormBuilderService, FormBuilderService>();
       services.AddScoped<IActionService, ActionService>();
       services.AddScoped<IConnectionService, ConnectionService>();
       services.AddScoped<IWidgetService, WidgetService>();
