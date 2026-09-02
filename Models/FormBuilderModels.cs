@@ -77,4 +77,15 @@ public static class FormBuilderPayloadValidator
 
     return null;
   }
+  public sealed class FormBuilderDeleteVersionRequest
+  {
+    [JsonPropertyName("formId")]
+    public int FormId { get; set; }
+
+    [JsonPropertyName("versionId")]
+    public int VersionId { get; set; }
+
+    [JsonPropertyName("expectedLastModificationTime")]
+    public DateTimeOffset? ExpectedLastModificationTime { get; set; }
+  }
 }

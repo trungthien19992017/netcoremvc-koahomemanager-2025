@@ -260,6 +260,7 @@ textarea.rt-control{min-height:86px;resize:vertical}.rt-control:focus{outline:2p
       <button class="btn icon" id="undoBtn" title="Hoàn tác">↶</button>
       <button class="btn" id="importBtn">↥ <span class="txt">Import</span></button>
       <button class="btn" id="previewBtn">◉ <span class="txt">Preview</span></button>
+      <button class="btn" id="deleteVersionBtn"><i class="fa fa-trash"></i> <span class="txt">Xóa version</span></button>
       <button class="btn" id="saveBtn"><i class="fa fa-save"></i> <span class="txt">Lưu nháp</span></button>
       <button class="btn publish" id="publishBtn"><i class="fa fa-check-circle"></i> <span class="txt">Publish</span></button>
       <button class="btn acid" id="exportBtn">Export JSON ↗</button>
@@ -316,7 +317,8 @@ textarea.rt-control{min-height:86px;resize:vertical}.rt-control:focus{outline:2p
     data: '@Url.Action("FormBuilderData", "NETForm")',
     catalog: '@Url.Action("FormBuilderCatalog", "NETForm")',
     save: '@Url.Action("FormBuilderSave", "NETForm")',
-    publish: '@Url.Action("FormBuilderPublish", "NETForm")'
+    publish: '@Url.Action("FormBuilderPublish", "NETForm")',
+    deleteVersion: '@Url.Action("FormBuilderDeleteVersion", "NETForm")'
   };
   const $ = s => document.querySelector(s), $$ = s => [...document.querySelectorAll(s)];
   const clone = x => JSON.parse(JSON.stringify(x));
@@ -433,7 +435,7 @@ textarea.rt-control{min-height:86px;resize:vertical}.rt-control:focus{outline:2p
     let items=types;if(query){items=window.Fuse?new Fuse(types,{keys:['label','desc','type'],threshold:.35}).search(query).map(r=>r.item):types.filter(t=>(t.label+t.desc+t.type).toLowerCase().includes(query.toLowerCase()));}
     let group='';$('#palette').innerHTML=items.map(t=>{const heading=group!==t.group?`<div class="group-title">${esc(t.group)}</div>`:'';group=t.group;return heading+`<button type="button" class="palette-item" data-add="${esc(t.fieldTypeCode)}" style="--c:${t.color}" title="${t.supported?'Thêm':'Viewer chưa hỗ trợ tạo mới'} ${esc(t.label)}" ${t.supported?'':'disabled'}><span class="pi">${icon('fa fa-'+t.icon)}</span><span><b>${esc(t.label)}</b><small>${esc(t.fieldTypeCode)} · ${esc(t.desc)}</small></span><span class="plus">${t.supported?'+':'·'}</span></button>`;}).join('');$('#paletteCount').textContent=items.length;
   }
-  function labelHTML(f,preview){return f.showLabel===false?'':`<label class="rt-label" ${preview?`for="rt-${esc(f.id)}"`:''}>${icon(f.iconClass,f.iconStyle)}<span style="${styleAttr(f.labelStyle)}">${esc(f.label)}</span>${f.required?'<span class="req">*</span>':''}</label>`;}
+  function labelHTML(f,preview){return f.showLabel===false?'':`<label class="rt-label" ${preview?`for="rt-${esc(f.id)}"`:''}>${icon(f.rawOptions.iconClass,f.iconStyle)}<span style="${styleAttr(f.labelStyle)}">${esc(f.label)}</span>${f.required?'<span class="req">*</span>':''}</label>`;}
   function youtubeURL(value){try{const u=new URL(value);let code='';if(['youtu.be','www.youtu.be'].includes(u.hostname))code=u.pathname.slice(1);else if(['youtube.com','www.youtube.com','m.youtube.com','www.youtube-nocookie.com'].includes(u.hostname))code=u.searchParams.get('v')||u.pathname.split('/').filter(Boolean).pop();return /^[a-zA-Z0-9_-]{11}$/.test(code)?'https://www.youtube-nocookie.com/embed/'+code:'';}catch{return '';}}
   function leafHTML(f,preview){
     const value=f.value??'', options=f.options||[];
@@ -458,7 +460,7 @@ textarea.rt-control{min-height:86px;resize:vertical}.rt-control:focus{outline:2p
     cols=cols||rootColumns();
     const fields=children(parentId).filter(f=>!preview||f.visible!==false);
     return `<div class="layout-grid" style="--cols:${cols}" ${preview?'':`data-grid-parent="${esc(parentId||'')}"`}>${fields.map(f=>{
-      const isGroup=f.type==='group',content=isGroup?`<section class="group-inner" style="${styleAttr(f.inputStyle)}">${f.showLabel===false?'':`<h3 class="group-heading">${icon(f.iconClass,f.iconStyle)}<span style="${styleAttr(f.labelStyle)}">${esc(f.label)}</span></h3>`}${renderGrid(f.id,f.colCount,preview)}${preview?'':`<button type="button" class="group-add" data-target-group="${esc(f.id)}">＋ Thêm trường vào nhóm này</button>`}</section>`:leafHTML(f,preview);
+      const isGroup=f.type==='group',content=isGroup?`<section class="group-inner" style="${styleAttr(f.inputStyle)}">${f.showLabel===false?'':`<h3 class="group-heading">${icon(f.rawOptions.iconClass,f.iconStyle)}<span style="${styleAttr(f.labelStyle)}">${esc(f.label)}</span></h3>`}${renderGrid(f.id,f.colCount,preview)}${preview?'':`<button type="button" class="group-add" data-target-group="${esc(f.id)}">＋ Thêm trường vào nhóm này</button>`}</section>`:leafHTML(f,preview);
       return `<div class="layout-item ${preview?'':`field-card ${isGroup?'group-card':''} ${sameId(f.id,selectedFieldId)?'selected':''} ${f.visible===false?'hidden-field':''}`}" style="--span:${f.colSpan}" data-field-id="${esc(f.id)}">${preview?'':`<span class="drag" title="Kéo đổi thứ tự trong cùng nhóm">⠿</span><span class="field-meta">${f.visible===false?'ẨN · ':''}${f.colSpan}/${cols} col${isGroup?' · nhóm '+f.colCount+' col':''}</span>`}<div class="${isGroup?'':'runtime-leaf'}">${content}</div>${preview?'':`<div class="field-actions"><button type="button" class="mini" data-move="${esc(f.id)}:up" title="Đưa lên trước" aria-label="Đưa ${esc(f.label)} lên">↑</button><button type="button" class="mini" data-move="${esc(f.id)}:down" title="Đưa xuống sau" aria-label="Đưa ${esc(f.label)} xuống">↓</button><button type="button" class="mini" data-dup="${esc(f.id)}" title="Nhân bản" aria-label="Nhân bản ${esc(f.label)}">⧉</button><button type="button" class="mini" data-del="${esc(f.id)}" title="Xóa" aria-label="Xóa ${esc(f.label)}">×</button></div>`}</div>`;
     }).join('')}${!fields.length&&!preview?'<div class="group-empty">Chọn trường từ thư viện để thêm vào đây.</div>':''}</div>`;
   }
@@ -487,7 +489,7 @@ textarea.rt-control{min-height:86px;resize:vertical}.rt-control:focus{outline:2p
     const count=parentColumns(f),isGroup=f.type==='group';
     let html=section('Trường đang chọn',esc(f.fieldTypeCode),control('Tên / label','field','label',f.label)+control('Title','field','title',f.title||'')+control('Code JSON (duy nhất)','field','key',f.key)+select('Loại trường','field','fieldTypeCode',f.fieldTypeCode,types.filter(t=>t.supported||t.fieldTypeCode===f.fieldTypeCode).map(t=>({value:t.fieldTypeCode,label:t.label+' · '+t.fieldTypeCode}))))+
       section('Bố cục',`${f.colSpan}/${count} cột`,select('Thuộc group','field','parentId',f.parentId,parents)+control('colSpan · số cột chiếm trong hàng','field','colSpan',f.colSpan,'number',`min="1" max="${count}" step="1"`)+`<div class="span-picker">${[...new Set([1,Math.max(1,Math.floor(count/3)),Math.max(1,Math.floor(count/2)),count])].map(n=>`<button type="button" data-span="${n}" class="${n===f.colSpan?'active':''}">${n}/${count}</button>`).join('')}</div>`+(isGroup?select('colCount · số cột bên trong group','field','colCount',f.colCount,groupCounts)+`<p class="help">Trường con dùng colSpan từ 1 đến ${f.colCount}. Giảm colCount sẽ tự thu các trường con quá rộng về giới hạn mới.</p>`:'')+`<p class="help">Xếp theo thứ tự. Tổng colSpan vượt <strong>${count}</strong> thì bắt đầu hàng mới; không lấp ngược ô trống.</p>`)+
-      section('Icon & tiêu đề','Font Awesome 4',control('Icon class','field','iconClass',f.iconClass||'','text','placeholder="fa fa-user"')+`<div class="icon-picker">${['user','music','headphones','envelope','calendar','phone','star','folder-open','play-circle','plus-circle','info-circle','heart'].map(name=>`<button type="button" data-icon="fa fa-${name}" title="fa fa-${name}" aria-label="Icon ${name}">${icon('fa fa-'+name)}</button>`).join('')}<button type="button" data-icon="" title="Bỏ icon">×</button></div>`+area('iconStyle · CSS của icon','field','iconStyle',f.iconStyle,'placeholder="color: #6f5cf6; font-size: 18px;"')+area('labelStyle · CSS của title','field','labelStyle',f.labelStyle,'placeholder="color: #243b77; font-size: 14px; font-weight: 700;"')+toggle('Hiện tiêu đề', 'showLabel', f.showLabel!==false))+
+      section('Icon & tiêu đề','Font Awesome 4',control('Icon class','field','iconClass',f.rawOptions.iconClass||'','text','placeholder="fa fa-user"')+`<div class="icon-picker">${['user','music','headphones','envelope','calendar','phone','star','folder-open','play-circle','plus-circle','info-circle','heart'].map(name=>`<button type="button" data-icon="fa fa-${name}" title="fa fa-${name}" aria-label="Icon ${name}">${icon('fa fa-'+name)}</button>`).join('')}<button type="button" data-icon="" title="Bỏ icon">×</button></div>`+area('iconStyle · CSS của icon','field','iconStyle',f.iconStyle,'placeholder="color: #6f5cf6; font-size: 18px;"')+area('labelStyle · CSS của title','field','labelStyle',f.labelStyle,'placeholder="color: #243b77; font-size: 14px; font-weight: 700;"')+toggle('Hiện tiêu đề', 'showLabel', f.showLabel!==false))+
       section('Giao diện trường',isGroup?'vỏ group':'editor / nội dung',area('inputStyle · CSS của '+(isGroup?'group':'trường'),'field','inputStyle',f.inputStyle,'placeholder="background: #f1f8ff; border: 1px solid #b9cfff; border-radius: 10px; padding: 12px;"')+`<p class="help">CSS trình bày được áp dụng trên canvas và Preview. Không nhận script, url(), CSS định vị hoặc CSS toàn trang.</p>`+toggle('Hiển thị trường','visible',f.visible!==false));
     if(f.type==='html')html+=section('Nội dung HTML','Label / HTML',area('HTML hiển thị','field','content',f.content,'placeholder="<h2>Tiêu đề</h2><p>Nội dung...</p>"')+'<p class="help">Hỗ trợ tiêu đề, đoạn văn, danh sách, bảng, liên kết và ảnh. Script, iframe và sự kiện HTML được loại bỏ; dùng trường Video để nhúng video.</p>');
     if(['image','video'].includes(f.type))html+=section('Nguồn nội dung',f.type==='image'?'Ảnh':'Video',control(f.type==='image'?'URL hình ảnh':'URL MP4 / WebM / YouTube','field','src',f.src||'','text','placeholder="https://..."')+(f.type==='image'?control('Mô tả ảnh (alt)','field','alt',f.alt||'')+`<div class="control"><label for="imageUpload">Hoặc chọn ảnh (tối đa 2 MB, lưu trong JSON)</label><input id="imageUpload" type="file" accept="image/png,image/jpeg,image/webp,image/gif" data-image-upload></div>`:control('URL ảnh poster (tùy chọn)','field','poster',f.poster||'')+'<p class="help">Video phát trong Preview. URL tương đối được tính từ vị trí file HTML. YouTube chỉ tải khi bấm phát.</p>'));
@@ -625,6 +627,16 @@ textarea.rt-control{min-height:86px;resize:vertical}.rt-control:focus{outline:2p
     catch(error){setSync(error.status===409?'XUNG ĐỘT':'LỖI PUBLISH');toast(error.message);}
     finally{saving=false;setSync(dirty?'CHƯA LƯU':'ĐÃ ĐỒNG BỘ');}
   }
+  
+  async function deleteVersion(){
+    if(saving)return null;if(activeVersion().status==='published'){toast('Version đã publish. Vui lòng chỉ xóa bản nháp.');tab='versions';renderInspector();return null;}
+    saving=true;setSync('ĐANG LƯU');
+    try{
+      const result=await requestJSON(API.deleteVersion,{method:'POST',body:JSON.stringify({formId:Number(state.form.id),versionId:activeVersion().id,expectedLastModificationTime:activeVersion().lastModificationTime||null})});
+      localStorage.removeItem(STORAGE_KEY);dirty=false;await loadServer(false,result.versionId);toast(`Đã xóa version ${result.version}.`);return result;
+    }catch(error){setSync(error.status===409?'XUNG ĐỘT':'LỖI LƯU');toast(error.status===409?'Cấu hình đã đổi trên server. Hãy Export bản đang làm rồi tải lại.':error.message);return null;}
+    finally{saving=false;setSync(dirty?'CHƯA LƯU':'ĐÃ ĐỒNG BỘ');}
+  }
 
   let signatures=new Map();
   function initSignatures(){signatures=new Map();$$('#previewBody canvas[data-signature]').forEach(canvas=>{const f=activeVersion().fields.find(x=>x.id===canvas.dataset.signature),scale=devicePixelRatio||1;canvas.width=Math.max(1,canvas.clientWidth)*scale;canvas.height=130*scale;const ctx=canvas.getContext('2d');ctx.scale(scale,scale);ctx.lineWidth=2;ctx.lineCap='round';ctx.strokeStyle='#303654';let down=false;
@@ -700,7 +712,7 @@ textarea.rt-control{min-height:86px;resize:vertical}.rt-control:focus{outline:2p
   $('#fieldSearch').addEventListener('input',e=>renderPalette(e.target.value));
   $('#versionSelect').addEventListener('change',e=>switchVersion(e.target.value));
   $('#undoBtn').onclick=()=>{if(!history.length)return toast('Không còn lịch sử');state=normalize(JSON.parse(history.pop()));selectedFieldId=activeVersion().fields[0]?.id||null;commit('Đã hoàn tác');};
-  $('#exportBtn').onclick=exportJSON;$('#previewBtn').onclick=openPreview;$('#importBtn').onclick=()=>$('#fileInput').click();$('#saveBtn').onclick=saveDraft;$('#publishBtn').onclick=publishVersion;
+  $('#exportBtn').onclick=exportJSON;$('#previewBtn').onclick=openPreview;$('#importBtn').onclick=()=>$('#fileInput').click();$('#saveBtn').onclick=saveDraft;$('#publishBtn').onclick=publishVersion;$('#deleteVersionBtn').onclick=deleteVersion;
   $('#fileInput').onchange=e=>{const file=e.target.files[0];if(!file)return;if(file.size>12*1024*1024){toast('JSON tối đa 12 MB.');e.target.value='';return;}const reader=new FileReader();reader.onload=()=>{try{applyJSON(reader.result);}catch(err){toast('Không nhập được: '+err.message);}$('#fileInput').value='';};reader.onerror=()=>toast('Không đọc được file.');reader.readAsText(file);};
   $('#previewModal').addEventListener('click',e=>{if(e.target===$('#previewModal'))closePreview();});
   $$('.mobile-nav button').forEach(btn=>btn.addEventListener('click',()=>{if(btn.dataset.mobile==='json'){tab='json';renderInspector();}openMobilePanel(btn.dataset.mobile);}));

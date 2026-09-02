@@ -3,6 +3,7 @@ using Npgsql;
 using NpgsqlTypes;
 using System.Globalization;
 using System.Text.Json;
+using static KOAHome.Models.FormBuilderPayloadValidator;
 
 namespace KOAHome.Services;
 
@@ -12,6 +13,7 @@ public interface IFormBuilderService
   Task<FormBuilderStoreResult> GetFormBuilderCatalogAsync(int? siteId, int? userId, CancellationToken cancellationToken = default);
   Task<FormBuilderStoreResult> SaveFormBuilderAsync(JsonElement payload, int userId, CancellationToken cancellationToken = default);
   Task<FormBuilderStoreResult> PublishFormBuilderAsync(FormBuilderPublishRequest request, int userId, CancellationToken cancellationToken = default);
+  Task<FormBuilderStoreResult> DeleteVersionFormBuilderAsync(FormBuilderDeleteVersionRequest request, int userId, CancellationToken cancellationToken = default);
 }
 
 public sealed class FormBuilderService : IFormBuilderService
@@ -80,6 +82,26 @@ public sealed class FormBuilderService : IFormBuilderService
     };
     return ExecuteAsync(
       "CALL dbo.net_form_builder_publish(_formid => @formid, _versionid => @versionid, " +
+      "_expectedlastmodificationtime => @expectedlastmodificationtime, _userid => @userid);",
+      parameters,
+      cancellationToken);
+  }
+
+  public Task<FormBuilderStoreResult> DeleteVersionFormBuilderAsync(FormBuilderDeleteVersionRequest request, int userId, CancellationToken cancellationToken = default)
+  {
+    var expected = new NpgsqlParameter("expectedlastmodificationtime", NpgsqlDbType.TimestampTz)
+    {
+      Value = request.ExpectedLastModificationTime?.UtcDateTime ?? (object)DBNull.Value
+    };
+    var parameters = new[]
+    {
+      Integer("formid", request.FormId),
+      Integer("versionid", request.VersionId),
+      expected,
+      Integer("userid", userId)
+    };
+    return ExecuteAsync(
+      "CALL dbo.net_form_builder_version_delete(_formid => @formid, _versionid => @versionid, " +
       "_expectedlastmodificationtime => @expectedlastmodificationtime, _userid => @userid);",
       parameters,
       cancellationToken);

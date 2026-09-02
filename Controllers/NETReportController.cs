@@ -887,5 +887,21 @@ namespace KOAHome.Controllers
       }
 
     }
+
+    [Authorize]
+    [HttpGet]
+    [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]
+    public IActionResult ReportBuilder(string ReportCode = "F0_HS_Booking1", bool CreateNew = false)
+    {
+      if (string.IsNullOrWhiteSpace(ReportCode))
+      {
+        ViewData["ErrorMessage"] = "Không tồn tại mã báo cáo";
+        return View();
+      }
+
+      ViewData["ReportCode"] = ReportCode.Trim();
+      ViewData["CreateNew"] = CreateNew;
+      return View();
+    }
   }
 }

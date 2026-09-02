@@ -16,6 +16,7 @@ using System.Text;
 using System.Text.Json;
 using System.Text.Json.Nodes;
 using System.Text.RegularExpressions;
+using static KOAHome.Models.FormBuilderPayloadValidator;
 
 namespace KOAHome.Controllers
 {
@@ -928,6 +929,7 @@ namespace KOAHome.Controllers
         return Json(new { success = false, errorMessage = ex.Message });
       }
     }
+
     [Authorize]
     [HttpGet]
     [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]
@@ -1031,6 +1033,36 @@ namespace KOAHome.Controllers
         return BadRequest(new { success = false, errorMessage = "Form ID và Version ID không hợp lệ." });
 
       var result = await _formBuilder.PublishFormBuilderAsync(request, userId.Value, cancellationToken);
+      var response = new
+      {
+        success = result.Success,
+        errorMessage = result.ErrorMessage,
+        formId = result.FormId,
+        formCode = result.FormCode,
+        versionId = result.VersionId,
+        version = result.Version,
+        status = result.Status,
+        warnings = result.Warnings,
+        lastModificationTime = result.LastModificationTime
+      };
+
+      if (result.Success) return Json(response);
+      return StatusCode(result.IsConcurrencyConflict ? StatusCodes.Status409Conflict : StatusCodes.Status400BadRequest, response);
+    }
+
+    [Authorize]
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    [RequestSizeLimit(FormBuilderPayloadValidator.MaxPayloadBytes + 65536)]
+    public async Task<IActionResult> FormBuilderDeleteVersion([FromBody] FormBuilderDeleteVersionRequest request, CancellationToken cancellationToken)
+    {
+      var userId = GetCurrentUserId();
+      if (!userId.HasValue)
+        return Unauthorized(new { success = false, errorMessage = "Không xác định được người dùng đang đăng nhập." });
+      if (request.FormId <= 0 || request.VersionId <= 0)
+        return BadRequest(new { success = false, errorMessage = "Form ID và Version ID không hợp lệ." });
+
+      var result = await _formBuilder.DeleteVersionFormBuilderAsync(request, userId.Value, cancellationToken);
       var response = new
       {
         success = result.Success,
