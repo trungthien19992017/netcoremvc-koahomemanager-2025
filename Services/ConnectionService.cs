@@ -472,6 +472,10 @@ namespace KOAHome.Services
         connectionString = _configuration.GetConnectionString("DefaultConnection");
       }
 
+      // Log query một lần khi gọi store
+      string singleLineQuery = sqlQuery.ToString().Replace(Environment.NewLine, " ").Replace("\n", " ");
+      _logger.LogInformation($"Query mới: '{singleLineQuery}'");
+
       var resultList = new List<dynamic>();
       using (var connection = new NpgsqlConnection(connectionString))
       {
