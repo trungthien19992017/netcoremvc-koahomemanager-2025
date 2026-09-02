@@ -35,6 +35,7 @@ namespace KOAHome.Services
     // dung de tính số cấp cha con của cột hiển thị
     public int Display_GetReportMaxParentLevel(List<dynamic> displayList);
     public Task<IDictionary<string, object>?> NET_Report_GetValidation(string reportCode);
+    public Task<IDictionary<string, object>?> NET_ReportBuilder_Save(string reportCode, string configJson, long? userId);
     public Task<string> BuildHtmlTableRows(
         List<dynamic> resultList,
         List<dynamic> displayList,
@@ -484,6 +485,21 @@ namespace KOAHome.Services
       var result = await _con.Connection_GetSingleDataFromQuery(parameters, sqlStore, connectionString, sqlQuery, sqlParams);
 
       return result;
+    }
+
+    public async Task<IDictionary<string, object>?> NET_ReportBuilder_Save(string reportCode, string configJson, long? userId)
+    {
+      string connectionString = _configuration.GetConnectionString("ConfigConnection");
+      string sqlStore = "usp_NETReportBuilder_SaveConfiguration";
+      var parameters = new Dictionary<string, object>
+      {
+        ["reportcode"] = reportCode,
+        ["configjson"] = configJson,
+        ["userid"] = userId ?? (object)DBNull.Value
+      };
+
+      var (sqlQuery, sqlParams) = await _con.Connection_GetQueryParam(parameters, sqlStore, connectionString);
+      return await _con.Connection_GetSingleDataFromQuery(parameters, sqlStore, connectionString, sqlQuery, sqlParams);
     }
     public async Task<string> BuildHtmlTableRows
       (

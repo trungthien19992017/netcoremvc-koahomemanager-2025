@@ -11,6 +11,8 @@ using Microsoft.AspNetCore.WebUtilities;
 using Microsoft.Data.SqlClient;
 using Npgsql;
 using System.Diagnostics;
+using System.Security.Claims;
+using System.Text.Json;
 using static NuGet.Packaging.PackagingConstants;
 
 namespace KOAHome.Controllers
@@ -891,7 +893,7 @@ namespace KOAHome.Controllers
     [Authorize]
     [HttpGet]
     [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]
-    public IActionResult ReportBuilder(string ReportCode = "F0_HS_Booking1", bool CreateNew = false)
+    public async Task<IActionResult> ReportBuilder(string ReportCode = "F0_HS_Booking1", bool CreateNew = false)
     {
       if (string.IsNullOrWhiteSpace(ReportCode))
       {
@@ -901,7 +903,210 @@ namespace KOAHome.Controllers
 
       ViewData["ReportCode"] = ReportCode.Trim();
       ViewData["CreateNew"] = CreateNew;
+
+      if (!CreateNew)
+      {
+        var report = await _report.NET_Report_Get(ReportCode.Trim());
+        if (report == null)
+        {
+          ViewData["ErrorMessage"] = "Không tìm thấy báo cáo " + ReportCode.Trim();
+          return View();
+        }
+
+        var reportValues = (IDictionary<string, object>)report;
+        object GetValue(string key) => reportValues.TryGetValue(key, out var value) ? value : null;
+        bool GetBool(string key, bool defaultValue = false) => GetValue(key) == null ? defaultValue : Convert.ToBoolean(GetValue(key));
+        string GetText(string key, string defaultValue = "") => Convert.ToString(GetValue(key)) ?? defaultValue;
+
+        var filterTask = _report.NET_Filter_WithReport_Get(ReportCode.Trim(), null);
+        var displayTask = _report.NET_Display_WithReport_Get(new Dictionary<string, object>(), ReportCode.Trim(), null);
+        var actionTask = _action.NET_ActionListDetail_WithObject_Get(ReportCode.Trim(), null, "REPORT");
+        await Task.WhenAll(filterTask, displayTask, actionTask);
+
+        var displays = await displayTask;
+        var filters = await filterTask;
+        var actions = await actionTask;
+        var groups = displays.Where(item => Convert.ToBoolean(((IDictionary<string, object>)item).TryGetValue("isparent", out var value) && value != null ? value : false))
+          .Select(item =>
+          {
+            var row = (IDictionary<string, object>)item;
+            string Text(string key) => row.TryGetValue(key, out var value) ? Convert.ToString(value) ?? "" : "";
+            return new { id = Text("code").ToLowerInvariant(), title = Text("name"), cssheader = Text("cssheader"), databaseId = row.TryGetValue("id", out var id) ? id : null };
+          }).ToList();
+
+        string Renderer(string type)
+        {
+          type = (type ?? "").ToLowerInvariant();
+          return type switch
+          {
+            "float" or "int" or "long" => "number",
+            "date" => "date",
+            "datetime" => "datetime",
+            "icons" => "icons",
+            "file" => "link",
+            "combobox" => "badge",
+            "textarea" => "text",
+            _ => type == "link" ? "html" : "text"
+          };
+        }
+
+        string DataType(string type)
+        {
+          type = (type ?? "").ToLowerInvariant();
+          return type switch
+          {
+            "float" or "int" or "long" => "number",
+            "date" => "date",
+            "datetime" => "datetime",
+            "combobox" => "select",
+            _ => "text"
+          };
+        }
+
+        var columns = displays.Where(item =>
+        {
+          var row = (IDictionary<string, object>)item;
+          return !(row.TryGetValue("isparent", out var value) && value != null && Convert.ToBoolean(value));
+        }).Select(item =>
+        {
+          var row = (IDictionary<string, object>)item;
+          object Value(string key) => row.TryGetValue(key, out var value) ? value : null;
+          string Text(string key) => Convert.ToString(Value(key)) ?? "";
+          bool Bool(string key, bool fallback = false) => Value(key) == null ? fallback : Convert.ToBoolean(Value(key));
+          int width = int.TryParse(Text("width"), out var parsedWidth) ? Math.Clamp(parsedWidth, 60, 800) : 150;
+          string sourceType = Text("type");
+          string align = Text("textalign").ToLowerInvariant();
+          if (align != "center" && align != "right") align = "left";
+          return new
+          {
+            id = "display_" + Convert.ToString(Value("id")), databaseId = Value("id"), key = Text("code").ToLowerInvariant(), title = Text("name"),
+            type = DataType(sourceType), renderer = Renderer(sourceType), sourceType, format = Text("format"), width, align,
+            @fixed = Bool("isfreepane") ? "left" : "", visible = Bool("isdisplay", true), sortable = Bool("issort", true),
+            filterable = true, isexport = Bool("isexport", true), groupId = Text("parentcode").ToLowerInvariant(), mobileRole = Bool("isdisplay", true) ? "summary" : "hidden",
+            cssheader = Text("cssheader"), csscell = "", iconClass = "", template = "", serviceId = Value("serviceid"),
+            aggregate = Bool("issum") ? "sum" : "", isreadonly = Bool("isreadonly"), colnum = Value("colnum")
+          };
+        }).ToList();
+
+        string FilterComponent(string dynamicFieldName)
+        {
+          dynamicFieldName = (dynamicFieldName ?? "").ToUpperInvariant();
+          if (dynamicFieldName.Contains("DATE") && dynamicFieldName.Contains("RANGE")) return "dateRange";
+          if (dynamicFieldName.Contains("DATE")) return "date";
+          if (dynamicFieldName.Contains("TREEVIEW") || dynamicFieldName.Contains("MULTIPLE")) return "multiSelect";
+          if (dynamicFieldName.Contains("SELECT") || dynamicFieldName.Contains("DROP")) return "select";
+          return "text";
+        }
+
+        var filterConfig = filters.Select(item =>
+        {
+          var row = (IDictionary<string, object>)item;
+          object Value(string key) => row.TryGetValue(key, out var value) ? value : null;
+          string Text(string key) => Convert.ToString(Value(key)) ?? "";
+          bool Bool(string key, bool fallback = false) => Value(key) == null ? fallback : Convert.ToBoolean(Value(key));
+          string component = FilterComponent(Text("dynamicfieldname"));
+          return new
+          {
+            id = "filter_" + Convert.ToString(Value("id")), databaseId = Value("id"), field = Text("code").ToLowerInvariant(), label = Text("name"), component,
+            @operator = component == "dateRange" ? "between" : component == "multiSelect" ? "in" : component == "text" ? "contains" : "equals",
+            colSpan = Math.Clamp(Value("colspan") == null ? 4 : Convert.ToInt32(Value("colspan")), 1, 12), options = Array.Empty<object>(),
+            dynamicFieldId = Value("dynamicfieldid"), serviceId = Value("seviceid"), required = Bool("required"), enabled = Bool("isactive", true), orderId = Value("orderid")
+          };
+        }).ToList();
+
+        var actionConfig = actions.Select(item =>
+        {
+          var row = (IDictionary<string, object>)item;
+          object Value(string key) => row.TryGetValue(key, out var value) ? value : null;
+          string Text(string key) => Convert.ToString(Value(key)) ?? "";
+          bool Bool(string key, bool fallback = false) => Value(key) == null ? fallback : Convert.ToBoolean(Value(key));
+          string css = Text("cssbutton");
+          string background = "#7759ed";
+          string color = "#ffffff";
+          try
+          {
+            if (!string.IsNullOrWhiteSpace(css))
+            {
+              using var cssJson = JsonDocument.Parse(css);
+              if (cssJson.RootElement.TryGetProperty("background", out var bg) && !string.IsNullOrWhiteSpace(bg.GetString())) background = bg.GetString();
+              if (cssJson.RootElement.TryGetProperty("color", out var fg) && !string.IsNullOrWhiteSpace(fg.GetString())) color = fg.GetString();
+            }
+          }
+          catch (JsonException) { }
+          return new
+          {
+            id = "actiondetail_" + Convert.ToString(Value("actionlistdetailid")), detailId = Value("actionlistdetailid"), actionId = Value("actionid"),
+            name = Text("actionname"), code = Text("actioncode"), scope = Bool("istop") ? "top" : "row", type = Text("type").ToUpperInvariant(),
+            icon = Text("actionicon"), iconStyle = "", background, color, value = Text("value"), enabled = Bool("isactive", true),
+            requiresSelection = Bool("ischoosedata"), confirm = Bool("ispopupconfirm"), orderId = Value("actionlistdetailorderid"), dataSourceId = Value("datasourceid")
+          };
+        }).ToList();
+
+        var previewRows = new List<dynamic>();
+        try
+        {
+          string connectionString = GetValue("datasourceid") == null
+            ? null
+            : await _datasrc.GetConnectionString(Convert.ToInt32(GetValue("datasourceid")));
+          var previewParameters = new Dictionary<string, object>();
+          string defaultStore = GetText("sqldefaultcontent");
+          if (!string.IsNullOrWhiteSpace(defaultStore))
+          {
+            var defaultValues = await _report.NET_Report_GetDefaultFilter(null, defaultStore, connectionString);
+            if (defaultValues != null) previewParameters = new Dictionary<string, object>(defaultValues);
+          }
+          string dataStore = GetText("sqlcontent");
+          if (!string.IsNullOrWhiteSpace(dataStore))
+          {
+            previewRows = (await _report.Report_search(previewParameters, dataStore, connectionString)).Take(100).ToList();
+          }
+        }
+        catch (Exception ex) when (ex is SqlException || ex is PostgresException || ex is InvalidOperationException)
+        {
+          _logger.LogWarning(ex, "Không tải được dữ liệu preview cho report {ReportCode}", ReportCode);
+          ViewData["ReportBuilderWarning"] = "Đã tải cấu hình nhưng chưa tải được dữ liệu preview.";
+        }
+
+        var initialConfig = new
+        {
+          version = "3.0.0",
+          databaseVersion = GetValue("lastmodificationtime"),
+          table = new
+          {
+            id = GetText("code"), title = GetText("name", "Danh sách"), subtitle = "Cấu hình từ TTT_Config", rowKey = "id",
+            pagination = GetBool("pagination", true), pageSize = 20, striped = true, rowSelection = !string.Equals(GetText("selectiontype"), "none", StringComparison.OrdinalIgnoreCase),
+            rowDetails = true, showRowActions = true, showSummary = true, datasourceId = GetValue("datasourceid"), sqlContent = GetText("sqlcontent"),
+            sqlDefaultContent = GetText("sqldefaultcontent"), sqlEditContent = GetText("sqleditcontent"), showToolbar = GetBool("showtoolbar", true),
+            showSearchBar = GetBool("issearchbar", true), exportExcel = GetBool("isexportexcel", true), createNew = false
+          },
+          display = new { theme = "light-dashboard", density = "comfortable", accent = "#8355f4", showHeader = true, showFilterBar = !GetBool("disablesearch"), allowColumnToggle = true, responsive = true, mobileMode = "cards", filterOpen = false, titleStyle = "", headerStyle = "", description = GetText("description"), mobileActionLabels = true },
+          groups, columns, filters = filterConfig, actions = actionConfig, rowRules = Array.Empty<object>(), data = new { mode = "database", rows = previewRows }
+        };
+        ViewData["ReportBuilderInitialConfig"] = JsonSerializer.Serialize(initialConfig);
+      }
       return View();
+    }
+
+    [Authorize]
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> ReportBuilderSave(string ReportCode, [FromBody] JsonElement config)
+    {
+      if (string.IsNullOrWhiteSpace(ReportCode) || config.ValueKind != JsonValueKind.Object)
+      {
+        return BadRequest(new { success = false, errorMessage = "Cấu hình hoặc mã báo cáo không hợp lệ." });
+      }
+
+      long? userId = long.TryParse(User.FindFirstValue(ClaimTypes.NameIdentifier), out var parsedUserId) ? parsedUserId : null;
+      var result = await _report.NET_ReportBuilder_Save(ReportCode.Trim(), config.GetRawText(), userId);
+      if (result == null)
+      {
+        return StatusCode(500, new { success = false, errorMessage = "Store lưu cấu hình không trả kết quả." });
+      }
+
+      bool success = result.TryGetValue("success", out var successValue) && Convert.ToBoolean(successValue);
+      string errorMessage = result.TryGetValue("errormessage", out var errorValue) ? Convert.ToString(errorValue) : null;
+      return Json(new { success, errorMessage, result });
     }
   }
 }
