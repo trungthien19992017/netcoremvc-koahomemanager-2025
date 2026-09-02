@@ -384,7 +384,7 @@ body{overflow:hidden}.app{height:100dvh;min-height:0;overflow:hidden;padding:0}.
   const clone=x=>JSON.parse(JSON.stringify(x));
   const esc=x=>String(x??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
   const uid=p=>p+'_'+(crypto.randomUUID?crypto.randomUUID().replace(/-/g,'').slice(0,12):Date.now().toString(36)+Math.random().toString(36).slice(2,9));
-  const column=(id,key,title,renderer='text',extras={})=>({id,key,title,type:'text',renderer,width:150,align:'left',fixed:'',visible:true,sortable:true,filterable:true,isexport:true,groupId:'',mobileRole:'summary',cssheader:'',csscell:'',iconClass:'',template:'',...extras});
+  const column=(id,key,title,renderer='text',extras={})=>({id,key,title,colnum:0,type:'text',renderer,width:150,align:'left',fixed:'',visible:true,sortable:true,filterable:true,isexport:true,groupId:'',mobileRole:'summary',cssheader:'',csscell:'',iconClass:'',template:'',...extras});
   const RENDERERS=['text','title','badge','number','currency','progress','date','datetime','boolean','link','icons','html'];
   const TYPES=['text','number','date','datetime','select','boolean'];
   const FILTERS=['text','number','date','dateRange','select','multiSelect','boolean'];
@@ -561,7 +561,25 @@ body{overflow:hidden}.app{height:100dvh;min-height:0;overflow:hidden;padding:0}.
     $('#reportDescription').innerHTML=html(config.display.description);renderFilters();renderTable();
   }
   function renderColumns(){const q=$('#columnSearch').value.trim().toLowerCase();$('#columnList').innerHTML=config.columns.filter(c=>(c.title+' '+c.key+' '+c.renderer).toLowerCase().includes(q)).map(c=>`<div class="column-item ${c.id===selectedColumnId?'active':''} ${c.visible?'':'hidden'}" data-column="${c.id}" role="button" tabindex="0" aria-label="Cấu hình cột ${esc(c.title)}"><span class="drag" aria-hidden="true">⠿</span><div class="column-copy"><strong>${icon(c.iconClass)} ${esc(c.title)}</strong><small>${esc(c.key)}</small><div class="column-meta">${c.fixed?'Ghim '+c.fixed+' · ':''}${c.mobileRole==='primary'?'Mobile: chính':c.mobileRole==='detail'?'Mobile: chi tiết':c.mobileRole==='hidden'?'Ẩn trên mobile':'Mobile: tóm tắt'}</div></div><span class="type">${esc(c.renderer)}</span></div>`).join('')||'<div class="empty">Không tìm thấy cột.</div>';
-    if(columnSortable){columnSortable.destroy();columnSortable=null;}if(window.Sortable&&!q)columnSortable=Sortable.create($('#columnList'),{handle:'.drag',animation:160,forceFallback:true,fallbackTolerance:4,ghostClass:'sortable-ghost',onEnd:e=>{if(e.oldIndex===e.newIndex)return;mutate(()=>config.columns.splice(e.newIndex,0,config.columns.splice(e.oldIndex,1)[0]),'Đã đổi thứ tự cột');}});
+            if(columnSortable){columnSortable.destroy();columnSortable=null;}if(window.Sortable&&!q)columnSortable=Sortable.create($('#columnList'),{handle:'.drag',animation:160,forceFallback:true,fallbackTolerance:4,ghostClass:'sortable-ghost',
+            onEnd:e=>{
+            if(e.oldIndex===e.newIndex)return;
+
+            mutate(()=>{
+                config.columns.splice(
+                    e.newIndex,
+                    0,
+                    config.columns.splice(e.oldIndex,1)[0]
+                );
+
+                syncColumnNumbers();
+            }, 'Đã đổi thứ tự cột');
+        }});
+  }
+  function syncColumnNumbers() {
+      config.columns.forEach((c, index) => {
+          c.colnum = index + 1;
+      });
   }
   function render(){renderColumns();renderInspector();renderPreview();$('#metricColumns').textContent=config.columns.length;$('#metricVisible').textContent=config.columns.filter(c=>c.visible).length;$('#metricFilters').textContent=config.filters.length;$('#metricRows').textContent=config.data.rows.length;$$('[data-center-tab]').forEach(b=>b.classList.toggle('active',b.dataset.centerTab===centerTab));$('#previewView').hidden=centerTab!=='preview';$('#jsonView').style.display=centerTab==='json'?'block':'none';if(centerTab==='json')renderJSON();$$('[data-device]').forEach(b=>b.classList.toggle('active',b.dataset.device===device));}
 
@@ -651,9 +669,63 @@ body{overflow:hidden}.app{height:100dvh;min-height:0;overflow:hidden;padding:0}.
     if(t.closest('[data-close-filters]')){filtersOpen=false;$('#advancedFilters').open=false;return;}
     if(t.closest('[data-clear-selection]')){selection.clear();renderTable();return;}
     const exp=t.closest('[data-export-data]');if(exp)return exportData(exp.dataset.exportData);
-    if(t.closest('[data-add-column]')){mutate(()=>{const id=uid('col');config.columns.push(column(id,freshKey(),'Cột mới'));selectedColumnId=id;inspectorTab='column';},'Đã thêm cột');if(innerWidth<=1200)showSheet('settings');return;}
+    function getNextColumnNumber() {
+        return Math.max(
+            0,
+            ...config.columns.map(c => Number(c.colnum) || 0)
+        ) + 1;
+    }
+    if(t.closest('[data-add-column]')){
+      mutate(()=>{
+          const id=uid('col');
+          const nextColNum=getNextColumnNumber();
+
+          config.columns.push(
+              column(
+                  id,
+                  freshKey(),
+                  'Cột mới',
+                  'text',
+                  {
+                      colnum: nextColNum
+                  }
+              )
+          );
+
+          selectedColumnId=id;
+          inspectorTab='column';
+      },'Đã thêm cột');
+
+      if(innerWidth<=1200)
+          showSheet('settings');
+
+      return;
+  }
     if(t.closest('[data-delete-column]')){const c=selectedColumn();if(!c)return;mutate(()=>{config.columns=config.columns.filter(x=>x.id!==c.id);config.filters=config.filters.filter(f=>f.field!==c.key);config.rowRules=config.rowRules.filter(r=>r.field!==c.key);},'Đã xóa cột và cấu hình liên quan');return;}
-    const move=t.closest('[data-move-column]');if(move){mutate(()=>{const from=config.columns.findIndex(c=>c.id===selectedColumnId),to=from+(move.dataset.moveColumn==='up'?-1:1);if(to>=0&&to<config.columns.length)config.columns.splice(to,0,config.columns.splice(from,1)[0]);});return;}
+    const move=t.closest('[data-move-column]');
+        if(move){
+            mutate(()=>{
+                const from=config.columns.findIndex(
+                    c=>c.id===selectedColumnId
+                );
+
+                const to=from+(
+                    move.dataset.moveColumn==='up' ? -1 : 1
+                );
+
+                if(to>=0 && to<config.columns.length){
+                    config.columns.splice(
+                        to,
+                        0,
+                        config.columns.splice(from,1)[0]
+                    );
+
+                    syncColumnNumbers();
+                }
+            });
+
+            return;
+        }
     const iconButton=t.closest('[data-column-icon]');if(iconButton)return update('column','iconClass',iconButton.dataset.columnIcon);
     if(t.closest('[data-booking-template]'))return update('column','template',bookingTemplate);
     if(t.closest('[data-add-group]'))return mutate(()=>config.groups.push({id:uid('group'),title:'Nhóm tiêu đề mới',cssheader:''}));
