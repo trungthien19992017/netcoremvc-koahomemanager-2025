@@ -904,6 +904,20 @@ namespace KOAHome.Controllers
       ViewData["ReportCode"] = ReportCode.Trim();
       ViewData["CreateNew"] = CreateNew;
 
+      var dynamicFields = await _report.NET_DynamicField_Search();
+      ViewData["ReportBuilderDynamicFields"] = JsonSerializer.Serialize(dynamicFields.Select(item =>
+      {
+        var row = (IDictionary<string, object>)item;
+        object Value(string key) => row.TryGetValue(key, out var value) ? value : null;
+        string name = Convert.ToString(Value("name")) ?? "";
+        string type = Convert.ToString(Value("type")) ?? "";
+        return new
+        {
+          value = Value("id"),
+          label = string.IsNullOrWhiteSpace(type) ? name : $"{name} ({type})"
+        };
+      }));
+
       if (!CreateNew)
       {
         var report = await _report.NET_Report_Get(ReportCode.Trim());

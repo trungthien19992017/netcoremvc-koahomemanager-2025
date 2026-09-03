@@ -29,6 +29,7 @@ namespace KOAHome.Services
     public Task<IDictionary<string, object>?> NET_Report_Get(string reportCode);
     public Task<List<dynamic>> NET_Filter_WithReport_Get(string? reportCode, int? reportId);
     public Task<List<dynamic>> NET_Display_WithReport_Get(Dictionary<string, object>? parameters, string? reportCode, int? reportId);
+    public Task<List<dynamic>> NET_DynamicField_Search();
     // lay danh sach bo loc mac dinh
     public Task<IDictionary<string, object>?> NET_Report_GetDefaultFilter(Dictionary<string, object>? parameters, string sqlStore, string? connectionString);
     // Hàm này sẽ tính độ sâu tối đa của cây phân cấp
@@ -500,6 +501,16 @@ namespace KOAHome.Services
 
       var (sqlQuery, sqlParams) = await _con.Connection_GetQueryParam(parameters, sqlStore, connectionString);
       return await _con.Connection_GetSingleDataFromQuery(parameters, sqlStore, connectionString, sqlQuery, sqlParams);
+    }
+
+    public async Task<List<dynamic>> NET_DynamicField_Search()
+    {
+      string connectionString = _configuration.GetConnectionString("ConfigConnection");
+      string sqlStore = "net_dynamicfield_search";
+      var parameters = new Dictionary<string, object>();
+      var (sqlQuery, sqlParams) = await _con.Connection_GetQueryParam(parameters, sqlStore, connectionString);
+
+      return await _con.Connection_GetDataFromQuery(parameters, sqlStore, connectionString, sqlQuery, sqlParams);
     }
     public async Task<string> BuildHtmlTableRows
       (
