@@ -2,6 +2,7 @@
 @{
     ViewData["Title"] = "Cấu hình Report động";
     Layout = "_BlankLayout";
+
 }
 
 <!doctype html>
@@ -398,23 +399,123 @@ body{overflow:hidden}.app{height:100dvh;min-height:0;overflow:hidden;padding:0}.
     version:'3.0.0',
     table:{id:'booking-report',title:'DANH SÁCH ĐẶT',subtitle:'Quản lý đặt phòng · Dữ liệu minh họa',rowKey:'id',pagination:true,pageSize:5,striped:true,rowSelection:true,rowDetails:true,showRowActions:true,showSummary:true},
     display:{theme:'light-dashboard',density:'comfortable',accent:'#8355f4',showHeader:true,showFilterBar:true,allowColumnToggle:true,responsive:true,mobileMode:'cards',filterOpen:false,titleStyle:'color:#2e518b; font-weight:800;',headerStyle:'background:#cfe4fe; color:#295084;',description:'<p>Dữ liệu trong bản xem trước là dữ liệu minh họa. Các thao tác nghiệp vụ không kết nối server.</p>',mobileActionLabels:true},
-    groups:[{id:'stay',title:'Thời gian lưu trú',cssheader:'background:#cfe4fe; color:#295084;'},{id:'payment',title:'Thanh toán',cssheader:'background:#c6f3dc; color:#29966a;'}],
+    groups:[
+      // {id:'stay',title:'Thời gian lưu trú',cssheader:'background:#cfe4fe; color:#295084;'},
+      {id:'payment',title:'Thanh toán',cssheader:'background:#c6f3dc; color:#29966a;'}
+    ],
     columns:[
       column('c_info','guest','Thông tin','html',{width:250,fixed:'left',mobileRole:'primary',iconClass:'fa fa-user-o',template:bookingTemplate}),
       column('c_room','room','Phòng','badge',{width:150,type:'select',iconClass:'fa fa-home',badgeMap:[{value:'KOA 101 · Tân Phú',color:'#139269',background:'#d7f7e9'},{value:'KOA 201 · Tân Phú',color:'#b67917',background:'#fff0c9'},{value:'KOA 302 · Quận 1',color:'#8057bc',background:'#f1e5ff'}]}),
-      column('c_in','checkin','Check in','datetime',{type:'datetime',width:130,groupId:'stay',mobileRole:'detail'}),
-      column('c_out','checkout','Check out','datetime',{type:'datetime',width:130,groupId:'stay',mobileRole:'detail'}),
-      column('c_total','amount','Tổng số tiền','currency',{type:'number',width:135,align:'right',groupId:'payment',mobileRole:'detail',aggregate:'sum'}),
-      column('c_paid','paid','Thanh toán','boolean',{type:'boolean',width:110,align:'center',groupId:'payment',mobileRole:'summary'}),
+      // column('c_in','checkin','Check in','datetime',{type:'datetime',width:130,groupId:'stay',mobileRole:'detail'}),
+      // column('c_out','checkout','Check out','datetime',{type:'datetime',width:130,groupId:'stay',mobileRole:'detail'}),
+      // column('c_total','amount','Tổng số tiền','currency',{type:'number',width:135,align:'right',groupId:'payment',mobileRole:'detail',aggregate:'sum'}),
+      // column('c_paid','paid','Thanh toán','boolean',{type:'boolean',width:110,align:'center',groupId:'payment',mobileRole:'summary'}),
       column('c_hours','hours','Số giờ','number',{type:'number',width:90,align:'right',groupId:'payment',mobileRole:'detail'}),
-      column('c_services','services','Dịch vụ','icons',{width:115,filterable:false,mobileRole:'summary'}),
-      column('c_phone','phone','Điện thoại','text',{width:130,mobileRole:'detail'}),
-      column('c_note','note','Ghi chú','text',{width:220,mobileRole:'detail'}),
-      column('c_status','status','Trạng thái','badge',{type:'select',width:120,visible:false,mobileRole:'hidden'}),
+      // column('c_services','services','Dịch vụ','icons',{width:115,filterable:false,mobileRole:'summary'}),
+      // column('c_phone','phone','Điện thoại','text',{width:130,mobileRole:'detail'}),
+      // column('c_note','note','Ghi chú','text',{width:220,mobileRole:'detail'}),
+      // column('c_status','status','Trạng thái','badge',{type:'select',width:120,visible:false,mobileRole:'hidden'}),
       column('c_id','id','Mã đặt','text',{width:110,visible:false,isexport:false,mobileRole:'hidden'})
     ],
-    filters:[{id:'f_guest',field:'guest',label:'Khách hàng',component:'text',operator:'contains',colSpan:4},{id:'f_room',field:'room',label:'Phòng',component:'select',operator:'equals',colSpan:4},{id:'f_paid',field:'paid',label:'Thanh toán',component:'boolean',operator:'equals',colSpan:4},{id:'f_date',field:'checkin',label:'Khoảng ngày check in',component:'dateRange',operator:'between',colSpan:8},{id:'f_amount',field:'amount',label:'Số tiền tối thiểu',component:'number',operator:'greaterThan',colSpan:4}],
-    actions:[{id:'a_add',name:'Thêm đặt phòng',scope:'top',type:'POPUPFORM',icon:'fa fa-plus',value:'/form/popup-viewer/BOOKING',background:'#382283',color:'#ffffff',enabled:true,requiresSelection:false,confirm:false},{id:'a_check',name:'Xác nhận',scope:'top',type:'STORE',icon:'fa fa-check',value:'ConfirmBooking',background:'#3ca693',color:'#ffffff',enabled:true,requiresSelection:true,confirm:true},{id:'a_import',name:'Import Excel',scope:'top',type:'IMPORT_FILEEXCEL',icon:'fa fa-upload',value:'ImportBooking',background:'#eba851',color:'#ffffff',enabled:true,requiresSelection:false,confirm:false},{id:'a_pay',name:'Thanh toán',scope:'row',type:'POPUPFORM',icon:'fa fa-credit-card',value:'/form/popup-viewer/PAYMENT/{{id}}',background:'#7c5be3',color:'#ffffff',enabled:true,confirm:false},{id:'a_edit',name:'Chỉnh sửa',scope:'row',type:'LINK',icon:'fa fa-pencil-square-o',value:'/form/viewer/BOOKING/{{id}}',background:'#4792c4',color:'#ffffff',enabled:true,confirm:false}],
+    filters: [{
+        id: 'f_guest',
+        field: 'guest',
+        label: 'Khách hàng',
+        component: 'text',
+        operator: 'contains',
+        colSpan: 4
+    }, {
+        id: 'f_room',
+        field: 'room',
+        label: 'Phòng',
+        component: 'select',
+        operator: 'equals',
+        colSpan: 4
+    }
+    // , {
+    //     id: 'f_paid',
+    //     field: 'paid',
+    //     label: 'Thanh toán',
+    //     component: 'boolean',
+    //     operator: 'equals',
+    //     colSpan: 4
+    // }, {
+    //     id: 'f_date',
+    //     field: 'checkin',
+    //     label: 'Khoảng ngày check in',
+    //     component: 'dateRange',
+    //     operator: 'between',
+    //     colSpan: 8
+    // }, {
+    //     id: 'f_amount',
+    //     field: 'amount',
+    //     label: 'Số tiền tối thiểu',
+    //     component: 'number',
+    //     operator: 'greaterThan',
+    //     colSpan: 4
+    // }
+    ],
+    actions: [{
+        id: 'a_add',
+        name: 'Thêm đặt phòng',
+        scope: 'top',
+        type: 'POPUPFORM',
+        icon: 'fa fa-plus',
+        value: '/form/popup-viewer/BOOKING',
+        background: '#382283',
+        color: '#ffffff',
+        enabled: true,
+        requiresSelection: false,
+        confirm: false
+    },
+    // , {
+    //     id: 'a_check',
+    //     name: 'Xác nhận',
+    //     scope: 'top',
+    //     type: 'STORE',
+    //     icon: 'fa fa-check',
+    //     value: 'ConfirmBooking',
+    //     background: '#3ca693',
+    //     color: '#ffffff',
+    //     enabled: true,
+    //     requiresSelection: true,
+    //     confirm: true
+    // }, {
+    //     id: 'a_import',
+    //     name: 'Import Excel',
+    //     scope: 'top',
+    //     type: 'IMPORT_FILEEXCEL',
+    //     icon: 'fa fa-upload',
+    //     value: 'ImportBooking',
+    //     background: '#eba851',
+    //     color: '#ffffff',
+    //     enabled: true,
+    //     requiresSelection: false,
+    //     confirm: false
+    // }, {
+    //     id: 'a_pay',
+    //     name: 'Thanh toán',
+    //     scope: 'row',
+    //     type: 'POPUPFORM',
+    //     icon: 'fa fa-credit-card',
+    //     value: '/form/popup-viewer/PAYMENT/{{id}}',
+    //     background: '#7c5be3',
+    //     color: '#ffffff',
+    //     enabled: true,
+    //     confirm: false
+    // },
+    {
+        id: 'a_edit',
+        name: 'Chỉnh sửa',
+        scope: 'row',
+        type: 'LINK',
+        icon: 'fa fa-pencil-square-o',
+        value: '/form/viewer/BOOKING/{{id}}',
+        background: '#4792c4',
+        color: '#ffffff',
+        enabled: true,
+        confirm: false
+    }],
     rowRules:[{id:'r_checkin',field:'status',operator:'equals',value:'checkin',label:'Đang check in',background:'#ddf3ff'},{id:'r_unpaid',field:'status',operator:'equals',value:'unpaid',label:'Chưa thanh toán',background:'#fff7ec'},{id:'r_checkout',field:'status',operator:'equals',value:'checkout',label:'Đã check out',background:'#ebfbf1'},{id:'r_discount',field:'status',operator:'equals',value:'discount',label:'Có giảm giá',background:'#f3efff'}],
     data:{mode:'sample',rows:defaultRows}
   };
@@ -636,7 +737,7 @@ body{overflow:hidden}.app{height:100dvh;min-height:0;overflow:hidden;padding:0}.
     const button=$('#saveBtn'),token=document.querySelector('input[name="__RequestVerificationToken"]')?.value;
     try{
       config=validate(config);button.disabled=true;button.classList.add('saving');$('#saveState').textContent='Đang lưu cấu hình...';
-      const response=await fetch('/NETReport/ReportBuilderSave?ReportCode='+encodeURIComponent(reportCode),{
+      const response=await fetch('/NETReport/ReportBuilderSave?ReportCode='+encodeURIComponent(reportCode)+'&CreateNew='+createNew,{
         method:'POST',headers:{'Content-Type':'application/json','RequestVerificationToken':token||''},body:JSON.stringify(config)
       });
       const payload=await response.json().catch(()=>({success:false,errorMessage:'Phản hồi từ máy chủ không hợp lệ.'}));

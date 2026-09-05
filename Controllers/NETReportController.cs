@@ -893,15 +893,15 @@ namespace KOAHome.Controllers
     [Authorize]
     [HttpGet]
     [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]
-    public async Task<IActionResult> ReportBuilder(string ReportCode = "F0_HS_Booking1", bool CreateNew = false)
+    public async Task<IActionResult> ReportBuilder(string ReportCode = "", bool CreateNew = false)
     {
-      if (string.IsNullOrWhiteSpace(ReportCode))
-      {
-        ViewData["ErrorMessage"] = "Không tồn tại mã báo cáo";
-        return View();
-      }
+      //if (string.IsNullOrWhiteSpace(ReportCode))
+      //{
+      //  ViewData["ErrorMessage"] = "Không tồn tại mã báo cáo";
+      //  return View();
+      //}
 
-      ViewData["ReportCode"] = ReportCode.Trim();
+      ViewData["ReportCode"] = string.IsNullOrWhiteSpace(ReportCode) ? "" : ReportCode.Trim();
       ViewData["CreateNew"] = CreateNew;
 
       var dynamicFields = await _report.NET_DynamicField_Search();
@@ -1106,13 +1106,13 @@ namespace KOAHome.Controllers
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> ReportBuilderSave(string ReportCode, [FromBody] JsonElement config)
     {
-      if (string.IsNullOrWhiteSpace(ReportCode) || config.ValueKind != JsonValueKind.Object)
-      {
-        return BadRequest(new { success = false, errorMessage = "Cấu hình hoặc mã báo cáo không hợp lệ." });
-      }
+      //if (string.IsNullOrWhiteSpace(ReportCode) || config.ValueKind != JsonValueKind.Object)
+      //{
+      //  return BadRequest(new { success = false, errorMessage = "Cấu hình hoặc mã báo cáo không hợp lệ." });
+      //}
 
       long? userId = long.TryParse(User.FindFirstValue(ClaimTypes.NameIdentifier), out var parsedUserId) ? parsedUserId : null;
-      var result = await _report.NET_ReportBuilder_Save(ReportCode.Trim(), config.GetRawText(), userId);
+      var result = await _report.NET_ReportBuilder_Save(string.IsNullOrWhiteSpace(ReportCode) ? "" : ReportCode.Trim(), config.GetRawText(), userId);
       if (result == null)
       {
         return StatusCode(500, new { success = false, errorMessage = "Store lưu cấu hình không trả kết quả." });

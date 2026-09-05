@@ -983,9 +983,9 @@ namespace KOAHome.Services
         {
           bool isPopupConfirm = Convert.ToBoolean(actionDict["ispopupconfirm"]);
           int? dataSourceID = actionDict.TryGetValue("datasourceid", out var num) ? Convert.ToInt32(num) : null;
-          string confirmButtonText = !string.IsNullOrWhiteSpace(actionDict["confirmbuttontext"].ToString()) ? actionDict["confirmbuttontext"].ToString() : null;
-          string confirmTitle = !string.IsNullOrWhiteSpace(actionDict["confirmtitle"].ToString()) ? actionDict["confirmtitle"].ToString() : null;
-          string confirmText = !string.IsNullOrWhiteSpace(actionDict["confirmtext"].ToString()) ? actionDict["confirmtext"].ToString() : null;
+          string confirmButtonText = !string.IsNullOrWhiteSpace(actionDict["confirmbuttontext"]?.ToString()) ? actionDict["confirmbuttontext"].ToString() : null;
+          string confirmTitle = !string.IsNullOrWhiteSpace(actionDict["confirmtitle"]?.ToString()) ? actionDict["confirmtitle"].ToString() : null;
+          string confirmText = !string.IsNullOrWhiteSpace(actionDict["confirmtext"]?.ToString()) ? actionDict["confirmtext"].ToString() : null;
           sb.AppendLine("<li>");
           sb.AppendLine(isPopupConfirm
               ? $"<a href='' data-id='{rowId}' data-isconfirm='{isPopupConfirm}' data-confirmtext='{confirmText}' data-confirmtitle='{confirmTitle}' data-confirmbutton='{confirmButtonText}' data-sqlstore='{actionValue}' data-datasourceid='{dataSourceID}' class='dropdown-item confirmAction'><i class='{actionIcon} me-1 text-primary'></i> {actionName}</a>"
